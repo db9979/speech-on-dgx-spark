@@ -3631,3 +3631,10 @@ body.appview.aptabs:not(.inchat):not(.appage)>main{flex:1 0 auto;width:100%;box-
    scrolls sideways (test_bildlauf: one bar per page) */
 body.appview .ffilt{flex-wrap:wrap;width:auto}
 body.appview .ffilt button{flex:0 0 auto;overflow:visible}
+/* Funktionen on a computer (code review 2026-11-11, point 8, report D3): the sentence of a function in two lines
+   instead of one cut after a few words, the save bar under list and detail (its width from js/fdetail.js), the detail
+   ends above it */
+#pane-feat.fsplit .fitem>.setrow:first-child .lbl>span{-webkit-line-clamp:2}
+#pane-feat.fsplit>.savebar{width:var(--fbar-w,100%);box-sizing:border-box}
+#pane-feat.fsplit>.fdet{bottom:calc(var(--h-bar) + var(--s6))}
+#pane-feat.fsplit .fdin{max-height:calc(100vh - 2 * var(--s4) - var(--h-bar))}

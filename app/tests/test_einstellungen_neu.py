@@ -540,6 +540,20 @@ class Frame(unittest.TestCase):
                     await pg.wait_for_function("!!window.lzIdle&&lzIdle()", timeout=20000)
                     self.assertGreater(await pg.evaluate("$('pane-feat').getBoundingClientRect().width"), 700)
                     self.assertTrue(await pg.evaluate("$('pane-feat').classList.contains('fsplit')"))
+                    # code review 2026-11-11, point 8: no empty right half at the start, the first function of the list is
+                    # open (once: closed with × the hint „Funktion antippen“ stands there), its sentence in the list has
+                    # two lines, the save bar lies under list and detail
+                    await pg.wait_for_function("document.querySelectorAll('#pane-feat .fitem.open').length===1", timeout=20000)
+                    self.assertTrue(await pg.evaluate("document.querySelector('#pane-feat .fgrp:not([hidden])>.fitem:not([hidden])').classList.contains('open')"))
+                    self.assertFalse(await pg.is_visible("#fdet .fdempty"))
+                    self.assertEqual(await pg.evaluate("getComputedStyle(document.querySelector('#pane-feat .fitem:not(.open)>.setrow .lbl>span')).webkitLineClamp"), "2")
+                    bar = await pg.evaluate("(()=>{const b=$('pane-feat').querySelector(':scope>.savebar').getBoundingClientRect(),d=$('fdet').getBoundingClientRect();return [b.right,d.right,b.top,$('fdet').firstElementChild.getBoundingClientRect().bottom]})()")
+                    self.assertLess(abs(bar[0] - bar[1]), 12, bar)        # as wide as the page, not only the list
+                    self.assertLessEqual(bar[3], bar[2] + 1, bar)        # the detail ends above the bar
+                    await pg.click("#fdet .fdx")
+                    await pg.wait_for_selector("#fdet .fdempty", timeout=20000)
+                    await pg.set_viewport_size({"width": 1300, "height": 900})   # a new width opens nothing again
+                    await pg.wait_for_timeout(300)
                     self.assertTrue(await pg.is_visible("#fdet .fdempty"))
                     await pg.evaluate("featOpen($('chat.search').closest('.fitem'),true)")
                     await pg.wait_for_timeout(400)

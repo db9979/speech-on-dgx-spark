@@ -1906,6 +1906,11 @@ class Browser(unittest.TestCase):
                     await self.loaded(pg)
                     n = await pg.evaluate("document.querySelectorAll('#pane-feat .fitem').length")
                     self.assertGreater(n, 15)
+                    # wide, the first function is open beside the list from the start (code review 2026-11-11, point 8);
+                    # closed with × the page is as on a phone: nothing open
+                    if await pg.evaluate("$('pane-feat').classList.contains('fsplit')"):
+                        await pg.wait_for_function("document.querySelectorAll('#pane-feat .fitem.open').length===1", timeout=20000)
+                        await pg.click("#fdet .fdx")
                     self.assertEqual(await pg.evaluate("document.querySelectorAll('#pane-feat .fitem.open').length"), 0)
                     # a closed line hides its sentence and settings
                     self.assertFalse(await pg.is_visible("#chat\\.search_url"))
@@ -2843,7 +2848,7 @@ class Browser(unittest.TestCase):
                     br, pg, errors = await self.page(p, w, h)
                     await pg.evaluate("goSec('cfg');document.querySelector('#cfgnav button[data-p=feat]').click()")
                     await self.loaded(pg)
-                    await pg.evaluate("const f=$('chat.kiwix').closest('.fitem');if(!f.classList.contains('open'))f.querySelector('.fexp').click()")
+                    await pg.evaluate("const f=$('chat.kiwix').closest('.fitem')||featCur();if(!f.classList.contains('open'))f.querySelector('.fexp').click()")
                     await self.until(pg, "!!$('kxsel')&&$('kxsel').innerText.includes('deutsche und englische Wikipedia')")
                     self.assertTrue(await pg.is_hidden("#kxpick"), name)
                     await pg.click("#kxload")

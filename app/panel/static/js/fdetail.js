@@ -72,12 +72,20 @@ async function who(it){let box=[...it.children].find(x=>x.classList.contains('fw
     b.textContent=label;b.disabled=!can;b.setAttribute('aria-pressed',on?'true':'false');b.setAttribute('aria-label',`${aria}: ${on?t('darf es','may use it'):can?t('gesperrt','blocked'):t('geht nicht','not possible')}`);
     b.onclick=async()=>{b.disabled=true;try{await act();who(it)}catch(e){alert(e.message);b.disabled=false}};return b}}
 // ---------------------------------------------------------------- open, close, wide or narrow
-window.featSide=(it,on)=>{if(on){if(split){if(cur&&cur!==it)featOpen(cur,false);out(it)}WD=null;who(it)}else if(cur===it)back()};
+window.featSide=(it,on)=>{if(on){if(split){if(cur&&cur!==it)featOpen(cur,false);out(it)}WD=null;who(it)}else{if(cur===it)back();
+  // its „Wer darf es“ goes with it (drawn anew when it opens): a closed function keeps no box nobody sees
+  [...it.children].filter(x=>x.classList.contains('fwho')).forEach(x=>x.remove())}};
 window.featCur=()=>cur;
-function layout(){const w=pane.getBoundingClientRect().width;if(!w)return;const s=w>=740&&!document.body.classList.contains('appview');if(s===split)return;
-  split=s;pane.classList.toggle('fsplit',s);
-  if(!s){back();return}
-  const open=[...pane.querySelectorAll('.fitem.open')];open.slice(1).forEach(x=>featOpen(x,false));if(open[0])out(open[0])}
+// (code review 2026-11-11, point 8) wide, the page does not start with an empty right half: the first function of the
+// list opens by itself, once per page load (closed with × it stays closed); the save bar spans list and detail
+let first=false;
+function layout(){const w=pane.getBoundingClientRect().width;if(!w)return;const s=w>=740&&!document.body.classList.contains('appview');
+  if(s)pane.style.setProperty('--fbar-w',Math.round(w-2*(parseFloat(getComputedStyle(pane).paddingLeft)||0))+'px');
+  if(s!==split){split=s;pane.classList.toggle('fsplit',s);
+    if(!s){back();return}
+    const open=[...pane.querySelectorAll('.fitem.open')];open.slice(1).forEach(x=>featOpen(x,false));if(open[0])out(open[0])}
+  if(s&&!first&&typeof featOpen==='function'){const it=cur||pane.querySelector('.fgrp:not([hidden])>.fitem:not([hidden])');
+    if(it){first=true;if(!cur)featOpen(it,true)}}}
 empty();new ResizeObserver(layout).observe(pane);
 // Vorgaben, which are a function of their own (Rückfrage ohne Weckwort, Eigene Stimme überhören): the preset for the
 // profiles sits in that function's detail, not twice under Vorgaben (plaene/einstellungen-anordnung.md, Umzug 3)
