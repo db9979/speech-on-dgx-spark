@@ -118,6 +118,7 @@ RULES = {
     "listshare": "tasks.py: tasks_show, tasks_add und tasks_change erreichen geteilte Listen („Setz Butter auf Sabines Einkaufsliste“), Löschen nur der Besitzer",
     "listnote": "tasks.py: ein Hinweis von selbst, wenn andere etwas auf eine geteilte Liste setzen; nichts zu fragen",
     "anrufassistent": "rufen.py: „Ruf Sabine an“, „Videoanruf mit Sabine“, „Ruf Mama übers Telefon an“, erst nach Ja",
+    **steckbrief.ohne_werkzeug("regel"),   # the functions with a Steckbrief (steckbrief.py)
 }
 
 WITHOUT = {
@@ -136,23 +137,7 @@ WITHOUT = {
     "stimmdesign": "Einstellung, mit welcher Stimme Antworten klingen (Ich → Gespräch → Eigene Stimme)",
     "anhalten": "Verhalten beim Ins-Wort-Fallen",
     "satzende": "Messung an Sprechpausen, kein Werkzeug",
-    "toolthink": "Einstellung, wie Antworten entstehen",
-    "routing": "Einstellung, wie Antworten entstehen",
-    "direct": "Einstellung, wie Antworten entstehen",
-    "hoeren": "Einstellung, wie die Spracherkennung hört",
-    "gedkurz": "Einstellung, wie Antworten entstehen",
-    "sofort": "Einstellung, wie Antworten entstehen",
     "suchschnell": "Einstellung, wie die Websuche liest",
-    "ack": "Einstellung, wie Antworten entstehen",
-    "vorab": "Einstellung, wie Antworten entstehen",
-    "einordnung": "Signal fürs Panel, keine Bitte",
-    "einordnungpost": "Signal fürs Panel, keine Bitte",
-    "einordnungtest": "Signal fürs Panel, keine Bitte",
-    "einordnungrat": "Signal fürs Panel, keine Bitte",
-    "einordnungcheck": "Signal fürs Panel, keine Bitte",
-    "helfer": "Hilfsmodell für feste Einordnungen (systemone.HELFER_USES), keine Bitte",
-    "helferangriff": "Hilfsmodell prüft gelesenen Text im Hintergrund, keine Bitte",
-    "einordnungklage": "Signal fürs Panel, keine Bitte",
     "vorrang": "Schutzregel für Personen",
     "docpics": "wirkt beim Einlesen",
     "docmeaning": "wirkt beim Suchen",
@@ -205,8 +190,6 @@ WITHOUT = {
     "dienstwacht": "meldet sich von selbst",
     "wartung": "Zustand → Wartungspause; in der Pause sagt das Panel einen festen Satz statt einer Antwort",
     "wartungauto": "wartung.py: das Panel pausiert selbst, wenn ein Modell neu startet; kein Werkzeug",
-    "weicheabstimmen": "weiche_abstimmen.py: nur der Admin auf Funktionen → Weiche; das Modell schlägt Wörter vor, feste Regeln messen, kein Werkzeug",
-    "weicheunklar": "weiche_unklar.py: das Panel merkt unklare Fragen anonym für den Admin auf Funktionen → Weiche, kein Werkzeug",
     "entwickeln": "entwickeln.py: OpenCode nur im Terminal von spark-dev, einspielen nur ein Admin (Kommandozeile oder Panel-Endpunkt); das Modell im Gespräch bekommt kein Werkzeug dafür",
     "entwickelnterminal": "entwickelnseite.py: eine Shell als spark-dev nur für einen Admin im Browser mit frischem Code; das Modell im Gespräch bekommt kein Werkzeug dafür und sieht nie, was dort läuft",
     "entwickelngithub": "entwickeln.py an_github: nur ein Admin gibt den Zweig weiter (Kommandozeile oder Panel-Endpunkt mit Code), feste Regeln, kein Werkzeug fürs Modell",
@@ -330,6 +313,7 @@ WITHOUT = {
     "beraterundo": "Entscheidung des Admins",
     "berateru": "nur in der Oberfläche",
     "beratermich": "nur in der Oberfläche",
+    **steckbrief.ohne_werkzeug("ohne"),   # the functions with a Steckbrief (steckbrief.py)
 }
 
 # the panel's own steps under a tool's name, never offered to the model (lokal.py's quick look)

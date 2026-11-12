@@ -97,9 +97,8 @@ DESK_SKIP = {
                      "hilfe", "verlaufsync", "eingespraech", "offlinelesen", "tagebuch", "sparkzustand",
                      "rueckgaengig"), _D_TALK),
     **dict.fromkeys(("follow", "selfecho", "anhalten", "satzende"), _D_VOICE),
-    **dict.fromkeys(("toolthink", "routing", "direct", "hoeren", "sofort", "gedkurz", "einordnung", "helfer", "vorrang",
-                     "berater", "geraeteupdate", "dienstwacht", "wachposten", "wartung", "notbetriebasr", "gehaeuse", "systemupdates",
-                     "schirm", "modellwechsel", "werkstatt", "entwickeln"), _D_SPARK),
+    **dict.fromkeys(("vorrang", "berater", "geraeteupdate", "dienstwacht", "wachposten", "wartung", "notbetriebasr",
+                     "gehaeuse", "systemupdates", "schirm", "modellwechsel", "werkstatt", "entwickeln"), _D_SPARK),
     **dict.fromkeys(("history", "teilen", "bilder", "musik", "dungeon", "mystatus", "agent", "chats", "weather",
                      "feeds", "contacts", "transit", "speaker", "verbrauch", "nas", "stimmdesign"), _D_PANEL),
     **dict.fromkeys(("room", "esp32", "wyoming", "telefon", "telegram", "android", "pebble", "terminal", "mcpserver", "llmapi", "llmapiassist", "openwebui",
@@ -112,8 +111,8 @@ DESK_SKIP = {
     "hoerstueck": "listened to in the panel, the iPhone app (native player) and Telegram; made, looked at and deleted "
                   "on the panel's page Mappen; hoerstueck_machen works in Frag Spark like in every answer",
     # the functions with a Steckbrief (steckbrief.py)
-    **{k: {"talk": _D_TALK, "voice": _D_VOICE, "spark": _D_SPARK, "link": _D_LINK, "device": _D_DEVICE}[v]
-       for k, v in steckbrief.begleiter().items()},
+    **{k: {"talk": _D_TALK, "voice": _D_VOICE, "spark": _D_SPARK, "link": _D_LINK, "device": _D_DEVICE,
+           "panel": _D_PANEL}.get(v, v) for k, v in steckbrief.begleiter().items()},
 }
 # Code-Prüfung D8 (one name per thing): an Ich page carries the name of its function, or a word of it, so "Funktionen →
 # Telefon" and "Ich → Telefon" are found as the same thing; these pages are named otherwise, each with its reason
@@ -170,28 +169,17 @@ FEATURES = (
     # ablauf.py: the tools of an answer under it, a waiting proposal as a card with Ja and Nein
     F("ablauf", "Ablauf und Freigabe zeigen", "Show steps and approvals", "talk", ("show_steps",), guide="ablauf"),
     F("images", "Bilder erkennen", "Picture recognition", "talk", ("images",), me="setbox", guide="images"),
-    F("toolthink", "Bei der Werkzeugwahl nachdenken", "Thinking while choosing tools", "speed", ("tool_thinking",),
-      me="setbox", guide="toolthink"),
-    F("routing", "Gezielte Werkzeugwahl", "Targeted tool choice", "speed", ("routing",), me="setbox", guide="routing"),
-    F("direct", "Eindeutiges direkt abrufen", "Fetch clear questions directly", "speed", ("direct_read",),
-      me="setbox", guide="direct"),
-    # hoerwoerter.py (plan genauer-und-schneller, 5): the speech recognition gets the names of rooms, devices, people
-    F("hoeren", "Namen fürs Hören", "Names for listening", "speed", ("hoer_namen",), guide="hoeren"),
-    # chat.memory_split (plan genauer-und-schneller, 4): a long memory keeps a fixed core, older facts only when they fit
-    # sofort.py (plan genauer-und-schneller, 6): time, date, arithmetic and units as the panel's fixed sentence
-    F("sofort", "Einfaches sofort beantworten", "Answer simple things at once", "speed", ("sofort",), guide="sofort"),
+    F(**steckbrief.feature("toolthink")),
+    F(**steckbrief.feature("routing")),
+    F(**steckbrief.feature("direct")),
+    F(**steckbrief.feature("hoeren")),
+    F(**steckbrief.feature("sofort")),
     F(**steckbrief.feature("rechnen")),   # rechnen.py: name, group, switch and guide in its Steckbrief
-    F("gedkurz", "Großes Gedächtnis kürzen", "Trim a large memory", "speed", ("memory_trim",), guide="gedkurz"),
-    F("ack", "Sofortige Rückmeldung", "Instant acknowledgement", "speed", ("instant_ack",),
-      parent="routing", me="setbox", guide="ack"),
-    # weiche_abstimmen.py (plan opencode-werkstatt, point 1): the model proposes words, fixed rules keep what helps
-    F("weicheabstimmen", "Weiche abstimmen", "Tune the switch", "speed", ("route_tune",), parent="routing", guide="weicheabstimmen"),
-    # weiche_unklar.py (plan unklare-fragen): unclear questions kept anonymized for the admin to tune the Weiche with;
-    # a preference, because the Spark keeps something of the profile's questions without being asked
-    F("weicheunklar", "Unklare Fragen anonym merken", "Keep unclear questions anonymously", "speed", ("route_unklar",),
-      pref="unklar_anon", parent="routing", me="setbox", guide="weicheunklar"),
-    F("vorab", "Vorab holen bei Rückfrage", "Fetch ahead on a question back", "speed", ("prefetch",),
-      parent="routing", me="setbox", guide="vorab"),
+    F(**steckbrief.feature("gedkurz")),
+    F(**steckbrief.feature("ack")),
+    F(**steckbrief.feature("weicheabstimmen")),
+    F(**steckbrief.feature("weicheunklar")),
+    F(**steckbrief.feature("vorab")),
     F("hilfe", "Hilfe zum Spark", "Help with the Spark", "talk", ("spark_help",), me="setbox", guide="hilfe"),
     F("hilfevorschlag", "Einstellungen vorschlagen", "Suggesting settings", "talk", ("spark_suggest",),
       parent="hilfe", me="setbox", guide="hilfevorschlag"),
@@ -207,22 +195,14 @@ FEATURES = (
       parent="tipps", me="kannbox", guide="tippssaetze"),
     F("tippsstimme", "Tipps beim Sprechen", "Tips while talking", "talk", ("feature_sentences_voice",),
       pref="voice_tips", parent="tippssaetze", me="setbox", guide="tippsstimme"),
-    # the LLM-Tor's /v1/systemone (systemone.py): probabilities instead of words, the panel decides with fixed thresholds
-    F("einordnung", "Einordnung mit Wahrscheinlichkeit", "Classification with probabilities", "speed", ("systemone",), me="setbox", guide="einordnung"),
-    F("einordnungpost", "Einordnung beim Postfach aufräumen", "Classification when tidying the inbox", "speed",
-      ("systemone_tidy", "mail_tidy", "mail"), parent="einordnung", me="setbox", guide="einordnungpost"),
-    F("einordnungtest", "Einordnung im Qualitätstest", "Classification in the quality test", "speed", ("systemone_quality",),
-      parent="einordnung", guide="einordnungtest"),
-    F("einordnungrat", "Einordnung im Einstellungs-Assistenten", "Classification in the settings assistant", "speed",
-      ("systemone_berater", "berater"), parent="einordnung", guide="einordnungrat"),
-    F("einordnungcheck", "Antworten im Hintergrund prüfen", "Check answers in the background", "speed",
-      ("systemone_check", "berater"), parent="einordnung", me="setbox", guide="einordnungcheck"),
-    F("einordnungklage", "Beschwerde erkennen", "Recognize complaints", "speed", ("systemone_klage", "loop_stop"), parent="einordnung", me="setbox", guide="einordnungklage"),
-    # the small helper model on the model computer (systemone.HELFER_USES, Dominik 2026-10-25), the language model
-    # stands in whenever it is not ready
-    F("helfer", "Hilfsmodell", "Helper model", "speed", ("helfer",), guide="helfer"),
-    F("helferangriff", "Hilfsmodell erkennt Angriffe", "Helper model spots attacks", "speed",
-      ("helfer_angriff", "systemone", "berater"), parent="helfer", guide="helferangriff"),
+    F(**steckbrief.feature("einordnung")),
+    F(**steckbrief.feature("einordnungpost")),
+    F(**steckbrief.feature("einordnungtest")),
+    F(**steckbrief.feature("einordnungrat")),
+    F(**steckbrief.feature("einordnungcheck")),
+    F(**steckbrief.feature("einordnungklage")),
+    F(**steckbrief.feature("helfer")),
+    F(**steckbrief.feature("helferangriff")),
     F("vorrang", "Vorrang für Personen", "Priority for people", "talk", ("person_priority",), guide="vorrang"),
     # knowledge and memory
     F("memory", "Gedächtnis", "Memory", "data", ("memory",), me="factbox", guide="memory"),
@@ -864,8 +844,8 @@ DUTY = None
 REVIEW = None
 
 # chat.* switches that are no function a profile uses (how the Spark itself works)
-SPARK_ONLY = {"wachposten", "public", "thinking", "prompt_cache", "answer_check", "answer_check_more", "action_check", "loop_stop", "datetime", "face_life", "esp32_ota_http", "wartung", "wartungauto", "notbetriebasr", "gehaeuse", "systemupdates", "systemnachtpanel", "systemnachtmodelle", "schirm", "rundlauf", "modellwechsel", "modelleeigen", "werkstatt", "werkstattnacht", "entwickeln", "entwickelngithub", "entwickelnterminal", "entwickelnauftrag", "angriffsprobe", "weicheabstimmen", "fernzugang", "fernzugangmeldung", "fernzugangalle", "spontanhilfe", "fernzuganghilfe", "fernbild", "fernbildablage", "fernnotizen", "fernordner", "ferngross", "fernweb", "fernsshtermy",
-              "helfer", "helferangriff"}
+SPARK_ONLY = {"wachposten", "public", "thinking", "prompt_cache", "answer_check", "answer_check_more", "action_check", "loop_stop", "datetime", "face_life", "esp32_ota_http", "wartung", "wartungauto", "notbetriebasr", "gehaeuse", "systemupdates", "systemnachtpanel", "systemnachtmodelle", "schirm", "rundlauf", "modellwechsel", "modelleeigen", "werkstatt", "werkstattnacht", "entwickeln", "entwickelngithub", "entwickelnterminal", "entwickelnauftrag", "angriffsprobe", "fernzugang", "fernzugangmeldung", "fernzugangalle", "spontanhilfe", "fernzuganghilfe", "fernbild", "fernbildablage", "fernnotizen", "fernordner", "ferngross", "fernweb", "fernsshtermy"} \
+    | steckbrief.nur_spark()   # with the functions that have a Steckbrief (steckbrief.py)
 # Everything starts off (Dominik 2026-10-08). The only values shipped on in config.default.json are protection and
 # stability rules and the basic functions the Spark had from the start, each with its reason here (Dominik 2026-10-12,
 # docs/de/richtlinien.md, part 3). tests/test_richtlinie.py fails for a value shipped on that is not listed.
