@@ -41,6 +41,7 @@ import time
 
 import httpx
 
+import ausleiten
 import beobachten
 import calendars
 import hintergrund
@@ -483,10 +484,8 @@ def _carries_out(name, args, extra, counts):
     read = counts.get("private") or set()
     if not read:
         return ""
-    if name == "web_search":
-        task = (counts.get("task") or "").lower()
-        words = re.findall(r"\w{3,}", str(args.get("query") or "").lower())
-        return CARRY_OUT if any(w not in task for w in words) else ""
+    if name == "web_search":   # the one rule for words that go out (ausleiten.py, also the chat's)
+        return CARRY_OUT if ausleiten.fremd({"query": args.get("query")}, counts.get("task")) else ""
     if name == "read_page":
         url = str(args.get("url") or "").strip()[:500].rstrip(".,;:")
         return "" if url in (counts.get("seen") or set()) else CARRY_OUT

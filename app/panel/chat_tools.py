@@ -10,6 +10,7 @@ import sys
 import httpx
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import ausleiten  # noqa: E402
 import calendars  # noqa: E402
 import documents  # noqa: E402,F401  (loaded before the tools on purpose)
 import extras  # noqa: E402
@@ -31,6 +32,14 @@ import dienstwacht  # noqa: E402
 
 
 async def run(t, name, args, st):
+    """One tool call of the model; what an internet tool brought in is kept as allowed words (ausleiten.pool_dazu)."""
+    result = await _run(t, name, args, st)
+    if name in notaus.INTERNET_TOOLS and isinstance(result, str):
+        ausleiten.pool_dazu(st, result)
+    return result
+
+
+async def _run(t, name, args, st):
     # the model may only use what this round offered (a tool parser passes any name through)
     if name not in st["offered"]:
         return chat.MAIL_BLOCKED if st["mail"] and name in chat.LOCKED_AFTER_MAIL else chat.NOT_OFFERED
@@ -49,6 +58,20 @@ async def run(t, name, args, st):
     gone = dienstwacht.tool_down(name, t.who["id"] if t.who else "") if name != "web_search" else ""
     if gone:
         return gone
+    # Ausleiten verhindern (ausleiten.py): after outside text an internet tool goes out only with the person's own words
+    # or words a search of this answer brought in (the documents' way with web_own swaps the query for the own words)
+    if name in notaus.INTERNET_TOOLS and st["outside"] and not (name == "web_search" and st.get("docs")
+                                                                and getattr(t, "web_own", "")):
+        bad = ausleiten.fremd(args, (getattr(t, "ask_text", "") or "") + "\n" + st.get("oeffentlich", ""))
+        if bad:
+            print("ausleiten: gesperrt", name, len(bad), "fremde Woerter", flush=True)
+            try:
+                import live
+                live.mark("Wächter", "Chat: Werkzeug ins Internet gesperrt (fremde Wörter nach Text von außen)")
+            except Exception:
+                pass
+            return ausleiten.HINWEIS
+        print("ausleiten: frei", name, flush=True)
     before = bool(st["mail"] or st["outside"])   # outside text read before this call (not this tool's own result)
     if name in chat.READS_OUTSIDE:
         st["outside"] = True

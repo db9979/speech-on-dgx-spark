@@ -1065,7 +1065,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Werkzeuge (chat_tools.run)
     "werkzeuge": {
-        "stand": "64168aea23",
+        "stand": "97a94c8145",
         "bezug": {
             "chat.LOCKED_OUTSIDE": ["s4"], "notaus.INTERNET_TOOLS": ["s3"], "werkzeuge.NAMES": ["s11"],
             "chat_tools.run": ["s2", "s7"], "chat.wrap_outside": ["s9"], "chat.LOCKED_AFTER_MAIL": ["s4"],
@@ -1118,13 +1118,16 @@ SEITEN = {
                "Wikipedia, Wetter, Fahrplan), nach eigenen Dokumenten die Websuche "
                "ebenfalls (außer bei „Erst lokal suchen“, dann nur mit den eigenen Worten der Frage; hat das Panel sie "
                "vorab schon gesucht, kommt dieses Ergebnis). Eine Mail unter den Treffern von „Erst lokal“ sperrt wie "
-               "eine gelesene Mail. Ein Lied, das die "
+               "eine gelesene Mail. Nach jedem anderen Text von außen geht ein Werkzeug ins Internet nur noch mit Wörtern "
+               "aus der eigenen Nachricht oder aus dem, was eine Suche dieser Antwort brachte (ausleiten.py). Ein Lied, das die "
                "Person selbst wünscht, bleibt nach Text von außen offen (own), nach Mail nicht.",
                "When this answer already read text from outside, nothing may change the home, the memory, "
                "appointments or reminders any more. After a mail everything that asks the internet is closed too (web "
                "search, Wikipedia, weather, transit), after own documents the web search "
                "(except with „search locally first“, then only with the question's own words; when the panel searched "
-               "them before, that result comes). A mail among the hits of „local first“ locks like a read mail. A song "
+               "them before, that result comes). A mail among the hits of „local first“ locks like a read mail. After any "
+               "other outside text a tool goes to the internet only with words from the own message or from what a search "
+               "of this answer brought (ausleiten.py). A song "
                "the person asks "
                "for stays open after outside text (own), not after mail."),
               ("stop", "ja", ("Gesperrt (fremder Text)", "Blocked (outside text)"))),

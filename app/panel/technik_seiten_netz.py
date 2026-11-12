@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "aussen": {
-        "stand": "cda26b36d6",
+        "stand": "f278940148",
         "bezug": {
             "dienstwacht.TIMEOUT": ["s5"], "notaus.locked_tools": ["s3"], "dienstwacht.tool_down": ["s5"],
             "netguard.client": ["s8", "s9", "s10"], "netguard.IMAP4_SSL": ["s9"],
@@ -53,9 +53,13 @@ SEITEN = {
             S("s4", "frage", ("Schon Text von außen gelesen?", "Outside text read already?"),
               ("dann nichts mehr ändern", "then change nothing more"),
               ("Hat die Antwort schon Mails, Webseiten, Kalender, Dokumente oder ein Archiv gelesen, darf sie nichts "
-               "mehr schalten, merken oder eintragen. Die Person muss das in einer neuen Nachricht selbst sagen.",
+               "mehr schalten, merken oder eintragen. Die Person muss das in einer neuen Nachricht selbst sagen. Ein "
+               "Werkzeug ins Internet nimmt dann nur noch Wörter aus ihrer eigenen Nachricht oder aus dem, was eine Suche "
+               "dieser Antwort brachte (ausleiten.py), damit nichts Privates als Suchwort hinausgeht.",
                "If the answer already read mail, web pages, calendar, documents or an archive, it may no longer "
-               "switch, save or enter anything. The person has to say so in a new message."),
+               "switch, save or enter anything. The person has to say so in a new message. A tool to the internet then "
+               "takes only words from their own message or from what a search of this answer brought (ausleiten.py), so "
+               "nothing private goes out as a search word."),
               ("stop", "ja", ("Gesperrt nach Text von außen", "Blocked after outside text"))),
             S("s5", "frage", ("Dienst als weg bekannt?", "Service known to be gone?"),
               ("Hinweis, wenn ein Dienst fehlt", "note when a service is missing"),

@@ -77,6 +77,7 @@ MODULE = {
     "panel": ("zugang", "Startet das Panel, Middleware (Notaus, Herkunft, Größe), liefert die Seite aus"),
     "core": ("zugang", "Admin-Passwort, Sitzungen, gemeinsame Pfade und Helfer"),
     "guard": ("zugang", "Rate-Limits, Sperren nach falschen Versuchen, fremde Seiten, audit.log mit Prüfkette"),
+    "ausleiten": ("zugang", "Nach fremdem Text gehen nur eigene Wörter ins Internet (Chat und Aufträge)"),
     "profiles": ("zugang", "Profile, Geräte, Sitzungen, Gespräche und Gedächtnis pro Profil"),
     "account": ("zugang", "Was ein Gerät für sich selbst darf: Anmelden und eigene Daten"),
     "mfa": ("zugang", "Zweiter Anmeldeschritt mit Code (TOTP) und Wiederherstellungscodes"),

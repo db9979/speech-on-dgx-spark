@@ -684,11 +684,11 @@ SEITEN = {
 
     # ------------------------------------------------------------------ sicherheit (the model as a whole)
     "sicherheit": {
-        "stand": "d554f2e699",
+        "stand": "fe369498ea",
         "bezug": {
             "features.blocked": ["s5"], "geteilt.put": ["s5"], "mitschreiblink.find": ["s3", "s5"], "core.confirm_code": ["s3", "s8"], "core.CONFIRM_WINDOW": ["s3"], "guard.Slot": ["s3"],
             "notaus.STAGE": ["s2"], "vault.seal": ["s10"], "tarswart.check": ["s3"], "tarswart.COMMANDS": ["s3"], "sysupdate.wunsch_nehmen": ["s3"],
-            "netguard.allowed": ["s6"], "chat.LOCKED_OUTSIDE": ["s6"], "chat.LOCKED_AFTER_MAIL": ["s6"], "mailansicht.clean": ["s6"],
+            "netguard.allowed": ["s6"], "chat.LOCKED_OUTSIDE": ["s6"], "chat.LOCKED_AFTER_MAIL": ["s6"], "ausleiten.fremd": ["s6"], "mailansicht.clean": ["s6"],
             "textnorm.defuse": ["s6"], "llm_tor.entschaerft": ["s6"], "regeln": ["s4", "s5"], "profiles._cap": ["s8"],
             "netguard.hole_oeffentlich": ["s6"], "doklink.eigene": ["s6"], "netproxy.Proxy": ["s6"], "ytquelle.befehl": ["s6"],
             "gedaechtnis.offer": ["s8"], "gemerkt.take_back": ["s8"], "profiles.write_own": ["s10"],
@@ -789,7 +789,7 @@ SEITEN = {
                "tut das für jede Nachricht noch einmal, llm_tor.entschaerft). Ab da sind "
                "{chat.LOCKED_OUTSIDE|anzahl} handelnde Werkzeuge gesperrt, auch im nächsten Zug, und nichts davon wird ins "
                "Gedächtnis gelernt; nach einer Mail sind es {chat.LOCKED_AFTER_MAIL|anzahl}, dazu gehört alles, was ins Internet "
-               "fragt (Websuche, Wikipedia, Wetter, Fahrplan), damit kein Suchwort Mail-Inhalt hinausträgt. Ob das hält, "
+               "fragt (Websuche, Wikipedia, Wetter, Fahrplan), damit kein Suchwort Mail-Inhalt hinausträgt. Nach jedem anderen Text von außen geht ein Werkzeug ins Internet nur noch mit Wörtern aus der eigenen Nachricht der Person oder aus dem, was eine Suche derselben Antwort schon gebracht hat; ein Wort aus Kalender, Gedächtnis oder Dokument wird so nie zum Suchwort (ausleiten.fremd, dieselbe Regel wie bei den Aufträgen). Ob das hält, "
                "prüft der Angriffs-Selbsttest mit einem Modell, das jedem Befehl gehorcht (panel/angriffe.json). Verbindungen nach außen laufen nur über den Wächter (netguard.allowed); "
                "eine Seite oder Datei holt nur netguard.hole_oeffentlich (Notaus zuerst, nur öffentlich auch nach jeder "
                "Weiterleitung, Größe, Zeit, Inhaltstyp), Links als Dokument nimmt eine Adresse nur aus den eigenen "
@@ -808,7 +808,7 @@ SEITEN = {
                "once more for every message, llm_tor.entschaerft). From then on "
                "{chat.LOCKED_OUTSIDE|anzahl} acting tools are locked, in the next turn too, and nothing of it is learned into "
                "memory; after a mail it is {chat.LOCKED_AFTER_MAIL|anzahl}, everything that asks the internet among them (web search, "
-               "Wikipedia, weather, transit), so no search word carries mail content out. Whether this holds is checked by "
+               "Wikipedia, weather, transit), so no search word carries mail content out. After any other outside text a tool goes to the internet only with words from the person's own message or from what a search of the same answer already brought in; a word from the calendar, the memory or a document never becomes a search word (ausleiten.fremd, the same rule as for background jobs). Whether this holds is checked by "
                "the attack self-test with a model that obeys every order (panel/angriffe.json). Connections to the outside go only through the guard (netguard.allowed); "
                "a page or file is fetched only by netguard.hole_oeffentlich (kill switch first, public only also after "
                "every redirect, size, time, content type), links as documents take an address only from the person's "
@@ -1039,6 +1039,7 @@ SEITEN = {
             ("netguard.allowed", ("ob eine Verbindung nach außen sein darf", "whether a connection out may happen")),
             ("netguard.hole_oeffentlich", ("der eine Abruf einer öffentlichen Seite oder Datei: Notaus zuerst, nur öffentlich", "the one fetch of a public page or file: kill switch first, public only")),
             ("doklink.eigene", ("Adressen fürs Werkzeug nur aus den eigenen Worten", "addresses for the tool only from the own words")),
+            ("ausleiten.fremd", ("Internet-Werkzeug nach fremdem Text nur mit eigenen Wörtern", "internet tool after outside text only with own words")),
             ("ytquelle.befehl", ("der feste Aufruf von yt-dlp: nur die Adresse aus der Video-Nummer", "the fixed call of yt-dlp: only the address from the video number")),
             ("netproxy.Proxy", ("der netguard-Proxy: der einzige Weg von yt-dlp hinaus", "the netguard proxy: yt-dlp's only way out")),
             ("answercheck.unsupported", ("Zahl ohne Quelle fällt heraus", "a figure without a source is dropped")),
