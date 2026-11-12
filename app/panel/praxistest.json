@@ -5754,6 +5754,13 @@
 "titel": "Keine privaten Wörter ins Internet",
 "text": "Pi updaten. Im Chat fragen: „Was steht heute in meinem Kalender? Such dann im Internet nach dem ersten Termin.“ Der Spark sucht nicht mit Wörtern aus dem Kalender, sondern sagt, dass er nur mit deinen eigenen Worten sucht. Zustand → Logs, Bereich System: eine Zeile „ausleiten: gesperrt web_search …“ ohne Termin-Wörter.",
 "thread": "Schwachstellen aus kritischer Prüfung beheben"
+},
+{
+"id": "P847",
+"v": 1402,
+"titel": "Hörstück: Stimmen-Probe und Rollenstimmen mit VoiceDesign",
+"text": "Pi updaten. Einstellungen → Sprachausgabe → „VoiceDesign zusätzlich bereitstellen“ an und speichern. Unter Funktionen → Eigene Dokumente → Mappen → Hörstück aus einer Mappe → Hörstück als Diskussion bei „Stimmen der Diskussion“ für B „▶ Probe“ tippen, ohne dass VoiceDesign vorher lief: unter den Rollen steht „VoiceDesign lädt … N s“, nach einigen Minuten kommt die Probe von selbst (sonst ein Satz mit dem Grund). Danach in einer Mappe „Sofort erstellen“: die Zeile zeigt kurz „wartet: VoiceDesign lädt“, dann sprechen A, B und C mit den beschriebenen Stimmen, auch wenn unter „Die drei Stimmen“ feste Stimmen gewählt sind; kein „Feste Stimmen ab Zeile …“ im Drehbuch. Zustand → Logs (Wissen): „hoerstueck: probe | laedt“, „hoerstueck: probe | neu“, „hoerstueck: stimmen laden | zeile 1“; Zustand → Live, Kasten Hörstück: Stimmproben und Warten auf VoiceDesign.",
+"thread": "Hörstück: VoiceDesign-Stimmen und Probe"
 }
 ]
 }

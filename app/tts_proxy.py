@@ -84,14 +84,21 @@ def _systemctl(action, unit):
 
 
 async def design_bereit(status):
-    """On demand: starts the stopped VoiceDesign engine once (the request still gets its 503 "loading")."""
+    """On demand: starts the stopped VoiceDesign engine once (the request still gets its 503 "loading"). A "blocked"
+    or "error" left in its state file by an earlier start counts as stopped while the unit is not running: a Hörstück
+    or a "▶ Probe" an hour later tries again (at most every DESIGN_START_S), never the old word for good (2026-11-12)."""
     design["used"] = time.time()
-    if status != "stopped" or not design_bedarf() or time.time() - design["start"] < DESIGN_START_S:
+    if not design_bedarf() or time.time() - design["start"] < DESIGN_START_S:
+        return status
+    alt = status
+    if status in ("blocked", "error") and await asyncio.to_thread(unit_active, UNIT_OF["design"]) not in ("active", "activating"):
+        status = "stopped"
+    if status != "stopped":
         return status
     design["start"] = time.time()
     rc = await asyncio.to_thread(_systemctl, "start", UNIT_OF["design"])
     print("tts: voicedesign start" if rc == 0 else "tts: voicedesign start fehler", flush=True)
-    return "loading" if rc == 0 else status
+    return "loading" if rc == 0 else alt
 
 
 async def design_leerlauf():

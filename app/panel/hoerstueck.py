@@ -23,7 +23,10 @@ tonteile.sprich with stufe "hinten" (common.signed_low: never taken for speech, 
 starting cancels the line (vorrang.Busy) and it is spoken again later. One request at a time (the vorrang slot: the
 speech output is weak with parallel requests). While the Dienst-Wächter sees the speech output gone nothing is spoken.
 The voices: the admin's three (chat.hoerstueck_stimmen, "-" or nothing: the standard voice, then with VoiceDesign the
-fixed description of the role, KLANG). The lines wait as WAV parts in users/<id>/hoerstuecke/<id>/, at the end ffmpeg
+fixed description of the role, KLANG); a discussion speaks with the role's description whenever VoiceDesign is on and
+the admin's voice only stands in (stimme_von). VoiceDesign loads on demand: a line waits LADEN_S while it loads, at most
+LADEN_MAX_S; when it does not come the Hörstück keeps fixed voices from that line on and says why (ERSATZ, hs_stueck
+ersatz/ersatz_ab, shown under the script, Dominik 2026-11-12 „Hörspiele nur mit internen fertigen Stimmen“). The lines wait as WAV parts in users/<id>/hoerstuecke/<id>/, at the end ffmpeg
 (no shell, -protocol_whitelist file,pipe) writes one Opus file (OPUS_KBIT kbit/s) with PAUSE_MS between voices and the
 parts go; every line keeps "ab", the second it starts (the panel and the app mark the line while it plays). TTS seconds
 count in verbrauch ("Hörstück").
@@ -130,11 +133,17 @@ MAX_S = 25 * 60          # seconds of one sound at most (20 minutes and the fram
 TG_MAX = 45 * 1024 * 1024   # bytes Telegram takes from the bot at most
 HOLD_S = 300             # after the speech output failed: the next try after this long
 LADEN_S = 30             # while VoiceDesign loads on demand: the same line comes again after this long
-LADEN_MAX_S = 300        # ... and after this long without it the standard voice stands in
+LADEN_MAX_S = 600        # ... and after this long without it the fixed voices stand in (the first load takes minutes)
+# why a Hörstück speaks with fixed voices instead of the descriptions (hs_stueck.ersatz, a fixed word; tonteile.NICHT):
+# "laedt" VoiceDesign did not come within LADEN_MAX_S, "speicher" it could not start for memory, "fehlt" stopped or in
+# error, "aus" VoiceDesign is switched off for a discussion
+ERSATZ = ("laedt", "speicher", "fehlt", "aus")
+ERSATZ_VON = {"loading": "laedt", "busy": "laedt", "blocked": "speicher"}
 READ_TIMEOUT = 240
 TON_FRIST = 150          # seconds one line may take
 TON_GRENZE = 16 * 1024 * 1024
 STIMMEN_S = 600          # seconds the speech output's list of voices stays remembered
+STIMMEN_FEHL_S = 30      # ... and when the speech output did not answer: asked again after this long
 BODY = 8 * 1024
 LIVE_EVERY = 60
 ID = re.compile(r"[0-9a-f]{12}")
@@ -145,7 +154,7 @@ CREATE TABLE IF NOT EXISTS hs_stueck (id TEXT PRIMARY KEY, mappe TEXT NOT NULL, 
     fertig_zeilen INTEGER DEFAULT 0, verworfen TEXT DEFAULT '{}', dauer_s INTEGER DEFAULT 0, datei TEXT DEFAULT '',
     sig TEXT DEFAULT '', made INTEGER DEFAULT 0, versuche INTEGER DEFAULT 0, fehler TEXT DEFAULT '',
     sprache TEXT DEFAULT 'de', sofort INTEGER DEFAULT 0, stil TEXT DEFAULT '', plan TEXT DEFAULT '',
-    probe INTEGER DEFAULT 0);
+    probe INTEGER DEFAULT 0, ersatz TEXT DEFAULT '', ersatz_ab INTEGER DEFAULT 0);
 """
 SPRACHEN = ("de", "en")   # the script's language: the one the person uses on the page or in the app (Push 5b)
 EINLEITUNG = "Ein Hörstück des Spark aus deiner Mappe „{name}“. Es kann Fehler enthalten; die Quellen stehen im Panel."
@@ -215,9 +224,13 @@ _day = DayCounter(neu=0, drehbuch=0, zeilen=0, verworfen=0, fertig=0, leer=0, ab
                   gespraech_weg=0, weise=0, rueck=0, rueck_kopie=0, hoerproben=0, hoerproben_weg=0,
                   # rund (hoerstueck_diskussion.paare, rundheit): sentences moved to another voice, open questions
                   # dropped, plans with versions of a text, the points of rundheit and the scripts measured
-                  repariert=0, frage_offen=0, fassungen=0, rund=0, rund_n=0)
+                  repariert=0, frage_offen=0, fassungen=0, rund=0, rund_n=0,
+                  # VoiceDesign (2026-11-12): lines that waited while it loaded, Hörstücke that went on with fixed
+                  # voices, the admin's „▶ Probe“ made, waiting while it loads, failed
+                  stimmen_laden=0, feste_stimmen=0, stimmproben=0, stimmproben_laedt=0, stimmproben_fehler=0)
 _live = {"at": 0.0, "data": None}
-_hold = {"tts": 0.0}     # until when nothing is sent to the speech output (it failed, or the Dienst-Wächter)
+_hold = {"tts": 0.0, "laedt": False}   # until when nothing is sent to the speech output (it failed, or the
+                                       # Dienst-Wächter); laedt: the hold is VoiceDesign loading (_warten "stimmen")
 _said = {}               # what was written to the journal once: "tts" -> until
 _tries = {}              # (uid, hid, line) -> failed tries of one line (memory only)
 _now = {}                # the Hörstück being worked on right now: {"uid", "id", "was"}
@@ -225,7 +238,7 @@ _sofort = {}             # the one forced Hörstück („Sofort erstellen"): {"u
 SOFORT_SCHRITTE = 2000   # steps of one forced run at most (speech may cancel a line often), then the quiet chain goes on
 SOFORT_WARTEN = 12       # waits of HOLD_S for a missing speech output at most, then the quiet chain goes on
 _laedt = {}              # (uid, id) -> since when this Hörstück waits for VoiceDesign to load (LADEN_MAX_S)
-_stimmen = {"t": 0.0, "design": False}   # whether the speech output makes voices from a description (STIMMEN_S)
+_stimmen = {"t": 0.0, "design": False, "ok": False}   # VoiceDesign switched on (STIMMEN_S); ok: the last ask answered
 
 
 def _chat():
@@ -298,7 +311,8 @@ class _Db(documents._Db):
             cols = {r[1] for r in con.execute("PRAGMA table_info(hs_stueck)")}
             for col, typ in (("sprache", "TEXT DEFAULT 'de'"), ("sofort", "INTEGER DEFAULT 0"),    # tables of 5a, 5b
                              ("stil", "TEXT DEFAULT ''"), ("plan", "TEXT DEFAULT ''"),          # and of before the discussion
-                             ("probe", "INTEGER DEFAULT 0")):
+                             ("probe", "INTEGER DEFAULT 0"), ("ersatz", "TEXT DEFAULT ''"),
+                             ("ersatz_ab", "INTEGER DEFAULT 0")):
                 if col not in cols:
                     con.execute(f"ALTER TABLE hs_stueck ADD COLUMN {col} {typ}")
         except BaseException:
@@ -523,27 +537,33 @@ async def ton(text, voice, klang, sprache="de", art=""):
 
 
 async def _design():
-    """Whether the speech output makes voices from a description (VoiceDesign), asked at most every STIMMEN_S."""
-    if time.time() - _stimmen["t"] >= STIMMEN_S:
+    """Whether VoiceDesign is switched on in the speech output (Einstellungen → Sprachausgabe, tts.voicedesign_enabled;
+    on demand it may still have to load), asked at most every STIMMEN_S. A line that could not get it never turns this
+    off (before, the settings then said "VoiceDesign ist aus" for 10 minutes and the Probe refused, 2026-11-12); an ask
+    without answer keeps the last word and asks again after STIMMEN_FEHL_S."""
+    if time.time() - _stimmen["t"] >= (STIMMEN_S if _stimmen["ok"] else STIMMEN_FEHL_S):
         try:
             import admin
             v = await admin.tts_voices()
-            _stimmen["design"] = v.get("voicedesign") is True
-        except Exception:   # noqa: BLE001  (no list: the standard voice without description)
-            _stimmen["design"] = False
+        except Exception:   # noqa: BLE001  (no answer: the last word stands)
+            v = {}
+        _stimmen["ok"] = "voicedesign" in v
+        if _stimmen["ok"]:
+            _stimmen["design"] = v["voicedesign"] is True
         _stimmen["t"] = time.time()
     return _stimmen["design"]
 
 
 async def stimme_von(sp, stil=""):
-    """(voice, klang) for one role: the admin's voice, else the standard voice with the role's description when
-    VoiceDesign runs (hoerstueck_stimmen.json: the standard one, for a discussion the admin's choice,
-    hoerstueck_diskussion.klang_von), else the standard voice."""
+    """(voice, klang) for one role. A discussion (stil): the role's description through VoiceDesign whenever it is on
+    (the admin's choice, hoerstueck_diskussion.klang_von), the admin's voice only stands in when VoiceDesign does not
+    come (tonteile.sprich takes klang before voice); without VoiceDesign the admin's voice or the standard voice. The
+    Hörstück of before: the admin's voice, else the standard description with VoiceDesign, else the standard voice."""
     import hoerstueck_diskussion as hd
     v = stimmen_wahl().get(sp, "")
-    if v:
+    if v and not stil:
         return v, ""
-    return "", hd.klang_von(sp, stil) if await _design() else ""
+    return v, hd.klang_von(sp, stil) if await _design() else ""
 
 
 def pcm_of(b):
@@ -646,18 +666,20 @@ def _kurz(r, sig_now):
             "geaendert": bool(r["sig"]) and sig_now is not None and r["sig"] != sig_now,
             "laeuft": _now.get("id") == r["id"], "sofort": bool(r["sofort"]), "erzwungen": _sofort.get("id") == r["id"],
             "warten": _warten(r), "stil": _stil(r), "probe": bool(r["probe"]),
+            "ersatz": r["ersatz"] if r["ersatz"] in ERSATZ else "", "ersatz_ab": r["ersatz_ab"] or 0,
             "kapitel": list(hd.fortschritt(r)) if _stil(r) and r["stand"] == "wartet" else [0, 0]}
 
 
 def _warten(r, now=None):
     """What a Hörstück being worked on (the forced run's or the quiet chain's step) waits for right now, a fixed word:
-    "sprachausgabe", "gespraech", "wartung", "andere" or "" (it works, or it is not being worked on)."""
+    "stimmen" (VoiceDesign loads), "sprachausgabe", "gespraech", "wartung", "andere" or "" (it works, or it is not
+    being worked on)."""
     if r["stand"] not in ("wartet", "sprechen") or r["id"] not in (_now.get("id"), _sofort.get("id")):
         return ""
     import vorrang
     now = time.time() if now is None else now
     if r["stand"] == "sprechen" and now < _hold["tts"]:
-        return "sprachausgabe"
+        return "stimmen" if _hold["laedt"] else "sprachausgabe"
     return vorrang.grund("Hörstück")
 
 
@@ -994,6 +1016,11 @@ async def zeile(uid, r, now, name=""):
         return "zeile"
     import hoerstueck_diskussion as hd
     voice, klang = await stimme_von(x.get("sprecher") if x.get("sprecher") in SPRECHER else "A", _stil(r))
+    if not r["ersatz"] and _stil(r) and not klang and _stimmen["ok"]:
+        # a discussion while VoiceDesign is switched off: fixed voices, and the script says so
+        await asyncio.to_thread(_ersatz, uid, r["id"], "aus", i, who)
+    if r["ersatz"] in ERSATZ:
+        klang = ""            # it went on with fixed voices once: the rest of this Hörstück keeps them (no change mid-way)
     art = hd.zusatz(x.get("weise")) if x.get("art") == "beitrag" else ""   # only the panel's fixed addition
     sprache = _sprache(r)
     key = (uid, r["id"], i)
@@ -1005,17 +1032,19 @@ async def zeile(uid, r, now, name=""):
         except RuntimeError as e:
             if not klang or not str(e).startswith("tts 503"):
                 raise
-            # VoiceDesign runs on demand (V01.1.374): this very request started it and got "loading". The line
-            # waits and comes again, each try keeps the engine loaded; before, the standard voice stood in for
-            # STIMMEN_S, the engine stopped unused after 5 minutes and no Hörstück ever got its designed voices.
-            if "loading" in str(e) and now - _laedt.setdefault((uid, r["id"]), now) < LADEN_MAX_S:
-                _hold["tts"] = now + LADEN_S
+            # VoiceDesign runs on demand (V01.1.374): this very request started it and got "loading" (or its place
+            # is taken, "busy"). The line waits LADEN_S and comes again, each try keeps the engine loaded, at most
+            # LADEN_MAX_S; then, or at once when it cannot start (memory, stopped, error), the fixed voices go on
+            # and the Hörstück says why (ERSATZ). The switch stays on (_design).
+            grund = ERSATZ_VON.get(str(e)[8:].split(" ")[0], "fehlt")
+            if grund == "laedt" and now - _laedt.setdefault((uid, r["id"]), now) < LADEN_MAX_S:
+                _hold.update(tts=now + LADEN_S, laedt=True)
+                _day.today()["stimmen_laden"] += 1
                 print(f"hoerstueck: stimmen laden | zeile {i + 1} | naechster versuch in {LADEN_S} s | {who}", flush=True)
                 live.bg_done("Hörstück", False, time.time() - t0, "Stimmen laden")
                 return "tts"
             _laedt.pop((uid, r["id"]), None)
-            _stimmen.update(design=False, t=time.time())   # VoiceDesign not up: the standard voice stands in
-            print(f"hoerstueck: stimmen fehlen | feste stimme | zeile {i + 1} | {who}", flush=True)
+            await asyncio.to_thread(_ersatz, uid, r["id"], grund, i, who)
             raw = await vorrang.run("Hörstück", lambda: ton(x["text"], voice, "", sprache, art), retries=0)
         else:
             _laedt.pop((uid, r["id"]), None)
@@ -1027,7 +1056,7 @@ async def zeile(uid, r, now, name=""):
         import httpx
         gone = isinstance(e, (httpx.TransportError, OSError)) or str(e).startswith("tts 5")
         if gone:             # a missing service never costs a line: it waits and the same line comes again
-            _hold["tts"] = now + HOLD_S
+            _hold.update(tts=now + HOLD_S, laedt=False)
             _day.today()["tts"] += 1
             print(f"hoerstueck: tts fehlt | {type(e).__name__} | naechster versuch in {HOLD_S} s", flush=True)
             live.bg_done("Hörstück", False, time.time() - t0, "Sprachausgabe fehlt")
@@ -1056,6 +1085,16 @@ async def zeile(uid, r, now, name=""):
     print(f"hoerstueck: zeile | {i + 1} von {len(z)} | {who}", flush=True)
     return "zeile"
 
+
+
+def _ersatz(uid, hid, grund, i, who):
+    """The Hörstück goes on with fixed voices from line i on (grund: a word of ERSATZ), once: stored for the script
+    (\"Feste Stimmen ab Zeile N\"), counted for Live and one journal line."""
+    with _Db(uid) as con:
+        n = con.execute("UPDATE hs_stueck SET ersatz=?, ersatz_ab=? WHERE id=? AND ersatz=''", (grund, i + 1, hid)).rowcount
+    if n:
+        _day.today()["feste_stimmen"] += 1
+        print(f"hoerstueck: stimmen fehlen | feste stimme | {grund} | zeile {i + 1} | {who}", flush=True)
 
 def _rueck_kopie(uid, hid, z, i):
     """A short reaction (art rueck) the same voice said before in this Hörstück with the same word: its part copied to
@@ -1106,7 +1145,7 @@ async def due_once(now=None):
                 _said["tts"] = now + HOLD_S
                 _day.today()["tts"] += 1
                 print(f"hoerstueck: tts fehlt | dienstwaechter | naechster versuch in {HOLD_S} s", flush=True)
-            _hold["tts"] = now + HOLD_S
+            _hold.update(tts=now + HOLD_S, laedt=False)
             continue
         await zeile(uid, r, now, name)
         return "hoerstueck"
@@ -1243,7 +1282,8 @@ async def sofort_lauf(uid, hid):
                 await drehbuch(uid, r, name, now)
                 continue
             if now < _hold["tts"] or dienstwacht.down("tts"):
-                warten += 1
+                # waiting while VoiceDesign loads is not counted: zeile bounds it (LADEN_MAX_S, then fixed voices)
+                warten += not (_hold["laedt"] and now < _hold["tts"])
                 if warten > SOFORT_WARTEN:
                     ende = "tts"
                     break
@@ -1338,7 +1378,8 @@ def for_live(now=None):
     "laeuft", "erzwungen", "wartet_auf", "erzwungen_heute", "erzwungen_nein", "diskussion", "plan", "plan_fest",
     "kapitel_geplant", "kapitel", "kapitel_neu", "beitraege", "beitrag_schnitt", "gespraech_weg", "weise", "rueck",
     "rueck_kopie", "hoerproben", "hoerproben_weg", "repariert", "frage_offen", "fassungen", "rund_n",
-    "rund_schnitt"}: sums over all profiles (remembered
+    "rund_schnitt", "stimmen_laden", "feste_stimmen", "stimmproben", "stimmproben_laedt", "stimmproben_fehler",
+    "laedt_stimmen"}: sums over all profiles (remembered
     LIVE_EVERY s) and today's counts; erzwungen is what the forced run does right now ("" or drehbuch, zeile, wartet),
     wartet_auf what the work on a Hörstück waits for (vorrang.grund: "" or gespraech, wartung, andere)."""
     now = time.time() if now is None else now
@@ -1366,12 +1407,14 @@ def for_live(now=None):
     import vorrang
     return dict(_live["data"], on=True, laeuft=_now.get("was") or "", erzwungen=_sofort.get("was") or "",
                 wartet_auf=vorrang.grund("Hörstück") if _sofort or _now else "",
+                laedt_stimmen=bool(_hold["laedt"] and now < _hold["tts"]),
                 erzwungen_heute=d["erzwungen"], diskussion=diskussion_on(),
                 beitrag_schnitt=d["beitrag_zeichen"] // d["beitraege"] if d["beitraege"] else 0,
                 rund_schnitt=round(d["rund"] / d["rund_n"]) if d["rund_n"] else 0, **{k: d[k] for k in (
                     "plan", "plan_fest", "kapitel_geplant", "kapitel", "kapitel_neu", "beitraege", "gespraech_weg",
                     "weise", "rueck", "rueck_kopie", "hoerproben", "hoerproben_weg", "repariert", "frage_offen",
-                    "fassungen", "rund_n",
+                    "fassungen", "rund_n", "stimmen_laden", "feste_stimmen", "stimmproben", "stimmproben_laedt",
+                    "stimmproben_fehler",
                     "neu", "drehbuch", "zeilen", "verworfen", "fertig", "leer", "abgebrochen", "fehler", "tts", "grenze",
                     "englisch", "m4a", "mitteilung", "telegram", "telegram_nein", "erzwungen_nein")})
 
@@ -1660,6 +1703,12 @@ async def delete_route(hid: str, request: Request, prof=Depends(own_profile)):
 PROBE_SATZ = {"de": "Hallo, so klinge ich im Hörstück. Was steht eigentlich in den Unterlagen?",
               "en": "Hello, this is how I sound in the audio overview. What do the documents actually say?"}
 PROBEN_MAX = 24          # samples kept in memory (role, description, language)
+PROBE_NOCHMAL_S = 10     # while VoiceDesign loads: the page asks again after this long (Retry-After)
+# what the page shows when a sample did not come (fixed sentences; "laedt" keeps the page asking)
+PROBE_SAGT = {"laedt": "VoiceDesign lädt …",
+              "speicher": "VoiceDesign kann gerade nicht starten: zu wenig freier Speicher auf dem Spark.",
+              "fehlt": "VoiceDesign startet nicht (gestoppt oder Fehler); in einigen Minuten neu versuchen.",
+              "": "Die Sprachausgabe ist gerade belegt oder fehlt; gleich noch einmal."}
 _proben = {}
 _probe_lock = {}
 
@@ -1678,11 +1727,12 @@ def _wav(raw):
 
 @router.get("/api/admin/hoerstueck/stimmen", dependencies=[Depends(auth)])
 async def stimmen_route(request: Request):
-    """The fixed descriptions per role (labels only), the admin's choice and whether VoiceDesign runs."""
+    """The fixed descriptions per role (labels only), the admin's choice, whether VoiceDesign is switched on and how
+    long „▶ Probe“ waits for it to load at most (LADEN_MAX_S, the same as a Hörstück's line)."""
     import hoerstueck_diskussion as hd
     guard.limit(request, "hoerstueck", admin=True)
     return {"rollen": {sp: [[de, en] for de, en, _ in hd.klaenge(sp)] for sp in SPRECHER}, "wahl": hd.klang_wahl(),
-            "design": await _design(), "namen": {k: list(v) for k, v in ROLLEN.items()}}
+            "design": await _design(), "namen": {k: list(v) for k, v in ROLLEN.items()}, "warten_s": LADEN_MAX_S}
 
 
 @router.get("/api/admin/hoerstueck/probe", dependencies=[Depends(auth)])
@@ -1708,12 +1758,21 @@ async def probe_route(request: Request, rolle: str = "A", klang: str = "0", spra
             try:
                 raw = await tonteile.sprich(PROBE_SATZ[sprache], klang=xs[int(klang)][2], frist=TON_FRIST,
                                             grenze=TON_GRENZE, sprache="English" if sprache == "en" else "German")
-            except Exception as e:   # noqa: BLE001  (busy or gone: said in words, never the error's text)
-                print(f"hoerstueck: probe | fehler | {type(e).__name__}", flush=True)
-                raise HTTPException(503, "Die Sprachausgabe ist gerade belegt oder fehlt; gleich noch einmal.")
+            except Exception as e:   # noqa: BLE001  (loading, busy or gone: said in words, never the error's text)
+                grund = ERSATZ_VON.get(str(e)[8:].split(" ")[0], "fehlt") if str(e).startswith("tts 503") else ""
+                if grund == "laedt":
+                    # VoiceDesign loads on demand (this very request started it): the page asks again after
+                    # Retry-After and shows „VoiceDesign lädt …“ meanwhile (hoerstueck.js PROBE_WARTEN_S)
+                    _day.today()["stimmproben_laedt"] += 1
+                    print("hoerstueck: probe | laedt | voicedesign", flush=True)
+                    raise HTTPException(503, PROBE_SAGT["laedt"], headers={"Retry-After": str(PROBE_NOCHMAL_S)})
+                _day.today()["stimmproben_fehler"] += 1
+                print(f"hoerstueck: probe | fehler | {grund or type(e).__name__}", flush=True)
+                raise HTTPException(503, PROBE_SAGT.get(grund, PROBE_SAGT[""]))
             while len(_proben) >= PROBEN_MAX:
                 _proben.pop(next(iter(_proben)))
             _proben[key] = _wav(raw)
+        _day.today()["stimmproben"] += 1
         print("hoerstueck: probe | neu", flush=True)
     else:
         print("hoerstueck: probe | behalten", flush=True)

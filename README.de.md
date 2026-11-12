@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.402** Hörstück-Stimmen: „▶ Probe“ wartet, bis VoiceDesign geladen ist, und eine Diskussion spricht mit den beschriebenen Rollenstimmen; kommt VoiceDesign nicht, sagt das Drehbuch warum
 - **V01.1.401** Steckbriefe für die Gruppe „Tempo und Genauigkeit“: ihre 18 Funktionen stehen je an einer Stelle
 - **V01.1.400** Ein Gesprächszug in sieben festen Stufen: wer fragt, Rechte und Sperren, wartendes Ja, Werkzeuge und Prompt haben je ihren Platz; für dich ändert sich nichts
 - **V01.1.399** Schwere Arbeit im zweiten Prozess: Dokumente entstehen neben dem Panel, Sprache und Seiten bleiben flott; der Dungeon erreicht Live über eine Tür
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.395** Arbeitsregeln: Baustopp für neue Funktionen, solange mehr als 10 Praxistest-Punkte „Jetzt wichtig“ sind; die Coding-Richtlinie wird nach Bedarf gelesen (kurzer Kopf plus die Teile des geänderten Bereichs)
 - **V01.1.394** Keine privaten Wörter ins Internet: nach Text von außen (Kalender, Web, Dokument) nimmt eine Suche, das Wetter oder eine Seite nur noch die eigenen Worte der Person oder Wörter, die eine Suche schon fand, im Chat wie bei Aufträgen
 - **V01.1.393** Einheitlicher Seitenkopf: Kalender, E-Mail, Listen und die anderen eigenen Seiten haben einen Titel, am Handy oben mit Zurück; die untere Leiste markiert, woher man kam
-- **V01.1.392** Praxistest in drei Stufen: „Jetzt wichtig“ (höchstens 10), „Bei Gelegenheit“, „Durch Selbsttest abgedeckt“; „Braucht dich“ zählt nur noch das Wichtige
 
 
 

@@ -21090,6 +21090,66 @@
           }
         }
       }
+    },
+    "wartet: VoiceDesign lädt (die Stimmen aus Beschreibung)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "waits: VoiceDesign is loading (the voices from a description)"
+          }
+        }
+      }
+    },
+    "VoiceDesign kam nicht rechtzeitig": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VoiceDesign did not come in time"
+          }
+        }
+      }
+    },
+    "VoiceDesign konnte nicht starten, zu wenig freier Speicher": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VoiceDesign could not start, not enough free memory"
+          }
+        }
+      }
+    },
+    "VoiceDesign war gestoppt oder im Fehler": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VoiceDesign was stopped or in error"
+          }
+        }
+      }
+    },
+    "VoiceDesign ist in der Sprachausgabe aus": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VoiceDesign is off in the speech output"
+          }
+        }
+      }
+    },
+    "Feste Stimmen ab Zeile %lld:": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fixed voices from line %lld:"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

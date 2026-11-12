@@ -357,7 +357,7 @@ class Flow(Base):
         self.assertEqual(c.get(f"/api/profile/hoerstueck/{hid}").json()["fertig_zeilen"], 1)
         self.assertTrue(v.calls[0][2])
         self.assertEqual(hoerstueck._laedt, {})
-        # it never comes up: after LADEN_MAX_S the standard voice stands in, the Hörstück goes on
+        # it never comes up: after LADEN_MAX_S the fixed voices stand in, the Hörstück goes on and says why
         spaet = NOW + 1000
         nie = Voice(fail=RuntimeError("tts 503 loading"))
         self.step(uid, voice=nie, now=spaet)
@@ -371,25 +371,99 @@ class Flow(Base):
                 return pcm()
 
         e = Erst()
-        self.step(uid, voice=e, now=spaet + hoerstueck.LADEN_MAX_S + 1)
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            with mock.patch.object(hoerstueck, "ask_model", Model()), mock.patch.object(hoerstueck, "ton", e), \
+                    mock.patch.object(wissen, "quiet", lambda: True), \
+                    mock.patch.object(hoerstueck.profiles, "user_ids", lambda: [uid]):
+                run(hoerstueck.due_once(spaet + hoerstueck.LADEN_MAX_S + 1))
         self.assertEqual([bool(x[2]) for x in e.calls], [True, False])
-        self.assertEqual(c.get(f"/api/profile/hoerstueck/{hid}").json()["fertig_zeilen"], 2)
-        self.assertFalse(hoerstueck._stimmen["design"])
-        # stopped for good or in error: the standard voice at once, as before
-        hoerstueck._stimmen.update(t=NOW * 2, design=True)
-
-        class Aus(Erst):
-            async def __call__(self, text, voice, klang, sprache="de", art=""):
-                self.calls.append((text, voice, klang))
-                if klang:
-                    raise RuntimeError("tts 503 error")
-                return pcm()
-
-        a = Aus()
-        self.step(uid, voice=a, now=spaet + 2 * hoerstueck.LADEN_MAX_S)
-        self.assertEqual([bool(x[2]) for x in a.calls], [True, False])
-        self.assertEqual(c.get(f"/api/profile/hoerstueck/{hid}").json()["fertig_zeilen"], 3)
+        got = c.get(f"/api/profile/hoerstueck/{hid}").json()
+        self.assertEqual((got["fertig_zeilen"], got["ersatz"], got["ersatz_ab"]), (2, "laedt", 2))
+        self.assertRegex(out.getvalue(), r"hoerstueck: stimmen fehlen \| feste stimme \| laedt \| zeile 2 \| Profil \w+\n")
+        # the switch stays on (before, the settings said "VoiceDesign ist aus" for 10 minutes, 2026-11-12) and the
+        # rest of this Hörstück keeps its fixed voices: never a change of voice in the middle
+        self.assertTrue(hoerstueck._stimmen["design"])
+        rest = Voice()
+        self.step(uid, voice=rest, now=spaet + hoerstueck.LADEN_MAX_S + 2)
+        self.assertEqual([x[2] for x in rest.calls], [""])
+        self.assertEqual(c.get(f"/api/profile/hoerstueck/{hid}").json()["ersatz_ab"], 2)   # the first word stays
         self.assertLess(hoerstueck.LADEN_S, 60)        # each try comes well before the engine unloads (1 min at least)
+
+    def test_voicedesign_that_cannot_start_gives_fixed_voices_at_once_with_the_reason(self):
+        """Dominik 2026-11-12 „Hörspiele sind nur mit internen fertigen Stimmen“: VoiceDesign blocked for memory,
+        stopped or in error: the fixed voices at once (no wait), the reason in the script; a busy place waits like
+        loading; VoiceDesign switched off for a discussion is said too."""
+        hoerstueck._laedt.clear()
+        self.addCleanup(hoerstueck._laedt.clear)
+        self.addCleanup(hoerstueck._stimmen.update, ok=False)
+        for i, (fehler, grund) in enumerate((("tts 503 blocked", "speicher"), ("tts 503 error", "fehlt"),
+                                             ("tts 503 stopped", "fehlt"), ("tts 503", "fehlt"))):
+            hoerstueck._stimmen.update(t=NOW * 2, design=True, ok=True)
+            c, uid = self.fresh(f"Hoerstueckersatz{i}")
+            mid, _, _ = self.mappe(uid)
+            hid = self.make(c, mid)
+            self.step(uid)
+
+            class Kaputt(Voice):
+                async def __call__(self, text, voice, klang, sprache="de", art=""):
+                    self.calls.append((text, voice, klang))
+                    if klang:
+                        raise RuntimeError(fehler)
+                    return pcm()
+
+            k = Kaputt()
+            self.step(uid, voice=k)
+            self.assertEqual([bool(x[2]) for x in k.calls], [True, False], fehler)
+            got = c.get(f"/api/profile/hoerstueck/{hid}").json()
+            self.assertEqual((got["fertig_zeilen"], got["ersatz"], got["ersatz_ab"]), (1, grund, 1), fehler)
+            self.assertTrue(hoerstueck._stimmen["design"])
+        # busy: waits like loading, no fixed voice
+        c, uid = self.fresh("Hoerstueckbelegt")
+        mid, _, _ = self.mappe(uid)
+        hid = self.make(c, mid)
+        self.step(uid)
+        self.step(uid, voice=Voice(fail=RuntimeError("tts 503 busy")))
+        self.addCleanup(hoerstueck._hold.update, tts=0.0, laedt=False)
+        got = c.get(f"/api/profile/hoerstueck/{hid}").json()
+        self.assertEqual((got["fertig_zeilen"], got["ersatz"]), (0, ""))
+        self.assertTrue(hoerstueck._hold["laedt"])
+        # what it waits for, on the page, in the app and in Live: "stimmen" (VoiceDesign loads)
+        self.addCleanup(hoerstueck._now.clear)
+        hoerstueck._now.update(uid=uid, id=hid, was="zeile")
+        self.assertEqual(hoerstueck._warten({"stand": "sprechen", "id": hid}, NOW + 1), "stimmen")
+        self.assertTrue(hoerstueck.for_live(NOW + 1)["laedt_stimmen"])
+        hoerstueck._hold.update(laedt=False)
+        self.assertEqual(hoerstueck._warten({"stand": "sprechen", "id": hid}, NOW + 1), "sprachausgabe")
+
+    def test_a_discussion_speaks_with_the_descriptions_even_with_the_admins_voices(self):
+        """Dominik 2026-11-12: with VoiceDesign on, a discussion speaks with the roles' descriptions; the admin's
+        voices only stand in. The Hörstück of before keeps the admin's voice first."""
+        import hoerstueck_diskussion as hd
+        helpers.set_config(hoerstueck_stimmen=["ryan", "-", "vivian"])
+        hoerstueck._stimmen.update(t=NOW * 2, design=True)
+        self.assertEqual(run(hoerstueck.stimme_von("A", "diskussion")), ("ryan", hd.klang_von("A", "diskussion")))
+        self.assertEqual(run(hoerstueck.stimme_von("B", "diskussion")), ("", hd.klang_von("B", "diskussion")))
+        self.assertEqual(run(hoerstueck.stimme_von("A")), ("ryan", ""))
+        hoerstueck._stimmen.update(t=NOW * 2, design=False)
+        self.assertEqual(run(hoerstueck.stimme_von("A", "diskussion")), ("ryan", ""))
+        self.assertEqual(run(hoerstueck.stimme_von("B", "diskussion")), ("", ""))
+
+    def test_the_switch_is_asked_again_soon_when_the_speech_output_did_not_answer(self):
+        """A failed ask keeps the last word (never "off" for STIMMEN_S) and comes again after STIMMEN_FEHL_S."""
+        import admin
+        self.addCleanup(hoerstueck._stimmen.update, t=NOW * 2, design=False, ok=False)
+        hoerstueck._stimmen.update(t=0.0, design=True, ok=True)
+        answers = [{"model_kind": None, "voices": [], "languages": []}, {"voicedesign": False, "voices": ["ryan"]}]
+        with mock.patch.object(admin, "tts_voices", mock.AsyncMock(side_effect=answers)) as tv:
+            self.assertTrue(run(hoerstueck._design()))           # no answer: the last word stands
+            self.assertFalse(hoerstueck._stimmen["ok"])
+            hoerstueck._stimmen["t"] -= hoerstueck.STIMMEN_FEHL_S + 1
+            self.assertFalse(run(hoerstueck._design()))          # a real answer: off
+            self.assertTrue(hoerstueck._stimmen["ok"])
+            self.assertFalse(run(hoerstueck._design()))          # remembered STIMMEN_S
+        self.assertEqual(tv.await_count, 2)
+        self.assertLess(hoerstueck.STIMMEN_FEHL_S, hoerstueck.STIMMEN_S)
 
     def test_voices_of_the_admin_and_the_standard(self):
         c, uid = self.fresh("Hoerstueckstimmen")

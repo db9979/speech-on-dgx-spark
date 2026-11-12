@@ -2063,6 +2063,14 @@ def snapshot(view="admin", now=None):
                             "wartet": " · erzwungen: wartet"}.get(hsn.get("erzwungen"), ""))
                         + ({"gespraech": " · wartet auf: Gespräch", "wartung": " · wartet auf: Wartung des Sprachmodells",
                             "andere": " · wartet auf: andere Hintergrundarbeit"}.get(hsn.get("wartet_auf"), ""))
+                        # VoiceDesign on demand (2026-11-12): a line waits while it loads, fixed voices stood in, the
+                        # admin's „▶ Probe“ (made, asked while loading, failed)
+                        + (" · wartet auf: VoiceDesign lädt" if hsn.get("laedt_stimmen") else "")
+                        + (f" · heute {hsn['stimmen_laden']}× auf VoiceDesign gewartet" if hsn.get("stimmen_laden") else "")
+                        + (f" · {hsn['feste_stimmen']} Hörstücke mit festen Stimmen statt VoiceDesign" if hsn.get("feste_stimmen") else "")
+                        + (f" · Stimmproben: {hsn.get('stimmproben', 0)} neu, {hsn.get('stimmproben_laedt', 0)}× lädt,"
+                           f" {hsn.get('stimmproben_fehler', 0)} Fehler"
+                           if hsn.get("stimmproben") or hsn.get("stimmproben_laedt") or hsn.get("stimmproben_fehler") else "")
                         + ((f" · Diskussion: heute {hsn.get('kapitel_geplant', 0)} Kapitel geplant"
                             + (f" ({hsn['plan_fest']}× Plan des Panels)" if hsn.get("plan_fest") else "")
                             + f", {hsn.get('kapitel', 0)} geschrieben, {hsn.get('kapitel_neu', 0)} neu geschrieben (flach),"

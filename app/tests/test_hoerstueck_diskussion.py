@@ -540,6 +540,87 @@ class Voices(Base):
         self.assertNotIn(hd.klaenge("A")[1][2], json.dumps(got))         # labels only, never the descriptions
         hoerstueck._stimmen.update(t=NOW * 2, design=False)
 
+    def test_the_admins_sample_waits_while_voicedesign_loads_on_demand(self):
+        """Dominik 2026-11-12 „Proben gehen nicht“: VoiceDesign loads on demand, the first ask got 503 "loading" and
+        the page said „belegt oder fehlt“. Against a stand-in of the speech output that answers "loading" twice and
+        then the sound: 503 with Retry-After and „VoiceDesign lädt …“ (the page asks again), then the WAV. Blocked
+        for memory or stopped: a sentence that says so, without Retry-After."""
+        import guard
+        import httpx
+        import tonteile
+        for k in [k for k in guard._rate if k[0] == "hoerstueckprobe"]:   # the admin's minute of samples is its own
+            guard._rate.pop(k, None)
+        hoerstueck._proben.clear()
+        self.addCleanup(hoerstueck._proben.clear)
+        hoerstueck._stimmen.update(t=NOW * 2, design=True)
+        self.addCleanup(hoerstueck._stimmen.update, t=NOW * 2, design=False)
+        seen, antworten = [], [(503, b'{"detail":"TTS engine loading: VoiceDesign starts on demand"}')] * 2
+
+        def handle(request):
+            seen.append(json.loads(request.content))
+            code, body = antworten.pop(0) if antworten else (200, b"\x01\x00" * 2400)
+            return httpx.Response(code, content=body)
+        real = httpx.AsyncClient
+        with mock.patch.object(httpx, "AsyncClient", lambda *a, **kw: real(*a, transport=httpx.MockTransport(handle), **kw)), \
+                th.quiet():
+            r1 = th.ADMIN.get("/api/admin/hoerstueck/probe?rolle=C&klang=1")
+            r2 = th.ADMIN.get("/api/admin/hoerstueck/probe?rolle=C&klang=1")
+            r3 = th.ADMIN.get("/api/admin/hoerstueck/probe?rolle=C&klang=1")
+        for r in (r1, r2):
+            self.assertEqual((r.status_code, r.json()["detail"], r.headers.get("retry-after")),
+                             (503, "VoiceDesign lädt …", str(hoerstueck.PROBE_NOCHMAL_S)))
+        self.assertEqual((r3.status_code, r3.headers["content-type"], r3.content[:4]), (200, "audio/wav", b"RIFF"))
+        self.assertEqual([b["task_type"] for b in seen], ["VoiceDesign"] * 3)
+        self.assertTrue(all(b["instructions"] == hd.klaenge("C")[1][2] for b in seen))
+        self.assertEqual(th.ADMIN.get("/api/admin/hoerstueck/stimmen").json()["warten_s"], hoerstueck.LADEN_MAX_S)
+        for fehler, satz in (("tts 503 blocked", hoerstueck.PROBE_SAGT["speicher"]),
+                             ("tts 503 stopped", hoerstueck.PROBE_SAGT["fehlt"]),
+                             ("tts 503 error", hoerstueck.PROBE_SAGT["fehlt"]), ("tts", hoerstueck.PROBE_SAGT[""])):
+            with mock.patch.object(tonteile, "sprich", mock.AsyncMock(side_effect=RuntimeError(fehler))), th.quiet():
+                r = th.ADMIN.get("/api/admin/hoerstueck/probe?rolle=A&klang=3")
+            self.assertEqual((r.status_code, r.json()["detail"], r.headers.get("retry-after")), (503, satz, None), fehler)
+        # the page: asks again after Retry-After with „VoiceDesign lädt … N s“ up to warten_s, then says so
+        js = helpers.repo_file("app", "panel", "static", "js", "hoerstueck.js")
+        self.assertIn("r.headers.get('Retry-After')", js)
+        self.assertIn("VoiceDesign lädt … ${sek} s", js)
+        self.assertIn("D.warten_s", js)
+
+    def test_the_proxy_starts_voicedesign_again_after_an_old_failure(self):
+        """tts_proxy.design_bereit: a "blocked" (memory) or "error" left from an earlier start while the unit is not
+        running starts it again on demand (once per DESIGN_START_S); before, VoiceDesign never came back."""
+        import tts_proxy
+        starts = []
+        self.addCleanup(tts_proxy.design.update, dict(tts_proxy.design))
+        with mock.patch.object(tts_proxy, "_systemctl", lambda a, u: starts.append((a, u)) or 0), \
+                mock.patch.object(tts_proxy, "design_bedarf", lambda: 5), th.quiet():
+            for status, aktiv, raus in (("blocked", "failed", "loading"), ("error", "inactive", "loading"),
+                                        ("error", "activating", "error"), ("loading", "activating", "loading"),
+                                        ("ready", "active", "ready"), ("stopped", "inactive", "loading")):
+                tts_proxy.design.update(used=0.0, start=0.0)
+                with mock.patch.object(tts_proxy, "unit_active", lambda u, a=aktiv: a):
+                    self.assertEqual(th.run(tts_proxy.design_bereit(status)), raus, (status, aktiv))
+            tts_proxy.design.update(start=0.0)
+            with mock.patch.object(tts_proxy, "unit_active", lambda u: "failed"):
+                self.assertEqual(th.run(tts_proxy.design_bereit("blocked")), "loading")
+                self.assertEqual(th.run(tts_proxy.design_bereit("blocked")), "blocked")   # not again within DESIGN_START_S
+        self.assertEqual(starts, [("start", "speech-spark-tts-design")] * 4)
+
+    def test_a_discussion_with_voicedesign_off_says_so_in_the_script(self):
+        """VoiceDesign switched off (a real answer of the speech output) while a discussion is spoken: fixed voices,
+        and the script says why (ersatz "aus")."""
+        c, uid = self.fresh("Hsdiskvdaus")
+        mid, _, _ = self.mappe(uid)
+        self.addCleanup(hoerstueck._stimmen.update, t=NOW * 2, design=False, ok=False)
+        hid = self.make(c, mid)
+        p, k = Plan(), Kapitel()
+        self.until_script(uid, p, k)
+        hoerstueck._stimmen.update(t=NOW * 2, design=False, ok=True)
+        v = th.Voice()
+        self.disk(uid, p, k, voice=v)
+        self.assertEqual(v.calls[0][2], "")
+        got = c.get(f"/api/profile/hoerstueck/{hid}").json()
+        self.assertEqual((got["ersatz"], got["ersatz_ab"], got["stil"]), ("aus", 1, "diskussion"))
+
 
 class Sound(Base):
     def test_pauses_by_fixed_rules(self):

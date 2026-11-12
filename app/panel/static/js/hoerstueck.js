@@ -38,7 +38,12 @@ const hsAva=(sp,R)=>`<span class="ld-ava" title="${esc(R&&R[sp]?t(R[sp][0],R[sp]
 // what the work on it waits for right now (hoerstueck._warten, fixed words of the server) and why a broken one broke
 const HS_WARTEN={gespraech:['wartet: jemand spricht (echte Sprache geht vor)','waits: somebody speaks (real speech goes first)'],
   wartung:['wartet: Wartung des Sprachmodells','waits: language model maintenance'],andere:['wartet: andere Hintergrundarbeit läuft','waits: other background work runs'],
-  sprachausgabe:['wartet: Sprachausgabe fehlt','waits: speech output missing']};
+  sprachausgabe:['wartet: Sprachausgabe fehlt','waits: speech output missing'],stimmen:['wartet: VoiceDesign lädt (die Stimmen aus Beschreibung)','waits: VoiceDesign is loading (the voices from a description)']};
+// why it speaks with fixed voices instead of the descriptions from a line on (hoerstueck.ERSATZ, fixed words)
+const HS_ERSATZ={laedt:['VoiceDesign kam nicht rechtzeitig','VoiceDesign did not come in time'],
+  speicher:['VoiceDesign konnte nicht starten, zu wenig freier Speicher','VoiceDesign could not start, not enough free memory'],
+  fehlt:['VoiceDesign war gestoppt oder im Fehler','VoiceDesign was stopped or in error'],
+  aus:['VoiceDesign ist in der Sprachausgabe aus','VoiceDesign is off in the speech output']};
 const HS_FEHLER={modell:['das Sprachmodell lieferte kein brauchbares Drehbuch','the language model gave no usable script'],
   ffmpeg:['Zusammensetzen ging nicht','putting it together failed'],mappe:['die Mappe ist weg','the collection is gone'],
   'kein text':['kein Text in der Mappe','no text in the collection'],'zu wenig':['zu wenig geprüfte Zeilen','too few checked lines']};
@@ -93,6 +98,7 @@ function hsCard(){const o=HS.one;if(!o||o.id!==HS.sel)return'';const R=o.rollen;
     (o.ton&&!o.telegram&&typeof TG_ON!=='undefined'&&TG_ON?`<p class="mut ld-note">${esc(t('„An Telegram“ geht, sobald Telegram verknüpft ist und Persönliches dort erlaubt ist: Ich → Telegram','"To Telegram" works once Telegram is linked and personal data is allowed there: Me → Telegram'))}</p>`:'')+
     (o.drehbuch.length?`<details class="hsscript"${HS.script?' open':''}><summary>${esc(t(`Drehbuch · ${o.drehbuch.length} Zeilen`,`Script · ${o.drehbuch.length} lines`)+(o.stand==='sprechen'?t(` · ${o.fertig_zeilen} gesprochen`,` · ${o.fertig_zeilen} spoken`):'')+(o.rund?t(` · rund ${o.rund.wert}/${o.rund.von}`,` · round ${o.rund.wert}/${o.rund.von}`):''))}</summary>`+
       (o.rund&&o.rund.fehlt&&o.rund.fehlt.length?`<p class="mut ld-note">${esc(t('Verfehlt: ','Missed: ')+o.rund.fehlt.map(k=>t(...(HS_RUND[k]||[k,k]))).join(', '))}</p>`:'')+
+      (HS_ERSATZ[o.ersatz]?`<p class="mut ld-note">${esc(t(`Feste Stimmen ab Zeile ${o.ersatz_ab}: `,`Fixed voices from line ${o.ersatz_ab}: `)+t(...HS_ERSATZ[o.ersatz]))}</p>`:'')+
       (roles?`<div class="hsroles">${roles}</div>`:'')+o.drehbuch.map((x,i)=>hsLine(x,R,i,o.drehbuch[i-1])).join('')+
       (weg.length?`<p class="mut ld-note">${esc(t('Verworfen: ','Dropped: ')+weg.join(', '))}</p>`:'')+
       (um.length?`<p class="mut ld-note">${esc(t('Umgestellt: ','Moved: ')+um.join(', '))}</p>`:'')+`</details>`:'')+`</div>`}
@@ -173,7 +179,7 @@ window.hsVoicesAdmin=hsVoicesAdmin;
 // Admin (… → Hörstück aus einer Mappe → Hörstück als Diskussion): a fixed description per role (hoerstueck_stimmen.json,
 // labels only) fills the hidden list field chat.hoerstueck_klang; „▶ Probe“ plays a fixed sentence in it (VoiceDesign;
 // while it is off the hint names its way and the button stays off). Saved with the other settings.
-const HSK={el:null,url:''};
+const HSK={el:null,url:'',lauf:0};
 async function hsKlangAdmin(){const box=$('hsklang'),el=$('chat.hoerstueck_klang');if(!box||!el||document.body.classList.contains('mgr'))return;
   let D=null;try{const r=await api('/api/admin/hoerstueck/stimmen');if(r.ok)D=await r.json()}catch{}
   if(!D||!D.rollen){box.textContent='';return}
@@ -184,8 +190,21 @@ async function hsKlangAdmin(){const box=$('hsklang'),el=$('chat.hoerstueck_klang
   paint();
   box.onchange=e=>{const s=e.target.closest('[data-hsklang]');if(!s)return;const cur=el.value.split(/[\s,;]+/).filter(Boolean);
     while(cur.length<3)cur.push('0');cur[+s.dataset.hsklang]=s.value||'0';el.value=cur.join(', ');el.dispatchEvent(new Event('input',{bubbles:true}))};
+  // „▶ Probe“: VoiceDesign loads on demand (hoerstueck.probe_route answers 503 with Retry-After while it loads); the
+  // page asks again and shows „VoiceDesign lädt … N s“ until it comes, at most D.warten_s (hoerstueck.LADEN_MAX_S)
   box.onclick=async e=>{const b=e.target.closest('[data-hsprobe]');if(!b)return;const sp=b.dataset.hsprobe,s=box.querySelector(`[data-hsklang="${'ABC'.indexOf(sp)}"]`);
-    b.disabled=true;try{const r=await api(`/api/admin/hoerstueck/probe?rolle=${sp}&klang=${encodeURIComponent(s?s.value:'0')}&sprache=${L==='en'?'en':'de'}`);
-      if(r.ok){if(HSK.el)HSK.el.pause();if(HSK.url)URL.revokeObjectURL(HSK.url);HSK.url=URL.createObjectURL(await r.blob());HSK.el=new Audio(HSK.url);await HSK.el.play()}
-      else{const d=await r.json().catch(()=>({}));let m=box.querySelector('.hsprobemsg');if(!m){m=document.createElement('p');m.className='mut ld-note hsprobemsg';m.setAttribute('role','status');box.append(m)}m.textContent=errSay(r.status,d.detail,'')}}catch{}b.disabled=false};
+    const say=x=>{let m=box.querySelector('.hsprobemsg');if(!m){m=document.createElement('p');m.className='mut ld-note hsprobemsg';m.setAttribute('role','status');box.append(m)}m.textContent=x};
+    const lauf=++HSK.lauf,t0=Date.now(),maxS=+D.warten_s||60;b.disabled=true;
+    try{for(;;){const r=await api(`/api/admin/hoerstueck/probe?rolle=${sp}&klang=${encodeURIComponent(s?s.value:'0')}&sprache=${L==='en'?'en':'de'}`);
+      if(lauf!==HSK.lauf)break;
+      if(r.ok){say('');if(HSK.el)HSK.el.pause();if(HSK.url)URL.revokeObjectURL(HSK.url);HSK.url=URL.createObjectURL(await r.blob());HSK.el=new Audio(HSK.url);
+        // after a long wait the browser may refuse to start sound by itself: then the player to tap
+        await HSK.el.play().catch(()=>{HSK.el.controls=true;say(t('Probe fertig, zum Anhören ▶ tippen:','Sample ready, tap ▶ to listen:'));box.querySelector('.hsprobemsg').append(HSK.el)});break}
+      const d=await r.json().catch(()=>({})),nochmal=+(r.headers.get('Retry-After')||0),sek=Math.round((Date.now()-t0)/1000);
+      if(r.status===503&&nochmal>0){
+        if(sek+nochmal>maxS){say(t(`VoiceDesign kam in ${Math.round(maxS/60)} Minuten nicht. Bitte später noch einmal.`,`VoiceDesign did not come within ${Math.round(maxS/60)} minutes. Please try again later.`));break}
+        say(t(`VoiceDesign lädt … ${sek} s (lädt bei Bedarf, beim ersten Mal einige Minuten; die Probe kommt von selbst)`,`VoiceDesign is loading … ${sek} s (loads on demand, the first time takes a few minutes; the sample comes by itself)`));
+        await new Promise(z=>setTimeout(z,Math.min(60,nochmal)*1000));if(lauf!==HSK.lauf)break;continue}
+      say(errSay(r.status,d.detail,''));break}}catch{say(t('Die Probe ging nicht; gleich noch einmal.','The sample did not work; try again in a moment.'))}
+    b.disabled=false};
   el.addEventListener('change',paint)}

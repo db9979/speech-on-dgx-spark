@@ -35,7 +35,7 @@ struct HsStueck: Identifiable, Hashable {
         geaendert = d["geaendert"] as? Bool ?? false
         erzwungen = d["erzwungen"] as? Bool ?? false
         let w = d["warten"] as? String ?? ""        // the server's fixed word of what the work waits for
-        warten = ["gespraech", "wartung", "andere", "sprachausgabe"].contains(w) ? w : ""
+        warten = ["gespraech", "wartung", "andere", "sprachausgabe", "stimmen"].contains(w) ? w : ""
         let f = d["fehler"] as? String ?? ""        // the server's fixed word of why a broken one broke
         fehler = ["modell", "ffmpeg", "mappe", "kein text", "zu wenig"].contains(f) ? f : ""
         probe = d["probe"] as? Bool ?? false
@@ -49,6 +49,7 @@ struct HsStueck: Identifiable, Hashable {
         case "wartung": return String(localized: "wartet: Wartung des Sprachmodells")
         case "andere": return String(localized: "wartet: andere Hintergrundarbeit läuft")
         case "sprachausgabe": return String(localized: "wartet: Sprachausgabe fehlt")
+        case "stimmen": return String(localized: "wartet: VoiceDesign lädt (die Stimmen aus Beschreibung)")
         default: return ""
         }
     }
@@ -182,6 +183,9 @@ struct HsDetail {
     /// how round the discussion is (hoerstueck_diskussion.rundheit): points of 10 and the points missed, fixed words
     let rund: Int?
     let rundFehlt: [String]
+    /// why it speaks with fixed voices instead of the descriptions from a line on (hoerstueck.ERSATZ, fixed words)
+    let ersatz: String
+    let ersatzAb: Int
 
     static let rundPunkte = ["fragen", "selbst", "offen", "gruss", "doppelt", "liste", "rueck"]
 
@@ -211,6 +215,9 @@ struct HsDetail {
         let ru = d["rund"] as? [String: Any]
         rund = (ru?["wert"] as? NSNumber).map { min(10, max(0, $0.intValue)) }
         rundFehlt = (ru?["fehlt"] as? [String] ?? []).filter { HsDetail.rundPunkte.contains($0) }
+        let e = d["ersatz"] as? String ?? ""
+        ersatz = ["laedt", "speicher", "fehlt", "aus"].contains(e) ? e : ""
+        ersatzAb = (d["ersatz_ab"] as? NSNumber)?.intValue ?? 0
     }
 
     /// „rund 8 von 10 · verfehlt: …“ under the script (only the server's fixed words)
@@ -228,6 +235,19 @@ struct HsDetail {
             }
         }
         return String(localized: "Rund \(rund) von 10") + (fehlt.isEmpty ? "" : " · " + String(localized: "Verfehlt:") + " " + fehlt.joined(separator: ", "))
+    }
+
+    /// „Feste Stimmen ab Zeile N: …“ above the script (only the server's fixed words)
+    var ersatzText: String? {
+        let grund: String
+        switch ersatz {
+        case "laedt": grund = String(localized: "VoiceDesign kam nicht rechtzeitig")
+        case "speicher": grund = String(localized: "VoiceDesign konnte nicht starten, zu wenig freier Speicher")
+        case "fehlt": grund = String(localized: "VoiceDesign war gestoppt oder im Fehler")
+        case "aus": grund = String(localized: "VoiceDesign ist in der Sprachausgabe aus")
+        default: return nil
+        }
+        return String(localized: "Feste Stimmen ab Zeile \(ersatzAb):") + " " + grund
     }
 
     /// the line being heard at this time: the last one whose start lies behind it
@@ -487,6 +507,9 @@ struct HoerstueckDetailView: View {
                         Button("Löschen", role: .destructive) { askDelete = true }
                     }
                     Section("Drehbuch") {
+                        if let e = d.ersatzText {
+                            Text(verbatim: e).font(.caption).foregroundStyle(Theme.muted)
+                        }
                         if let r = d.rundText {
                             Text(verbatim: r).font(.caption).foregroundStyle(Theme.muted)
                         }

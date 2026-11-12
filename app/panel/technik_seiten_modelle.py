@@ -205,7 +205,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Sprachausgabe
     "tts": {
-        "stand": "c580008bdb",
+        "stand": "c4ba6f71a8",
         "bezug": {
             "textnorm.NUMBER_MODES": ["s7"], "tts_proxy.speech": ["s1"], "tts_proxy.check_reference": ["s8"],
             "tts_proxy.engine_status": ["s4"], "tts_proxy.apply_clone": ["s8"], "textnorm.speech_markdown": ["s5"],
@@ -267,13 +267,16 @@ SEITEN = {
                "eigene_rolle), läuft die nicht, spricht die Standardstimme der Haupt-Engine; alles andere an die "
                "Haupt-Engine. engine_status fragt deren /health und nennt sonst den Grund. VoiceDesign lädt nur bei "
                "Bedarf (tts.voicedesign_leerlauf_min): design_bereit startet die gestoppte Einheit einmal und "
-               "antwortet „loading“ mit Retry-After, design_leerlauf stoppt sie nach den Minuten ohne Anfrage.",
+               "antwortet „loading“ mit Retry-After (auch nach einem früheren „blocked“ oder „error“, wenn die "
+               "Einheit nicht läuft, höchstens alle DESIGN_START_S), design_leerlauf stoppt sie nach den Minuten "
+               "ohne Anfrage.",
                "A VoiceDesign request goes to the second engine when it is on; a designed voice (sd-…, eigen-…, "
                "Design own voices) to the engine \"Own voices\" (Base, eigene_rolle), and when that one is not "
                "running the main engine's standard voice speaks; everything else to the main engine. engine_status "
                "asks its /health and otherwise names the reason. VoiceDesign loads only when needed "
                "(tts.voicedesign_leerlauf_min): design_bereit starts the stopped unit once and answers \"loading\" "
-               "with Retry-After, design_leerlauf stops it after the minutes without a request."),
+               "with Retry-After (also after an earlier \"blocked\" or \"error\" while the unit is not running, at "
+               "most every DESIGN_START_S), design_leerlauf stops it after the minutes without a request."),
               ("stop", "nein", ("Nicht bereit (503)", "Not ready (503)"))),
             S("s5", "schritt", ("Markdown weg, Geheimnisse verdeckt", "Markdown off, secrets hidden"),
               ("immer, ohne Schalter", "always, no switch"),
