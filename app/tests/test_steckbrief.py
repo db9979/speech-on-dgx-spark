@@ -4,7 +4,7 @@
   Spickzettel, technik, Begleiter);
 - no old table names a part of it again (rule 12: one source);
 - a new function comes with a Steckbrief: OHNE_ALT, the functions without one, only shrinks (V01.1.397: all but
-  „Rechnen“; V01.1.401: the group „Tempo und Genauigkeit“ moved in).
+  „Rechnen“; V01.1.401: the group „Tempo und Genauigkeit“; V01.1.403: every function without a tool of its own).
 
 Reads only app/, so it runs in the app/-only copy too. No wall clock dependence.
 """
@@ -26,45 +26,15 @@ import werkzeug_abdeckung  # noqa: E402
 import werkzeuge  # noqa: E402
 
 PANEL = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "panel")
-OHNE_ALT = ('ablauf', 'agent', 'android', 'androidassist', 'androidlive', 'androidlock', 'androidupdate',
-            'angriffsprobe', 'anhalten', 'anrufassistent', 'anrufe', 'anrufeturn', 'appmerken', 'auftragsplan',
-            'auswertungen', 'begleiter', 'begleiterbedienen', 'begleitermeeting', 'begleiterschirm', 'begleitertun',
-            'beobachten', 'berater', 'beraterana', 'beraterauto', 'beraterchat', 'beratererklaeren',
-            'beraterhinweis', 'beraterideen', 'beraterissue', 'beratermich', 'berateru', 'beraterundo',
-            'beraterwarum', 'bewerten', 'bewertenzurueck', 'bildaendern', 'bilder', 'calendar', 'calserver',
-            'calshare', 'chatgroups', 'chatinvite', 'chatmedia', 'chatprivate', 'chats', 'contacts', 'dienstnutzer',
-            'dienstwacht', 'docaudio', 'docbrief', 'docfiles', 'docling', 'doclink', 'docmeaning', 'docnight',
-            'docpics', 'docshared', 'documents', 'docyoutube', 'dungeon', 'dungeonbilder', 'dungeonbuecher',
-            'dungeongast', 'dungeongeschichten', 'dungeonpruefstand', 'dungeonpruefung', 'eingespraech',
-            'einladungen', 'entwickeln', 'entwickelnauftrag', 'entwickelngithub', 'entwickelnterminal', 'erstellen',
-            'erstellenbilder', 'erstellenvorlagen', 'esp32', 'espstopp', 'feeds', 'feedsmelden', 'fernals',
-            'fernbild', 'fernbildablage', 'ferngross', 'fernnotizen', 'fernordner', 'fernsshtermy', 'fernweb',
-            'fernzugang', 'fernzugangalle', 'fernzuganghilfe', 'fernzugangmeldung', 'fixes', 'follow', 'fuerdich',
-            'fund', 'fundchats', 'fundkontakte', 'fundlisten', 'fundmail', 'fundmedien', 'fundschlagworte',
-            'fundtermine', 'gedfragen', 'gedhinweis', 'gedpruefen', 'gedthemen', 'gehaeuse', 'geraetenacht',
-            'geraeteupdate', 'ha', 'hacam', 'haevent', 'halive', 'haloud', 'havoice', 'hilfe', 'hilfeseite',
-            'hilfevorschlag', 'history', 'hoerstueck', 'hoerstueckdisk', 'ichweiss', 'images', 'iphone',
-            'iphonepanel', 'iphonepruef', 'iphonepush', 'iphoneupdate', 'kartensuche', 'kiwix', 'klaeren',
-            'klaerenmerken', 'klaerenweg', 'kontakteaendern', 'kontaktserver', 'kontingent', 'listdav', 'listlink',
-            'listnote', 'listshare', 'llmapi', 'llmapiassist', 'llmapiextern', 'lokal', 'mail', 'mailcode',
-            'maildelete', 'mailidle', 'maillearn', 'mailmanage', 'mailsend', 'mailstil', 'mailwichtig', 'mappen',
-            'mcp', 'mcpact', 'mcpextern', 'mcpserver', 'melden', 'meldenadmin', 'memory', 'messages_all',
-            'messages_announce', 'mfa', 'modelleeigen', 'modellwechsel', 'musik', 'musikbearbeiten', 'mymcp',
-            'mymcpjobs', 'mymcpoauth', 'mystatus', 'nachsortieren', 'nas', 'nasablage', 'nashaushalt', 'nasquelle',
-            'naszustand', 'notbetriebasr', 'notedevice', 'offlinelesen', 'openwebui', 'parcels', 'pebble',
-            'pebbleantwort', 'pebblechat', 'pebbleerinnern', 'pebblefern', 'pebblefolge', 'pebblegesund',
-            'pebblemeldung', 'pebblemerken', 'pebbleort', 'pebbleschnell', 'pebbletag', 'pebblezifferblatt',
-            'proactive', 'remarkable', 'reminders', 'rmask', 'rmaufgaben', 'rmaufraeumen', 'rmfresh', 'rmguide',
-            'rminbox', 'rmmeet', 'rmmorning', 'rmordner', 'rmpapier', 'rmsend', 'rmtodo', 'rmweb', 'rmweek', 'roles',
-            'room', 'roomfar', 'roomha', 'roomtv', 'rueckgaengig', 'rundlauf', 'satzende', 'schirm', 'schreib',
-            'schreibapps', 'search', 'selfecho', 'sparkzustand', 'speaker', 'speicher', 'speicherauslagern',
-            'speicherlan', 'speicherordner', 'spkcode', 'spontanhilfe', 'spontansteuern', 'stimmdesign', 'style',
-            'suchfragen', 'suchpruefung', 'suchschnell', 'systemnachtmodelle', 'systemnachtpanel', 'systemupdates',
-            'tagebuch', 'tasks', 'teilen', 'teilenhinweis', 'telefon', 'telefonalarm', 'telefonanrufen',
-            'telefonaussen', 'telefongast', 'telegram', 'terminal', 'tidy', 'tipps', 'tippspush', 'tippssaetze',
-            'tippsstimme', 'transit', 'verbrauch', 'verbund', 'verbundgruppen', 'verbundmedia', 'verlaufsync',
-            'vorgaenge', 'vorrang', 'wachposten', 'wartung', 'wartungauto', 'weather', 'werkstatt', 'werkstattnacht',
-            'wiki', 'wissensbuch', 'wissenskarte', 'wissensknoten', 'wyoming', 'xiaozhihinweis')
+OHNE_ALT = ('agent', 'auswertungen', 'begleiter', 'begleiterbedienen', 'begleitertun', 'beobachten', 'bilder',
+            'calendar', 'chats', 'contacts', 'docaudio', 'docbrief', 'doclink', 'docshared', 'documents',
+            'docyoutube', 'entwickelnauftrag', 'erstellen', 'erstellenbilder', 'erstellenvorlagen', 'esp32', 'feeds',
+            'fuerdich', 'fund', 'ha', 'hacam', 'hilfe', 'hilfeseite', 'hilfevorschlag', 'history', 'hoerstueck',
+            'hoerstueckdisk', 'iphone', 'kiwix', 'mail', 'mappen', 'memory', 'messages_all', 'messages_announce',
+            'musik', 'musikbearbeiten', 'nasablage', 'naszustand', 'parcels', 'proactive', 'remarkable', 'reminders',
+            'rmaufgaben', 'rmsend', 'rmtodo', 'rmweb', 'rueckgaengig', 'schreib', 'search', 'sparkzustand',
+            'tagebuch', 'tasks', 'telefonanrufen', 'tidy', 'tipps', 'tippssaetze', 'transit', 'vorgaenge', 'weather',
+            'wiki')
 
 
 def source(name):
@@ -135,18 +105,28 @@ class Steckbrief(unittest.TestCase):
                     lits = []
                     if isinstance(n, ast.Dict):
                         lits = [k for k in n.keys if k is not None]
-                    elif isinstance(n, (ast.Set, ast.Tuple, ast.List)):
+                    elif isinstance(n, ast.Set):
                         lits = n.elts
+                    elif isinstance(n, ast.Tuple) and targets[0] == "KURZ":
+                        lits = n.elts[:1]   # (tool, example de, example en)
                     elif isinstance(n, ast.Call) and n.args and not (isinstance(n.func, ast.Attribute)
                                                                      and getattr(n.func.value, "id", "") == "steckbrief"):
-                        lits = n.args[:1]   # F("key", …), dict.fromkeys((…), …) is a tuple above
+                        first = n.args[0]   # F("key", …) or dict.fromkeys(("a", "b"), …)
+                        lits = first.elts if isinstance(first, ast.Tuple) else [first]
                     for k in lits:
                         if isinstance(k, ast.Constant) and isinstance(k.value, str):
                             found.setdefault(k.value, set()).add(f"{name} {targets[0]}")
+        feature_tables = {"features.py FEATURES", "features.py DESK_SKIP", "features.py DESK", "features.py SPARK_ONLY",
+                          "werkzeug_abdeckung.py TOOLS", "werkzeug_abdeckung.py RULES", "werkzeug_abdeckung.py WITHOUT"}
+        tool_tables = {"werkzeuge.py NAMES", "live.py TOOLS", "werkzeug_abdeckung.py BY_WORD", "spickzettel.py KURZ"}
         for key, s in steckbrief.STECKBRIEFE.items():
-            words = set(s.werkzeuge) | {key} | ({s.live[0]} if s.live else set()) | ({s.modul[0]} if s.modul else set())
-            for w in sorted(words):
-                self.assertEqual(sorted(found.get(w, ())), [], f"{w} stands there again: it lives in steckbrief.py")
+            # each name only against the tables that hold that kind of name (a feature's key may also be the name of
+            # a Live node of its own, which stays in live.py until the Steckbrief carries it)
+            words = [(key, feature_tables)] + [(t, tool_tables) for t in s.werkzeuge] \
+                + ([(s.live[0], {"live.py TARGETS", "live.py RETURNS"})] if s.live else []) \
+                + ([(s.modul[0], {"technik.py MODULE"})] if s.modul else [])
+            for w, where in words:
+                self.assertEqual(sorted(found.get(w, set()) & where), [], f"{w} stands there again: it lives in steckbrief.py")
             if s.log:
                 self.assertNotRegex(source("logfilter.py"), r"[|(]%s[|)]" % re.escape(s.log[1]), "logfilter names it again")
 

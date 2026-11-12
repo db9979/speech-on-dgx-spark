@@ -93,19 +93,10 @@ _D_SPARK = "a setting of the whole Spark for the admin, stays in the panel"
 _D_VOICE = "for speaking in the room (speakers, phone); the Begleiter asks by text, dictation or the wake word"
 _D_DEVICE = "another device with its own app or page"
 DESK_SKIP = {
-    **dict.fromkeys(("search", "wiki", "kiwix", "lokal", "roles", "style", "klaeren", "ablauf", "images",
-                     "hilfe", "verlaufsync", "eingespraech", "offlinelesen", "tagebuch", "sparkzustand",
-                     "rueckgaengig"), _D_TALK),
-    **dict.fromkeys(("follow", "selfecho", "anhalten", "satzende"), _D_VOICE),
-    **dict.fromkeys(("vorrang", "berater", "geraeteupdate", "dienstwacht", "wachposten", "wartung", "notbetriebasr",
-                     "gehaeuse", "systemupdates", "schirm", "modellwechsel", "werkstatt", "entwickeln"), _D_SPARK),
-    **dict.fromkeys(("history", "teilen", "bilder", "musik", "dungeon", "mystatus", "agent", "chats", "weather",
-                     "feeds", "contacts", "transit", "speaker", "verbrauch", "nas", "stimmdesign"), _D_PANEL),
-    **dict.fromkeys(("room", "esp32", "wyoming", "telefon", "telegram", "android", "pebble", "terminal", "mcpserver", "llmapi", "llmapiassist", "openwebui",
-                     "iphone", "appmerken"), _D_DEVICE),
-    "memory": _D_LINK, "mfa": _D_LINK + " (Meine Daten on the Ich page Sicherheit)",
-    "melden": "stays in the panel; the Begleiter's Kopplung page opens it (Problem melden …)",
-    "fernzugang": "an admin page, stays in the panel; the Begleiter's settings (Übersicht) link to it for an admin",
+    **dict.fromkeys(("search", "wiki", "kiwix", "hilfe", "tagebuch", "sparkzustand", "rueckgaengig"), _D_TALK),
+    **dict.fromkeys(("history", "bilder", "musik", "agent", "chats", "weather", "feeds", "contacts", "transit"), _D_PANEL),
+    **dict.fromkeys(("esp32", "iphone"), _D_DEVICE),
+    "memory": _D_LINK,
     "mappen": "set up, looked at and deleted on the panel's page Mappen and in the iPhone app; its tools and the Mappe "
               "filter of document_search and fund_suche work in Frag Spark like in every answer",
     "hoerstueck": "listened to in the panel, the iPhone app (native player) and Telegram; made, looked at and deleted "
@@ -139,36 +130,23 @@ F = Feature
 FEATURES = (
     # conversation
     F("search", "Websuche", "Web search", "talk", ("search",), guide="search"),
-    # chat.web_search (plan genauer-und-schneller, 7): 3 s per page, the fitting parts, 10 minutes in memory
-    F("suchschnell", "Schnellere Websuche", "Faster web search", "talk", ("search_fast",), parent="search",
-      guide="suchschnell"),
+    F(**steckbrief.feature("suchschnell")),
     F("wiki", "Wikipedia direkt", "Wikipedia straight away", "talk", ("wiki",), me="setbox", guide="wiki"),
     F("kiwix", "Eigenes Kiwix-Archiv", "Own Kiwix archive", "talk", ("kiwix",), me="setbox", guide="kiwix"),
-    F("lokal", "Erst lokal suchen", "Look locally first", "talk", ("local_first",), me="setbox", guide="lokal"),
-    F("roles", "Rollen per Sprache", "Roles by voice", "talk", ("roles",), me="setbox", guide="roles"),
-    F("style", "Eigener Gesprächsstil", "Own conversation style", "talk", ("own_style",), me="setbox", guide="style"),
-    F("follow", "Rückfrage ohne Weckwort", "Follow-up without wake word", "talk", ("follow_up",), me="setbox", guide="follow"),
-    F("selfecho", "Eigene Stimme überhören", "Ignore my own voice", "talk", ("no_self_echo",), me="setbox", guide="selfecho"),
-    # stimmdesign.py (Dominik 2026-11-11, plan eigene-stimme): 20 fixed voices and own ones from fields, made once with
-    # VoiceDesign, then cloned by the Base engine (tts.klon_enabled); READY needs both on the speech output
-    F("stimmdesign", "Eigene Stimmen gestalten", "Design own voices", "talk", ("stimmdesign",), me="setbox",
-      guide="stimmdesign"),
-    # zwischenruf.py (plan ins-wort-fallen): a barge-in only pauses the answer; fixed words decide on, stop or question
-    F("anhalten", "Ins Wort fallen: erst anhalten", "Barge-in: pause first", "talk", ("barge_hold",), me="setbox",
-      guide="anhalten"),
-    # satzende.py, smartturn.py (plan ins-wort-fallen B1): Smart Turn hears at each pause whether you sound done; measures only
-    F("satzende", "Satzende am Tonfall", "Turn end by tone", "talk", ("turn_tone",), me="setbox", guide="satzende"),
-    F("fixes", "Aus Korrekturen lernen", "Learning from corrections", "talk", ("learn_fixes",),
-      parent="memory", me="setbox", guide="fixes"),
-    F("klaeren", "Rückfrage statt Raten", "Ask instead of guessing", "talk", ("klaeren",), me="setbox",
-      guide="klaeren"),
-    F("klaerenmerken", "Auswahl merken", "Remember the choice", "talk", ("klaeren_merken",),
-      parent="klaeren", me="setbox", guide="klaerenmerken"),
-    # Rückfragen der Weiche (klaeren.py area "weg", intent.ask_route, P5): before a change, which way a wish goes
-    F("klaerenweg", "Rückfrage zum Weg", "Ask which way", "talk", ("klaeren_weg",), parent="klaeren", guide="klaerenweg"),
-    # ablauf.py: the tools of an answer under it, a waiting proposal as a card with Ja and Nein
-    F("ablauf", "Ablauf und Freigabe zeigen", "Show steps and approvals", "talk", ("show_steps",), guide="ablauf"),
-    F("images", "Bilder erkennen", "Picture recognition", "talk", ("images",), me="setbox", guide="images"),
+    F(**steckbrief.feature("lokal")),
+    F(**steckbrief.feature("roles")),
+    F(**steckbrief.feature("style")),
+    F(**steckbrief.feature("follow")),
+    F(**steckbrief.feature("selfecho")),
+    F(**steckbrief.feature("stimmdesign")),
+    F(**steckbrief.feature("anhalten")),
+    F(**steckbrief.feature("satzende")),
+    F(**steckbrief.feature("fixes")),
+    F(**steckbrief.feature("klaeren")),
+    F(**steckbrief.feature("klaerenmerken")),
+    F(**steckbrief.feature("klaerenweg")),
+    F(**steckbrief.feature("ablauf")),
+    F(**steckbrief.feature("images")),
     F(**steckbrief.feature("toolthink")),
     F(**steckbrief.feature("routing")),
     F(**steckbrief.feature("direct")),
@@ -188,13 +166,11 @@ FEATURES = (
     # tipps.py: the assistant points out a function that would help and helps setting it up
     F("tipps", "Funktionen vorschlagen", "Suggesting functions", "talk", ("feature_tips",),
       parent="hilfe", me="setbox", guide="tipps"),
-    F("tippspush", "Funktionen vorschlagen von selbst", "Suggesting functions by itself", "day",
-      ("feature_tips_push", "feature_tips"), pref="pro_tips", parent="proactive", me="probox", guide="tippspush"),
+    F(**steckbrief.feature("tippspush")),
     # saetze.py: functions that are on but never used, with a sentence to say (Ich → Was ich kann)
     F("tippssaetze", "Das kannst du auch sagen", "You can also say", "talk", ("feature_sentences",),
       parent="tipps", me="kannbox", guide="tippssaetze"),
-    F("tippsstimme", "Tipps beim Sprechen", "Tips while talking", "talk", ("feature_sentences_voice",),
-      pref="voice_tips", parent="tippssaetze", me="setbox", guide="tippsstimme"),
+    F(**steckbrief.feature("tippsstimme")),
     F(**steckbrief.feature("einordnung")),
     F(**steckbrief.feature("einordnungpost")),
     F(**steckbrief.feature("einordnungtest")),
@@ -203,61 +179,40 @@ FEATURES = (
     F(**steckbrief.feature("einordnungklage")),
     F(**steckbrief.feature("helfer")),
     F(**steckbrief.feature("helferangriff")),
-    F("vorrang", "Vorrang für Personen", "Priority for people", "talk", ("person_priority",), guide="vorrang"),
+    F(**steckbrief.feature("vorrang")),
     # knowledge and memory
     F("memory", "Gedächtnis", "Memory", "data", ("memory",), me="factbox", guide="memory"),
-    # gedaechtnis.py (plan gedaechtnis-pruefen/plan.md): evidence per fact, fixed rules mark what may be out of date
-    F("gedpruefen", "Gedächtnis prüfen", "Memory check", "data", ("memory_check",), parent="memory",
-      me="factbox", guide="gedpruefen"),
-    F("gedfragen", "Nachfrage zum Gedächtnis", "Memory check-back", "data", ("memory_ask",),
-      parent="gedpruefen", me="setbox", guide="gedfragen"),
-    F("gedthemen", "Themen im Gedächtnis", "Memory topics", "data", ("memory_topics",),
-      parent="gedpruefen", me="factbox", guide="gedthemen"),
-    # gemerkt.py (plan nutzerwissen, Punkt 1): „Gemerkt: …“ under the answer with „Rückgängig“, learned ones as a card
-    F("gedhinweis", "Gemerkt-Hinweis", "Remembered note", "data", ("memory_note",), parent="memory",
-      me="factbox", guide="gedhinweis"),
+    F(**steckbrief.feature("gedpruefen")),
+    F(**steckbrief.feature("gedfragen")),
+    F(**steckbrief.feature("gedthemen")),
+    F(**steckbrief.feature("gedhinweis")),
     F("history", "Frühere Gespräche", "Past conversations", "data", ("history",), me="setbox", guide="history"),
     F("documents", "Eigene Dokumente", "Own documents", "data", ("documents",), me="docbox", guide="documents"),
-    F("docpics", "Bilder und Scans lesen", "Read pictures and scans", "data", ("doc_pictures",),
-      parent="documents", me="docbox", guide="docpics"),
-    F("docmeaning", "Bedeutungssuche", "Meaning search", "data", ("doc_semantic",),
-      parent="documents", me="docbox", guide="docmeaning"),
-    F("docfiles", "Originale aufbewahren", "Keep originals", "data", ("doc_originals",),
-      parent="documents", me="docbox", guide="docfiles"),
-    F("docnight", "Lange Dokumente nachts lesen", "Read long documents at night", "data", ("doc_night",),
-      parent="documents", me="docbox", guide="docnight"),
+    F(**steckbrief.feature("docpics")),
+    F(**steckbrief.feature("docmeaning")),
+    F(**steckbrief.feature("docfiles")),
+    F(**steckbrief.feature("docnight")),
     F("docshared", "Gemeinsame Dokumente", "Shared documents", "data", ("doc_shared",),
       parent="documents", me="docbox", guide="docshared"),
-    # geteilt.py (plan teilen-profile, Dominik 2026-10-20 „ok“): one way to share for every kind, Ich → Geteilt; a
-    # document to single profiles, calendars and lists listed and taken back there. The note is a preference.
-    F("teilen", "Teilen mit Profilen", "Sharing with profiles", "data", ("share",), me="teilbox", guide="teilen"),
-    F("teilenhinweis", "Hinweis auf Geteiltes", "Note on shared things", "data", ("share",), pref="share_note",
-      parent="teilen", me="teilbox", guide="teilenhinweis"),
-    # Docling-Server (doclingdienst.py): for all profiles once the admin sets it up; each may say "not my files"
-    # (preference doc_docling, on by default) because the files leave the Spark for the server in the home network
-    F("docling", "Docling-Server", "Docling server", "data", ("docling",), pref="doc_docling", parent="documents",
-      me="docbox", guide="docling"),
+    F(**steckbrief.feature("teilen")),
+    F(**steckbrief.feature("teilenhinweis")),
+    F(**steckbrief.feature("docling")),
     F("remarkable", "reMarkable-Notizen", "reMarkable notes", "data", ("remarkable",),
       parent="docpics", me="rmbox", guide="remarkable"),
     F("rmsend", "Aufs reMarkable schicken", "Sending to the reMarkable", "data", ("remarkable_send",),
       parent="remarkable", me="rmbox", guide="rmsend"),
-    F("rmfresh", "Neueste zuerst", "Newest first", "data", ("remarkable_fresh",),
-      parent="remarkable", me="rmbox", guide="rmfresh"),
-    F("rmmorning", "Morgenblatt", "Morning sheet", "data", ("remarkable_plus",), pref="rm_morning", parent="rmsend", me="rmbox", guide="rmplus"),
-    F("rmask", "@Spark auf Papier", "@Spark on paper", "data", ("remarkable_plus",), parent="rmsend", me="rmbox", guide="rmplus"),
+    F(**steckbrief.feature("rmfresh")),
+    F(**steckbrief.feature("rmmorning")),
+    F(**steckbrief.feature("rmask")),
     F("rmtodo", "Aufgaben vom reMarkable", "Tasks from the reMarkable", "data", ("remarkable_plus",), parent="rmsend", me="rmbox", guide="rmplus"),
-    F("rmmeet", "Besprechungen zusammenfassen", "Meeting summaries", "data", ("remarkable_plus",), parent="rmsend", me="rmbox", guide="rmplus"),
-    F("rmweek", "Wochenrückblick", "Week in review", "data", ("remarkable_plus",), pref="rm_week", parent="rmsend", me="rmbox", guide="rmplus"),
+    F(**steckbrief.feature("rmmeet")),
+    F(**steckbrief.feature("rmweek")),
     F("rmweb", "Webseiten und Anhänge aufs reMarkable", "Web pages and attachments to the reMarkable", "data", ("remarkable_plus",), parent="rmsend", me="rmbox", guide="rmplus"),
-    F("rminbox", "Eingang pro Tag", "Daily inbox", "data", ("remarkable_plus",), pref="rm_inbox", parent="rmsend", me="rmbox", guide="rmplus"),
-    F("rmguide", "Spark-Anleitung auf dem reMarkable", "Spark guide on the reMarkable", "data", ("remarkable_plus",), parent="rmsend", me="rmbox", guide="rmplus"),
-    # paper for the reMarkable (rmpapier.py): one admin switch for three functions
-    F("rmpapier", "Gestaltete Blätter zum Ankreuzen", "Designed sheets to tick", "data", ("remarkable_paper",),
-      parent="rmsend", me="rmbox", guide="rmpapier"),
-    F("rmordner", "Ordner nach Art", "Folders by kind", "data", ("remarkable_paper",), parent="rmsend", me="rmbox",
-      guide="rmpapier"),
-    F("rmaufraeumen", "Selbst aufräumen", "Tidy up by itself", "data", ("remarkable_paper",), pref="rm_tidy", parent="rmordner",
-      me="rmbox", guide="rmpapier"),
+    F(**steckbrief.feature("rminbox")),
+    F(**steckbrief.feature("rmguide")),
+    F(**steckbrief.feature("rmpapier")),
+    F(**steckbrief.feature("rmordner")),
+    F(**steckbrief.feature("rmaufraeumen")),
     F("rmaufgaben", "Aufgabenblatt zum Ankreuzen", "Task sheet to tick", "data", ("remarkable_tasks",), "",
       parent="rmpapier", me="rmbox", guide="rmaufgaben"),
     # Dokumente erstellen (docmake.py, plan dokumente-erstellen): letters, presentations, tables ... as files
@@ -270,44 +225,20 @@ FEATURES = (
       parent="erstellen", me="docbox", guide="erstellenbilder"),
     # Bilder malen (bilder.py, bild_server.py, plan bildgenerierung): FLUX.2 [klein] on the Spark, installed by install.sh --bild
     F("bilder", "Bilder malen", "Painting pictures", "data", ("bilder",), me="bildbox", guide="bilder"),
-    # Bilder ändern (bilder.from_turn, plan bildbearbeitung, Stufe 2a): an own photo or picture changed by FLUX.2 [klein];
-    # the panel picks the picture by a fixed rule, never the model
-    F("bildaendern", "Bilder ändern", "Changing pictures", "data", ("bilder_aendern",), parent="bilder", me="bildbox",
-      guide="bildaendern"),
+    F(**steckbrief.feature("bildaendern")),
     # Musik machen (musik.py, musik_server.py, plan musik M1): ACE-Step 1.5 on the model computer, install.sh --musik
     F("musik", "Musik machen", "Making music", "data", ("musik",), me="musikbox", guide="musik"),
     # Musik bearbeiten (musik.py, plan musik-experte, Stufe E1): an own song or an own file changed into a new version
     # (Abschnitt neu, Verlängern, Musikrichtung, Remix, Schneiden, Tempo und Tonart); the panel picks the song
     F("musikbearbeiten", "Musik bearbeiten", "Editing music", "data", ("musik_bearbeiten",), parent="musik",
       me="musikbox", guide="musikbearbeiten"),
-    # KI-Dungeon-Master (dungeon.py, plan dungeon-master): a role-playing round for up to five players, also without a
-    # profile by seat link; the model narrates, the panel rolls and gives loot, experience, levels and trades by fixed rules
-    F("dungeon", "KI-Dungeon-Master", "AI Dungeon Master", "data", ("dungeon",), me="dmbox", guide="dungeon"),
-    # Ausdünnen 1 (dungeon_tiefe.py, Dominik 2026-11-11 „Ok“): the game's parts hang on the game and its Regeltiefe
-    # (einfach/voll, chat.dungeon_tiefe and per round) or on one of these six switches, never one switch per part
-    # Bilder und Heldenlied (dungeon_dingbild, dungeon_gesicht, dungeon_wappen, dungeon_album, dungeon_lied): pictures
-    # for gear, spells, faces and arms, the monster album and the bard's song; painting needs „Bilder malen“ too
-    F("dungeonbilder", "Bilder und Heldenlied", "Pictures and hero song", "data", ("dungeon_bilder",),
-      parent="dungeon", me="dmbox", guide="dungeonbilder"),
-    # Zweite Prüfung durch das Modell (dungeon_erzaehler Richter, dungeon_schreiber, dungeon_kommentar): a second model
-    # call per turn after the fixed checks, about 2 to 4 seconds more
-    F("dungeonpruefung", "Zweite Prüfung durch das Modell", "Second check by the model", "data", ("dungeon_pruefung",),
-      parent="dungeon", me="dmbox", guide="dungeonpruefung"),
-    # Gäste mit E-Mail (dungeon_gast.py): guests sign in with a code from the admin's mailbox and keep their heroes
-    F("dungeongast", "Gäste mit E-Mail", "Guests with e-mail", "data", ("dungeon_gast",), parent="dungeon", me="dmbox",
-      guide="dungeongast"),
-    # Bücher (dungeon_chronik.py, dungeon_buch.py): the campaign's chronicle book and the hero book to the reMarkable
-    # (that one needs „Aufs reMarkable schicken“ too)
-    F("dungeonbuecher", "Chronik und Heldenbuch", "Chronicle and hero book", "data", ("dungeon_buecher",),
-      parent="dungeon", me="dmbox", guide="dungeonbuecher"),
-    # Eigene Geschichten (dungeon_geschichten.py, dungeon_import.py): edit, copy and delete stories, „＋ Neue Geschichte“
-    # and the adventure import
-    F("dungeongeschichten", "Eigene Geschichten und Import", "Own stories and import", "data", ("dungeon_geschichten",),
-      parent="dungeon", me="dmbox", guide="dungeongeschichten"),
-    # Prüfstände (dungeon_pruefstand.py, dungeon_erzaehlstand.py): the balance bench at night and the narrator bench on
-    # the admin's button
-    F("dungeonpruefstand", "Prüfstände", "Test benches", "data", ("dungeon_pruefstand",), parent="dungeon",
-      me="dmbox", guide="dungeonpruefstand"),
+    F(**steckbrief.feature("dungeon")),
+    F(**steckbrief.feature("dungeonbilder")),
+    F(**steckbrief.feature("dungeonpruefung")),
+    F(**steckbrief.feature("dungeongast")),
+    F(**steckbrief.feature("dungeonbuecher")),
+    F(**steckbrief.feature("dungeongeschichten")),
+    F(**steckbrief.feature("dungeonpruefstand")),
     F("docbrief", "Steckbrief und Tags", "Document card and tags", "data", ("doc_brief",),
       parent="documents", me="docbox", guide="docbrief"),
     # Auswertungen je Dokument (auswertung.py, plan open-notebook Stufe 2): Kurzfassung and Kernaussagen by themselves in
@@ -327,27 +258,12 @@ FEATURES = (
     # (netproxy.py, fixed host list), and transcribed like a recording; without yt-dlp the link says how to install it
     F("docyoutube", "YouTube-Links abschreiben", "Transcribe YouTube links", "data", ("doc_youtube", "doc_link"),
       parent="docaudio", me="docbox", guide="docyoutube"),
-    # Suchprüfung (suchpruefung.py, plan suche-schaerfen, Stufe 1): test questions measure how often the search
-    # finds the right passage; the admin's release is enough (no profile switch, Freigabe rule 2026-10-13)
-    F("suchpruefung", "Suchprüfung", "Search check", "data", ("search_check",), parent="documents", me="docbox",
-      guide="suchpruefung"),
-    F("nachsortieren", "Treffer nachsortieren", "Re-rank hits", "data", ("rerank",), parent="documents", me="docbox",
-      guide="nachsortieren"),
-    # Wissensbuch (wissensbuch.py, plan wissensbuch after Karpathy's LLM Wiki): own documents worked once into pages
-    # with a source per sentence; the panel's fixed rules decide what stays, never the model
-    F("wissensbuch", "Wissensbuch", "Knowledge book", "data", ("knowledge_book",), parent="documents", me="wbbox",
-      guide="wissensbuch"),
-    # Wissenskarte (wissenskarte.py, plan wissensgraph): the pages of the Wissensbuch as a map with checked connections
-    F("wissenskarte", "Wissenskarte", "Knowledge map", "data", ("knowledge_map",), parent="wissensbuch", me="wbbox",
-      guide="wissenskarte"),
-    # Knoten aus Dokumenten (wissenskarte.py, plan wissensgraph Stufe 2): people, companies, places, contracts, accounts
-    # and deadlines of the documents as own points of the map; the panel's fixed rules decide, never the model
-    F("wissensknoten", "Personen, Firmen und Fristen", "People, companies and deadlines", "data", ("knowledge_ents",),
-      parent="wissenskarte", me="wbbox", guide="wissensknoten"),
-    # Karte hilft der Suche (wissenskarte.liste, plan wissensgraph Stufe 3): the points from documents give the document
-    # search a third list of hits (the words name a point, its neighbours, their places); fixed rules, never the model
-    F("kartensuche", "Karte hilft der Suche", "Map helps the search", "data", ("knowledge_search",),
-      parent="wissensknoten", me="wbbox", guide="kartensuche"),
+    F(**steckbrief.feature("suchpruefung")),
+    F(**steckbrief.feature("nachsortieren")),
+    F(**steckbrief.feature("wissensbuch")),
+    F(**steckbrief.feature("wissenskarte")),
+    F(**steckbrief.feature("wissensknoten")),
+    F(**steckbrief.feature("kartensuche")),
     # Mappen (mappen.py, plan open-notebook Stufe 1, Dominik 2026-10-30 „1a 2a“): own documents, Wissensbuch pages and
     # notes bundled per undertaking, a context level per entry; a conversation bound to a Mappe gets its entries as data
     F("mappen", "Mappen", "Collections", "data", ("mappen",), parent="documents", me="mpbox", guide="mappen"),
@@ -364,435 +280,225 @@ FEATURES = (
     # Finden (fund.py, plan such-index, Stufe A): one index over the own data with fields and tags, the page Finden,
     # Strg K and the tool fund_suche; each source follows its own function (documents, NAS, reMarkable, Wissensbuch)
     F("fund", "Finden in allen Daten", "Find in all data", "data", ("fund",), me="fundbox", guide="fund"),
-    # Finden, Stufe B (fundmail.py): every mail of the inbox, archive and sent folder with its attachments in the index,
-    # sealed (marks and AES-GCM), read in slices in quiet minutes and at night; needs E-Mail lesen
-    F("fundmail", "Mails und Anhänge finden", "Find mail and attachments", "data", ("fund_mail", "fund", "mail"), parent="fund",
-      me="fundbox", guide="fundmail"),
-    # Finden, Stufe C (fundquellen.py): each source a sub-switch of Finden, off, and it follows the function it comes
-    # from (fundquellen.frei): appointments of the own calendars from the Spark's copy and contacts sealed like mail;
-    # conversations only as date and channel (their words through recall); lists, reminders, pictures, songs clear
-    F("fundtermine", "Termine finden", "Find appointments", "data", ("fund_termine", "fund", "calendar"), parent="fund",
-      me="fundbox", guide="fundtermine"),
-    F("fundkontakte", "Kontakte finden", "Find contacts", "data", ("fund_kontakte", "fund", "contacts"), parent="fund",
-      me="fundbox", guide="fundkontakte"),
-    F("fundchats", "Gespräche finden", "Find conversations", "data", ("fund_chats", "fund", "history"), parent="fund",
-      me="fundbox", guide="fundchats"),
-    F("fundlisten", "Listen und Erinnerungen finden", "Find lists and reminders", "data", ("fund_listen", "fund"),
-      parent="fund", me="fundbox", guide="fundlisten"),
-    F("fundmedien", "Bilder und Lieder finden", "Find pictures and songs", "data", ("fund_medien", "fund"), parent="fund",
-      me="fundbox", guide="fundmedien"),
-    # Finden, Stufe D (fund.schlagworte_due): the language model proposes tags in quiet minutes, the panel keeps only
-    # what its fixed rules allow (fund.pruefe), always marked „vom Modell“, the own tags win; off, never for guests
-    F("fundschlagworte", "Schlagworte vom Modell", "Tags by the model", "data", ("fund_schlagworte", "fund"), parent="fund",
-      me="fundbox", guide="fundschlagworte"),
-    F("suchfragen", "Prüffragen vom Spark", "Test questions by the Spark", "data", ("search_check_auto",),
-      parent="suchpruefung", me="docbox", guide="suchfragen"),
+    F(**steckbrief.feature("fundmail")),
+    F(**steckbrief.feature("fundtermine")),
+    F(**steckbrief.feature("fundkontakte")),
+    F(**steckbrief.feature("fundchats")),
+    F(**steckbrief.feature("fundlisten")),
+    F(**steckbrief.feature("fundmedien")),
+    F(**steckbrief.feature("fundschlagworte")),
+    F(**steckbrief.feature("suchfragen")),
     # everyday
     F("proactive", "Von selbst melden", "Speaking up by itself", "day", ("proactive",), pref="pro_on", me="probox", guide="proactive"),
-    # Home Assistant tells the Spark (hamelden.py): each part below "Von selbst melden"
-    F("halive", "Sofort-Meldungen aus Home Assistant", "Instant notes from Home Assistant", "day", ("ha_live", "homeassistant"),
-      pref="pro_ha_live", parent="proactive", me="probox", guide="halive"),
-    F("haloud", "Haus-Meldungen über Lautsprecher", "House notes on speakers", "day",
-      ("ha_loud", "homeassistant", "messages_announce", "chats"), pref="pro_ha_loud", parent="proactive", me="probox", guide="haloud"),
-    F("haevent", "Home Assistant meldet an Spark", "Home Assistant tells the Spark", "day", ("ha_events", "homeassistant"),
-      pref="pro_ha_events", parent="proactive", me="probox", guide="haevent"),
-    F("havoice", "Smart-Home-Regel per Sprache", "Smart home rule by voice", "day", ("ha_voice_rules", "homeassistant"), parent="proactive", me="probox", guide="havoice"),
-    F("mailwichtig", "Wichtige Mails erkennen", "Recognize important mail", "day", ("systemone_mail", "systemone", "mail"),
-      pref="pro_mail_smart", parent="proactive", me="mailbox", guide="mailwichtig"),
+    F(**steckbrief.feature("halive")),
+    F(**steckbrief.feature("haloud")),
+    F(**steckbrief.feature("haevent")),
+    F(**steckbrief.feature("havoice")),
+    F(**steckbrief.feature("mailwichtig")),
     F("hacam", "Kamerabild beschreiben", "Describe a camera picture", "day", ("ha_camera", "homeassistant"),
       pref="pro_ha_cam", parent="proactive", me="probox", guide="hacam"),
     F("reminders", "Timer und Erinnerungen", "Timers and reminders", "day", ("reminders",), guide="reminders"),
-    # zustellung.py (plan benachrichtigung-geraet, Dominik 2026-10-20 "ok"): a note goes to the device in use right now,
-    # else to the phone app
-    F("notedevice", "Mitteilung ans genutzte Gerät", "Notes to the device in use", "day", ("note_device", "reminders"),
-      parent="reminders", guide="notedevice"),
+    F(**steckbrief.feature("notedevice")),
     # Alles Offene im Assistenten (vorgaenge.py, plan assistent-zentrale): cards with buttons in the conversation, Später,
     # the page Offen; a child row under Timer und Erinnerungen (the Funktionen page is near its height limit)
     F("vorgaenge", "Alles Offene im Assistenten", "Everything open in the assistant", "day", ("vorgaenge",),
       parent="reminders", me="vgbox", guide="vorgaenge"),
     F("tasks", "Listen für Einkauf und Aufgaben", "Lists for shopping and tasks", "day", ("tasks",), me="taskbox", guide="tasks"),
-    # tasks.py (plan listen-teilen Stufe 2, Dominik 2026-10-20 „3a“): share an own list with another profile, see or
-    # put on and tick off; a note when others put something on (preference list_note)
-    F("listshare", "Listen teilen", "Share lists", "day", ("tasks_share", "tasks"), parent="tasks", me="taskbox",
-      guide="listshare"),
-    F("listnote", "Hinweis bei neuen Einträgen", "Note on new entries", "day", ("tasks_share", "tasks"), pref="list_note",
-      parent="listshare", me="taskbox", guide="listshare"),
-    F("listdav", "Listen in Erinnerungen", "Lists in Reminders", "day", ("tasks_dav", "tasks", "calendar_server", "calendar"),
-      parent="tasks", me="taskbox", guide="listdav"),
-    F("listlink", "Mitschreib-Link", "Write link", "day", ("tasks_link", "tasks"), parent="tasks", me="taskbox",
-      guide="listlink"),
-    F("mystatus", "Mein Zustand", "My status", "day", ("my_status",), me="bgbox", guide="mystatus"),
+    F(**steckbrief.feature("listshare")),
+    F(**steckbrief.feature("listnote")),
+    F(**steckbrief.feature("listdav")),
+    F(**steckbrief.feature("listlink")),
+    F(**steckbrief.feature("mystatus")),
     F("agent", "Aufträge", "Jobs", "day", ("agent",), me="agentbox", guide="agent"),
     # watches (beobachten.py): admin release only, every profile with agent functions, never guests
     F("beobachten", "Beobachten", "Watching", "day", ("agent_watch",), parent="agent", me="agentbox", guide="beobachten"),
-    # package F of the redde ideas (auftragsplan.py): plan, question, proposal and Nachschieben inside a job
-    F("auftragsplan", "Aufträge mit Plan, Rückfrage und Vorschlag", "Jobs with plan, questions and proposals", "day",
-      ("agent_plan",), parent="agent", me="agentbox", guide="auftragsplan"),
-    F("mcp", "Dienste per MCP", "Services over MCP", "day", ("agent_mcp",), parent="agent", guide="mcp"),
-    # each profile its own MCP services (meinmcp.py); needs no agent level, only the switches
-    F("mymcp", "Eigene MCP-Dienste", "Own MCP services", "day", ("mcp_own",), parent="mcp", me="mymcpbox",
-      guide="mymcp"),
-    F("mymcpjobs", "Eigene MCP-Dienste in Aufträgen", "Own MCP services in jobs", "day", ("mcp_own_jobs",),
-      parent="mymcp", me="mymcpbox", guide="mymcpjobs"),
-    F("mymcpoauth", "Eigene MCP-Dienste mit Anmeldung", "Own MCP services with sign-in", "day", ("mcp_own_oauth",),
-      parent="mymcp", me="mymcpbox", guide="mymcpoauth"),
+    F(**steckbrief.feature("auftragsplan")),
+    F(**steckbrief.feature("mcp")),
+    F(**steckbrief.feature("mymcp")),
+    F(**steckbrief.feature("mymcpjobs")),
+    F(**steckbrief.feature("mymcpoauth")),
     # chats.py (plan plaene/messenger.md): chats between the people of this Spark, like a messenger; since V01.0.488
     # also what "Nachrichten an andere" did (plan plaene/nachrichten-in-chats.md): "Sag Anna …", "an alle", Durchsagen
     F("chats", "Chats", "Chats", "day", ("chats",), me="setbox", guide="chats"),
     F("messages_all", "Nachricht an alle", "Message to everybody", "day", ("messages_all",), pref="msg_all", parent="chats",
       me="setbox", guide="messages_all"),
-    F("chatgroups", "Gruppen-Chats", "Group chats", "day", ("chats_groups",), parent="chats", me="setbox", guide="chatgroups"),
-    F("chatmedia", "Fotos, Dateien und Sprache in Chats", "Photos, files and voice in chats", "day", ("chats_media",),
-      parent="chats", me="setbox", guide="chatmedia"),
-    F("chatinvite", "In einen Chat einladen", "Invite into a chat", "day", ("chats_invite",), parent="chats", me="setbox",
-      guide="chatinvite"),
-    F("chatprivate", "Private Chats (Ende-zu-Ende)", "Private chats (end-to-end)", "day", ("chats_private",), parent="chats",
-      me="setbox", guide="chatprivate"),
-    # verbund.py (plan plaene/spark-verbund.md): chats with people on other Sparks; needs the own address from outside
-    F("verbund", "Chats mit anderen Sparks", "Chats with other Sparks", "day", ("chats_verbund",), parent="chats",
-      guide="verbund"),
-    F("verbundmedia", "Fotos und Dateien zu anderen Sparks", "Photos and files to other Sparks", "day", ("verbund_media",),
-      parent="verbund", guide="verbundmedia"),
-    F("verbundgruppen", "Gruppen mit anderen Sparks", "Groups with other Sparks", "day", ("verbund_groups",),
-      parent="verbund", guide="verbundgruppen"),
-    # anrufe.py (plan plaene/messenger-d-v2.md): voice and video calls in a chat of two; from outside through the
-    # Vermittler (coturn on tars), which needs the address from outside
-    F("anrufe", "Anrufe (Sprache und Video)", "Calls (voice and video)", "day", ("chats_calls",), parent="chats",
-      guide="anrufe"),
-    F("anrufeturn", "Anrufe von unterwegs", "Calls when away", "day", ("calls_turn",), parent="anrufe",
-      guide="anrufeturn"),
-    # rufen.py (Dominik 2026-10-18): „Ruf Sabine an“ to the assistant, a call after the person's yes; on Android also
-    # „übers Telefon“ with the own address book
-    F("anrufassistent", "Anrufe per Assistent", "Calls by the assistant", "day", ("calls_assistant",), parent="anrufe",
-      guide="anrufassistent"),
+    F(**steckbrief.feature("chatgroups")),
+    F(**steckbrief.feature("chatmedia")),
+    F(**steckbrief.feature("chatinvite")),
+    F(**steckbrief.feature("chatprivate")),
+    F(**steckbrief.feature("verbund")),
+    F(**steckbrief.feature("verbundmedia")),
+    F(**steckbrief.feature("verbundgruppen")),
+    F(**steckbrief.feature("anrufe")),
+    F(**steckbrief.feature("anrufeturn")),
+    F(**steckbrief.feature("anrufassistent")),
     F("calendar", "Kalender", "Calendar", "day", ("calendar",), me="calbox", guide="calendar"),
-    # calendars.py (Dominik 2026-10-18 „1a 2a“): share one calendar with another profile, see or see and enter;
-    # private appointments only as „belegt“
-    F("calshare", "Kalender teilen", "Share calendars", "day", ("calendar_share", "calendar"), parent="calendar",
-      me="calbox", guide="calshare"),
-    # kalenderserver.py (Dominik 2026-10-19 „1a-5a“, Spark-Kalender Stufe 4): the profile's Spark calendars for the
-    # calendar app of the iPhone (CalDAV, an app password per profile)
-    F("calserver", "Kalender-Server für Kalender-Apps", "Calendar server for calendar apps", "day",
-      ("calendar_server", "calendar"), parent="calendar", me="calbox", guide="calserver"),
+    F(**steckbrief.feature("calshare")),
+    F(**steckbrief.feature("calserver")),
     F("weather", "Wetter", "Weather", "day", ("weather",), me="wxbox", guide="weather"),
     # feeds.py (Dominik 2026-10-17, plan reddit/plan.md): own Reddit inbox, subreddits and other feeds, read only
     F("feeds", "Reddit und Feeds", "Reddit and feeds", "day", ("feeds",), me="feedbox", guide="feeds"),
-    F("feedsmelden", "Neues aus Feeds melden", "Telling news from feeds", "day", ("feeds", "proactive"),
-      pref="pro_feeds", parent="proactive", me="probox", guide="feeds"),
+    F(**steckbrief.feature("feedsmelden")),
     # mail and contacts
     F("mail", "E-Mail lesen", "Reading e-mail", "post", ("mail",), me="mailbox", guide="mail"),
     F("tidy", "Postfach aufräumen", "Inbox tidying", "post", ("mail_tidy",), parent="mail", me="mailbox", guide="tidy"),
-    # postfach.py (plan kalender-mail Stufe 2, Mailclient Stufe A): on the page E-Mail read/unread, flag, archive, move
-    # (also several at once), every folder read, own folders made, renamed, removed when empty
-    F("mailmanage", "Mails ordnen", "Order mail", "post", ("mail_manage", "mail"), parent="mail", me="mailbox",
-      guide="mailmanage"),
-    F("mailsend", "Mails senden", "Send mail", "post", ("mail_send", "mail"), parent="mail", me="mailbox",
-      guide="mailsend"),
-    # mailidle.py (Vorwärmen Stufe C, Dominik 2026-10-19 „6a“): IMAP IDLE for profiles that read mail lately, new mail
-    # and its rules within seconds, at most mailidle.MAX_OPEN connections
-    # postfach.py „Löschen“ (Dominik 2026-10-20): the person moves a message into the trash and back, or removes one
-    # there for good after the page's own question; rules, the model, „Für dich“ and the voice never delete
-    F("maildelete", "Mails löschen", "Delete mail", "post", ("mail_delete", "mail_manage", "mail"), parent="mailmanage",
-      me="mailbox", guide="maildelete"),
-    # mailregeln.py „Sortieren aus Korrekturen lernen“ (Dominik 2026-10-30, plan mail-lernen 3a 4a 5a): a mail the Spark sorted and
-    # the person put elsewhere (or into „Falsch sortiert“) is a correction; fixed thresholds make an exception, pause a
-    # rule and bring the card „Regel-Vorschlag“; never the model
-    F("maillearn", "Sortieren aus Korrekturen lernen", "Learn sorting from corrections", "post", ("mail_learn", "mail_manage", "mail"),
-      parent="mailmanage", me="mailbox", guide="maillearn"),
-    # einladung.py (Dominik 2026-10-21 „ja alles umsetzen 1-6“, Punkt 3): an invitation (.ics) in a mail into a calendar
-    # with one tap, Zusagen/Vielleicht/Absagen to the organiser (with „Mails senden“)
-    F("einladungen", "Einladungen aus Mails", "Invitations from mail", "post", ("mail_invites", "mail", "calendar"),
-      parent="mail", me="mailbox", guide="einladungen"),
-    F("mailidle", "Neue Mails sofort", "New mail at once", "post", ("mail_idle", "mail"), parent="mail", me="mailbox",
-      guide="mailidle"),
-    # mailcode.py (Dominik 2026-10-21 „5“): a new mail with a confirmation code as a note on the device in use, never
-    # Telegram, the code never logged; needs Neue Mails sofort
-    F("mailcode", "Bestätigungscodes", "Confirmation codes", "post", ("mail_code", "mail_idle", "mail"), parent="mailidle",
-      me="mailbox", guide="mailcode"),
-    F("mailstil", "Mailstil lernen", "Learn mail style", "post", ("mail_style",), parent="mail", me="mailbox", guide="mailstil"),
+    F(**steckbrief.feature("mailmanage")),
+    F(**steckbrief.feature("mailsend")),
+    F(**steckbrief.feature("maildelete")),
+    F(**steckbrief.feature("maillearn")),
+    F(**steckbrief.feature("einladungen")),
+    F(**steckbrief.feature("mailidle")),
+    F(**steckbrief.feature("mailcode")),
+    F(**steckbrief.feature("mailstil")),
     F("parcels", "Pakete", "Parcels", "post", ("parcels",), parent="mail", me="mailbox", guide="parcels"),
     # fuerdich.py (plan persoenlicher-assistent, Dominik 2026-10-18): bills, contracts, orders, offers, open replies and
     # phishing found in the own mails by fixed rules; tab „Für dich“ on the mail page
     F("fuerdich", "Für dich aus Mails", "For you from mail", "post", ("mail_insight",), parent="mail", me="mailbox",
       guide="fuerdich"),
-    # ichweiss.py (stages 3 and 4, „3a 4a 6a 7a“): interests with their evidence (count after „Stimmt“), Wiederkehrendes,
-    # the week and the month, one web tip a day; part of the same switch, its own page under Ich
-    F("ichweiss", "Was ich über dich weiß", "What I know about you", "post", ("mail_insight",), parent="fuerdich",
-      me="wissbox", guide="ichweiss"),
+    F(**steckbrief.feature("ichweiss")),
     F("schreib", "Schreibhilfe", "Writing help", "post", ("write_help",), me="writebox", guide="schreib"),
-    F("schreibapps", "Schreibhilfe in anderen Programmen", "Writing help in other programs", "post", ("write_apps",), parent="schreib", me="writebox", guide="schreibapps"),
+    F(**steckbrief.feature("schreibapps")),
     F("contacts", "Kontakte", "Contacts", "post", ("contacts",), me="conbox", guide="contacts"),
-    # contacts.py page Kontakte (Apple-Stil „6a“): a card changed in its own address book (ETag), new ones there or on the Spark
-    F("kontakteaendern", "Kontakte ändern", "Edit contacts", "post", ("contacts_edit", "contacts"), parent="contacts",
-      me="conbox", guide="kontakteaendern"),
-    # kontaktserver.py (Apple-Stil „6a“ Stufe 3b): the address book „Auf dem Spark“ for the iPhone's Kontakte app (CardDAV,
-    # the Kalender-Server's app password)
-    F("kontaktserver", "Kontakte für Kontakte-Apps", "Contacts for contacts apps", "post",
-      ("contacts_server", "contacts", "calendar_server"), parent="contacts", me="conbox", guide="kontaktserver"),
+    F(**steckbrief.feature("kontakteaendern")),
+    F(**steckbrief.feature("kontaktserver")),
     # home
     F("ha", "Home Assistant", "Home Assistant", "home", ("homeassistant",), me="habox", guide="ha"),
-    F("room", "Raum-Modus", "Room mode", "home", ("room",), me="roombox", guide="room"),
-    F("roomtv", "Fernsehstimmen überhören", "Ignore TV voices", "home", ("room_voices",), parent="room", me="roombox", guide="roomtv"),
-    F("roomha", "Raum-Modus für Home Assistant", "Room mode for Home Assistant", "home", ("room_ha",), parent="room",
-      me="roombox", guide="roomha"),
+    F(**steckbrief.feature("room")),
+    F(**steckbrief.feature("roomtv")),
+    F(**steckbrief.feature("roomha")),
     F("esp32", "Eigene Lautsprecher (ESP32)", "Own speakers (ESP32)", "home", ("esp32",), me="espbox", guide="esp32"),
-    F("espstopp", "Stopp beim Vorlesen", "Stop while it speaks", "home", ("esp32_stop", "esp32"),
-      parent="esp32", me="espbox", guide="espstopp"),
-    F("roomfar", "Raum-Modus aus der Ferne starten", "Start room mode from afar", "home", ("room_remote", "esp32"),
-      parent="room", me="roombox", guide="roomfar"),
+    F(**steckbrief.feature("espstopp")),
+    F(**steckbrief.feature("roomfar")),
     F("messages_announce", "Durchsagen auf Lautsprechern", "Announcements on speakers", "home", ("messages_announce",), parent="chats", me="setbox", guide="messages_announce"),
-    F("wyoming", "Home Assistant Assist (Wyoming)", "Home Assistant Assist (Wyoming)", "home", ("wyoming",), guide="wyoming"),
-    # Den Spark anrufen (telefon.py, plan telefon-anruf.md): the Spark as an IP phone at the home's PBX
-    F("telefon", "Telefon", "Phone", "home", ("telefon",), me="telbox", guide="telefon"),
-    # handsets nobody assigned get questions and answers as a guest (never a tool); off: a sentence, then hang up
-    F("telefongast", "Telefon: Gäste annehmen", "Phone: take guests", "home", ("telefon_gaeste", "telefon"),
-      parent="telefon", guide="telefongast"),
-    # calls from outside through the PBX: confirmed own numbers (Ich → Telefon) as their profile, with Gäste also unknown ones
-    F("telefonaussen", "Telefon: Anrufe von außen", "Phone: calls from outside", "home", ("telefon_aussen", "telefon"),
-      parent="telefon", guide="telefonaussen"),
+    F(**steckbrief.feature("wyoming")),
+    F(**steckbrief.feature("telefon")),
+    F(**steckbrief.feature("telefongast")),
+    F(**steckbrief.feature("telefonaussen")),
     # the Spark calls (telefon_anruf.py, T4): wake-up calls and reminders the profile ordered, call backs; the
     # preference telefon_anrufbar lets each profile say no
     F("telefonanrufen", "Telefon: der Spark ruft an", "Phone: the Spark calls", "home", ("telefon_anrufen", "telefon"),
       pref="telefon_anrufbar", parent="telefon", me="telbox", guide="telefonanrufen"),
-    # a service gone 10 minutes or more: a call to the admin besides the note, never in the quiet hours
-    F("telefonalarm", "Telefon: Anruf bei Dienstausfall", "Phone: call on outages", "home",
-      ("telefon_alarm", "telefon_anrufen", "telefon", "svc_watch"), parent="telefonanrufen", guide="telefonalarm"),
+    F(**steckbrief.feature("telefonalarm")),
     # on the go and devices
     F("transit", "Bus und Bahn", "Bus and train", "go", ("transit",), me="trbox", guide="transit"),
-    F("telegram", "Telegram", "Telegram", "go", ("telegram",), me="tgbox", guide="telegram"),
-    F("android", "Android-App", "Android app", "go", ("android",), me="andbox", guide="android"),
-    F("androidlive", "Android: Mitteilungen sofort", "Android: notes at once", "go", ("android_live",), pref="android_live",
-      parent="android", me="andbox", guide="androidlive"),
-    F("androidupdate", "Android: Update in der App", "Android: update in the app", "go", ("android_update",),
-      parent="android", me="andbox", guide="androidupdate"),
-    F("androidassist", "Android: Spark als Assistent", "Android: Spark as assistant", "go", ("android_assist",),
-      parent="android", me="andbox", guide="androidassist"),
-    F("androidlock", "Android: Fingerabdruck für Admins", "Android: fingerprint for admins", "go", ("android_lock",),
-      parent="android", me="andbox", guide="androidlock"),
+    F(**steckbrief.feature("telegram")),
+    F(**steckbrief.feature("android")),
+    F(**steckbrief.feature("androidlive")),
+    F(**steckbrief.feature("androidupdate")),
+    F(**steckbrief.feature("androidassist")),
+    F(**steckbrief.feature("androidlock")),
     F("begleiter", "Spark-Begleiter am PC und Mac", "Spark companion on PC and Mac", "go", ("desk",),
       me="deskbox", guide="begleiter"),
     F("begleitertun", "Begleiter darf am PC handeln", "Companion may act on the PC", "go", ("desk_act",),
       parent="begleiter", me="deskbox", guide="begleitertun"),
-    F("begleitermeeting", "Besprechungen mitschreiben", "Write along in meetings", "go", ("desk_meeting",),
-      parent="begleiter", me="deskbox", guide="begleitermeeting"),
-    # Rechner fernsteuern, Stufe 2 (fernsicht.py): look at the own PC or Mac and, when allowed there, operate it
-    F("begleiterschirm", "Bildschirm zeigen und bedienen", "Show and operate the screen", "go", ("desk_view",),
-      parent="begleiter", me="deskbox", guide="begleiterschirm"),
+    F(**steckbrief.feature("begleitermeeting")),
+    F(**steckbrief.feature("begleiterschirm")),
     # Stufe 3 (bedienen.py): the Spark operates the own computer step by step, every step confirmed there
     F("begleiterbedienen", "Spark bedient den Rechner", "Spark operates the computer", "go", ("desk_operate",),
       parent="begleiter", me="deskbox", guide="begleiterbedienen"),
-    F("pebble", "Pebble-Uhr", "Pebble watch", "go", ("pebble",), me="pebbox", guide="pebblepair"),
-    # more on the watch (pebblewatch.py, plan pebble-ideen/plan.md): follow-ups to tap, the profile's own fixed commands,
-    # its reminders and timers kept on the watch as wake-ups (they ring without the phone)
-    F("pebblefolge", "Uhr: Nachfragen zum Antippen", "Watch: follow-ups to tap", "go", ("pebble_follow",),
-      parent="pebble", me="pebbox", guide="pebblefolge"),
-    F("pebbleschnell", "Uhr: Schnellbefehle", "Watch: quick commands", "go", ("pebble_quick",),
-      parent="pebble", me="pebbox", guide="pebbleschnell"),
-    F("pebbleerinnern", "Uhr: Erinnerungen und Timer am Handgelenk", "Watch: reminders and timers on the wrist", "go",
-      ("pebble_remind", "reminders"), parent="pebble", me="pebbox", guide="pebbleerinnern"),
-    # Paket 2: a watchface of its own, the day and the week, outage notes for admins, quick notes (with the place)
-    F("pebblezifferblatt", "Spark-Zifferblatt", "Spark watchface", "go", ("pebble_face",),
-      parent="pebble", me="pebbox", guide="pebblezifferblatt"),
-    F("pebbletag", "Uhr: Mein Tag und meine Woche", "Watch: my day and my week", "go", ("pebble_day",),
-      parent="pebble", me="pebbox", guide="pebbletag"),
-    F("pebblemeldung", "Uhr: Meldungen für Admins", "Watch: notes for admins", "go", ("pebble_alerts", "svc_watch"),
-      parent="pebble", me="pebbox", guide="pebblemeldung"),
-    F("pebblemerken", "Uhr: Schnell merken", "Watch: quick notes", "go", ("pebble_note", "memory"),
-      parent="pebble", me="pebbox", guide="pebblemerken"),
-    F("pebbleort", "Uhr: Ort beim Merken", "Watch: place with a note", "go", ("pebble_place", "pebble_note", "memory"),
-      parent="pebble", me="pebbox", guide="pebbleort"),
-    # Paket 3: the chats on the watch (with reply suggestions), a remote for picked devices, steps, pulse and sleep
-    F("pebblechat", "Uhr: Nachrichten", "Watch: messages", "go", ("pebble_chat", "chats"),
-      parent="pebble", me="pebbox", guide="pebblechat"),
-    F("pebbleantwort", "Uhr: Antwortvorschläge", "Watch: reply suggestions", "go", ("pebble_reply", "pebble_chat", "chats"),
-      parent="pebble", me="pebbox", guide="pebbleantwort"),
-    F("pebblefern", "Uhr: Fernbedienung", "Watch: remote", "go", ("pebble_remote",),
-      parent="pebble", me="pebbox", guide="pebblefern"),
-    F("pebblegesund", "Uhr: Schritte, Puls und Schlaf", "Watch: steps, pulse and sleep", "go", ("pebble_health",),
-      parent="pebble", me="pebbox", guide="pebblegesund"),
-    # spark-tui in a terminal (terminal.py): chat, conversations, Heute and the agent's jobs, paired by a setup line
-    F("terminal", "Terminal-Client", "Terminal client", "go", ("terminal",), me="termbox", guide="terminal"),
-    # new firmware and app versions for the devices (geraeteupdate.py): overview, notes, speakers at night, XiaoZhi
-    F("geraeteupdate", "Geräte-Updates", "Device updates", "go", ("dev_updates",), me="setbox", guide="geraeteupdate"),
-    F("geraetenacht", "Lautsprecher nachts aktualisieren", "Update speakers at night", "go", ("dev_updates_night", "esp32"),
-      pref="devup_night", parent="geraeteupdate", me="setbox", guide="geraetenacht"),
-    F("xiaozhihinweis", "Hinweis auf neue XiaoZhi-Version", "Note on a new XiaoZhi version", "go", ("dev_updates_upstream",),
-      parent="geraeteupdate", guide="xiaozhihinweis"),
-    F("mcpserver", "Spark als MCP-Server", "Spark as MCP server", "go", ("mcp_server",), me="mcpbox", guide="mcpserver"),
-    F("mcpextern", "MCP-Server von außen (OAuth)", "MCP server from outside (OAuth)", "go", ("mcp_server_extern",),
-      parent="mcpserver", me="mcpbox", guide="mcpextern"),
-    F("mcpact", "MCP: Handeln mit Bestätigung", "MCP: acting with confirmation", "go", ("mcp_server_act",),
-      parent="mcpserver", me="mcpbox", guide="mcpact"),
-    # Sprachmodell per API (llmapi.py): own programs use the plain language model at /v1 with a key of their profile
-    F("llmapi", "Sprachmodell per API", "Language model by API", "go", ("llm_api",), me="llmapibox", guide="llmapi"),
-    F("llmapiextern", "Sprachmodell per API von außen", "Language model by API from outside", "go", ("llm_api_extern",),
-      parent="llmapi", me="llmapibox", guide="llmapiextern"),
-    # Spark-Assistent per API (llmapi.ASSIST): the model "spark-assistent" is one read-only turn of the assistant, like „Spark fragen“
-    F("llmapiassist", "Spark-Assistent per API", "Spark assistant by API", "go", ("llm_api_assistant",), parent="llmapi",
-      me="llmapibox", guide="llmapiassist"),
-    # Open WebUI einbinden (openwebui.py): one step makes its key and MCP connection; the menu links to it, the Wächter watches it
-    F("openwebui", "Open WebUI einbinden", "Open WebUI integration", "go", ("openwebui",), parent="llmapi", me="llmapibox",
-      guide="openwebui"),
+    F(**steckbrief.feature("pebble")),
+    F(**steckbrief.feature("pebblefolge")),
+    F(**steckbrief.feature("pebbleschnell")),
+    F(**steckbrief.feature("pebbleerinnern")),
+    F(**steckbrief.feature("pebblezifferblatt")),
+    F(**steckbrief.feature("pebbletag")),
+    F(**steckbrief.feature("pebblemeldung")),
+    F(**steckbrief.feature("pebblemerken")),
+    F(**steckbrief.feature("pebbleort")),
+    F(**steckbrief.feature("pebblechat")),
+    F(**steckbrief.feature("pebbleantwort")),
+    F(**steckbrief.feature("pebblefern")),
+    F(**steckbrief.feature("pebblegesund")),
+    F(**steckbrief.feature("terminal")),
+    F(**steckbrief.feature("geraeteupdate")),
+    F(**steckbrief.feature("geraetenacht")),
+    F(**steckbrief.feature("xiaozhihinweis")),
+    F(**steckbrief.feature("mcpserver")),
+    F(**steckbrief.feature("mcpextern")),
+    F(**steckbrief.feature("mcpact")),
+    F(**steckbrief.feature("llmapi")),
+    F(**steckbrief.feature("llmapiextern")),
+    F(**steckbrief.feature("llmapiassist")),
+    F(**steckbrief.feature("openwebui")),
     F("iphone", "iPhone-App", "iPhone app", "go", ("iphone",), me="appbox", guide="iphone"),
-    F("iphonepush", "Push an die iPhone-App", "Push to the iPhone app", "go", ("iphone_push",), pref="app_push", parent="iphone",
-      me="appbox", guide="iphonepush"),
-    F("iphonepanel", "Panel-Bereiche in der iPhone-App", "Panel areas in the iPhone app", "go", ("iphone_panel",),
-      parent="iphone", me="appbox", guide="iphonepanel"),
-    # appmerken.py: the iPhone and the Android app keep the last state of their profile on the phone (no files, no keys)
-    F("appmerken", "Apps merken sich den letzten Stand", "Apps keep the last state", "go", ("app_cache",), guide="appmerken"),
-    # pruefzugang.py: Apple's app review pairs with a typed code instead of the 10-minute link
-    F("iphonepruef", "Prüfzugang für die iPhone-App", "Review access for the iPhone app", "go", ("iphone_review",),
-      parent="iphone", guide="iphonepruef"),
-    F("iphoneupdate", "Spark-Update über die iPhone-App", "Spark update from the iPhone app", "go", ("iphone_update",),
-      parent="iphone", guide="iphoneupdate"),
+    F(**steckbrief.feature("iphonepush")),
+    F(**steckbrief.feature("iphonepanel")),
+    F(**steckbrief.feature("appmerken")),
+    F(**steckbrief.feature("iphonepruef")),
+    F(**steckbrief.feature("iphoneupdate")),
     # security
-    F("speaker", "Sprechererkennung", "Speaker recognition", "sec", ("speaker_id",), me="voicebox", guide="speaker"),
-    F("spkcode", "Codewort am Lautsprecher", "Code word at a speaker", "sec", ("speaker_code", "esp32"),
-      parent="speaker", me="espbox", guide="spkcode"),
-    F("mfa", "Zweiter Anmeldeschritt", "Second sign-in step", "sec", ("mfa",), me="secbox", guide="mfa"),
-    # reports as GitHub issues with anonymized log lines (meldung.py); what goes out is shown before
-    F("melden", "Probleme melden", "Reporting problems", "sec", ("report",), me="rpbox", guide="melden"),
-    F("meldenadmin", "Admin über Meldungen informieren", "Tell admins about reports", "sec", ("report_notify",),
-      parent="melden", me="rpbox", guide="meldenadmin"),
-    # verbrauch.py (plan plaene/token-zaehler.md): how much the models do, numbers only; each profile sees its own
-    # under Ich → Verbrauch; the quota limits a profile's language model tokens per day, week and month (admins never)
-    F("verbrauch", "Verbrauchszähler", "Usage counter", "sec", ("usage_count",), me="usebox", guide="verbrauch"),
-    F("kontingent", "Kontingent", "Quota", "sec", ("usage_quota",), parent="verbrauch", me="usebox",
-      guide="kontingent"),
-    # dienstwacht.py: the Spark looks at its services and tells the admins when one is gone and when it is back
-    F("dienstwacht", "Dienst-Wächter", "Service watch", "sec", ("svc_watch",), pref="svc_note", me="setbox", guide="dienstwacht"),
-    # rundlauf.py: every few minutes a real round trip (speak, hear, ask the model); told through the Dienst-Wächter
-    F("rundlauf", "Rundlauf prüfen", "Round-trip check", "sec", ("rundlauf",), parent="dienstwacht", guide="rundlauf"),
-    # wachposten.py: fixed rules on the change log (lockouts, new ways in, protection changed, log changed, quality
-    # worse) notify the admins; the Selbst-Notaus (notaus.AUTO) stays apart
-    F("wachposten", "Wachposten", "Sentry", "sec", ("wachposten",), guide="wachposten"),
-    # wartung.py: while the language model, ASR or TTS is updated the Spark pauses on purpose (fixed sentence, background waits)
-    F("wartung", "Wartungspause", "Maintenance pause", "sec", ("wartung",), guide="wartung"),
-    F("wartungauto", "Wartungspause bei Neustart", "Maintenance pause on restart", "sec", ("wartung_auto",), parent="wartung",
-      guide="wartungauto"),
-    # notbetrieb.py: with the models on another computer, Parakeet on this one hears while they are gone (fixed commands)
-    F("notbetriebasr", "Notbetrieb mit Parakeet", "Emergency mode with Parakeet", "sec", ("notbetrieb_asr",), guide="notbetriebasr"),
-    # gehaeuse.py: the case of a panel computer (Pironman 5): OLED pages for the admin, status LEDs, fan thresholds
-    F("gehaeuse", "Gehäuse", "Case", "sec", ("gehaeuse",), guide="gehaeuse"),
-    # systemupdates.py + ../sysupdate.py (Dominik 2026-11-04 „1a-4a“): the operating system of both computers, OpenCode and
-    # the Python packages (OSV), firmware shown; installed only by the fixed root unit with a fresh code, never while
-    # somebody talks, never a restart without the admin; admins only, no tool for the model
-    F("systemupdates", "System-Updates", "System updates", "sec", ("system_updates",), guide="systemupdates"),
-    F("systemnachtpanel", "System-Updates nachts auf dem Panel-Rechner", "System updates at night on the panel computer", "sec",
-      ("system_updates_night_panel",), parent="systemupdates", guide="systemnachtpanel"),
-    F("systemnachtmodelle", "System-Updates nachts auf dem Modell-Rechner", "System updates at night on the model computer", "sec",
-      ("system_updates_night_models",), parent="systemupdates", guide="systemnachtmodelle"),
-    # schirm.py + steuerzentrale.py (B9): the control centre as text on the panel computer's screen (tty1), no desktop
-    F("schirm", "Steuerzentrale am Bildschirm", "Control centre on the screen", "sec", ("schirm",), guide="schirm"),
-    # modelle.py stage E4: admins switch the model of one kind under Zustand → Modelle (root unit speech-spark-wechsel)
-    F("modellwechsel", "Modelle wechseln", "Switch models", "sec", ("modelle_wechseln",), guide="modellwechsel"),
-    # modelle.py stage E5: the admin adds own Hugging Face models (language model, image understanding) under fixed rules
-    F("modelleeigen", "Eigene Modelle", "Own models", "sec", ("modelle_eigene",), parent="modellwechsel", guide="modelleeigen"),
-    # werkstattseite.py + werkstatt.py (plan opencode-werkstatt): test run, code measurement, diagnosis and repairs in a
-    # sandbox on the model computer (OpenCode, no data, no internet, no push); admins only, the patch goes to a person
-    F("werkstatt", "Werkstatt", "Workshop", "sec", ("werkstatt",), guide="werkstatt"),
-    F("werkstattnacht", "Jede Nacht testen", "Test every night", "sec", ("werkstatt_nacht",), parent="werkstatt", guide="werkstattnacht"),
-    # entwickeln.py + entwickelnseite.py (plan opencode-pi, package 1): OpenCode with the own language model in the
-    # terminal of the panel computer (user spark-dev, its own clone), local changes installed like an update (Weg B)
-    F("entwickeln", "Entwickeln auf dem Pi", "Develop on the Pi", "sec", ("entwickeln",), guide="entwickeln"),
-    # entwickeln.py an_github (package 2, Weg A): spark-dev's branch to GitHub as opencode/<thema> for a Claude thread
-    # to review; root pushes it with its own deploy key, never main, never forced; spark-dev stays off the internet
-    F("entwickelngithub", "An GitHub geben", "Hand to GitHub", "sec", ("entwickeln_github",), parent="entwickeln", guide="entwickelngithub"),
-    # entwickelnseite.py (package 3): a shell as spark-dev in the browser under Zustand → Werkstatt → Entwickeln, a fresh
-    # code every session; root's fixed program starts it in a unit of its own, never as the panel's user or root
-    F("entwickelnterminal", "Terminal im Browser", "Terminal in the browser", "sec", ("entwickeln_terminal",), parent="entwickeln", guide="entwickelnterminal"),
+    F(**steckbrief.feature("speaker")),
+    F(**steckbrief.feature("spkcode")),
+    F(**steckbrief.feature("mfa")),
+    F(**steckbrief.feature("melden")),
+    F(**steckbrief.feature("meldenadmin")),
+    F(**steckbrief.feature("verbrauch")),
+    F(**steckbrief.feature("kontingent")),
+    F(**steckbrief.feature("dienstwacht")),
+    F(**steckbrief.feature("rundlauf")),
+    F(**steckbrief.feature("wachposten")),
+    F(**steckbrief.feature("wartung")),
+    F(**steckbrief.feature("wartungauto")),
+    F(**steckbrief.feature("notbetriebasr")),
+    F(**steckbrief.feature("gehaeuse")),
+    F(**steckbrief.feature("systemupdates")),
+    F(**steckbrief.feature("systemnachtpanel")),
+    F(**steckbrief.feature("systemnachtmodelle")),
+    F(**steckbrief.feature("schirm")),
+    F(**steckbrief.feature("modellwechsel")),
+    F(**steckbrief.feature("modelleeigen")),
+    F(**steckbrief.feature("werkstatt")),
+    F(**steckbrief.feature("werkstattnacht")),
+    F(**steckbrief.feature("entwickeln")),
+    F(**steckbrief.feature("entwickelngithub")),
+    F(**steckbrief.feature("entwickelnterminal")),
     # codeauftrag.py (package 3b): an admin types a code order in the panel's or the app's chat; OpenCode works on it once
     # as spark-dev on its own branch, the card shows the change; installing stays the admin's step with a fresh code
     F("entwickelnauftrag", "Code-Auftrag im Chat", "Code order in the chat", "sec", ("entwickeln_auftrag",), parent="entwickeln", guide="entwickelnauftrag"),
-    # fernzugang.py + anker/spark-anker.py (plan ssh-vermittlung, stage 1): the shell of a server elsewhere in the
-    # browser; the server's anchor calls the panel, admins only, no tool for the model
-    F("fernzugang", "Fernzugang zu Servern", "Remote access to servers", "sec", ("fernzugang",), guide="fernzugang"),
-    # a push to the admins when a remote session opens from the internet or a new place (on under the switch)
-    F("fernzugangmeldung", "Meldung bei Fernsitzung", "Note on a remote session", "sec", ("fernzugang_meldung",), parent="fernzugang", guide="fernzugangmeldung"),
-    # Mehrere Sitzungen Stufe 4 (Dominik 2026-10-30 „alle“, mockup 4-an-alle): one line into several open shells, off
-    F("fernzugangalle", "An alle senden im Fernzugang", "Send to all in remote access", "sec", ("fernzugang_alle",), parent="fernzugang", guide="fernzugangalle"),
-    # spontanhilfe.py (plan spontanhilfe, S1): a person shares her screen once in the browser (/hilfe), admins only
-    F("spontanhilfe", "Spontanhilfe", "Spontaneous help", "sec", ("spontanhilfe",), parent="fernzugang", guide="spontanhilfe"),
-    # spontansteuern.py (plan spontanhilfe S2a): the admin moves the mouse and types, through the SparkHilfe program the
-    # person starts herself; three consents (fresh code, her download, her „Erlauben“)
-    F("spontansteuern", "Steuern bei der Spontanhilfe", "Control in spontaneous help", "sec", ("spontansteuern",), parent="spontanhilfe", guide="spontansteuern"),
-    # stage 2b: „Frag den Assistenten“ beside the terminal, the own language model only, no tool, admins only
-    F("fernzuganghilfe", "Assistent im Fernzugang", "Assistant in remote access", "sec", ("fernzugang_hilfe",), parent="fernzugang", guide="fernzuganghilfe"),
-    # fernbild.py (plan ssh-vermittlung stage 4): the screen of a paired system through guacd, admins only, first only watching
-    F("fernbild", "Bildschirm im Fernzugang", "Screen in remote access", "sec", ("fernbild",), parent="fernzugang", guide="fernbild"),
-    F("fernbildablage", "Zwischenablage beim Bildschirm", "Clipboard with the screen", "sec", ("fernbild_zwischenablage",), parent="fernbild",
-      guide="fernbildablage"),
-    # fernnotiz.py (Dominik 2026-10-29 08:57): a note per paired system, sealed, admins only behind the page's unlock
-    F("fernnotizen", "Notizen im Fernzugang", "Notes in remote access", "sec", ("fernzugang_notizen",), parent="fernzugang", guide="fernnotizen"),
-    # fernordner.py (Dominik 2026-10-29 09:18 „A“): the paired systems in folders, only an order, admins only
-    F("fernordner", "Ordner im Fernzugang", "Folders in remote access", "sec", ("fernzugang_ordner",), parent="fernzugang", guide="fernordner"),
-    # fernals.py (Dominik 2026-11-03 „1“): „Dateien“ as root or another user the server named (sudo spark-anker dateien als …),
-    # or in folders a Windows server gave free; plus a switch per system with a fresh code; read only, writing its own step
-    F("fernals", "Dateien als anderer Benutzer", "Files as another user", "sec", ("fernals",), parent="fernzugang", guide="fernals"),
-    F("ferngross", "Große Dateien im Fernzugang", "Big files in remote access", "sec", ("fernzugang_gross",), parent="fernzugang",
-      guide="ferngross"),
-    # fernweb.py (Dominik 2026-10-30 „1a, 2a“): the web pages of a paired system through its anchor, own origin, admins only
-    F("fernweb", "Webdienste im Fernzugang", "Web services in remote access", "sec", ("fernweb",), parent="fernzugang", guide="fernweb"),
-    # fernsshtermy.py (Dominik 2026-11-06 „alle empfehlungen umsetzten“): sshTermy reaches the paired systems through the
-    # panel as a jump host (Vermittler-Protokoll v1), SSH end to end, the panel passes bytes only; admins only
-    F("fernsshtermy", "sshTermy als Jump-Host", "sshTermy as jump host", "sec", ("fernzugang_sshtermy",), parent="fernzugang",
-      guide="fernsshtermy"),
-    # angriffsprobe.py: how often the real model would follow an order in outside text (numbers only, nothing runs)
-    F("angriffsprobe", "Angriffsprobe", "Attack probe", "sec", ("angriffsprobe",), parent="werkstatt", guide="angriffsprobe"),
-    # nas.py (plan plaene/synology-bauplan.md): the places of a profile (NAS or cloud connected once), Ich → Speicher
-    F("nas", "Speicher und NAS", "Storage and NAS", "data", ("nas_on",), me="storebox", guide="nas"),
-    # speicher.py: a copy of the profile's data at one of its places (WebDAV, SFTP, SMB) or a folder the admin mounted
-    F("speicher", "Kopie meiner Daten", "Copy of my data", "data", ("storage_own",), parent="nas", me="storebox", guide="speicher"),
-    # nasquelle.py (S2): folders at a place read into the profile's own document search, only reading
-    F("nasquelle", "Wissensordner", "Knowledge folders", "data", ("nas_sources",), parent="nas", me="storebox", guide="nasquelle"),
-    # nasquelle.py (S5): an admin profile picks one folder at its place "für alle"; every profile finds what is in it
-    F("nashaushalt", "Haushaltsordner", "Household folder", "data", ("nas_shared",), parent="nasquelle", me="storebox",
-      guide="nashaushalt"),
+    F(**steckbrief.feature("fernzugang")),
+    F(**steckbrief.feature("fernzugangmeldung")),
+    F(**steckbrief.feature("fernzugangalle")),
+    F(**steckbrief.feature("spontanhilfe")),
+    F(**steckbrief.feature("spontansteuern")),
+    F(**steckbrief.feature("fernzuganghilfe")),
+    F(**steckbrief.feature("fernbild")),
+    F(**steckbrief.feature("fernbildablage")),
+    F(**steckbrief.feature("fernnotizen")),
+    F(**steckbrief.feature("fernordner")),
+    F(**steckbrief.feature("fernals")),
+    F(**steckbrief.feature("ferngross")),
+    F(**steckbrief.feature("fernweb")),
+    F(**steckbrief.feature("fernsshtermy")),
+    F(**steckbrief.feature("angriffsprobe")),
+    F(**steckbrief.feature("nas")),
+    F(**steckbrief.feature("speicher")),
+    F(**steckbrief.feature("nasquelle")),
+    F(**steckbrief.feature("nashaushalt")),
     # nasablage.py (S4): spark_ablage at a place in the home network; made documents and, after "Ja", own things go
     # into Erstellt/, files put into Eingang/ come into Dokumente; the only folder the Spark writes to
     F("nasablage", "Ablage-Ordner", "Filing folder", "data", ("nas_drop",), parent="nas", me="storebox", guide="nasablage"),
     # naszustand.py (S6): the main admin lets the Spark read how the NAS is doing (SNMPv3); only admin profiles ask
     F("naszustand", "Zustand der NAS", "NAS status", "data", ("nas_status",), parent="nas", guide="naszustand"),
-    F("speicherlan", "Speicher im Heimnetz", "Storage in the home network", "data", ("storage_lan",), parent="speicher",
-      me="storebox", guide="speicherlan"),
-    F("speicherordner", "Ordner auf dem Spark", "Folder on the Spark", "data", ("storage_folder",), parent="speicher",
-      me="storebox", guide="speicherordner"),
-    F("speicherauslagern", "Originale auslagern", "Move originals out", "data", ("storage_offload",), parent="speicher",
-      me="storebox", guide="speicherauslagern"),
-    F("dienstnutzer", "Hinweis, wenn ein Dienst fehlt", "Note when a service is missing", "talk", ("svc_watch_users",), parent="dienstwacht", me="setbox", guide="dienstnutzer"),
-    # verlauf.py (plan plaene/verlauf-sync.md): the history on every device of the profile
-    F("verlaufsync", "Verlauf sofort abgleichen", "Instant history sync", "talk", ("history_live",),
-      me="setbox", guide="verlaufsync"),
-    F("eingespraech", "Ein Gespräch für alle Kanäle", "One conversation for all channels", "talk", ("history_one",),
-      me="setbox", guide="eingespraech"),
-    F("offlinelesen", "Verlauf offline lesen", "Read history offline", "talk", ("history_offline",),
-      me="setbox", guide="offlinelesen"),
-    # Einstellungs-Assistent (faelle.py, berater.py): problems become cases, cases proposals from a fixed catalog
-    F("berater", "Einstellungs-Assistent", "Settings assistant", "talk", ("berater",), guide="berater"),
-    F("beratererklaeren", "Anfragen erklären", "Explain requests", "talk", ("berater_explain",), parent="berater",
-      guide="beratererklaeren"),
-    F("beraterchat", "Den Assistenten nach Vorschlägen fragen", "Ask the assistant for proposals", "talk",
-      ("berater_chat",), parent="berater", me="setbox", guide="beraterchat"),
-    F("beraterhinweis", "Hinweis bei neuem Vorschlag", "Note on a new proposal", "talk", ("berater_notify",),
-      pref="berater_note", parent="berater", me="setbox", guide="beraterhinweis"),
-    F("beraterissue", "Fälle als Meldung vorbereiten", "Prepare cases as reports", "talk", ("berater_issue",),
-      parent="berater", guide="beraterissue"),
-    F("beraterauto", "Autopilot für kleine Änderungen", "Autopilot for small changes", "talk", ("berater_auto",),
-      parent="berater", guide="beraterauto"),
-    F("beraterideen", "Ideen außerhalb des Katalogs", "Ideas outside the catalog", "talk", ("berater_ideas",),
-      parent="berater", guide="beraterideen"),
-    F("beraterana", "Fall analysieren", "Analyse a case", "talk", ("berater_analyse",),
-      parent="berater", guide="beraterana"),
-    F("beraterundo", "Automatisch zurücknehmen", "Undo automatically", "talk", ("berater_auto_undo",),
-      parent="berater", guide="beraterundo"),
-    F("berateru", "Schritte für die Umgebung", "Steps for the environment", "talk", ("berater_env",), parent="berater",
-      guide="berateru"),
-    F("beratermich", "Vorschläge für mein Profil", "Proposals for my profile", "talk", ("berater_me",),
-      parent="berater", me="setbox", guide="beratermich"),
-    F("bewerten", "👍/👎 unter Antworten", "👍/👎 under answers", "talk", ("bewerten",), parent="berater",
-      me="setbox", guide="bewerten"),
-    F("beraterwarum", "„Warum?“ für alle Profile", "\"Why?\" for every profile", "talk", ("berater_why",),
-      me="setbox", guide="beraterwarum", parent="berater"),
+    F(**steckbrief.feature("speicherlan")),
+    F(**steckbrief.feature("speicherordner")),
+    F(**steckbrief.feature("speicherauslagern")),
+    F(**steckbrief.feature("dienstnutzer")),
+    F(**steckbrief.feature("verlaufsync")),
+    F(**steckbrief.feature("eingespraech")),
+    F(**steckbrief.feature("offlinelesen")),
+    F(**steckbrief.feature("berater")),
+    F(**steckbrief.feature("beratererklaeren")),
+    F(**steckbrief.feature("beraterchat")),
+    F(**steckbrief.feature("beraterhinweis")),
+    F(**steckbrief.feature("beraterissue")),
+    F(**steckbrief.feature("beraterauto")),
+    F(**steckbrief.feature("beraterideen")),
+    F(**steckbrief.feature("beraterana")),
+    F(**steckbrief.feature("beraterundo")),
+    F(**steckbrief.feature("berateru")),
+    F(**steckbrief.feature("beratermich")),
+    F(**steckbrief.feature("bewerten")),
+    F(**steckbrief.feature("beraterwarum")),
     F("tagebuch", "Spark-Tagebuch", "Spark diary", "talk", ("tagebuch",), me="setbox", guide="tagebuch"),
     # Zustand per Sprache (zustand_wz.py, plan werkzeug-abdeckung Paket 4): „Läuft alles?“, „Wann wurde gesichert?“
     F("sparkzustand", "Zustand per Sprache", "Status by voice", "talk", ("status_voice",),
@@ -800,8 +506,7 @@ FEATURES = (
     # Ändern per Sprache (aendern.py, plan werkzeug-abdeckung Paket 6): „Mach das rückgängig“ nach dem Ja
     F("rueckgaengig", "Rückgängig per Sprache", "Undo by voice", "talk", ("undo_voice",),
       guide="rueckgaengig"),
-    F("bewertenzurueck", "Rückmeldung, wenn es behoben ist", "Feedback when it is fixed", "talk", ("bewerten_back",),
-      pref="rate_back", parent="bewerten", me="setbox", guide="bewertenzurueck"),
+    F(**steckbrief.feature("bewertenzurueck")),
 )
 BY_KEY = {f.key: f for f in FEATURES}
 profiles.NO_PRESET.update(f.pref for f in FEATURES if f.pref)
@@ -844,7 +549,8 @@ DUTY = None
 REVIEW = None
 
 # chat.* switches that are no function a profile uses (how the Spark itself works)
-SPARK_ONLY = {"wachposten", "public", "thinking", "prompt_cache", "answer_check", "answer_check_more", "action_check", "loop_stop", "datetime", "face_life", "esp32_ota_http", "wartung", "wartungauto", "notbetriebasr", "gehaeuse", "systemupdates", "systemnachtpanel", "systemnachtmodelle", "schirm", "rundlauf", "modellwechsel", "modelleeigen", "werkstatt", "werkstattnacht", "entwickeln", "entwickelngithub", "entwickelnterminal", "entwickelnauftrag", "angriffsprobe", "fernzugang", "fernzugangmeldung", "fernzugangalle", "spontanhilfe", "fernzuganghilfe", "fernbild", "fernbildablage", "fernnotizen", "fernordner", "ferngross", "fernweb", "fernsshtermy"} \
+SPARK_ONLY = {"public", "thinking", "prompt_cache", "answer_check", "answer_check_more", "action_check", "loop_stop", "datetime", "face_life", "esp32_ota_http",
+              "entwickelnauftrag"} \
     | steckbrief.nur_spark()   # with the functions that have a Steckbrief (steckbrief.py)
 # Everything starts off (Dominik 2026-10-08). The only values shipped on in config.default.json are protection and
 # stability rules and the basic functions the Spark had from the start, each with its reason here (Dominik 2026-10-12,
