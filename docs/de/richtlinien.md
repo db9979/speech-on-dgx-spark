@@ -58,6 +58,8 @@ Dominik, 2026-10-12: Jede Funktionserweiterung fügt sich genauso in Monitoring,
 
 Diese Liste gehört zu jedem Commit, der eine Funktion, ein Werkzeug, einen Dienst, ein Gerät oder einen Kanal hinzufügt oder ändert. Im Ergebnis an Dominik steht kurz, welche Punkte berührt wurden. Nicht zutreffende Punkte bleiben weg.
 
+**Steckbrief zuerst (Dominik 2026-11-12, Kritische Prüfung Punkt 4):** Eine neue Funktion bekommt ihren Eintrag in `steckbrief.py` (Name de/en, Gruppe, Schalter, Anleitung, Werkzeuge mit Namen, Live-Knoten, Log-Wort, Werkzeug-Abdeckung, Spickzettel-Satz, Modul-Zeile, Begleiter). Was dort steht, lesen `features`, `werkzeuge`, `live`, `logfilter`, `werkzeug_abdeckung`, `spickzettel` und `technik` selbst; diese Zeilen der Liste unten entfallen dann. `test_steckbrief` prüft, dass jeder Steckbrief alle Listen erreicht, dass keine alte Tabelle ihn noch einmal nennt und dass jede neue Funktion einen hat (die Liste der Funktionen ohne Steckbrief schrumpft nur). Die übrigen Zeilen gelten wie bisher.
+
 | # | Bereich | Was zu tun ist | Erzwungen |
 |---|---|---|---|
 | 1 | **Rechte und Schalter** | Eintrag in `features.py`: Name de/en, Gruppe, Admin-Schalter `chat.*`, `parent`, Ich-Seite und Anleitung (kein neuer Profilschalter, kein Gastzugang zu Funktionen). Admin-Schalter stehen auf **aus**; die wenigen Vorlieben (`pref=`) auf an. Was ausnahmsweise an ausgeliefert wird, steht mit Grund in `features.DEFAULT_ON` oder, wenn es zur Grundausstattung für Neulinge gehört, in `features.GRUNDAUSSTATTUNG` (Teil 3). Module fragen nur `features.allowed/admin_on`. Standardwerte stehen nur in `config.default.json`. Ein Schalter, der nur für den Spark gilt, kommt nach `SPARK_ONLY`. | 🧪 test_features, test_richtlinie (DefaultOn) und Aus-Tests pro Funktion |

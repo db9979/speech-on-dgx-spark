@@ -184,6 +184,7 @@ Every request passes here first: size, origin, kill switch, login, profile and r
 | `app/panel/profiles.py` | User profiles for the assistant: who is talking, and what the assistant remembers about them. |
 | `app/panel/siegel.py` | Versiegeln im Ruhezustand: memory, conversations and what the Spark learned about a person lie sealed in the profile's folder (dateien.SIEGEL, profiles.write … |
 | `app/panel/signatur.py` | Signed update manifests (Ed25519), optional until a key exists. |
+| `app/panel/steckbrief.py` | Steckbrief pro Funktion: one place per function for everything the mandatory list (guideline part 1) used to spread over many files. |
 | `app/panel/stufen.py` | Wann fragt der Spark nach dem Code? |
 | `app/panel/vault.py` | Secrets at rest: calendar and mail passwords and Home Assistant tokens are stored encrypted, so a copy of the profile folders (a backup, a look into the file … |
 | `app/panel/wachposten.py` | Wachposten: the Spark tells its admins by itself when something happens on the doors and locks, so nobody has to read the change log to notice it. |

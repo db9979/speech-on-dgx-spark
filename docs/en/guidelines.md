@@ -58,6 +58,8 @@ Dominik, 2026-10-12: Every feature extension fits into monitoring, logging, the 
 
 This list belongs to every commit that adds or changes a feature, a tool, a service, a device or a channel. The result reported to Dominik briefly states which points were touched. Points that do not apply are left out.
 
+**Steckbrief first (Dominik 2026-11-12, critical review point 4):** a new feature gets its entry in `steckbrief.py` (name de/en, group, switches, guide, tools with names, Live node, log word, tool coverage, cheat-sheet sentence, module line, companion). What stands there is read by `features`, `werkzeuge`, `live`, `logfilter`, `werkzeug_abdeckung`, `spickzettel` and `technik` themselves; those rows of the list below are then dropped. `test_steckbrief` checks that every Steckbrief reaches all lists, that no old table names it again and that every new feature has one (the list of features without a Steckbrief only shrinks). The other rows apply as before.
+
 | # | Area | What to do | Enforced |
 |---|---|---|---|
 | 1 | **Rights and switches** | Entry in `features.py`: name de/en, group, admin switch `chat.*`, `parent`, Me page and guide (no new profile switch, no guest access to features). Admin switches are **off**; the few preferences (`pref=`) are on. Whatever is shipped on as an exception is listed with a reason in `features.DEFAULT_ON` or, when it belongs to the basic set for newcomers, in `features.GRUNDAUSSTATTUNG` (part 3). Modules only ask `features.allowed/admin_on`. Defaults live only in `config.default.json`. A switch that only applies to the Spark goes into `SPARK_ONLY`. | 🧪 test_features, test_richtlinie (DefaultOn) and off tests per feature |

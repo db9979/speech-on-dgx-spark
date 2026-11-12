@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.397** Steckbrief pro Funktion: alles, was eine Funktion in den Listen braucht (Namen, Live, Logs, Abdeckung, Hilfesatz), steht an einer Stelle; Pilot „Rechnen“, jede neue Funktion beginnt damit
 - **V01.1.396** Schichten statt Knäuel: ein Selbsttest hält die Importe des Codes nach unten; kein neues Modul kommt in den großen Import-Kreis, versteckte Importe in Funktionen werden nur weniger
 - **V01.1.395** Arbeitsregeln: Baustopp für neue Funktionen, solange mehr als 10 Praxistest-Punkte „Jetzt wichtig“ sind; die Coding-Richtlinie wird nach Bedarf gelesen (kurzer Kopf plus die Teile des geänderten Bereichs)
 - **V01.1.394** Keine privaten Wörter ins Internet: nach Text von außen (Kalender, Web, Dokument) nimmt eine Suche, das Wetter oder eine Seite nur noch die eigenen Worte der Person oder Wörter, die eine Suche schon fand, im Chat wie bei Aufträgen
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.390** Funktionen am Rechner: Beschreibung in zwei Zeilen, die erste Funktion gleich geöffnet, „Speichern“ als Leiste unter der ganzen Seite
 - **V01.1.389** Tippflächen am Handy: Schalter, Pfeile, Filter und kleine Knöpfe trifft ein Finger jetzt auf mindestens 44 px; die Filter der Funktionen-Seite zeigen ganze Wörter
 - **V01.1.388** ROT-FIX Tests: ein Test ließ den offenen Sprach-Chat eingeschaltet zurück und machte einen anderen wacklig; ein zu großes Foto für die Rechner-Karte wird immer als „zu groß“ abgelehnt
-- **V01.1.387** Fix: kürzerer Hinweis zu „Eigene Stimmen“ in den Sprachausgabe-Einstellungen.
 
 
 

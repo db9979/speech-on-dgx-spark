@@ -12,6 +12,7 @@ tests/test_werkzeug_abdeckung.py checks: every function is here, every tool name
 chat sits in a group of the Weiche (intent.GROUPS), is always kept (intent.NARROW_KEEP) or kept when the person names
 it (BY_WORD), and SENTENCES leads each grouped tool's typical request to its group. A new function adds its line
 here in the same commit (guideline part 1, row 29)."""
+import steckbrief
 
 TOOLS = {
     # conversation and knowledge
@@ -54,7 +55,6 @@ TOOLS = {
     "tagebuch": ("spark_tagebuch",),
     "sparkzustand": ("spark_zustand",),
     "entwickelnauftrag": ("code_auftrag",),
-    "rechnen": ("rechnen",),
     # everyday
     "reminders": ("reminder_set", "reminder_list", "reminder_cancel"),
     "tasks": ("tasks_show", "tasks_add", "tasks_change"),
@@ -84,6 +84,7 @@ TOOLS = {
     "begleiterbedienen": ("pc_look",),
     "begleitertun": ("pc_action",),
     "iphone": ("iphone_action",),
+    **steckbrief.abdeckung(),   # the functions with a Steckbrief (steckbrief.py)
 }
 
 RULES = {
@@ -336,12 +337,13 @@ PANEL_STEPS = {"local_search"}
 
 # tools a module offers only when the person's own words name it: the Weiche keeps them (extras "keep")
 BY_WORD = {"remarkable_note": "remarkable", "remarkable_sent": "remarkable", "remarkable_page": "remarkable",
-           "remarkable_attachment": "remarkable", "remarkable_library": "rmliste", "remarkable_sheet": "remarkable", "spark_zustand": "zustand_wz", "code_auftrag": "codeauftrag", "rechnen": "rechnen",
+           "remarkable_attachment": "remarkable", "remarkable_library": "rmliste", "remarkable_sheet": "remarkable", "spark_zustand": "zustand_wz", "code_auftrag": "codeauftrag",
            "home_rules_list": "hamelden", "home_rule_delete": "hamelden", "speaker_volume": "aendern",
            "proactive_pause": "aendern", "undo_last": "aendern", "nas_ablegen": "nasablage",
            "nas_zustand": "naszustand", "offen_zeigen": "vorgaenge",
            # the computer (P4, review D-14): only when the own words name it or at the Begleiter itself
-           "pc_action": "begleiter", "pc_send": "begleiter", "pc_look": "begleiter"}
+           "pc_action": "begleiter", "pc_send": "begleiter", "pc_look": "begleiter",
+           **steckbrief.nur_eigenes_wort()}   # the functions with a Steckbrief (steckbrief.py)
 
 # one typical request per tool of a Weiche group, German and English: it must reach that group
 # (tests/test_werkzeug_abdeckung.py). The one list of example sentences: „Das kannst du auch sagen“ (saetze.py) shows

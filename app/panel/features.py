@@ -26,6 +26,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 
 import guard
 import profiles
+import steckbrief
 from common import STATE, load_config, write_json
 from core import acting_profile, assistant, auth, json_body
 
@@ -92,7 +93,7 @@ _D_SPARK = "a setting of the whole Spark for the admin, stays in the panel"
 _D_VOICE = "for speaking in the room (speakers, phone); the Begleiter asks by text, dictation or the wake word"
 _D_DEVICE = "another device with its own app or page"
 DESK_SKIP = {
-    **dict.fromkeys(("search", "wiki", "kiwix", "lokal", "roles", "style", "klaeren", "ablauf", "images", "rechnen",
+    **dict.fromkeys(("search", "wiki", "kiwix", "lokal", "roles", "style", "klaeren", "ablauf", "images",
                      "hilfe", "verlaufsync", "eingespraech", "offlinelesen", "tagebuch", "sparkzustand",
                      "rueckgaengig"), _D_TALK),
     **dict.fromkeys(("follow", "selfecho", "anhalten", "satzende"), _D_VOICE),
@@ -110,6 +111,9 @@ DESK_SKIP = {
               "filter of document_search and fund_suche work in Frag Spark like in every answer",
     "hoerstueck": "listened to in the panel, the iPhone app (native player) and Telegram; made, looked at and deleted "
                   "on the panel's page Mappen; hoerstueck_machen works in Frag Spark like in every answer",
+    # the functions with a Steckbrief (steckbrief.py)
+    **{k: {"talk": _D_TALK, "voice": _D_VOICE, "spark": _D_SPARK, "link": _D_LINK, "device": _D_DEVICE}[v]
+       for k, v in steckbrief.begleiter().items()},
 }
 # Code-Prüfung D8 (one name per thing): an Ich page carries the name of its function, or a word of it, so "Funktionen →
 # Telefon" and "Ich → Telefon" are found as the same thing; these pages are named otherwise, each with its reason
@@ -176,8 +180,7 @@ FEATURES = (
     # chat.memory_split (plan genauer-und-schneller, 4): a long memory keeps a fixed core, older facts only when they fit
     # sofort.py (plan genauer-und-schneller, 6): time, date, arithmetic and units as the panel's fixed sentence
     F("sofort", "Einfaches sofort beantworten", "Answer simple things at once", "speed", ("sofort",), guide="sofort"),
-    # rechnen.py (Dominik 2026-10-22): the tool rechnen and the check of sums, the panel computes, never the model
-    F("rechnen", "Rechnen mit festem Werkzeug", "Exact calculations", "talk", ("rechnen",), guide="rechnen"),
+    F(**steckbrief.feature("rechnen")),   # rechnen.py: name, group, switch and guide in its Steckbrief
     F("gedkurz", "Großes Gedächtnis kürzen", "Trim a large memory", "speed", ("memory_trim",), guide="gedkurz"),
     F("ack", "Sofortige Rückmeldung", "Instant acknowledgement", "speed", ("instant_ack",),
       parent="routing", me="setbox", guide="ack"),

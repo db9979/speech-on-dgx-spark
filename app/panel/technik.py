@@ -23,6 +23,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))   # common.py, also as a script
 import dateien  # noqa: E402
 import guard  # noqa: E402
+import steckbrief  # noqa: E402
 import technik_knoten  # noqa: E402
 from core import auth  # noqa: E402
 
@@ -85,6 +86,7 @@ MODULE = {
     "coadmin": ("zugang", "Profile als Admins: Admin und Verwalter, ohne zweite Stufe"),
     "stufen": ("zugang", "Liste, welche Änderung den Code verlangt"),
     "features": ("zugang", "Alle Funktionen mit Namen und Freigaben an einer Stelle"),
+    "steckbrief": ("zugang", "Steckbrief pro Funktion: alle Teile einer Funktion an einer Stelle, die Listen lesen daraus"),
     "join": ("zugang", "Neue Personen per Einladung"),
     "notaus": ("zugang", "Notaus in drei Stufen, von außen nach innen"),
     "laufend": ("zugang", "Was gerade spricht (Antworten, Anrufe, Home Assistant): Notaus Stufe 3 beendet es sofort"),
@@ -294,7 +296,6 @@ MODULE = {
     "aendern": ("dienste", "Ändern per Sprache: Lautstärke, Termine und anderes nach „Ja“"),
     "zustand_wz": ("dienste", "Werkzeug: Zustand des Spark per Sprache („Läuft alles?“)"),
     "codeauftrag": ("betrieb", "Werkzeug: Code-Auftrag eines Admins für OpenCode, Karte mit dem Vorschlag, nichts eingespielt"),
-    "rechnen": ("gespraech", "Rechnen mit festem Werkzeug: eigener Parser statt eval, Datumsrechnung, Nachrechnen in Antworten"),
     "rmplus": ("dienste", "Mehr mit dem reMarkable: Senden, Ordner, Abgleich"),
     "rmpapier": ("dienste", "Gestaltete Blätter fürs reMarkable"),
     "rmaufgaben": ("dienste", "Aufgabenblatt zum Ankreuzen aufs reMarkable"),
@@ -456,6 +457,7 @@ MODULE = {
     "api_watchdog": ("sprache", "Wächter ohne Panel (Installationsart „api“)"),
     "bench": ("sprache", "Leistung messen"),
     "vorrang": ("sprache", "Sprache zuerst: Hintergrundarbeit wartet"),
+    **steckbrief.module(),   # the functions with a Steckbrief (steckbrief.py)
 }
 NO_MODULE = {"selftest"}   # app/selftest.py runs the tests, it is not part of the Spark
 

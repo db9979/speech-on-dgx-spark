@@ -184,6 +184,7 @@ Jede Anfrage geht zuerst hier durch: Größe, Herkunft, Notaus, Anmeldung, Profi
 | `app/panel/profiles.py` | Profile, Geräte, Sitzungen, Gespräche und Gedächtnis pro Profil |
 | `app/panel/siegel.py` | Gedächtnis und Gespräche versiegelt im Ruhezustand: einmal umstellen, Beiseitegelegtes wieder einlesen |
 | `app/panel/signatur.py` | Prüft signierte Update-Manifeste (Ed25519) |
+| `app/panel/steckbrief.py` | Steckbrief pro Funktion: alle Teile einer Funktion an einer Stelle, die Listen lesen daraus |
 | `app/panel/stufen.py` | Liste, welche Änderung den Code verlangt |
 | `app/panel/vault.py` | Versiegelt Passwörter und Tokens mit state/secret.key |
 | `app/panel/wachposten.py` | Wachposten: feste Regeln auf dem Änderungsprotokoll melden den Admins Sperren, neue Zugänge, geänderten Schutz |

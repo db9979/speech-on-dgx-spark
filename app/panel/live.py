@@ -36,6 +36,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 
 import guard
+import steckbrief
 from common import DayCounter, STATE, load_config, write_json
 from core import auth
 
@@ -68,7 +69,7 @@ TOOLS = {
     "agent_schedule": "mem", "agent_task": "mem", "routine_save": "mem", "agent_watch": "mem",
     # inside a job (auftragsplan.py): plan, question and proposal stay on the Spark
     "job_plan": "mem", "job_propose": "mem", "job_ask": "mem",
-    "spark_hilfe": "hilfe", "spark_vorschlag": "hilfe", "spark_tagebuch": "mem", "spark_zustand": "mem", "rechnen": "rechnen", "pc_action": "desk", "pc_send": "desk", "pc_look": "desk",
+    "spark_hilfe": "hilfe", "spark_vorschlag": "hilfe", "spark_tagebuch": "mem", "spark_zustand": "mem", "pc_action": "desk", "pc_send": "desk", "pc_look": "desk",
     # tools only programs use over MCP (mcpserver.py; transcribe/speak/voices show as Hören/Sprechen)
     "today": "cal", "action_status": "mem", "Vorschlag": "mem",
     # notes the Spark sends (push.py) and what it says by itself (proactive.py, live.note)
@@ -98,6 +99,7 @@ TOOLS = {
     "document_facts": "kiwix", "document_picture": "kiwix", "document_sources": "mem",
     # a finished document delivered (docmake.send): to the real target
     "Dokument → Begleiter": "desk", "Dokument → reMarkable": "rm", "Dokument → Telegram": "tg", "Dokument → Mail": "mail",
+    **steckbrief.live_werkzeuge(),   # the functions with a Steckbrief (steckbrief.py)
 }
 # The targets: name, short line, zone (spark = on this machine, lan = home network, net = internet), fixed = always shown
 TARGETS = {
@@ -119,8 +121,7 @@ TARGETS = {
     "rm": ("reMarkable", "Cloud · Internet", "net", True),
     "push": ("Apple Push", "APNs · Internet", "net", True),
     "hilfe": ("Spark-Hilfe", "Anleitungen · auf dem Spark", "spark", False),
-    # Rechnen mit festem Werkzeug (rechnen.py): the panel computes, nothing leaves the Spark
-    "rechnen": ("Rechnen", "fester Rechner · auf dem Spark", "spark", False),
+    **steckbrief.live_knoten(),   # the functions with a Steckbrief (steckbrief.py), e.g. Rechnen
     "webpush": ("Web Push", "Push-Dienst des Browsers · Internet", "net", False),
     "tg": ("Telegram", "Bot-API · Internet", "net", False),
     "android": ("Android-App", "wartet, bis die App abholt", "spark", False),
@@ -228,13 +229,14 @@ TARGETS = {
 RETURNS = {"cal": "Termine oder Aufgaben", "ha": "Zustände oder Schaltung", "web": "Suchergebnisse", "pages": "Seitentext", "kiwix": "Archiv-Treffer",
            "wiki": "Artikel", "mail": "Mails (nur Anzahl und Größe)", "contacts": "Kontakte", "rm": "Ablage", "push": "Zustellung",
            "weather": "Wetterwerte", "parcels": "Sendungen", "transit": "Verbindungen", "feeds": "Beiträge", "mem": "eigene Daten",
-           "hilfe": "Anleitungen oder Vorschlagskarte", "rechnen": "Ergebnis", "webpush": "Zustellung", "tg": "Zustellung",
+           "hilfe": "Anleitungen oder Vorschlagskarte", "webpush": "Zustellung", "tg": "Zustellung",
            "android": "liegt bereit", "desk": "liegt bereit", "page": "liegt bereit",
            "github": "Stand und Testergebnis", "nas": "Ablage bestätigt", "speicher": "Ablage bestätigt oder Datei geholt", "nasquelle": "Ordnerliste und Dateien", "nasablage": "Ablage bestätigt oder Datei geholt", "naszustand": "Belegung und Zustand in Zahlen", "docling": "Text des Dokuments", "mcp": "Antwort des Dienstes",
            "issues": "Nummer der Meldung", "make": "Gliederung, Auftrag oder Zustellung", "bild": "Bild (Größe und Sekunden)",
            "musik": "Lied (Länge und Sekunden)", "links": "Dokument (Art und Größe)",
            "geraete": "Versionsnummern und geprüfte Dateien", "systemupdate": "Paketzahlen und Kennungen von Warnungen", "telefon": "Anruf und Ton",
-           "modell": "Antwort (nur Anzahl der Befehle)"}
+           "modell": "Antwort (nur Anzahl der Befehle)",
+           **steckbrief.live_rueckgabe()}   # the functions with a Steckbrief (steckbrief.py)
 CLIENT = {"web": "Browser", "speaker": "Lautsprecher", "telefon": "Telefon", "watch": "Uhr", "siri": "Siri", "telegram": "Telegram",
           "app": "iPhone-App", "android": "Android-App", "car": "CarPlay", "mcp": "MCP-Client", "ha": "Home Assistant", "auto": "Von selbst", "desk": "Spark-Begleiter",
           "tui": "Terminal", "other": "Gerät"}

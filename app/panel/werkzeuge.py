@@ -14,6 +14,8 @@ import os
 import re
 import sys
 
+import steckbrief
+
 # tool -> (de, en)
 NAMES = {
     "home_assistant": ("Smart Home", "Smart home"), "home_assistant_action": ("Geräte schalten", "Switch devices"),
@@ -49,7 +51,6 @@ NAMES = {
     "hoerstueck_machen": ("Hörstück machen", "Make audio overview"),
     "link_als_dokument": ("Link als Dokument", "Link as document"),
     "dokument_auswertung": ("Auswertung eines Dokuments", "Analysis of a document"),
-    "rechnen": ("Rechnen", "Calculate"),
     "spark_vorschlag": ("Spark-Vorschlag", "Spark suggestion"), "wikipedia": ("Wikipedia", "Wikipedia"),
     "article_more": ("Artikel weiterlesen", "Read on"), "archive_search": ("Eigenes Archiv", "Own archive"),
     "document_plan": ("Dokument planen", "Plan document"), "document_change": ("Dokument ändern", "Change document"),
@@ -78,6 +79,7 @@ NAMES = {
     "job_plan": ("Plan des Auftrags", "Plan of the job"), "job_ask": ("Rückfrage im Auftrag", "Question in a job"),
     "job_propose": ("Vorschlag des Auftrags", "Proposal of the job"),
     "today": ("Heute (Überblick)", "Today (overview)"), "action_status": ("Stand einer Bestätigung", "State of a confirmation"),
+    **steckbrief.werkzeug_namen(),   # the functions with a Steckbrief (steckbrief.py)
 }
 MCP = re.compile(r"^mcpu?_[0-9a-f]{6}_(.+)$")   # mcp.exposed / meinmcp.exposed
 PANEL = " (Panel)"                               # a step the panel ran itself (tracelog)
