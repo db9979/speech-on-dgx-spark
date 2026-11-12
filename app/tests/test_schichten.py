@@ -7,8 +7,8 @@ one big cycle: every one of them reaches every other, so none can be loaded, tes
 Three rules, each a ratchet like test_aufraeumen (the lists and numbers only shrink):
 - a  GRUND, the bottom layer: these modules import no panel module outside GRUND, not even inside a function. A module
      that became clean may join (the test names it); none leaves.
-- b  KNOTEN_ALT: the modules in the big cycle on V01.1.395. A new module never joins it; one that left must be taken
-     out of the list in the same commit.
+- b  KNOTEN_ALT: the modules in the big cycle on V01.1.395 (plus KNOTEN_TUEREN, doors with their reason). A new module
+     never joins it; one that left must be taken out of the list in the same commit.
 - c  LOKAL_MAX: imports of panel modules inside functions (the way around a cycle). Never more; fewer lowers it.
 And at module level no cycle beyond MODUL_KREISE.
 
@@ -21,7 +21,7 @@ import sys
 import unittest
 
 PANEL = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "panel")
-GRUND = ("aktiv", "ausleiten", "beobachten", "dateien", "docrender", "dungeon_ablage", "dungeon_balance",
+GRUND = ("aktiv", "arbeiter", "ausleiten", "beobachten", "dateien", "docrender", "dungeon_ablage", "dungeon_balance",
          "dungeon_bestiarium", "dungeon_einordnung", "dungeon_legenden", "dungeon_tabellen", "dungeon_vorlesen",
          "embed_worker", "folien", "kalenderspiegel", "kalserie", "kontaktkarte", "kopplung", "latency", "pdftabellen",
          "rechenteile", "schwer", "signatur", "sse", "steckbrief", "steuer", "stoppwort", "stufen", "symbole", "taten",
@@ -70,6 +70,11 @@ KNOTEN_ALT = ('ablauf', 'abschrift', 'account', 'ack', 'admin', 'aendern', 'agen
     'wachposten', 'wartung', 'watch', 'weather', 'weiche', 'weiche_unklar', 'werkstattseite', 'wiki', 'wissen',
     'wissensbuch', 'wissensdoppelt', 'wissenskarte', 'wissensmessung', 'wyoming', 'ytquelle', 'zertpin', 'zustand_wz',
     'zustellung', 'zwischenruf')
+# Doors (Kritische Prüfung point 7): a module that takes many imports of the knot onto one way in. It sits in the knot
+# only because the modules behind it still import their callers; it leaves with them. Each with its reason.
+KNOTEN_TUEREN = {
+    "dungeon_live": "V01.1.399: replaces live.snapshot's 41 imports of game modules by one",
+}
 
 
 def graph():
@@ -143,9 +148,11 @@ class Schichten(unittest.TestCase):
 
     def test_b_no_new_module_joins_the_big_cycle(self):
         big = max(cycles({m: e for m, (e, _) in G.items()}), key=len, default=set())
-        self.assertEqual(sorted(big - set(KNOTEN_ALT)), [], "these modules joined the big import cycle: import only "
+        known = set(KNOTEN_ALT) | set(KNOTEN_TUEREN)
+        self.assertEqual(sorted(big - known), [], "these modules joined the big import cycle: import only "
                                                              "downwards (GRUND, then the abilities, then the flow)")
-        self.assertEqual(sorted(set(KNOTEN_ALT) - big), [], "these modules left the big cycle: take them out of KNOTEN_ALT")
+        self.assertEqual(sorted(known - big), [], "these modules left the big cycle: take them out of KNOTEN_ALT "
+                                                   "or KNOTEN_TUEREN")
 
     def test_c_imports_inside_functions_only_get_fewer(self):
         self.assertLessEqual(LOCAL, LOKAL_MAX, "a new import of a panel module inside a function hides a cycle: put the "

@@ -60,6 +60,7 @@ import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile
 from fastapi.responses import Response
 
+import arbeiter
 import docrender
 import features
 import folien
@@ -1149,7 +1150,8 @@ def build(uid, d, fmt=None, v=None, page=None):
     if not _render_sem.acquire(timeout=60):
         raise ValueError("gerade beschäftigt, bitte gleich noch einmal")
     try:
-        data = docrender.render(c, fmt, d.get("style") or "spark-hell", picture_paths(uid), base, page)
+        # in a process of its own at a lower priority (arbeiter.py, Kritische Prüfung point 6): the panel keeps the GIL
+        data = arbeiter.dokument(c, fmt, d.get("style") or "spark-hell", picture_paths(uid), base, page)
     finally:
         _render_sem.release()
     if len(data) > MAX_FILE:

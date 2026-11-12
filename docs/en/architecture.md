@@ -340,6 +340,7 @@ Home Assistant, tasks, For you, weather, reMarkable, MCP and what the Spark does
 | `app/panel/dungeon_kommentar.py` | KI-Dungeon-Master: Helden kommentieren selbst. |
 | `app/panel/dungeon_legenden.py` | KI-Dungeon-Master: legendäre Einzelstücke je Welt. |
 | `app/panel/dungeon_lied.py` | KI-Dungeon-Master: Heldenlied des Barden. |
+| `app/panel/dungeon_live.py` | The Dungeon-Master's numbers for Status → Live (Kritische Prüfung 2026-11-12 point 7): one way in from live.py instead of forty imports of game modules in li … |
 | `app/panel/dungeon_mitkommen.py` | KI-Dungeon-Master: Überreden zum Mitkommen. |
 | `app/panel/dungeon_musik.py` | KI-Dungeon-Master: Musik, Geräusche, Würfel. |
 | `app/panel/dungeon_mut.py` | KI-Dungeon-Master: Heldenmut. |
@@ -548,6 +549,7 @@ Speech recognition and speech output as their own services, ahead of everything 
 | Module | Task |
 |---|---|
 | `app/api_watchdog.py` | The watchdog without the web panel (install mode "api"): the same rules the panel uses (panel/health.py), run as the unit speech-spark-watch. |
+| `app/panel/arbeiter.py` | Zweiter Prozess für schwere Arbeit (Kritische Prüfung 2026-11-12 point 6): CPU-heavy work that used to run in a thread of the panel's one process (and so hel … |
 | `app/asr_proxy.py` | Qwen3-ASR front end for the vLLM engine (backend "vllm"). |
 | `app/asr_server.py` | Qwen3-ASR as a small HTTP service (OpenAI-style /v1/audio/transcriptions). |
 | `app/bedarf.py` | An engine that runs only on demand (Bilder malen: bild_server.py, Musik machen: musik_server.py): the service starts it as its child process for the first jo … |

@@ -38,7 +38,7 @@ AREAS = (("search", r"^chat: web search"), ("werkzeug", r"^chat: tool "),
          ("verbessern", r"^(berater|faelle|tagebuch|meldung):"),
          ("fernzugang", r"^fernzugang:"),
          ("spontanhilfe", r"^spontanhilfe:"),
-         ("system", r"^(notaus|notzugang|wartung|guard|ausleiten|audit|coadmin|dienstwacht|watchdog|livecheck|update|geraeteupdate|logs|vault|zustand|"
+         ("system", r"^(notaus|notzugang|wartung|guard|ausleiten|arbeiter|audit|coadmin|dienstwacht|watchdog|livecheck|update|geraeteupdate|logs|vault|zustand|"
                     r"ghtoken|netguard|verbrauch|modelle|llmtor|tlstor|dockertor|teilen|waerter|steuer|notbetrieb|gehaeuse|systemupdate|rechner|schirm|praxistest|rundlauf|werkstatt|entwickeln|wachposten|loopwacht|offline)\b"),
          ("ereignis", r"^ereignis:"))
 _AREAS = [(k, re.compile(rx)) for k, rx in AREAS]

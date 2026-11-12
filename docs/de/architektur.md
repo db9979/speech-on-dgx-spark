@@ -340,6 +340,7 @@ Home Assistant, Aufgaben, Für dich, Wetter, reMarkable, MCP und was der Spark v
 | `app/panel/dungeon_kommentar.py` | Dungeon-Master: Helden kommentieren selbst, je Held, der gehandelt hat, eine kurze geprüfte Zeile in seiner Stimme |
 | `app/panel/dungeon_legenden.py` | Dungeon-Master-Legenden: 20 benannte Einzelstücke je Welt, nur aus Boss, Belohnung oder Truhe, einmal je Kampagne |
 | `app/panel/dungeon_lied.py` | Dungeon-Master: Heldenlied des Barden, am Kapitelende feste Strophen mit Heldennamen, gesungen vom Musikmodell |
+| `app/panel/dungeon_live.py` | KI-Dungeon-Master: die Zahlen aller Teile für die Live-Übersicht, ein Weg aus live.py |
 | `app/panel/dungeon_mitkommen.py` | Dungeon-Master: Überreden zum Mitkommen, Haltung und Charisma-Probe des Panels, die Karte nimmt die Person mit |
 | `app/panel/dungeon_musik.py` | KI-Dungeon-Master: Musik je Welt und Stimmung (auch Boss) vorab, Tempo/Tonart als Metadaten; Klänge, Würfel im Browser |
 | `app/panel/dungeon_mut.py` | Dungeon-Master-Heldenmut: einmal am Abend neu würfeln oder kritisch treffen, ein zweiter durch 👍 der Mitspieler |
@@ -548,6 +549,7 @@ Spracherkennung und Sprachausgabe als eigene Dienste, mit Vorrang vor allem ande
 | Modul | Aufgabe |
 |---|---|
 | `app/api_watchdog.py` | Wächter ohne Panel (Installationsart „api“) |
+| `app/panel/arbeiter.py` | Zweiter Prozess für schwere Arbeit (Dokumente bauen) mit niedrigerer Priorität |
 | `app/asr_proxy.py` | Spracherkennung: nimmt an und reicht an die Engine durch |
 | `app/asr_server.py` | Spracherkennung als eigener kleiner Dienst |
 | `app/bedarf.py` | Engine nur bei Bedarf: Kindprozess starten, nach Ruhe beenden, nur eine zur Zeit (bedarf.lock) |
