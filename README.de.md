@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.395** Arbeitsregeln: Baustopp für neue Funktionen, solange mehr als 10 Praxistest-Punkte „Jetzt wichtig“ sind; die Coding-Richtlinie wird nach Bedarf gelesen (kurzer Kopf plus die Teile des geänderten Bereichs)
 - **V01.1.394** Keine privaten Wörter ins Internet: nach Text von außen (Kalender, Web, Dokument) nimmt eine Suche, das Wetter oder eine Seite nur noch die eigenen Worte der Person oder Wörter, die eine Suche schon fand, im Chat wie bei Aufträgen
 - **V01.1.393** Einheitlicher Seitenkopf: Kalender, E-Mail, Listen und die anderen eigenen Seiten haben einen Titel, am Handy oben mit Zurück; die untere Leiste markiert, woher man kam
 - **V01.1.392** Praxistest in drei Stufen: „Jetzt wichtig“ (höchstens 10), „Bei Gelegenheit“, „Durch Selbsttest abgedeckt“; „Braucht dich“ zählt nur noch das Wichtige
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.388** ROT-FIX Tests: ein Test ließ den offenen Sprach-Chat eingeschaltet zurück und machte einen anderen wacklig; ein zu großes Foto für die Rechner-Karte wird immer als „zu groß“ abgelehnt
 - **V01.1.387** Fix: kürzerer Hinweis zu „Eigene Stimmen“ in den Sprachausgabe-Einstellungen.
 - **V01.1.386** Nur eine Base-Engine für Sprachausgabe: ein Base-Hauptmodell spricht die eigenen Stimmen selbst, kein schwächeres zweites Modell daneben; VoiceDesign steht als „lädt bei Bedarf“.
-- **V01.1.385** Überschriften auch mitten im Absatz: eingefügte Chats und Notizen bekommen ihre Abschnitte (fett, mit Doppelpunkt oder Klammer), so zeigen Quellen-Chips den richtigen Abschnitt; gilt nach „Neu einlesen“
 
 
 

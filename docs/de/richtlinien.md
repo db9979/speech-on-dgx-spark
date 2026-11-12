@@ -4,6 +4,21 @@ Gilt für jeden Thread und jeden Menschen, der Code an Speech on DGX Spark ände
 
 **Die Richtlinie wächst mit:** Wer eine neue allgemeine Regel einführt (neuer Baustein, neues Register, neue Pflicht für jede Funktion), ergänzt sie hier und in der englischen Fassung im selben Commit. `tests/test_richtlinie.py` prüft, dass jeder hier genannte Selbsttest existiert.
 
+**Lesen nach Bedarf (Dominik 2026-11-12, Kritische Prüfung Punkt 9):** Pflicht vor jeder Änderung sind `CLAUDE.md` und dieser Kopf bis einschließlich Teil 0 (zusammen höchstens 15 KB, `test_richtlinie`). Die übrigen Teile liest, wer ihren Bereich ändert. Was ein Selbsttest erzwingt (🧪), meldet der Test mit seinem eigenen Hinweis; diese Teile muss niemand vorab ganz lesen.
+
+| Teil | lesen, wenn die Änderung … |
+|---|---|
+| 1 Pflichtliste | eine neue Funktion, einen Schalter oder ein Werkzeug bringt |
+| 2 Sicherheit | Endpunkte, Zugang, fremden Text, Verbindungen nach außen, Geheimnisse, root oder Update berührt (immer mit der Sicherheits-Checkliste) |
+| 3 Funktionen, Schalter, Rechte | Freigaben, Profile oder Gäste berührt |
+| 4 Logging, 5 Live | neue Logzeilen oder Live-Zähler bringt |
+| 6 Oberfläche, 7 Texte | Seiten, CSS, JS, sichtbare Texte, Hilfe oder Englisch berührt |
+| 8 Sprachmodell, Weiche, Werkzeuge | den Chat-Ablauf, die Weiche, Werkzeuge oder Modelle berührt |
+| 9 Tests, 14 Übersicht | Tests ändert oder ein Wächter rot wird |
+| 10 Repo, 11 Doku, 12 Betrieb | Push, CI, Releases, Doku, Update oder Dienste berührt |
+| 13 Zusammenarbeit | immer (kurz) |
+| 15, 16, 17 | Altlasten, alte Beschlüsse, neue Helfer oder Listen berührt |
+
 **Legende**
 - 🧪 Ein Selbsttest erzwingt die Regel (Testname dahinter). Ein Verstoß macht „Tests“ auf GitHub rot, und tars spielt die Version nicht ein.
 - 📝 Die Regel ist nur eine Absprache. Kein Test prüft sie.
@@ -426,6 +441,7 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
 
 ## 13. Zusammenarbeit (Threads und Dominik)
 
+- **Baustopp bei Prüf-Rückstand (Dominik 2026-11-12, Kritische Prüfung Punkt 8):** Zeigt Zustand → Praxistest unter „Jetzt wichtig“ mehr als 10 Punkte (dann sind gemeldete Probleme dabei), bauen Threads nur Fixes und keine neuen Funktionen, bis die Zahl wieder bei 10 oder darunter liegt. Die Zahl sieht nur Dominik auf dem Pi; der Koordinator fragt vor einer neuen Funktion nach, ein gemeldetes Problem geht vor. (PA)
 - Antworten auf Deutsch, kurze nummerierte Vorschläge mit markierter Empfehlung. Bei größeren Funktionen erst Plan, dann bauen. (PA)
 - Im Ergebnis steht, welche Punkte der Sicherheits-Checkliste und der Pflichtliste (Teil 1) berührt wurden. Bei neuen Funktionen auch, was in Live ergänzt wurde. (PA)
 - Eine neue allgemeine Regel kommt im selben Commit in diese Richtlinie (de und en) und, wenn möglich, in einen Selbsttest.

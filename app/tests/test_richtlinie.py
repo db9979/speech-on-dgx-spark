@@ -27,6 +27,7 @@ import profiles  # noqa: E402
 APP = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ROOT = os.path.dirname(APP)
 PANEL = os.path.join(APP, "panel")
+MUST_READ = 15 * 1024   # bytes read before every change: CLAUDE.md + the guideline up to part 0 (Dominik 2026-11-12)
 
 
 def repo_file(*parts):
@@ -174,6 +175,21 @@ class Guideline(unittest.TestCase):
             self.assertIn("sicherheits-checkliste.md" if text is de else "security-checklist.md", text)
         repo_file("docs", "de", "sicherheits-checkliste.md")
         repo_file("docs", "en", "security-checklist.md")
+
+    def test_what_must_be_read_stays_short(self):
+        """Lesen nach Bedarf (Kritische Prüfung 2026-11-12 point 9): CLAUDE.md and the guideline's head up to and including
+        part 0 are read before every change; together they stay at most MUST_READ bytes, the parts are read on demand."""
+        claude = repo_file("CLAUDE.md")
+        for name, title in ((("docs", "de", "richtlinien.md"), "Lesen nach Bedarf"), (("docs", "en", "guidelines.md"), "Read on demand")):
+            text = repo_file(*name)
+            head = text[:text.index("\n## 1.")]
+            self.assertIn(title, head, "/".join(name))
+            for part in range(1, 18):
+                self.assertTrue(re.search(r"^\| [^|\n]*\b%d\b" % part, head, re.M),
+                                f"{'/'.join(name)}: part {part} missing in the reading table")
+            size = len(head.encode("utf-8")) + len(claude.encode("utf-8"))
+            self.assertLessEqual(size, MUST_READ, f"{'/'.join(name)}: head up to part 0 plus CLAUDE.md is {size} bytes: shorten "
+                                                  "the head or CLAUDE.md, details belong into the parts")
 
     def test_no_test_opens_a_file_outside_app_directly(self):
         """tars 2026-10-16: the self-test of install.sh (a copy with only app/) had four ERROR from open(../install.sh)."""

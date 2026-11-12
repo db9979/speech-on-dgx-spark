@@ -4,6 +4,21 @@ Applies to every thread and every person who changes code in Speech on DGX Spark
 
 **The guideline grows along:** whoever introduces a new general rule (new building block, new register, new duty for every feature) adds it here and in the German version in the same commit. `tests/test_richtlinie.py` checks that every self-test named here exists.
 
+**Read on demand (Dominik 2026-11-12, critical review point 9):** required before every change are `CLAUDE.md` and this head up to and including part 0 (together at most 15 KB, `test_richtlinie`). The other parts are read by whoever changes their area. What a self-test enforces (🧪) is reported by the test with its own hint; nobody has to read those parts in full beforehand.
+
+| Part | read when the change … |
+|---|---|
+| 1 Mandatory list | brings a new feature, switch or tool |
+| 2 Security | touches endpoints, access, outside text, outgoing connections, secrets, root or update (always with the security checklist) |
+| 3 Features, switches, rights | touches releases, profiles or guests |
+| 4 Logging, 5 Live | brings new log lines or Live counters |
+| 6 Interface, 7 Texts | touches pages, CSS, JS, visible texts, help or English |
+| 8 Language model, switch, tools | touches the chat flow, the switch, tools or models |
+| 9 Tests, 14 Overview | changes tests or a guard turns red |
+| 10 Repo, 11 Docs, 12 Operation | touches push, CI, releases, docs, update or services |
+| 13 Collaboration | always (short) |
+| 15, 16, 17 | touches legacy, old decisions, new helpers or lists |
+
 **Legend**
 - 🧪 A self-test enforces the rule (test name after it). A violation turns "Tests" red on GitHub, and tars does not install the version.
 - 📝 The rule is only an agreement. No test checks it.
@@ -426,6 +441,7 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 
 ## 13. Collaboration (threads and Dominik)
 
+- **Build stop on a test backlog (Dominik 2026-11-12, critical review point 8):** when Status → Hands-on test shows more than 10 points under "Important now" (then reported problems are among them), threads build only fixes and no new features until the number is back at 10 or below. Only Dominik sees the number on the Pi; the coordinator asks before a new feature, a reported problem comes first. (PA)
 - Answers in German, short numbered suggestions with a marked recommendation. For larger features first a plan, then build. (PA)
 - The result states which points of the security checklist and the mandatory list (part 1) were touched. For new features also what was added to Live. (PA)
 - A new general rule goes into this guideline (de and en) in the same commit and, if possible, into a self-test.
