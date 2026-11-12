@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.398** Hidden test set for the switch: 168 everyday sentences nobody tuned the rules on; the switch hits 81 % of them (100 % on its own test sentences) and may not get worse
 - **V01.1.397** Steckbrief per feature: everything a feature needs in the lists (names, Live, logs, coverage, help sentence) stands in one place; pilot "Exact calculations", every new feature starts with one
 - **V01.1.396** Layers instead of a knot: a self-test keeps the code's imports going downwards; no new module joins the big import cycle, imports hidden in functions only get fewer
 - **V01.1.395** Working rules: a build stop for new features while more than 10 hands-on test points are "Important now"; the coding guideline is read on demand (a short head plus the parts of the changed area)
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.391** Page "Guides" dissolved: every guide stands next to its switch or on its Me page, the search (Ctrl K) opens it there
 - **V01.1.390** Features on a computer: description in two lines, the first function open at once, "Save" as a bar under the whole page
 - **V01.1.389** Tap areas on the phone: a finger now hits switches, arrows, filters and small buttons on at least 44 px; the filters of the Features page show whole words
-- **V01.1.388** Red fix for tests: one test left the open voice chat switched on and made another one wobble; a photo that is too big for the computer card is always refused as "too big"
 
 
 

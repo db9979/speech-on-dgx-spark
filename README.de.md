@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.398** Verdeckter Prüfsatz für die Weiche: 168 Alltagssätze, an denen niemand die Regeln eingestellt hat; die Weiche trifft 81 % davon (bei den eigenen Testsätzen 100 %) und darf nicht schlechter werden
 - **V01.1.397** Steckbrief pro Funktion: alles, was eine Funktion in den Listen braucht (Namen, Live, Logs, Abdeckung, Hilfesatz), steht an einer Stelle; Pilot „Rechnen“, jede neue Funktion beginnt damit
 - **V01.1.396** Schichten statt Knäuel: ein Selbsttest hält die Importe des Codes nach unten; kein neues Modul kommt in den großen Import-Kreis, versteckte Importe in Funktionen werden nur weniger
 - **V01.1.395** Arbeitsregeln: Baustopp für neue Funktionen, solange mehr als 10 Praxistest-Punkte „Jetzt wichtig“ sind; die Coding-Richtlinie wird nach Bedarf gelesen (kurzer Kopf plus die Teile des geänderten Bereichs)
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.391** Seite „Anleitungen“ aufgelöst: jede Anleitung steht neben ihrem Schalter oder auf ihrer Ich-Seite, die Suche (Strg K) öffnet sie dort
 - **V01.1.390** Funktionen am Rechner: Beschreibung in zwei Zeilen, die erste Funktion gleich geöffnet, „Speichern“ als Leiste unter der ganzen Seite
 - **V01.1.389** Tippflächen am Handy: Schalter, Pfeile, Filter und kleine Knöpfe trifft ein Finger jetzt auf mindestens 44 px; die Filter der Funktionen-Seite zeigen ganze Wörter
-- **V01.1.388** ROT-FIX Tests: ein Test ließ den offenen Sprach-Chat eingeschaltet zurück und machte einen anderen wacklig; ein zu großes Foto für die Rechner-Karte wird immer als „zu groß“ abgelehnt
 
 
 

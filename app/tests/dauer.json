@@ -426,6 +426,7 @@
 "test_weiche": 5.9,
 "test_weiche_abstimmen": 2.2,
 "test_weiche_unklar": 1.3,
+"test_weiche_verdeckt": 1.3,
 "test_werkstatt": 1.0,
 "test_werkzeug_abdeckung": 2.3,
 "test_werkzeuge": 0.1,
