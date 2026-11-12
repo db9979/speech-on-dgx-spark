@@ -1972,7 +1972,7 @@ Self-tests: `test_panel`, `test_features`, `test_rechte_sofort`, `test_passkey`,
 
 ### Prepare request
 
-chat_turn.prepare turns a chat request into a finished turn before the language model is asked: who speaks and what that person may do, the system prompt, answers to questions back and proposals, the locks after outside text and the list of offered tools.
+chat_turn.prepare turns a chat request into a finished turn before the language model is asked: who speaks and what that person may do, the system prompt, answers to questions back and proposals, the locks after outside text and the list of offered tools. That happens in seven fixed stages (chat_turn.STUFEN: input, way, who, rights and locks, waiting yes, tools, prompt), each reads only what the stages before it set.
 
 **Why:** The model should only see what it may really use in this turn. Everything that decides (rights, locks, a „yes“ to a proposal, the choice after a question back) the panel does here by fixed rules; the model only says the result afterwards.
 
@@ -2074,6 +2074,7 @@ Applies at: [step 11](#kn-vorbereiten-s10), [step 12](#kn-vorbereiten-s11)
 #### In the code
 
 - `app/panel/chat_turn.py` `prepare`: the whole way ([step 1](#kn-vorbereiten-s1), [step 14](#kn-vorbereiten-s13))
+- `app/panel/chat_turn.py` `STUFEN`: the seven stages in fixed order ([step 1](#kn-vorbereiten-s1), [step 14](#kn-vorbereiten-s13))
 - `app/panel/chat_turn.py` `shared_stranger`: unknown voice at a speaker ([step 4](#kn-vorbereiten-s3))
 - `app/panel/chat.py` `trim_history`: trim the history ([step 3](#kn-vorbereiten-s2))
 - `app/panel/chat.py` `left_out`: leave out answers from outside text ([step 3](#kn-vorbereiten-s2), [step 5](#kn-vorbereiten-s4))

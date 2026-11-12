@@ -4,19 +4,23 @@ from technik_seiten import S
 
 SEITEN = {
     "vorbereiten": {
-        "stand": "5c04bf0f3e",
+        "stand": "6e900ba45d",
         "bezug": {
-            "klaeren.MAX_BUTTONS": ["s7"], "chat_turn.prepare": ["s1", "s13"], "chat_turn.shared_stranger": ["s3"],
+            "klaeren.MAX_BUTTONS": ["s7"], "chat_turn.prepare": ["s1", "s13"], "chat_turn.STUFEN": ["s1", "s13"], "chat_turn.shared_stranger": ["s3"],
             "chat.left_out": ["s2", "s4"], "notaus.locked_tools": ["s11"], "chat_turn.notaus_note": ["s8", "s11"],
             "chat.offer_memory": ["s10"], "chat.ha_take": ["s7"], "profiles.quelle": ["s7"], "profiles.pending_replaced": ["s7"], "stoppwort.ende": ["s14"], "proactive.answers_note": ["s14"],
             "regeln": ["s10", "s11"], "regel:Gast oder unbekannte Stimme am Lautsprecher": ["s3"],
         },
         "kurz": ("chat_turn.prepare macht aus einer Chat-Anfrage einen fertigen Gesprächszug, bevor das Sprachmodell "
                  "gefragt wird: wer spricht und was diese Person darf, der Systemprompt, Antworten auf Rückfragen und "
-                 "Vorschläge, die Sperren nach fremdem Text und die Liste der angebotenen Werkzeuge.",
+                 "Vorschläge, die Sperren nach fremdem Text und die Liste der angebotenen Werkzeuge. Das geschieht in "
+                 "sieben festen Stufen (chat_turn.STUFEN: Eingang, Weg, Wer, Rechte und Sperren, wartendes Ja, "
+                 "Werkzeuge, Prompt), jede liest nur, was die Stufen davor gesetzt haben.",
                  "chat_turn.prepare turns a chat request into a finished turn before the language model is asked: who "
                  "speaks and what that person may do, the system prompt, answers to questions back and proposals, the "
-                 "locks after outside text and the list of offered tools."),
+                 "locks after outside text and the list of offered tools. That happens in seven fixed stages "
+                 "(chat_turn.STUFEN: input, way, who, rights and locks, waiting yes, tools, prompt), each reads only what "
+                 "the stages before it set."),
         "warum": ("Das Modell soll nur sehen, was es in diesem Zug wirklich darf. Alles, was entscheidet (Rechte, "
                   "Sperren, ein „Ja“ zu einem Vorschlag, die Auswahl bei einer Rückfrage), macht das Panel hier mit "
                   "festen Regeln; das Modell sagt danach nur das Ergebnis.",
@@ -268,6 +272,7 @@ SEITEN = {
         ],
         "code": [
             ("chat_turn.prepare", ("der ganze Ablauf", "the whole way")),
+            ("chat_turn.STUFEN", ("die sieben Stufen in fester Reihenfolge", "the seven stages in fixed order")),
             ("chat_turn.shared_stranger", ("fremde Stimme am Lautsprecher", "unknown voice at a speaker")),
             ("chat.trim_history", ("Verlauf kürzen", "trim the history")),
             ("chat.left_out", ("Antworten aus fremdem Text weglassen", "leave out answers from outside text")),

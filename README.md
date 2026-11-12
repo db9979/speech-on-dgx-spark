@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.400** One chat turn in seven fixed stages: who asks, rights and locks, waiting yes, tools and prompt each have their own place; nothing changes for you
 - **V01.1.399** Heavy work in a second process: documents are built beside the panel, so speech and pages stay quick; the Dungeon reaches Live through one door
 - **V01.1.398** Hidden test set for the switch: 168 everyday sentences nobody tuned the rules on; the switch hits 81 % of them (100 % on its own test sentences) and may not get worse
 - **V01.1.397** Steckbrief per feature: everything a feature needs in the lists (names, Live, logs, coverage, help sentence) stands in one place; pilot "Exact calculations", every new feature starts with one
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.393** One page head: Calendar, E-mail, Lists and the other own pages have a title, on a phone on top with a way back; the bar below marks where one came from
 - **V01.1.392** Hands-on test in three tiers: "Important now" (at most 10), "When there is time", "Covered by a self-test"; "Needs you" counts only what is important
 - **V01.1.391** Page "Guides" dissolved: every guide stands next to its switch or on its Me page, the search (Ctrl K) opens it there
-- **V01.1.390** Features on a computer: description in two lines, the first function open at once, "Save" as a bar under the whole page
 
 
 

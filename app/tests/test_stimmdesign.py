@@ -364,8 +364,8 @@ class Panel(unittest.TestCase):
                     text = f.read()
                 self.assertIsNone(re.search(r"settings\([^()\n]*\)\s*\.get\(\s*[\"']voice[\"']", text), name)
                 self.assertIsNone(re.search(r"settings\([^()\n]*\)\s*\[\s*[\"']voice[\"']", text), name)
-        for name, part in (("chat_turn.py", 'k != "voice" or profiles.voice_ok(who["id"], body[k])'),
-                           ("chat_turn.py", 'k != "voice" or profiles.voice_ok(sound_of["id"], own[k])'),
+        for name, part in (("chat_turn.py", 'k != "voice" or profiles.voice_ok(z.who["id"], z.body[k])'),
+                           ("chat_turn.py", 'k != "voice" or profiles.voice_ok(z.sound_of["id"], z.own[k])'),
                            ("mcpserver.py", "if voice and not profiles.voice_ok(uid, voice):"),
                            ("mcpserver.py", 'args.get("voice") or profiles.voice_for(uid)')):
             with open(os.path.join(os.path.dirname(profiles.__file__), name), encoding="utf-8") as f:

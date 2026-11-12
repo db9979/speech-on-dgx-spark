@@ -1972,7 +1972,7 @@ Selbsttests: `test_panel`, `test_features`, `test_rechte_sofort`, `test_passkey`
 
 ### Anfrage vorbereiten
 
-chat_turn.prepare macht aus einer Chat-Anfrage einen fertigen Gesprächszug, bevor das Sprachmodell gefragt wird: wer spricht und was diese Person darf, der Systemprompt, Antworten auf Rückfragen und Vorschläge, die Sperren nach fremdem Text und die Liste der angebotenen Werkzeuge.
+chat_turn.prepare macht aus einer Chat-Anfrage einen fertigen Gesprächszug, bevor das Sprachmodell gefragt wird: wer spricht und was diese Person darf, der Systemprompt, Antworten auf Rückfragen und Vorschläge, die Sperren nach fremdem Text und die Liste der angebotenen Werkzeuge. Das geschieht in sieben festen Stufen (chat_turn.STUFEN: Eingang, Weg, Wer, Rechte und Sperren, wartendes Ja, Werkzeuge, Prompt), jede liest nur, was die Stufen davor gesetzt haben.
 
 **Warum:** Das Modell soll nur sehen, was es in diesem Zug wirklich darf. Alles, was entscheidet (Rechte, Sperren, ein „Ja“ zu einem Vorschlag, die Auswahl bei einer Rückfrage), macht das Panel hier mit festen Regeln; das Modell sagt danach nur das Ergebnis.
 
@@ -2074,6 +2074,7 @@ Gilt bei: [Schritt 11](#kn-vorbereiten-s10), [Schritt 12](#kn-vorbereiten-s11)
 #### Im Code
 
 - `app/panel/chat_turn.py` `prepare`: der ganze Ablauf ([Schritt 1](#kn-vorbereiten-s1), [Schritt 14](#kn-vorbereiten-s13))
+- `app/panel/chat_turn.py` `STUFEN`: die sieben Stufen in fester Reihenfolge ([Schritt 1](#kn-vorbereiten-s1), [Schritt 14](#kn-vorbereiten-s13))
 - `app/panel/chat_turn.py` `shared_stranger`: fremde Stimme am Lautsprecher ([Schritt 4](#kn-vorbereiten-s3))
 - `app/panel/chat.py` `trim_history`: Verlauf kürzen ([Schritt 3](#kn-vorbereiten-s2))
 - `app/panel/chat.py` `left_out`: Antworten aus fremdem Text weglassen ([Schritt 3](#kn-vorbereiten-s2), [Schritt 5](#kn-vorbereiten-s4))

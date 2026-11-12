@@ -1941,7 +1941,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Anfrage vorbereiten",
 "title": "Anfrage vorbereiten",
-"text": "chat_turn.prepare macht aus einer Chat-Anfrage einen fertigen Gesprächszug, bevor das Sprachmodell gefragt wird: wer spricht und was diese Person darf, der Systemprompt, Antworten auf Rückfragen und Vorschläge, die Sperren nach fremdem Text und die Liste der angebotenen Werkzeuge."
+"text": "chat_turn.prepare macht aus einer Chat-Anfrage einen fertigen Gesprächszug, bevor das Sprachmodell gefragt wird: wer spricht und was diese Person darf, der Systemprompt, Antworten auf Rückfragen und Vorschläge, die Sperren nach fremdem Text und die Liste der angebotenen Werkzeuge. Das geschieht in sieben festen Stufen (chat_turn.STUFEN: Eingang, Weg, Wer, Rechte und Sperren, wartendes Ja, Werkzeuge, Prompt), jede liest nur, was die Stufen davor gesetzt haben."
 },
 {
 "lang": "de",
@@ -2029,7 +2029,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/chat_turn.py prepare: der ganze Ablauf (Schritt 1, Schritt 14) - app/panel/chat_turn.py shared_stranger: fremde Stimme am Lautsprecher (Schritt 4) - app/panel/chat.py trim_history: Verlauf kürzen (Schritt 3) - app/panel/chat.py left_out: Antworten aus fremdem Text weglassen (Schritt 3, Schritt 5) - app/panel/chat.py offer_memory: kein memory_save, wenn die Nachricht nur fragt (Schritt 11) - app/panel/intent.py classify_cfg: feste Regeln der Weiche (Schritt 5) - app/panel/klaeren.py answer: Antwort auf eine Rückfrage (Schritt 8) - app/panel/klaeren.py weg_answer: Antwort auf die Rückfrage zum Weg (Schritt 8) - app/panel/features.py allowed: Freigabe je Funktion (Schritt 11) - app/panel/notaus.py locked_tools: was der Notaus wegnimmt (Schritt 12) - app/panel/intent.py narrow: Werkzeuge eingrenzen (Schritt 13) - app/panel/chat_turn.py notaus_note: Satz für das Modell bei Notaus (Schritt 9, Schritt 12) - app/panel/chat.py ha_take: Befehl mit Codewort nur von seiner Quelle (Schritt 8) - app/panel/profiles.py quelle: die eine Quelle eines Zugs: Art, Gespräch, Gerät (Schritt 8) - app/panel/profiles.py pending_replaced: ein Ja, dessen Vorschlag von woanders ersetzt wurde (Schri"
+"text": "- app/panel/chat_turn.py prepare: der ganze Ablauf (Schritt 1, Schritt 14) - app/panel/chat_turn.py STUFEN: die sieben Stufen in fester Reihenfolge (Schritt 1, Schritt 14) - app/panel/chat_turn.py shared_stranger: fremde Stimme am Lautsprecher (Schritt 4) - app/panel/chat.py trim_history: Verlauf kürzen (Schritt 3) - app/panel/chat.py left_out: Antworten aus fremdem Text weglassen (Schritt 3, Schritt 5) - app/panel/chat.py offer_memory: kein memory_save, wenn die Nachricht nur fragt (Schritt 11) - app/panel/intent.py classify_cfg: feste Regeln der Weiche (Schritt 5) - app/panel/klaeren.py answer: Antwort auf eine Rückfrage (Schritt 8) - app/panel/klaeren.py weg_answer: Antwort auf die Rückfrage zum Weg (Schritt 8) - app/panel/features.py allowed: Freigabe je Funktion (Schritt 11) - app/panel/notaus.py locked_tools: was der Notaus wegnimmt (Schritt 12) - app/panel/intent.py narrow: Werkzeuge eingrenzen (Schritt 13) - app/panel/chat_turn.py notaus_note: Satz für das Modell bei Notaus (Schritt 9, Schritt 12) - app/panel/chat.py ha_take: Befehl mit Codewort nur von seiner Quelle (Schritt 8) - app/panel/profiles.py quelle: die eine Quelle eines Zugs: Art, Gespräch, Gerät (Schritt 8) - a"
 },
 {
 "lang": "de",
@@ -2037,7 +2037,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "tt 8) - app/panel/stoppwort.py ende: ein ganzer Satz aus Stoppwörtern beendet das Gespräch (Schritt 2) - app/panel/proactive.py answers_note: Antwort auf eine Meldung des Spark (Schritt 2)"
+"text": "pp/panel/profiles.py pending_replaced: ein Ja, dessen Vorschlag von woanders ersetzt wurde (Schritt 8) - app/panel/stoppwort.py ende: ein ganzer Satz aus Stoppwörtern beendet das Gespräch (Schritt 2) - app/panel/proactive.py answers_note: Antwort auf eine Meldung des Spark (Schritt 2)"
 },
 {
 "lang": "de",
@@ -19381,7 +19381,7 @@
 "file": "Architecture and data flow",
 "head": "Prepare request",
 "title": "Prepare request",
-"text": "chat_turn.prepare turns a chat request into a finished turn before the language model is asked: who speaks and what that person may do, the system prompt, answers to questions back and proposals, the locks after outside text and the list of offered tools."
+"text": "chat_turn.prepare turns a chat request into a finished turn before the language model is asked: who speaks and what that person may do, the system prompt, answers to questions back and proposals, the locks after outside text and the list of offered tools. That happens in seven fixed stages (chat_turn.STUFEN: input, way, who, rights and locks, waiting yes, tools, prompt), each reads only what the stages before it set."
 },
 {
 "lang": "en",
@@ -19469,7 +19469,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/chat_turn.py prepare: the whole way (step 1, step 14) - app/panel/chat_turn.py shared_stranger: unknown voice at a speaker (step 4) - app/panel/chat.py trim_history: trim the history (step 3) - app/panel/chat.py left_out: leave out answers from outside text (step 3, step 5) - app/panel/chat.py offer_memory: no memory_save when the message only asks (step 11) - app/panel/intent.py classify_cfg: the switch's fixed rules (step 5) - app/panel/klaeren.py answer: answer to a question back (step 8) - app/panel/klaeren.py weg_answer: answer to the question which way (step 8) - app/panel/features.py allowed: release per function (step 11) - app/panel/notaus.py locked_tools: what the kill switch takes away (step 12) - app/panel/intent.py narrow: narrow the tools (step 13) - app/panel/chat_turn.py notaus_note: sentence for the model with the kill switch (step 9, step 12) - app/panel/chat.py ha_take: command with code word only from its source (step 8) - app/panel/profiles.py quelle: the one source of a turn: kind, conversation, device (step 8) - app/panel/profiles.py pending_replaced: a yes whose proposal was replaced from elsewhere (step 8) - app/panel/stoppwort.py ende: a whole "
+"text": "- app/panel/chat_turn.py prepare: the whole way (step 1, step 14) - app/panel/chat_turn.py STUFEN: the seven stages in fixed order (step 1, step 14) - app/panel/chat_turn.py shared_stranger: unknown voice at a speaker (step 4) - app/panel/chat.py trim_history: trim the history (step 3) - app/panel/chat.py left_out: leave out answers from outside text (step 3, step 5) - app/panel/chat.py offer_memory: no memory_save when the message only asks (step 11) - app/panel/intent.py classify_cfg: the switch's fixed rules (step 5) - app/panel/klaeren.py answer: answer to a question back (step 8) - app/panel/klaeren.py weg_answer: answer to the question which way (step 8) - app/panel/features.py allowed: release per function (step 11) - app/panel/notaus.py locked_tools: what the kill switch takes away (step 12) - app/panel/intent.py narrow: narrow the tools (step 13) - app/panel/chat_turn.py notaus_note: sentence for the model with the kill switch (step 9, step 12) - app/panel/chat.py ha_take: command with code word only from its source (step 8) - app/panel/profiles.py quelle: the one source of a turn: kind, conversation, device (step 8) - app/panel/profiles.py pending_replaced: a yes whose pr"
 },
 {
 "lang": "en",
@@ -19477,7 +19477,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "sentence of stop words ends the talk (step 2) - app/panel/proactive.py answers_note: answer to a note of the Spark (step 2)"
+"text": "oposal was replaced from elsewhere (step 8) - app/panel/stoppwort.py ende: a whole sentence of stop words ends the talk (step 2) - app/panel/proactive.py answers_note: answer to a note of the Spark (step 2)"
 },
 {
 "lang": "en",

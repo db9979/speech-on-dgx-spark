@@ -437,9 +437,9 @@ class Assist(unittest.TestCase):
         import chat_turn
         import inspect
         self.assertIn("ohne Listen", chat.ANDROID_HINT)
-        src = inspect.getsource(chat_turn.prepare)
-        self.assertLess(src.index("android.assist_gate"), src.index("guest = "))   # before anything else is worked out
-        self.assertIn("chat.ANDROID_HINT", src)
+        src = inspect.getsource(chat_turn._eingang)   # the first stage of prepare
+        self.assertLess(src.index("android.assist_gate"), src.index("z.guest = "))   # before anything else is worked out
+        self.assertIn("chat.ANDROID_HINT", "".join(inspect.getsource(f) for f in chat_turn.STUFEN))
         import live
         import tracelog
         self.assertIn("android", tracelog.CLIENTS)

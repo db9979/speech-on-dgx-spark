@@ -613,7 +613,7 @@ class DocsCheap(unittest.TestCase):
     def test_the_question_reads_the_lists_beside_the_loop(self):
         import inspect
         import chat_turn
-        src = inspect.getsource(chat_turn.prepare)
+        src = "".join(inspect.getsource(f) for f in chat_turn.STUFEN)   # every stage of prepare
         self.assertNotIn("documents.list_docs(", src)
         self.assertNotIn("wissen.shared_list(", src)
         self.assertNotIn("chat.docs_hint(", src)

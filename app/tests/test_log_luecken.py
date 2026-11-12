@@ -170,7 +170,8 @@ PANEL = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "panel")
 # prints whose line a helper builds (the helper's own words start with an area) or that go to a console, not the journal
 PRINT_OK = {
     ("chat.py", "watch_report"): "watch.report_line baut „watch: …“",
-    ("chat_turn.py", "prepare"): "lokal.log_line baut „wissen: …“ bzw. „lokal: …“",
+    ("chat_turn.py", "_weg"): "„weiche: Antwort auf Rückfrage …“ bzw. „weiche: Folgefrage …“ je nach Fall",
+    ("chat_turn.py", "_werkzeuge"): "lokal.log_line baut „wissen: …“ bzw. „lokal: …“",
     ("lokal.py", "run"): "log_line baut „wissen: …“",
     ("panel.py", "slow_reads"): "slow_read baut „seite: slow GET …“",
     ("tracelog.py", "finish"): "line() baut „anfrage: …“",

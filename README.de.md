@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.400** Ein Gesprächszug in sieben festen Stufen: wer fragt, Rechte und Sperren, wartendes Ja, Werkzeuge und Prompt haben je ihren Platz; für dich ändert sich nichts
 - **V01.1.399** Schwere Arbeit im zweiten Prozess: Dokumente entstehen neben dem Panel, Sprache und Seiten bleiben flott; der Dungeon erreicht Live über eine Tür
 - **V01.1.398** Verdeckter Prüfsatz für die Weiche: 168 Alltagssätze, an denen niemand die Regeln eingestellt hat; die Weiche trifft 81 % davon (bei den eigenen Testsätzen 100 %) und darf nicht schlechter werden
 - **V01.1.397** Steckbrief pro Funktion: alles, was eine Funktion in den Listen braucht (Namen, Live, Logs, Abdeckung, Hilfesatz), steht an einer Stelle; Pilot „Rechnen“, jede neue Funktion beginnt damit
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.393** Einheitlicher Seitenkopf: Kalender, E-Mail, Listen und die anderen eigenen Seiten haben einen Titel, am Handy oben mit Zurück; die untere Leiste markiert, woher man kam
 - **V01.1.392** Praxistest in drei Stufen: „Jetzt wichtig“ (höchstens 10), „Bei Gelegenheit“, „Durch Selbsttest abgedeckt“; „Braucht dich“ zählt nur noch das Wichtige
 - **V01.1.391** Seite „Anleitungen“ aufgelöst: jede Anleitung steht neben ihrem Schalter oder auf ihrer Ich-Seite, die Suche (Strg K) öffnet sie dort
-- **V01.1.390** Funktionen am Rechner: Beschreibung in zwei Zeilen, die erste Funktion gleich geöffnet, „Speichern“ als Leiste unter der ganzen Seite
 
 
 
