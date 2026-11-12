@@ -267,6 +267,7 @@
 "test_saetze": 0.7,
 "test_satzende": 1.0,
 "test_scanner": 1.5,
+"test_schichten": 0.0,
 "test_schonend": 0.2,
 "test_schreib": 2.6,
 "test_schwer": 0.1,

@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.396** Layers instead of a knot: a self-test keeps the code's imports going downwards; no new module joins the big import cycle, imports hidden in functions only get fewer
 - **V01.1.395** Working rules: a build stop for new features while more than 10 hands-on test points are "Important now"; the coding guideline is read on demand (a short head plus the parts of the changed area)
 - **V01.1.394** No private words to the internet: after outside text (calendar, web, document) a search, the weather or a page only takes the person's own words or words a search already found, in the chat as in background jobs
 - **V01.1.393** One page head: Calendar, E-mail, Lists and the other own pages have a title, on a phone on top with a way back; the bar below marks where one came from
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.389** Tap areas on the phone: a finger now hits switches, arrows, filters and small buttons on at least 44 px; the filters of the Features page show whole words
 - **V01.1.388** Red fix for tests: one test left the open voice chat switched on and made another one wobble; a photo that is too big for the computer card is always refused as "too big"
 - **V01.1.387** Fix: shorter hint for "Own voices" in the speech output settings.
-- **V01.1.386** Only one Base engine for speech: a Base main model speaks the own voices itself, no weaker second model beside it; VoiceDesign shows as loaded on demand.
 
 
 
