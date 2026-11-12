@@ -16533,7 +16533,15 @@
 "file": "Sicherheit und Betrieb",
 "head": "Selbsttest",
 "title": "Praxistest",
-"text": "Praxistest (seit V01.0.697, nur Admin, nicht für Verwalter): *Zustand → Praxistest* zeigt, was neu ist und im Alltag noch ausprobiert werden sollte, das Neueste oben. Die Prüfpunkte stehen als eine Liste im Repository (app/panel/praxistest.json: Nummer, Version, Titel, Schritte, Thread); jede neue Funktion hängt ihren Punkt mit der nächsten Nummer an, Nummern ändern sich nie. Je Punkt „Klappt“, „Problem“ oder „Später“; „Problem“ zeigt den Weg zu *Zustand → Logs → Diagnose*, um den Auszug mit der Nummer in den Thread zu geben. Punkte vor V01.0.600, die niemand markiert hat, sind als „alt, vermutlich erledigt“ eingeklappt, mit einem Knopf „Alle alten erledigt“. Gespeichert wird nur das Wort je Nummer (praxistest-stand.json, bleibt auf diesem Gerät), nie ein Text. „Braucht dich“ nennt die offenen Punkte als leise Zeile (nie rot); die iPhone-App zeigt die Seite unter „Spark verwalten“. Logs: praxistest: klappt|problem|spaeter|offen P123, praxistest: alt erledigt N."
+"text": "Praxistest (seit V01.0.697, nur Admin, nicht für Verwalter): *Zustand → Praxistest* zeigt, was neu ist und im Alltag noch ausprobiert werden sollte, in drei Stufen (Code-Review 11.11.2026, Punkt 7): „Jetzt wichtig“ steht offen oben (jeder Punkt mit „Problem“, dazu höchstens 10 Punkte: die für die Sicherheit markierten und die der drei neuesten Versionen), „Bei Gelegenheit“ ist der Rest und eingeklappt, „Durch Selbsttest abgedeckt“ sind Punkte, deren Sätze ein Selbsttest bei jeder Version prüft (der Punkt nennt den Test, test_praxistest prüft, dass es ihn gibt); sie warten auf niemanden. Die Stufe rechnet das Panel nach festen Regeln (praxistest.seite), gespeichert wird sie nie; in jeder Stufe das Neueste oben. Die Prüfpunkte stehen als eine Liste im Repository (app/panel/praxistest.json: Nummer, Version, Titel, Schritte, Thread, wahlweise \"wichtig\": true oder \"test\"); jede neue Funktion hängt ihren Punkt mit der nächsten Nummer an, Nummern ändern sich nie. Je Punkt „Klappt“, „Problem“ oder „Später“; „Problem“ zeigt den Weg zu *Zustand → Logs → Diagnose*, um den Auszug mit der Nummer in den Thread zu geben. Punkte vor V01.0.600, die niemand markiert hat, sind als „alt, vermutlich er"
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Selbsttest",
+"title": "Praxistest",
+"text": "ledigt“ eingeklappt, mit einem Knopf „Alle alten erledigt“. Gespeichert wird nur das Wort je Nummer (praxistest-stand.json, bleibt auf diesem Gerät), nie ein Text. „Braucht dich“ nennt nur die Zahl aus „Jetzt wichtig“ und die Probleme als leise Zeile (nie rot), nicht mehr alle offenen Punkte; die iPhone-App zeigt unter „Spark verwalten“ „Jetzt wichtig“ und eingeklappt „Bei Gelegenheit“. Logs: praxistest: klappt|problem|spaeter|offen P123, praxistest: alt erledigt N."
 },
 {
 "lang": "de",
@@ -33597,7 +33605,15 @@
 "file": "Security and operation",
 "head": "Self-test",
 "title": "Hands-on test",
-"text": "Hands-on test (since V01.0.697, admin only, not for managers): *Status → Hands-on test* shows what is new and should still be tried out in daily use, the newest first. The check points are one list in the repository (app/panel/praxistest.json: number, version, title, steps, thread); every new feature adds its point with the next number, numbers never change. Per point „Works“, „Problem“ or „Later“; „Problem“ shows the way to *Status → Logs → Diagnosis* to give the excerpt with the number to the thread. Points before V01.0.600 that nobody marked are folded away as „old, probably done“, with one button „All old ones done“. Only the word per number is kept (praxistest-stand.json, stays on this device), never a text. „Needs you“ names the open points as a quiet line (never red); the iPhone app shows the page under „Manage Spark“. Logs: praxistest: klappt|problem|spaeter|offen P123, praxistest: alt erledigt N. The steps are written in German."
+"text": "Hands-on test (since V01.0.697, admin only, not for managers): *Status → Hands-on test* shows what is new and should still be tried out in daily use, in three tiers (code review 2026-11-11, point 7): „Important now“ is open on top (every point with „Problem“, plus at most 10 points: those marked for security and those of the three newest versions), „When there is time“ is the rest and folded, „Covered by a self-test“ are points whose sentences a self-test checks with every version (the point names the test, test_praxistest checks that it is there); they wait for nobody. The panel counts the tier with fixed rules (praxistest.seite), it is never kept; in every tier the newest first. The check points are one list in the repository (app/panel/praxistest.json: number, version, title, steps, thread, optionally \"wichtig\": true or \"test\"); every new feature adds its point with the next number, numbers never change. Per point „Works“, „Problem“ or „Later“; „Problem“ shows the way to *Status → Logs → Diagnosis* to give the excerpt with the number to the thread. Points before V01.0.600 that nobody marked are folded away as „old, probably done“, with one button „All old ones done“. Only the wo"
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Self-test",
+"title": "Hands-on test",
+"text": "rd per number is kept (praxistest-stand.json, stays on this device), never a text. „Needs you“ names only the count of „Important now“ and the problems as a quiet line (never red), no longer all open points; the iPhone app shows „Important now“ and, folded, „When there is time“ under „Manage Spark“. Logs: praxistest: klappt|problem|spaeter|offen P123, praxistest: alt erledigt N. The steps are written in German."
 },
 {
 "lang": "en",

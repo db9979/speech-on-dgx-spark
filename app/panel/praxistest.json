@@ -5435,14 +5435,16 @@
 "v": 1361,
 "titel": "Push-Abo nur für ein Profil",
 "text": "Am selben Browser (https) als Profil A anmelden, Ich → Mitteilungen → Erinnerungen auf diesem Gerät einschalten, abmelden, als Profil B anmelden: Ich → Mitteilungen zeigt „Aus“, nicht „An“. Für A eine Erinnerung in 2 Minuten stellen (am Handy): sie kommt nicht in diesem Browser. Als B einschalten: unter A steht der Browser nicht mehr.",
-"thread": "Spark stabilisieren mit Code-Review"
+"thread": "Spark stabilisieren mit Code-Review",
+"wichtig": true
 },
 {
 "id": "P803",
 "v": 1361,
 "titel": "Mitteilung nie an einen anderen Browser",
 "text": "Profil mit iPhone-App und einem Browser mit Mitteilungen; in einem zweiten Browser ohne Mitteilungen arbeiten und eine Erinnerung fällig werden lassen: sie kommt auf dem iPhone, nicht im ersten Browser. Zustand → Logs (Mitteilung): „push: route web ohne abo | app“.",
-"thread": "Spark stabilisieren mit Code-Review"
+"thread": "Spark stabilisieren mit Code-Review",
+"wichtig": true
 },
 {
 "id": "P804",
@@ -5456,21 +5458,24 @@
 "v": 1361,
 "titel": "Verneinung schaltet nie",
 "text": "Mit Home Assistant: „Mach das Licht nicht aus“, „Mach das Licht aus, nein doch nicht“ und „Kein Licht bitte“ sagen: das Licht bleibt an. „Vergiss es“: kurze Antwort, „Schon gut“: „Gestoppt.“ (Stoppwort, P811), beide Male nichts im Gedächtnis gelöscht (Ich → Gedächtnis). Zustand → Logs (Weiche): „verneint“ in der Zeile „weiche: Absicht …“.",
-"thread": "Spark stabilisieren mit Code-Review"
+"thread": "Spark stabilisieren mit Code-Review",
+"test": "test_sicherheit_sofort.Negation.test_negated_switching_is_no_direct_command"
 },
 {
 "id": "P806",
 "v": 1361,
 "titel": "Keine Websuche für Privates",
 "text": "Mit Websuche: „Wie ist das Ergebnis meiner Blutuntersuchung?“ und „Gibt es Nachrichten von Tom?“ fragen: Logs → Anfragen zeigt keine Websuche, „Pflicht -“. „Wer hat gestern in der Bundesliga gewonnen?“ sucht weiter im Web.",
-"thread": "Spark stabilisieren mit Code-Review"
+"thread": "Spark stabilisieren mit Code-Review",
+"test": "test_sicherheit_sofort.PrivateNeverSearched.test_private_sentences_never_force_the_web"
 },
 {
 "id": "P807",
 "v": 1361,
 "titel": "Codewort nur vom selben Gerät",
 "text": "Smart-Home-Codewort gesetzt: am Handy „Mach das Garagentor auf“ ohne Codewort, dann innerhalb von 2 Minuten am Rechner etwas mit Codewort sagen: das Tor bleibt zu. Danach am Handy das Codewort sagen: das Tor geht auf.",
-"thread": "Spark stabilisieren mit Code-Review"
+"thread": "Spark stabilisieren mit Code-Review",
+"wichtig": true
 },
 {
 "id": "P808",
@@ -5561,28 +5566,32 @@
 "v": 1366,
 "titel": "Weiche: Wissensfrage behält das Web",
 "text": "Im Chat „Was ist eine Lampe?“ und „Wer hat den Strom erfunden?“ fragen: Zustand → Logs zeigt „weiche: Absicht unklar“ (kein Smart Home), die Antwort darf Websuche oder Wikipedia nutzen. Gegenprobe: „Wie funktioniert meine Heizung?“ bleibt Smart Home.",
-"thread": "Spark stabilisieren mit Code-Review"
+"thread": "Spark stabilisieren mit Code-Review",
+"test": "test_intent.Genauer.test_knowledge_keeps_web_and_wikipedia"
 },
 {
 "id": "P821",
 "v": 1366,
 "titel": "Weiche: Notruf und Anruf für später",
 "text": "Am Handy „Ruf die 112 an“ sagen: kein Anruf, keine Frage „Soll ich anrufen?“, nur eine Antwort ohne Werkzeug (Logs: Grund „Notruf“). „Ruf Papa um 6 an“: Gruppe Erinnerung, das iPhone wählt nicht sofort.",
-"thread": "Spark stabilisieren mit Code-Review"
+"thread": "Spark stabilisieren mit Code-Review",
+"test": "test_intent.Genauer.test_no_instant_call_for_an_emergency_or_later"
 },
 {
 "id": "P822",
 "v": 1366,
 "titel": "Weiche: Folgefrage nur frisch und mit Rückbezug",
 "text": "„Wie wird das Wetter heute?“, dann sofort „Und morgen?“: wieder Wetter. Danach „Wie spät ist es?“: kein Wetter. Mehr als 5 Minuten warten, dann „Und morgen?“: Logs zeigen „weiche: Folgefrage zu alt“.",
-"thread": "Spark stabilisieren mit Code-Review"
+"thread": "Spark stabilisieren mit Code-Review",
+"test": "test_intent.Genauer.test_follow_up_needs_a_real_reference_and_a_fresh_question"
 },
 {
 "id": "P823",
 "v": 1366,
 "titel": "Weiche: Schreibweisen und Gegenprobe",
 "text": "„Wann fährt die Strassenbahn“ und „Mach die Wohnzimmerlampe aus“ landen bei Bahn bzw. Smart Home. Funktionen → Weiche, unter den Alltagssätzen steht „Gegenprobe: 100 von 101 ohne falsche Gruppe, falsch erzwungen 0“.",
-"thread": "Spark stabilisieren mit Code-Review"
+"thread": "Spark stabilisieren mit Code-Review",
+"test": "test_intent.Genauer.test_one_normalization_step"
 },
 {
 "id": "P824",
@@ -5610,7 +5619,8 @@
 "v": 1368,
 "titel": "„Ja“ nur am eigenen Gerät",
 "text": "Am Laptop-Browser einen Termin vorschlagen lassen („Trag morgen 10 Uhr Zahnarzt ein“), nicht bestätigen. Am zweiten Browser (oder am iPhone) desselben Profils „Ja“ sagen: nichts wird eingetragen, der Assistent sagt, dass hier kein Vorschlag wartet. Am Laptop „Ja“: jetzt wird eingetragen. Ebenso iPhone und iPad, und zwei Gespräche am selben iPhone.",
-"thread": "Spark stabilisieren mit Code-Review"
+"thread": "Spark stabilisieren mit Code-Review",
+"wichtig": true
 },
 {
 "id": "P828",
@@ -5723,6 +5733,13 @@
 "titel": "Überschriften mitten im Absatz",
 "text": "Pi updaten. Die eingefügte Notiz mit mehreren Fassungen unter Ich → Dokumente auswählen und „Neu einlesen“. Dann eine Frage zu „Kostenneutrale Struktur“ oder „Stufe 2“ stellen: der Quellen-Chip zeigt diesen Abschnitt statt „Was die DGX Station bedeutet“. Ein langes PDF mit umbrochenem Fließtext neu einlesen: seine Quellen-Chips zeigen weiter dieselben Abschnitte wie vorher, kein Satzanfang wird zur Überschrift. Danach das Hörstück der Mappe neu „Sofort erstellen“: die Chips im Drehbuch nennen die richtigen Abschnitte.",
 "thread": "Hörstück rund: Überschriften"
+},
+{
+"id": "P844",
+"v": 1392,
+"titel": "Praxistest in drei Stufen",
+"text": "Pi updaten. Zustand → Praxistest: oben steht offen „Jetzt wichtig“ mit höchstens 10 Punkten (das Neueste und die Sicherheitspunkte), darunter eingeklappt „Bei Gelegenheit“ und „Durch Selbsttest abgedeckt“ (dort nennt jeder Punkt seinen Selbsttest). Einen wichtigen Punkt mit „Klappt“ markieren: die Zahl „jetzt wichtig“ sinkt. Zustand → Überblick, „Braucht dich“: die leise Zeile nennt nur noch die wichtigen Punkte („… Praxistests sind jetzt wichtig“), nicht mehr mehrere hundert. iPhone: Spark verwalten → Praxistest zeigt „Jetzt wichtig“ und eingeklappt „Bei Gelegenheit“.",
+"thread": "Code-Review mit neuen Vorschlägen"
 }
 ]
 }

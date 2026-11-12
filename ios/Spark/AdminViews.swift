@@ -894,35 +894,63 @@ struct ModelsView: View {
     }
 }
 
-/// Zustand → Praxistest (panel/praxistest.py): the points of the hands-on test still open, the newest first; per point
-/// „Klappt“, „Problem“, „Später“. The steps are German, as the threads wrote them.
+/// Zustand → Praxistest (panel/praxistest.py): the points of the hands-on test still open in the panel's tiers
+/// (stufe, counted there): „Jetzt wichtig“ on top, „Bei Gelegenheit“ folded, in each the newest first; what a self-test
+/// covers is not listed here. Per point „Klappt“, „Problem“, „Später“. The steps are German, as the threads wrote them.
 struct PraxisView: View {
     @State private var d: [String: Any] = [:]
     @State private var error: String?
 
+    private var open: [[String: Any]] {
+        (d["punkte"] as? [[String: Any]] ?? []).filter { p in
+            let s = p["stand"] as? String ?? ""
+            return (p["alt"] as? Bool) != true && (s.isEmpty || s == "problem")
+        }
+    }
+    /// an older panel names no tier: everything open is important then
+    private var now: [[String: Any]] {
+        open.filter { p in
+            let s = p["stufe"] as? String ?? ""
+            return s.isEmpty || s == "wichtig"
+        }
+    }
+    private var later: [[String: Any]] { open.filter { ($0["stufe"] as? String ?? "") == "gelegenheit" } }
+
+    private static func version(_ v: Int) -> String { "V01.\(v / 1000)." + String(format: "%03d", v % 1000) }
+
+    @ViewBuilder private func row(_ p: [String: Any]) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(verbatim: p["titel"] as? String ?? "").font(.headline)
+            if p["stand"] as? String == "problem" { Text("Problem").font(.caption).foregroundStyle(Theme.badText) }
+            Text(SparkAPI.way(p["text"] as? String ?? "")).font(.subheadline)
+            Text(verbatim: (p["id"] as? String ?? "") + " · " + Self.version((p["v"] as? Int) ?? 0)).font(.caption).foregroundStyle(.secondary)
+            HStack {
+                Button("Klappt") { Task { await mark(p, "ok") } }.buttonStyle(.bordered).tint(Theme.ok)
+                if p["stand"] as? String != "problem" {
+                    Button("Problem") { Task { await mark(p, "problem") } }.buttonStyle(.bordered).tint(Theme.bad)
+                    Button("Später") { Task { await mark(p, "spaeter") } }.buttonStyle(.bordered)
+                }
+            }
+        }.padding(.vertical, 4)
+    }
+
     var body: some View {
         List {
             if let e = error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
-            let all = d["punkte"] as? [[String: Any]] ?? []
-            let open = all.filter { ($0["alt"] as? Bool) != true && (($0["stand"] as? String ?? "").isEmpty || $0["stand"] as? String == "problem") }
             Section {
-                ForEach(Array(open.enumerated()), id: \.offset) { _, p in
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(verbatim: p["titel"] as? String ?? "").font(.headline)
-                        if p["stand"] as? String == "problem" { Text("Problem").font(.caption).foregroundStyle(Theme.badText) }
-                        Text(SparkAPI.way(p["text"] as? String ?? "")).font(.subheadline)
-                        Text(verbatim: (p["id"] as? String ?? "") + " · V01.0." + String(format: "%03d", (p["v"] as? Int) ?? 0)).font(.caption).foregroundStyle(.secondary)
-                        HStack {
-                            Button("Klappt") { Task { await mark(p, "ok") } }.buttonStyle(.bordered).tint(Theme.ok)
-                            if p["stand"] as? String != "problem" {
-                                Button("Problem") { Task { await mark(p, "problem") } }.buttonStyle(.bordered).tint(Theme.bad)
-                                Button("Später") { Task { await mark(p, "spaeter") } }.buttonStyle(.bordered)
-                            }
-                        }
-                    }.padding(.vertical, 4)
-                }
-            } header: { Text("Offen") } footer: {
+                if now.isEmpty { Text("Nichts ist jetzt wichtig: das Neueste ist geprüft.").foregroundStyle(.secondary) }
+                ForEach(Array(now.enumerated()), id: \.offset) { _, p in row(p) }
+            } header: { Text("Jetzt wichtig") } footer: {
                 Text(SparkAPI.way(String(localized: "Bei einem Problem: im Browser Zustand → Logs → Diagnose kopieren und mit der Nummer in den Thread geben.")))
+            }
+            if !later.isEmpty {
+                Section {
+                    DisclosureGroup {
+                        ForEach(Array(later.enumerated()), id: \.offset) { _, p in row(p) }
+                    } label: {
+                        LabeledContent { Text(verbatim: "\(later.count)") } label: { Text("Bei Gelegenheit") }
+                    }
+                }
             }
         }
         .navigationTitle("Praxistest")

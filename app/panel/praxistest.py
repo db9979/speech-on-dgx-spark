@@ -6,13 +6,17 @@ list in this repository, praxistest.json next to this file (until V01.0.688 they
 the panel never saw): number, version, title, steps, thread. A new function adds its point at the end with the next
 number; numbers never change and are never used twice (tests/test_praxistest.py).
 
-The page shows what is still open, the newest first; every way in a step („Funktionen → …“) becomes a jump link by
+The page orders what is still open in three tiers (code review 2026-11-11, point 7, Dominik „1-11“): „Jetzt wichtig“
+(a problem, a point its thread marked "wichtig" for security, and the points of the WICHTIG_VERSIONEN newest versions,
+at most WICHTIG_MAX), „Bei Gelegenheit“ (the rest) and „Durch Selbsttest abgedeckt“ (a point that names the self-test
+checking the same sentences in "test": it waits for nobody; tests/test_praxistest.py checks the test is there). The
+tier is counted here with fixed rules, never kept; within a tier the newest first. Every way in a step („Funktionen → …“) becomes a jump link by
 itself (way.js). Per point the admin marks „Klappt“, „Problem“ or „Später“; „Problem“ opens Zustand → Logs →
 Diagnose with the point's number to copy for the thread. Points older than ALT_BIS that nobody marked are folded
 away as „alt, vermutlich erledigt“ (4a), with one button that marks them all as done.
 
 Kept is only the mark per point (STATE/praxistest-stand.json: number → word and time), never a text. Logs: fixed
-words and the number. „Braucht dich“ shows a quiet line with the count (level info, never red); the Live view, the
+words and the number. „Braucht dich“ shows a quiet line with the count of „Jetzt wichtig“ only (level info, never red); the Live view, the
 Steuerzentrale and the iPhone app's "Spark verwalten" take it from there (health.alerts). No switch: the page does
 nothing by itself and only admins see it, like Zustand → Modelle and Technik.
 
@@ -39,6 +43,9 @@ PUNKTE_FILE = os.path.join(HERE, "praxistest.json")
 STAND_FILE = os.path.join(STATE, "praxistest-stand.json")
 ALT_BIS = 600              # points before V01.0.600 nobody marked are folded away (Dominik 2026-10-16, 4a)
 # a point's "v": middle number × 1000 + patch (V01.0.999 = 999, V01.1.000 = 1000; Dominik 2026-10-24 „2“), so newest first holds
+WICHTIG_VERSIONEN = 3      # the points of that many newest versions are „Jetzt wichtig“ ...
+WICHTIG_MAX = 10           # ... and at most that many points (a problem always is and does not count here)
+STUFEN = ("wichtig", "gelegenheit", "abgedeckt")
 STAENDE = ("ok", "problem", "spaeter", "erledigt")   # erledigt: the button for all old points at once
 WORT = {"ok": "klappt", "problem": "problem", "spaeter": "spaeter", "erledigt": "erledigt", "offen": "offen"}
 ID = re.compile(r"P\d{3,4}")
@@ -76,17 +83,45 @@ def alt(p):
     return isinstance(p.get("v"), int) and p["v"] < ALT_BIS and not p.get("aktuell")
 
 
+def _wichtig(offen):
+    """The numbers of „Jetzt wichtig“ among the open points nobody marked: the marked ones first, then the newest
+    versions, WICHTIG_MAX in all."""
+    neu = set(sorted({p.get("v") or 0 for p in punkte()})[-WICHTIG_VERSIONEN:])
+    erst = [p for p in offen if p.get("wichtig") is True]
+    dann = [p for p in offen if p.get("wichtig") is not True and (p.get("v") or 0) in neu]
+    key = lambda p: (-(p.get("v") or 0), p["id"])  # noqa: E731
+    return {p["id"] for p in (sorted(erst, key=key) + sorted(dann, key=key))[:WICHTIG_MAX]}
+
+
 def seite(st=None):
-    """The page: every point with its mark, the newest first, and the counts."""
+    """The page: every point with its mark and its tier, the newest first, and the counts."""
     st = stand() if st is None else st
-    out, n = [], {"offen": 0, "ok": 0, "problem": 0, "spaeter": 0, "erledigt": 0, "alt": 0}
+    out, n = [], {"offen": 0, "ok": 0, "problem": 0, "spaeter": 0, "erledigt": 0, "alt": 0,
+                  "wichtig": 0, "gelegenheit": 0, "abgedeckt": 0}
+    offen = []
     for p in punkte():
         s = (st.get(p["id"]) or {}).get("s") or ("erledigt" if p.get("erledigt") else "")
         a = not s and alt(p)
-        n["alt" if a else (s or "offen")] += 1
+        test = p.get("test") if isinstance(p.get("test"), str) else ""
+        stufe = "wichtig" if s == "problem" else ""
+        if not s and not a:
+            stufe = "abgedeckt" if test else "gelegenheit"
+            if not test:
+                offen.append(p)
         out.append({"id": p["id"], "v": p.get("v"), "titel": p.get("titel", ""), "text": p.get("text", ""),
-                    "thread": p.get("thread", ""), "stand": s, "alt": a,
+                    "thread": p.get("thread", ""), "stand": s, "alt": a, "stufe": stufe, "test": test,
                     "zeit": (st.get(p["id"]) or {}).get("t")})
+    oben = _wichtig(offen)
+    for x in out:
+        if x["id"] in oben:
+            x["stufe"] = "wichtig"
+        if x["stand"]:
+            n[x["stand"]] += 1
+        elif x["alt"]:
+            n["alt"] += 1
+        else:
+            n[x["stufe"]] += 1
+    n["offen"] = n["wichtig"] + n["gelegenheit"]
     out.sort(key=lambda x: (-(x["v"] or 0), x["id"]))
     return {"punkte": out, "zahlen": n, "alt_bis": ALT_BIS}
 
@@ -104,16 +139,17 @@ def _merke(ids, s, now=None):
 
 
 def alerts():
-    """„Braucht dich“: a quiet line with the open points (level info), the problems named apart."""
+    """„Braucht dich“: a quiet line with the points of „Jetzt wichtig“ (level info), the problems named apart; what
+    waits „Bei Gelegenheit“ or is covered by a self-test asks for nobody."""
     try:
         n = seite()["zahlen"]
     except Exception:
         return []
-    if not n["offen"] and not n["problem"]:
+    if not n["wichtig"] and not n["problem"]:
         return []
     teile = []
-    if n["offen"]:
-        teile.append("1 Praxistest ist offen" if n["offen"] == 1 else f"{n['offen']} Praxistests sind offen")
+    if n["wichtig"]:
+        teile.append("1 Praxistest ist jetzt wichtig" if n["wichtig"] == 1 else f"{n['wichtig']} Praxistests sind jetzt wichtig")
     if n["problem"]:
         teile.append("1 hat ein Problem" if n["problem"] == 1 else f"{n['problem']} haben ein Problem")
     return [{"kind": "praxistest", "level": "info", "go": "Zustand → Praxistest", "text": ", ".join(teile) + "."}]

@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.392** Praxistest in drei Stufen: „Jetzt wichtig“ (höchstens 10), „Bei Gelegenheit“, „Durch Selbsttest abgedeckt“; „Braucht dich“ zählt nur noch das Wichtige
 - **V01.1.391** Seite „Anleitungen“ aufgelöst: jede Anleitung steht neben ihrem Schalter oder auf ihrer Ich-Seite, die Suche (Strg K) öffnet sie dort
 - **V01.1.390** Funktionen am Rechner: Beschreibung in zwei Zeilen, die erste Funktion gleich geöffnet, „Speichern“ als Leiste unter der ganzen Seite
 - **V01.1.389** Tippflächen am Handy: Schalter, Pfeile, Filter und kleine Knöpfe trifft ein Finger jetzt auf mindestens 44 px; die Filter der Funktionen-Seite zeigen ganze Wörter
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.385** Überschriften auch mitten im Absatz: eingefügte Chats und Notizen bekommen ihre Abschnitte (fett, mit Doppelpunkt oder Klammer), so zeigen Quellen-Chips den richtigen Abschnitt; gilt nach „Neu einlesen“
 - **V01.1.384** Ich → Überblick aufgeräumt: keine Kopie des Menüs mehr, nur Seiten mit einem Stand; jede Gruppen-Überschrift im Menü steht einmal
 - **V01.1.383** Hörstück als Diskussion rund: jede Frage beantwortet eine andere Stimme, ein Faden über alle Kapitel, Gruß nur am Anfang, keine vorgelesenen Listen, ein Kapitel „Was sich geändert hat“ bei mehreren Fassungen und ein Rund-Wert von 10
-- **V01.1.382** Mappen, Wissensbuch, Dungeon-Master und Kontakte sagen, wenn ihre Funktion ausgeschaltet ist, mit dem Weg zum Schalter, statt dauerhaft „Lade …“ zu zeigen
 
 
 

@@ -4151,7 +4151,7 @@ class Browser(unittest.TestCase):
                     await pg.click("#palres a.wayl")
                     self.assertEqual(await pg.evaluate("$('chattext').value"), "xqzzyv")
                     # D12: a note only to know stands on Zustand, not above every page
-                    await pg.evaluate("goSec('cfg');showAlerts([{kind:'praxistest',level:'info',text:'3 Praxistests sind offen.'}])")
+                    await pg.evaluate("goSec('cfg');showAlerts([{kind:'praxistest',level:'info',text:'3 Praxistests sind jetzt wichtig.'}])")
                     self.assertEqual(await pg.evaluate("$('alerts').textContent"), "")
                     await pg.evaluate("goSec('mon')")
                     self.assertIn("Praxistests", await pg.evaluate("$('alerts').textContent"))

@@ -9971,6 +9971,36 @@
         }
       }
     },
+    "Jetzt wichtig": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Important now"
+          }
+        }
+      }
+    },
+    "Bei Gelegenheit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When there is time"
+          }
+        }
+      }
+    },
+    "Nichts ist jetzt wichtig: das Neueste ist geprüft.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing is important now: the newest is checked."
+          }
+        }
+      }
+    },
     "Rundlauf": {
       "localizations": {
         "en": {

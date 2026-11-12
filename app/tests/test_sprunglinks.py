@@ -514,7 +514,7 @@ class Browser(unittest.TestCase):
                 await pg.evaluate("TRACE_ON=true;$('logreqtab').hidden=false;SA=showAlerts;showAlerts=()=>{};SA(["
                                   "{kind:'service',level:'bad',text:'Sprachausgabe ist weg.'},"
                                   "{kind:'latency',level:'warn',text:'Antworten sind langsamer geworden.',go:'Zustand → Logs → Anfragen'},"
-                                  "{kind:'praxistest',level:'info',text:'25 Praxistests sind offen.',go:'Zustand → Praxistest'}])")
+                                  "{kind:'praxistest',level:'info',text:'25 Praxistests sind jetzt wichtig.',go:'Zustand → Praxistest'}])")
                 r = await pg.evaluate("(()=>{const f=$('alerts').querySelector('details.afold');return {open:f.open,"
                                       "first:$('alerts').firstElementChild.classList.contains('bad'),"
                                       "sum:f.querySelector('summary').textContent,h:f.getBoundingClientRect().height}})()")
@@ -527,7 +527,7 @@ class Browser(unittest.TestCase):
                 await self.until(pg, "localStorage.getItem('alertsopen')==='1'")
                 await pg.evaluate("ALERTS_LAST='';SA(["
                                   "{kind:'latency',level:'warn',text:'Antworten sind langsamer geworden.',go:'Zustand → Logs → Anfragen'},"
-                                  "{kind:'praxistest',level:'info',text:'25 Praxistests sind offen.',go:'Zustand → Praxistest'}])")
+                                  "{kind:'praxistest',level:'info',text:'25 Praxistests sind jetzt wichtig.',go:'Zustand → Praxistest'}])")
                 self.assertTrue(await pg.evaluate("$('alerts').querySelector('details.afold').open"))
                 await pg.click("#alerts details.afold .gonote button")
                 await self.until(pg, "LG.tab==='req'&&getComputedStyle($('logs')).display!=='none'")

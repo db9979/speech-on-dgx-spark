@@ -1838,7 +1838,7 @@ body.inchats:not(.appview):not(.kbd) .cx-comp{padding-right:96px}
 /* Zustand → Praxistest (praxistest.js) */
 .pt-sum{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 12px}.pt-n{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 12px;min-width:84px}
 .pt-n b{display:block;font-size:20px}.pt-n small{color:var(--mut)}
-.pt-grp>summary{font-weight:600;cursor:pointer}.pt-grp>.b{margin:8px 0}
+.pt-grp>summary{font-weight:600;cursor:pointer}.pt-grp>.b{margin:8px 0}.pt-grp>.mut{margin:var(--s2) 0}
 .pt-row{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line)}
 .pt-v{font:12px var(--mono,monospace);color:var(--mut);min-width:70px;padding-top:2px}.pt-t{flex:1;min-width:0;overflow-wrap:anywhere}
 .pt-steps{margin:2px 0}.pt-btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
