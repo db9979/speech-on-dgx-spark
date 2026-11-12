@@ -5740,6 +5740,13 @@
 "titel": "Praxistest in drei Stufen",
 "text": "Pi updaten. Zustand → Praxistest: oben steht offen „Jetzt wichtig“ mit höchstens 10 Punkten (das Neueste und die Sicherheitspunkte), darunter eingeklappt „Bei Gelegenheit“ und „Durch Selbsttest abgedeckt“ (dort nennt jeder Punkt seinen Selbsttest). Einen wichtigen Punkt mit „Klappt“ markieren: die Zahl „jetzt wichtig“ sinkt. Zustand → Überblick, „Braucht dich“: die leise Zeile nennt nur noch die wichtigen Punkte („… Praxistests sind jetzt wichtig“), nicht mehr mehrere hundert. iPhone: Spark verwalten → Praxistest zeigt „Jetzt wichtig“ und eingeklappt „Bei Gelegenheit“.",
 "thread": "Code-Review mit neuen Vorschlägen"
+},
+{
+"id": "P845",
+"v": 1393,
+"titel": "Einheitlicher Seitenkopf",
+"text": "Pi updaten. Am Rechner Kalender, E-Mail, Listen und Kontakte öffnen: über jeder Seite steht ihr Name als Titel, die Seite füllt das Fenster weiter ohne zu rollen. Am Handy (Browser oder Android-App) unter „Heute“ eine Karte zu Kalender oder Listen antippen: oben steht der Name der Seite und links „‹ Heute“, unten bleibt „Heute“ markiert; „‹ Heute“ führt zurück. Über die Suche unter „Verwalten“ dieselbe Seite öffnen: oben steht „‹ Spark verwalten“ und unten ist „Verwalten“ markiert.",
+"thread": "Code-Review mit neuen Vorschlägen"
 }
 ]
 }

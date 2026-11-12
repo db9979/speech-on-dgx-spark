@@ -2,7 +2,7 @@
 Kontakte showed a lasting „Lade …“ (or nothing) when someone reached them by a link while the admin had the function
 off. Each now shows one sentence with the way to its switch (base.js ausSatz, a jump link like every way); and the
 footer stands at the bottom of a phone's window; Ich → Überblick is no copy of the menu; a finger hits every control on a
-phone. Static
+phone; every page of one's own things has the same head as the other pages (point 9). Static
 checks everywhere, the browser check where Playwright and Chromium exist; no test reads the clock."""
 import asyncio
 import os
@@ -76,6 +76,65 @@ class Browser(unittest.TestCase):
                         self.assertEqual(errors, [])
                     finally:
                         await br.close()
+        asyncio.run(go())
+
+    def test_every_own_page_has_the_same_head(self):
+        """Code review 2026-11-11, point 9: Kalender, E-Mail, Listen, Kontakte … began with tabs in a card, without a
+        title; on a phone they had no title and no way back, and the bar below marked „Heute“ or nothing. Now the
+        title stands above the page on a computer (#phead, from the menu entry, text only) and in the app bar on a
+        phone (with the way back to where one came from, never both), the bar below marks a tab the person has, and
+        a page that fills the window still does not scroll."""
+        async def go():
+            async with async_playwright() as p:
+                br, pg, errors = await self.page(p, 1280, 800, profile=True)
+                try:
+                    for seite, titel in (("kontakte", "Kontakte"), ("mappen", "Mappen")):
+                        await pg.evaluate(f"goSec('{seite}')")
+                        await pg.wait_for_function("t=>document.getElementById('pheadt').textContent===t", arg=titel, timeout=10000)
+                        k = await pg.evaluate("""(()=>{const ph=document.getElementById('phead'),r=ph.getBoundingClientRect(),
+                          s=document.querySelector('main>section.on').getBoundingClientRect();
+                          return {da:!ph.hidden&&r.height>0,ueber:r.bottom<=s.top+1,satz:getComputedStyle(document.getElementById('pheadi')).display,
+                                  rollt:document.documentElement.scrollHeight-innerHeight,kinder:document.getElementById('pheadt').children.length}})()""")
+                        self.assertEqual((k["da"], k["ueber"], k["satz"], k["kinder"]), (True, True, "none", 0), seite)
+                        self.assertLessEqual(k["rollt"], 1, seite + ": the title must not push a full page out of the window")
+                    await pg.evaluate("goSec('chat')")
+                    self.assertTrue(await pg.evaluate("document.getElementById('phead').hidden"))
+                    await pg.evaluate("goSec('logs')")       # a page of a group keeps its title and its sentence
+                    self.assertEqual(await pg.evaluate("[document.getElementById('pheadt').textContent,document.getElementById('phead').classList.contains('one')]"), ["Logs", False])
+                    self.assertEqual(errors, [])
+                finally:
+                    await br.close()
+                kopf = """(()=>{const b=document.getElementById('apbar'),on=document.querySelector('#aptabs button.on');
+                  return {titel:b.hidden?'':document.getElementById('aptitle').textContent,zurueck:document.querySelector('#apback span').textContent,
+                          tab:on&&!on.hidden?on.dataset.tab:'',gross:getComputedStyle(document.getElementById('phead')).display}})()"""
+                br, pg, errors = await self.page(p, 390, 760, profile=True)
+                try:
+                    await pg.wait_for_function("document.body.classList.contains('appview')", timeout=10000)
+                    await pg.evaluate("APV.tab('today')")
+                    await pg.evaluate("goSec('kontakte')")
+                    self.assertEqual(await pg.evaluate(kopf), {"titel": "Kontakte", "zurueck": "Heute", "tab": "today", "gross": "none"})
+                    await pg.click("#apback")
+                    await pg.wait_for_function("document.body.classList.contains('appage')&&document.getElementById('aptoday').classList.contains('on')", timeout=10000)
+                    await pg.evaluate("APV.tab('manage')")   # from „Verwalten“ (its search): back leads there, and it stays marked
+                    await pg.evaluate("goSec('mappen')")
+                    self.assertEqual(await pg.evaluate(kopf), {"titel": "Mappen", "zurueck": "Spark verwalten", "tab": "manage", "gross": "none"})
+                    await pg.click("#apback")
+                    await pg.wait_for_function("document.body.classList.contains('appage')&&document.getElementById('apmanage').classList.contains('on')", timeout=10000)
+                    # the Dungeon-Master fills the phone's window with its own bars: no app bar over it, the tab stays marked
+                    await pg.evaluate("goSec('dungeon')")
+                    k = await pg.evaluate(kopf)
+                    self.assertEqual((k["titel"], k["tab"]), ("", "manage"))
+                    self.assertEqual(errors, [])
+                finally:
+                    await br.close()
+                br, pg, errors = await self.page(p, 390, 760)     # an admin without a profile has no „Heute“
+                try:
+                    await pg.wait_for_function("document.body.classList.contains('appview')", timeout=10000)
+                    await pg.evaluate("goSec('kontakte')")
+                    self.assertEqual(await pg.evaluate(kopf), {"titel": "Kontakte", "zurueck": "Spark verwalten", "tab": "manage", "gross": "none"})
+                    self.assertEqual(errors, [])
+                finally:
+                    await br.close()
         asyncio.run(go())
 
     def test_the_footer_stands_at_the_bottom_on_a_phone(self):

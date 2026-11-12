@@ -159,7 +159,8 @@ class Klar2(unittest.TestCase):
         self.assertIn('<div class="phead" id="phead" hidden><h2 class="pt" id="pheadt"></h2><div class="pintro" id="pheadi"></div></div>', html)
         base = read(os.path.join("js", "base.js"))
         self.assertIn("function pageHead(g,s,many)", base)
-        self.assertIn("$('pheadt').textContent=it[1]", base)   # text, never HTML
+        self.assertIn("$('pheadt').textContent=", base)        # text, never HTML
+        self.assertNotRegex(base, r"\$\('phead[ti]'\)\.innerHTML")
         # the coloured tiles of the second column are gone: one line colour, the open page in the accent
         self.assertNotRegex(css, r"\.cic\.c-\w+\{background")
 

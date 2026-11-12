@@ -180,7 +180,7 @@ class IPhone(unittest.TestCase):
     def test_android_takes_the_panels_page(self):
         self.assertIn(("fundbox", "finden", "Finden", "Find"), features.OWN_PAGES)
         view = helpers.repo_file("app", "panel", "static", "js", "appview.js")
-        self.assertIn("sec.id==='finden'", view)     # the page of its own sits in the app view's tab like Kalender
+        self.assertRegex(view, r"const OWN=new Set\(\[[^\]]*'finden'")     # the page of its own sits in the app view's tab like Kalender
 
 
 @unittest.skipUnless(browser_ok(), "no Playwright/Chromium here")

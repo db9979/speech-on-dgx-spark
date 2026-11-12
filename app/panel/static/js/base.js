@@ -201,8 +201,13 @@ const SUBGRP={mon:t('Beobachten','Watch'),test:t('Prüfen','Check'),usage:t('Tec
 // second column the group's name on top; pages that bring their own title (Funktionen: #pane-feat h2.pt) keep theirs
 const PHEAD_OWN=new Set(['feat']);
 const PINTRO={mon:()=>t('Was der Spark gerade tut und was dich braucht','What the Spark is doing right now and what needs you')};
-function pageHead(g,s,many){const ph=$('phead');if(!ph)return;const it=GROUPS[g].find(x=>x[0]===s),off=!many||!it||PHEAD_OWN.has(s);ph.hidden=off;if(off)return;
-  $('pheadt').textContent=it[1];$('pheadi').textContent=(PINTRO[s]||SUBDESC[s]||(()=>''))()}
+// A page of one's own things (PHEAD_ONE: Kalender, E-Mail, Listen …) gets the same title, taken from its menu entry
+// (code review 2026-11-11, point 9); on a phone the app bar on top carries it (appview.js), so it is not shown twice.
+const PHEAD_ONE=new Set(['cal','post','listen','offen','kontakte','wbuch','finden','mappen','dungeon']);
+function pageHead(g,s,many){const ph=$('phead');if(!ph)return;const it=GROUPS[g].find(x=>x[0]===s),one=!many&&PHEAD_ONE.has(s),off=!one&&(!many||!it||PHEAD_OWN.has(s));
+  ph.hidden=off;ph.classList.toggle('one',one);if(off)return;
+  const nb=one&&document.querySelector(`nav button[data-s=${s}]`);
+  $('pheadt').textContent=one?[...nb.childNodes].filter(n=>n.nodeType===3).map(n=>n.textContent).join('').trim():it[1];$('pheadi').textContent=one?'':(PINTRO[s]||SUBDESC[s]||(()=>''))()}
 function subnav(g,s){const items=GROUPS[g],bar=$('subnav'),many=items.length>1;bar.hidden=!many;document.querySelector('main').classList.toggle('hassub',many);
   if(!many)document.querySelector('main').classList.remove('sublist');pageHead(g,s,many);
   bar.innerHTML=!many?'':`<h2 class="colhd">${esc(GNAME[g]||'')}</h2>`+items.map(([id,l])=>(g==='mon'&&SUBGRP[id]?`<div class="cgrp">${esc(SUBGRP[id])}</div>`:'')+`<button type="button" data-sub="${id}"${id===s?' class="on"':''}>${esc(l)}<small class="gls">${esc(SUBDESC[id]?SUBDESC[id]():'')}</small></button>`).join('');

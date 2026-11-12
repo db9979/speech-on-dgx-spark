@@ -46,8 +46,17 @@ function enter(){ON=true;B.classList.add('appview');
   try{history.replaceState(Object.assign({},history.state||{},{ap:0}),'')}catch{}hd=0;pend=false;
   const sec=document.querySelector('main>section.on');TAB=secTab(sec);
   apFace();render()}
-// which tab a section of the page belongs to (Assistent → Spark, Chats → Chats, the rest → Verwalten)
-function secTab(sec){return !sec||sec.id==='chat'?'spark':sec.id==='chats'?'chats':sec.id==='cal'||sec.id==='post'||sec.id==='listen'||sec.id==='offen'||sec.id==='kontakte'||sec.id==='wbuch'||sec.id==='finden'||sec.id==='mappen'||sec.id==='dungeon'||sec.id==='spiel'?'today':'manage'}
+// which tab a section of the page belongs to (Assistent → Spark, Chats → Chats, the rest → Verwalten). The pages of
+// one's own things (OWN: Kalender, E-Mail, Listen …) have no tab: the bar marks where one came from (Heute or
+// Verwalten, ownFrom; code review 2026-11-11, point 9), and never a tab this person does not have.
+const OWN=new Set(['cal','post','listen','offen','kontakte','wbuch','finden','mappen','dungeon','spiel']);
+let ownFrom='today';
+function ownTab(){const v=visible();return v[ownFrom]?ownFrom:v.today?'today':'manage'}
+// the Dungeon-Master and the games fill the phone's window with bars of their own on top: no app bar over them
+const OWN_FULL=new Set(['dungeon','spiel']);
+function ownSec(){const sec=document.querySelector('main>section.on');return !!sec&&OWN.has(sec.id)}
+function ownOpen(){const sec=document.querySelector('main>section.on');return !B.classList.contains('appage')&&$('profmodal').style.display!=='grid'&&!!sec&&OWN.has(sec.id)&&!OWN_FULL.has(sec.id)}
+function secTab(sec){return !sec||sec.id==='chat'?'spark':sec.id==='chats'?'chats':OWN.has(sec.id)?ownTab():'manage'}
 function leave(stillPhone){const page=B.classList.contains('appage');ON=false;B.classList.remove('appview','appage','apmsgs','aptabs','apsub','aptab-docs');sheet.hidden=true;
   // on a wider screen phone.js has put its parts back already: only the face (never touched by phone.js here) moves
   const f=$('face'),fm=marks.get(f);if(fm){fm.parentNode.insertBefore(f,fm);fm.remove();marks.delete(f)}
@@ -74,7 +83,8 @@ function tab(k){if(!ON)return;closeSheet();const pm=$('profmodal').style.display
 tabs.addEventListener('click',e=>{const b=e.target.closest('button[data-tab]');if(b)tab(b.dataset.tab)});
 // other code opens a section (search, "Gesperrte Funktionen", the start page): follow it
 const _showSec=showSec;
-showSec=function(s){_showSec(s);if(!ON)return;B.classList.remove('appage');for(const p of [today,manage])p.classList.remove('on');
+showSec=function(s){const was=B.classList.contains('appage')?(manage.classList.contains('on')?'manage':'today'):TAB;
+  _showSec(s);if(!ON)return;if(OWN.has(s)&&(was==='manage'||was==='today'))ownFrom=was;B.classList.remove('appage');for(const p of [today,manage])p.classList.remove('on');
   TAB=secTab({id:s});render()};
 // ---------------------------------------------------------------- the top bar
 function manageNav(){const m=mainEl(),cw=document.querySelector('.cfgwrap'),sec=document.querySelector('main>section.on');
@@ -99,7 +109,9 @@ function render(){if(!ON)return;if(manage.classList.contains('on')&&manageSig()!
     // Suchen (plaene/suche-gesicht.md): the magnifier at the top for admins and profiles, guests have nothing to find
     th=(ADMIN||PROFILE?`<button type="button" class="apib" data-ap="find" aria-label="${esc(t('Suchen','Search'))}">${SV('find')}</button>`:'')+(vc?`<button type="button" class="apib" data-ap="voice" aria-pressed="${von}"${vc.disabled?' disabled':''} aria-label="${esc(vc.closest('label').title||t('Vorlesen','Read aloud'))}">${SV(von?'vol':'mute')}</button>`:'')+(isGuest()?`<button type="button" class="apib" data-ap="menu" aria-label="${esc(t('Menü','Menu'))}">${SV('more')}</button>`
       :`<button type="button" class="apib" data-ap="set" aria-label="${esc(t('Gespräch einstellen','Conversation settings'))}">${SV('set')}</button>`)}
-  else if(TAB==='manage'&&!page&&!pm){show=true;const n=manageNav();title=n.title;bl=n.back}
+  // an own page gets the same head as every other page: its name, and back to where one came from
+  else if(ownOpen()){show=true;title=label(document.querySelector('nav button[data-s].on'));bl=TAB==='manage'?t('Spark verwalten','Manage the Spark'):t('Heute','Today')}
+  else if(TAB==='manage'&&!page&&!pm&&!ownSec()){show=true;const n=manageNav();title=n.title;bl=n.back}
   if(bl&&bl.trim()===title.trim())bl=t('Zurück','Back');   // „Funktionen ‹ Funktionen“
   bar.hidden=!show;$('aptitle').textContent=title;back.hidden=!bl;back.querySelector('span').textContent=bl;
   // the back label takes the room up to the title, so „Verwalten“ stands whole beside a short title and shortens
@@ -114,13 +126,15 @@ bar.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return
 // ---------------------------------------------------------------- one level back (top left, edge swipe, back gesture)
 function depth(){if(!ON)return 0;let d=sheet.hidden&&$('msheet').style.display!=='grid'?0:1;const pm=$('profmodal');
   if(pm.style.display==='grid'&&TAB==='me'&&pm.classList.contains('sub')&&!pm.classList.contains('one'))d++;
-  if(TAB==='manage'&&!B.classList.contains('appage')&&pm.style.display!=='grid')d+=manageNav().deep;
+  if(ownOpen())d++;
+  else if(TAB==='manage'&&!ownSec()&&!B.classList.contains('appage')&&pm.style.display!=='grid')d+=manageNav().deep;
   if(TAB==='chats'&&!B.classList.contains('appage')&&pm.style.display!=='grid'&&window.cxDepth)d+=cxDepth();
   return d}
 function back(){if(!sheet.hidden){closeSheet();return true}
   if($('msheet').style.display==='grid'){$('msheet').style.display='none';return true}
   const pm=$('profmodal');if(pm.style.display==='grid'){if(TAB==='me'&&pm.classList.contains('sub')&&!pm.classList.contains('one')){$('meback').click();return true}return false}
-  if(TAB==='manage'&&!B.classList.contains('appage')){manageNav().act();return true}
+  if(ownOpen()){tab(ownTab());return true}
+  if(TAB==='manage'&&!ownSec()&&!B.classList.contains('appage')){manageNav().act();return true}
   if(TAB==='chats'&&!B.classList.contains('appage')&&window.cxBackStep)return cxBackStep();
   return false}
 // the browser history follows the depth, so Android's back gesture (and Safari's) goes one level up

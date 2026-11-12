@@ -642,7 +642,7 @@ details.qhow{margin-top:6px}details.qhow>summary{cursor:pointer;font-size:13px;f
    actions that work at once in their own section */
 .pintro{font:var(--t-body);color:var(--mut);margin:-6px 0 4px}
 /* Seitenkopf (Klar 2, Redesign Stufe 2): großer Titel und ein Satz über jeder Seite einer Gruppe (base.js pageHead) */
-.phead{margin:2px 0 18px}.phead[hidden]{display:none}.phead .pt{font:var(--t-large);letter-spacing:var(--track-display);margin:0}.phead .pintro{margin:4px 0 0}
+.phead{margin:2px 0 18px}.phead[hidden]{display:none}.phead .pt{font:var(--t-large);letter-spacing:var(--track-display);margin:0}.phead .pintro{margin:4px 0 0}.phead.one .pintro,body.appview #phead.one{display:none}
 .colhd{display:none}
 h3.sec{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:22px 0 2px;padding-bottom:6px;border-bottom:2px solid var(--line);font-size:15px;font-weight:650}
 h3.sec span{font-size:12px;font-weight:400;color:var(--mut)}
@@ -1181,7 +1181,8 @@ button.ld-back:hover{background:none;text-decoration:underline}.ld-box{scroll-ma
    (test_bildlauf). 94 px = the page's padding above and below and the footer line under the card. */
 @media (min-width:761px){
   main:has(>section.on .ld-frame){padding-bottom:24px}
-  main>section.on:has(.ld-frame)>.card{height:calc(100vh - 94px);min-height:420px;display:flex;flex-direction:column;overflow:hidden}
+  main>section.on:has(.ld-frame)>.card{height:calc(100vh - var(--ld-off));min-height:420px;display:flex;flex-direction:column;overflow:hidden}
+  main{--ld-off:94px}main:has(>#phead.one:not([hidden])){--ld-off:calc(94px + var(--s12) + var(--s1))}
   main>section.on:has(.ld-frame)>.card :is(.ic-tabwrap,.ic-tabbody):has(.ld-frame){display:flex;flex-direction:column;flex:1;min-height:0}
   .ld-frame{display:flex;flex-direction:column;flex:1;min-height:0}
   .ld-frame>.ld-split{display:grid;flex:1;min-height:0;grid-template-rows:minmax(0,1fr);align-items:stretch}
