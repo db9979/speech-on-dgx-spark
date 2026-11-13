@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older versions (V01.0.000 to V01.0.999 and the lines before version numbers): [CHANGELOG-V01.0.md](CHANGELOG-V01.0.md).
 
+- **V01.1.420** · 2026-11-13 · Schwachstellen, was wirklich läuft: tars meldet die Pakete aller venvs über den Wärter, die Docker-Abbilder werden je Digest gelesen, dazu was iPhone-App, Android-App, Begleiter, Pebble und das Panel-JavaScript mitbringen (auch im Nachtlauf auf GitHub)
 - **V01.1.419** · 2026-11-13 · Ruhige E-Mail-Seite: Liste und offene Mail zeichnen nur, was sich ändert (keyFill), eine HTML-Mail lädt einmal, Rückkehr zeigt sofort die Liste von vorher und gleicht leise ab, Ordner nur ein Abruf; Handy-Fußzeile wandert nicht mehr (P863)
 - **V01.1.418** · 2026-11-13 · Schwachstellen-Seite: Zustand → Schwachstellen zeigt bekannte Lücken in Panel-Paketen, Engines auf tars, alten Docker-Abbildern und Betriebssystem, geprüft gegen OSV alle 6 Stunden, je Fund Schweregrad, Version mit Fix und ein fester Satz, was zu tun ist (aus, nur Admins)
 - **V01.1.417** · 2026-11-13 · Gemma 4 26B A4B als Messkandidat im Modell-Katalog (NVFP4, Apache-2.0, sieht Bilder, Werkzeuge): sudo speech-spark modelle messen gemma4 oder „Messen“ unter Zustand → Modelle, nur zum Vergleich mit Qwen3.6 (P861)

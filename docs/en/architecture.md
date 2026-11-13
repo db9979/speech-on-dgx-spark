@@ -504,6 +504,7 @@ Live overview, logs, watchers, backup, update, help and the admin pages.
 | `app/gputakt.py` | GPU-Taktgrenze: a ceiling on the model computer's GPU clock for less power and heat at about the same speed. |
 | `app/panel/health.py` | Stability: a watchdog for hung speech services, a warning before memory runs out, and a live check of the real services (LLM answers, TTS speaks, ASR underst … |
 | `app/panel/hilfe.py` | Spark-Hilfe: the assistant answers questions about the Spark itself ("Wie bekomme ich schnellere Antworten?", "Was macht dieser Schalter?", "Was sollte ich h … |
+| `app/installiert.py` | Schwachstellen, what a computer really has installed: the one place that reads it, on the panel's computer for itself and in the Wärter on the model computer … |
 | `app/panel/klartext.py` | Klartext für Status → Improve. |
 | `app/panel/latency.py` | How long people wait: the time from the question to the first sound of the answer, for every answer of the assistant (chat.py), kept for two weeks in STATE/l … |
 | `app/panel/live.py` | Status → Live: what the Spark does right now, for the admin and for a wall monitor. |
@@ -823,6 +824,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/guard-xff-hinted.json` | Proxy hint shown | – | no |
 | `state/guard.json` | Lockouts | – | no |
 | `state/gut-saetze.json` | Questions confirmed with 👍 | – | yes |
+| `state/installiert-abbilder.json` | Vulnerabilities: the Python packages inside the models' Docker images (name and version, read once per digest) | – | no |
 | `state/iphone-pruef.json` | Review accesses for the iPhone app (hashes) | hashes only | yes |
 | `state/iphone-update.json` | Update from the iPhone app | – | no |
 | `state/join.json` | Invitations (hashes) | hashes only | yes |
@@ -1740,7 +1742,7 @@ flowchart TD
 
 1. <a id="kn-sicherheit-s1"></a>**A question or order comes in**: At home directly, on the way only through the reverse proxy with TLS. Every device has its own key or signs in like the browser. Every way in (panel, device keys, calendar and contacts apps, MCP, other Sparks, Wyoming, phone, Telegram, the anchors and the web terminal of remote access, the spontaneous help page, the pickup link of "Download all my data") stands with its protection in the security docs under "Ways in".
 2. <a id="kn-sicherheit-s2"></a>**Does the kill switch allow it?**: The kill switch has three stages from the outside in: stage 1 closes the internet, stage 2 every action, stage 3 every conversation, and whatever still talks then (answers, calls, Home Assistant) ends at once (laufend.end_all). No model, mail or document can trigger or lift it. A whole sentence of stop words („Stop“, „Bye“) ends a talk by a fixed rule without the model (stoppwort.ende).
-3. <a id="kn-sicherheit-s3"></a>**Signed in and within limits?**: Size limit and origin check (CSRF) before reading, then a rate limit per profile or address (a way with its own session key per session after the right key, guessing still per address) and a cap on parallel requests for the model, recognition and output (guard.Slot). Secrets, roles and backups also need a fresh code or passkey (core.confirm_code, 10 minutes). A whole area can be unlocked for a while with a second step (rule "unlocking an area", first remote access: 5 to 120 minutes, fernzugang.entsperrt_bis): this login only, from the same place only, locked on Lock, logout and the kill switch; pairing and removing still ask every time. The models on tars are reached only through the TLS-Tor; commands there are checked by the Wärter (tarswart.check: signature, time, one-time number, one of 21 fixed commands).
+3. <a id="kn-sicherheit-s3"></a>**Signed in and within limits?**: Size limit and origin check (CSRF) before reading, then a rate limit per profile or address (a way with its own session key per session after the right key, guessing still per address) and a cap on parallel requests for the model, recognition and output (guard.Slot). Secrets, roles and backups also need a fresh code or passkey (core.confirm_code, 10 minutes). A whole area can be unlocked for a while with a second step (rule "unlocking an area", first remote access: 5 to 120 minutes, fernzugang.entsperrt_bis): this login only, from the same place only, locked on Lock, logout and the kill switch; pairing and removing still ask every time. The models on tars are reached only through the TLS-Tor; commands there are checked by the Wärter (tarswart.check: signature, time, one-time number, one of 22 fixed commands).
 4. <a id="kn-sicherheit-s4"></a>**Who asks, surely known?**: The profile comes from the cookie, the app key or a linked account. At a shared speaker the device key is not enough: chat_turn.shared_stranger allows personal things only when the owner's voice is surely recognised in the same recording.
 5. <a id="kn-sicherheit-s5"></a>**Release and block**: Every function is off until the admin releases it; then it counts for every profile, unless the admin blocks single ones (features.blocked). What is not allowed is not even offered as a tool. What belongs to a profile stays with it: a browser's push subscription belongs to exactly one profile (push.add takes it from every other) and ends with the login that switched it on (push.drop_login); a note never goes to another browser because the one in use has none; a page takes no answer that was still asked for the profile before.
 6. <a id="kn-sicherheit-s6"></a>**Outside stays data**: What a tool reads from outside reaches the model as a marked block of data (textnorm.defuse: the block's end and the model's own markers such as „<|im_start|>“ or „<tool_call>“ are defused; the LLM-Tor does it once more for every message, llm_tor.entschaerft). From then on 13 acting tools are locked, in the next turn too, and nothing of it is learned into memory; after a mail it is 20, everything that asks the internet among them (web search, Wikipedia, weather, transit), so no search word carries mail content out. After any other outside text a tool goes to the internet only with words from the person's own message or from what a search of the same answer already brought in; a word from the calendar, the memory or a document never becomes a search word (ausleiten.fremd, the same rule as for background jobs). Whether this holds is checked by the attack self-test with a model that obeys every order (panel/angriffe.json). Connections to the outside go only through the guard (netguard.allowed); a page or file is fetched only by netguard.hole_oeffentlich (kill switch first, public only also after every redirect, size, time, content type), links as documents take an address only from the person's own words (doklink.eigene), and the page becomes a document like any: data; a YouTube link goes as an address built from the video number alone to the pinned yt-dlp with fixed options (ytquelle.befehl), whose whole traffic runs only through the netguard proxy (netproxy.Proxy: fixed host list, port 443, netguard.resolve); a remote-access tunnel only to targets by fernweb.ziel_ok: 127.0.0.1 there and the system's own addresses its anchor reports itself. A mail with HTML is shown only as the Spark cleaned it (mailansicht.clean: a fixed list of allowed tags, no script), in a frame without script with its own CSP; pictures from outside only after the own click and through the guard, a link only after the question with its real address. The web search becomes a must only from strong words („search the internet“, „Bundesliga“, „Who won?“) and never for a private sentence (chat.PRIVATE_WORDS: my, health, money, „messages from Tom“), so nothing private goes out as a query (chat.needed).
@@ -1795,7 +1797,7 @@ Applies at: [step 4](#kn-sicherheit-s4), [step 5](#kn-sicherheit-s5)
 - **13** tools locked after outside text ([step 6](#kn-sicherheit-s6))
 - **20** tools locked after a mail ([step 6](#kn-sicherheit-s6))
 - **10 min** a right code counts for „Confirm“ ([step 3](#kn-sicherheit-s3))
-- **21** fixed commands of the Wärter on tars ([step 3](#kn-sicherheit-s3))
+- **22** fixed commands of the Wärter on tars ([step 3](#kn-sicherheit-s3))
 - **3** kill switch stages, the last stops every conversation ([step 2](#kn-sicherheit-s2))
 
 #### In the code
@@ -3828,7 +3830,7 @@ flowchart TD
 
 - **600 s** a pairing code lives ([step 2](#kn-teilen-s2))
 - **60 s** a command's time may be off ([step 7](#kn-teilen-s7))
-- **21** fixed commands of the Wärter ([step 7](#kn-teilen-s7))
+- **22** fixed commands of the Wärter ([step 7](#kn-teilen-s7))
 - **30 s** without an answer until Notbetrieb ([step 10](#kn-teilen-s8))
 - **80 °C** note, the panel computer is warm ([step 8](#kn-teilen-s9))
 - **10 %** disk free, below it a note ([step 8](#kn-teilen-s9))
@@ -3921,7 +3923,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Seal**: vault.seal turns the value into „enc1:“ and a Fernet token (encrypted and protected against change). A value already sealed stays as it is.
 5. <a id="kn-state-s5"></a>**Write atomically**: common.write_json writes into a fresh temporary file next to it, never through a link, gives it the rights of the old file (a new one is readable for the service only) and then swaps it in one step. A crash in the middle leaves the old file whole.
 6. <a id="kn-state-s6"></a>**Read**: A sealed value is opened with the key. If the key does not fit (backup from another Spark), an empty value comes back and the account has to be entered again. Older unsealed values are read and sealed the next time they are saved.
-7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 51), otherwise the line gives its reason (dateien.STATE_LOCAL, 115). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
+7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 51), otherwise the line gives its reason (dateien.STATE_LOCAL, 116). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
 8. <a id="kn-state-s8"></a>**Move backup?**: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup.
 9. <a id="kn-state-s9"></a>**Fine when restoring?**: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays.
 10. <a id="kn-state-s10"></a>**Put in place with a way back**: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back.
@@ -3932,7 +3934,7 @@ flowchart TD
 #### Numbers (from the code)
 
 - **51** files in every backup ([step 7](#kn-state-s7))
-- **115** files and folders that stay out with a reason ([step 7](#kn-state-s7))
+- **116** files and folders that stay out with a reason ([step 7](#kn-state-s7))
 - **8 MB** largest file when restoring ([step 9](#kn-state-s9))
 - **12** characters the move password has at least ([step 8](#kn-state-s8))
 

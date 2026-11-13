@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.420** Vulnerabilities, what really runs: tars reports the packages of every venv through the Wärter, the Docker images are read once per digest, plus what the iPhone app, Android app, companions, Pebble and the panel's JavaScript bring along (in the nightly run on GitHub too)
 - **V01.1.419** Calm mail page: the list and the open mail draw only what changed, a mail loads once, coming back shows the list at once
 - **V01.1.418** Vulnerabilities page: Status → Vulnerabilities shows known holes in panel packages, engines on tars, old Docker images and the operating system, checked against OSV every 6 hours, with weight, the version with the fix and a fixed sentence on what to do for each finding (off, admins only)
 - **V01.1.417** Gemma 4 can be measured on tars and compared with Qwen3.6
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.413** Vulnerabilities: the nightly run names weight and the version with the fix for every hole, a panel package is raised without Claude if wanted (tested first), and every new package version is checked at OSV before each push
 - **V01.1.412** Fix parcels: shipping mails count in every own folder, not only the inbox and the Spark's folders
 - **V01.1.411** Fix parcels: shipping mails count also when the Spark sorted them into one of its folders; before, a proactive note named a parcel the question about it no longer found
-- **V01.1.410** Answer reports also show what the tools gave back: so it is clear whether the tool or the model was wrong
 
 
 

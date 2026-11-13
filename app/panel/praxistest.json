@@ -5888,6 +5888,14 @@
 "text": "Pi updaten. E-Mail öffnen, eine Mail mit Bildern oder Formatierung anklicken: sie erscheint einmal und flackert nicht nach. Zu Kalender und zurück zu E-Mail: die Liste steht sofort da, wird nicht grau und springt nicht. Am Handy beim Öffnen der Seite wandert unten nichts.",
 "thread": "Mail mit Ideen aus pl_mail verbessern",
 "test": "test_post_seite.Page.test_calm_page_keeps_rows_and_loads_the_mail_once"
+},
+{
+"id": "P864",
+"v": 1420,
+"titel": "Schwachstellen: tars, Docker-Inhalte, Apps",
+"text": "Nach dem Update (tars zuerst) Zustand → Schwachstellen öffnen und „Jetzt prüfen“ tippen. Die Kachel tars · Python nennt jetzt einige hundert geprüfte Pakete (nicht mehr nur 2 aus install.sh); Docker-Abbilder zeigt „n Pakete in 1 Abbildern“ (beim ersten Mal „1 noch nicht gelesen“, nach einigen Minuten noch einmal prüfen); Apps und Begleiter nennt die geprüften Teile. Ein Fund unter tars nennt seine venv (z. B. venv-asr).",
+"thread": "Schwachstellen gegen OSV prüfen",
+"test": "test_schwachstellen.Paket3.test_tars_docker_and_apps_join_the_check"
 }
 ]
 }

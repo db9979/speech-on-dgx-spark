@@ -73,9 +73,18 @@ def alt(bilder, heute):
     return [(n, (heute - d).days) for n, d in bilder if (heute - d).days > DOCKER_TAGE]
 
 
-def frage(pak, post=None):
+def apps(root=ROOT):
+    """({"name teil": version}, {"name teil": ecosystem}) of what the apps and companions bring along (osv.apps); the
+    space keeps them out of Weg 1 (luecke_schliessen.ziele raises only the panel's own lock)."""
+    pak, oeko = {}, {}
+    for teil, n, v, e in osv.apps(root):
+        pak[f"{n} {teil}"], oeko[f"{n} {teil}"] = v, e
+    return pak, oeko
+
+
+def frage(pak, post=None, oeko="PyPI"):
     """{name: {"v", "ids", "alle"}} for the packages OSV knows a hole in; raises when there is no answer."""
-    body = json.dumps(osv.anfrage(pak)).encode()
+    body = json.dumps(osv.anfrage(pak, oeko)).encode()
     if post is None:
         def post(data):
             req = urllib.request.Request(OSV_URL, data=data, headers={"Content-Type": "application/json"})
@@ -84,7 +93,7 @@ def frage(pak, post=None):
     return osv.antwort(pak, post(body))
 
 
-def genauer(warn, get=None):
+def genauer(warn, get=None, oeko=None):
     """Weight, fix and holes without a fix for every package in warn (app/osv.zusammen); a record that does not
     come counts as unknown, without a fix."""
     if get is None:
@@ -98,7 +107,8 @@ def genauer(warn, get=None):
                 records.append(osv.eintrag(get(vid)))
             except Exception:   # noqa: BLE001  (one record missing: that hole counts as unknown, without fix)
                 records.append(None)
-        w.update({k: v for k, v in osv.zusammen(dict(w, name=n.split(" ")[0]), records).items()
+        w.update({k: v for k, v in osv.zusammen(dict(w, name=n.split(" ")[0]), records,
+                                                (oeko or {}).get(n, "PyPI")).items()
                   if k in ("stufe", "score", "behoben", "ohne_fix")})
     return warn
 
@@ -109,12 +119,14 @@ def main(argv, post=None, heute=None, get=None):
         print("pakete: no pinned package found", flush=True)
         return 2
     pak.update(motoren())
+    app_pak, oeko = apps()
+    pak.update(app_pak)
     try:
-        warn = frage(pak, post)
+        warn = frage(pak, post, oeko)
     except Exception as e:   # noqa: BLE001  (no network, another answer: no verdict)
         print(f"pakete: osv fehler {type(e).__name__} | {len(pak)} pakete", flush=True)
         return 2
-    genauer(warn, get)
+    genauer(warn, get, oeko)
     bilder = abbilder()
     old = alt(bilder, heute or datetime.date.today())
     print(f"pakete: osv ok {len(warn)} warnungen {len(pak)} pakete | {len(old)} von {len(bilder)} abbildern alt",
@@ -123,8 +135,8 @@ def main(argv, post=None, heute=None, get=None):
         return 0
     lines = []
     if warn:
-        lines += ["Gepinnte Python-Pakete mit bekannter Lücke (OSV):", ""]
-        lines += [f"- `{n.split(' ')[0]}` {w['v']}: {w['stufe']}"
+        lines += ["Gepinnte Pakete mit bekannter Lücke (OSV; Python, dazu Apps und Begleiter mit ihrem Teil):", ""]
+        lines += [f"- `{n.split(' ')[0]}`" + (f" ({n.split(' ')[1]})" if n in oeko else "") + f" {w['v']}: {w['stufe']}"
                   + (f" ({w['score']})" if w.get("score") is not None else "")
                   + (f", behoben in {w['behoben']}" if w.get("behoben") else ", noch kein Fix")
                   + (f" ({w['ohne_fix']} ohne Fix)" if w.get("behoben") and w.get("ohne_fix") else "")

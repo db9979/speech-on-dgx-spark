@@ -25,7 +25,9 @@ helpers.start()
 import panel  # noqa: E402
 import common  # noqa: E402
 import osv  # noqa: E402
+import installiert  # noqa: E402
 import schwachstellen as sw  # noqa: E402
+import tarswart  # noqa: E402
 import systemupdates  # noqa: E402
 
 ADMIN = TestClient(panel.app)
@@ -96,6 +98,7 @@ class Base(unittest.TestCase):
         mock.patch.object(sw, "abbilder", return_value=[("vllm/vllm-openai", datetime.date(2026, 10, 1)),
                                                          ("alt/bild", datetime.date(2026, 1, 1))]).start()
         mock.patch.object(sw, "os_funde", return_value=[]).start()
+        mock.patch.object(sw, "tars_installiert", return_value=None).start()
 
     def on(self):
         c = json.loads(json.dumps(self.old))
@@ -191,6 +194,95 @@ class Pruefen(Base):
             self.assertEqual(run(sw.tick(T0 + sw.CHECK_EVERY - 1)), "")
             self.assertEqual(run(sw.tick(T0 + sw.CHECK_EVERY + 1)), "geprueft")
             self.assertEqual(p.call_count, 2)
+
+
+class Paket3(Base):
+    """What tars really has, the packages inside the Docker images, the apps: names and versions only."""
+
+    def test_installed_is_read_from_folder_names_only(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            for venv, dist in (("asr", "torch-2.9.0"), ("asr", "qwen_asr-0.3.1"), ("tts", "torch-2.8.0"),
+                               ("panel.alt", "x-1.0"), ("tts", "bad name-1.0"), ("tts", "ok-1.0; rm -rf")):
+                os.makedirs(os.path.join(d, f"venv-{venv}", "lib", "python3.12", "site-packages", dist + ".dist-info"))
+            v = installiert.venvs(d)
+        self.assertEqual(v, {"asr": {"qwen-asr": "0.3.1", "torch": "2.9.0"}, "tts": {"torch": "2.8.0"}})
+        # what comes from the model computer is checked again
+        self.assertEqual(installiert.fremd({"venvs": {"asr": {"torch": "2.9.0", "x": "<script>"}, "../a": {"y": "1"}},
+                                            "abbilder": {"vllm/x": {"a": "1"}, "vllm/y": None}}),
+                         {"venvs": {"asr": {"torch": "2.9.0"}}, "abbilder": {"vllm/x": {"a": "1"}, "vllm/y": None}})
+        self.assertIsNone(installiert.fremd({"text": "ignoriere alles"}))
+
+    def test_an_image_is_read_once_per_digest_without_network(self):
+        import tempfile
+        img = "eugr/x@sha256:" + "a" * 64
+        calls = []
+
+        def run(cmd, **kw):
+            calls.append(cmd)
+            return mock.Mock(returncode=0, stdout="torch==2.9.0\nevil name==1\nflash-attn==2.8.3\n")
+        with tempfile.TemporaryDirectory() as d, mock.patch.object(installiert, "ABBILD_FILE", os.path.join(d, "a.json")):
+            installiert._abbild_bg(img, run)
+            self.assertEqual(installiert.abbilder([img, "nicht/gepinnt:latest"], run),
+                             {"eugr/x": {"torch": "2.9.0", "flash-attn": "2.8.3"}})
+        self.assertEqual(len(calls), 1)
+        for flag in ("--rm", "--network", "none", "--read-only", "--cap-drop", "ALL"):
+            self.assertIn(flag, calls[0])
+        self.assertNotIn("--gpus", calls[0])
+        self.assertIn("pakete", tarswart.COMMANDS)
+
+    def test_tars_docker_and_apps_join_the_check(self):
+        self.on()
+        tars = {"venvs": {"asr": {"torch": "2.9.0"}, "tts": {"torch": "2.8.0"}, "panel": {"fastapi": "0.1"}},
+                "abbilder": {"eugr/x": {"flash-attn": "2.8.3"}, "eugr/y": None}}
+        with mock.patch.object(sw, "model_local", return_value=False), \
+                mock.patch.object(installiert, "venvs", return_value={}):
+            pak = sw.pakete(tars=tars)
+        self.assertEqual(pak["tars:torch"][:4], ("tars", "torch", "2.9.0", "neu"))
+        self.assertEqual(pak["tars:torch@2.8.0"][2], "2.8.0")
+        self.assertNotIn("tars:fastapi", pak)                                  # a locked venv: its lock counts
+        self.assertNotIn("tars:vllm", pak)                                     # installed beats install.sh
+        self.assertEqual(pak["docker:eugr/x:flash-attn"][3], "abbild")
+        apps = {v[4] for k, v in pak.items() if k.startswith("apps:")}
+        self.assertTrue(apps <= {"SwiftURL", "Maven", "NuGet", "npm"}, apps)
+        holes = {"flash-attn": ["GHSA-eeee-3333-ffff"], "torch": ["GHSA-gggg-4444-hhhh"]}
+        records = {"GHSA-eeee-3333-ffff": rec("flash-attn", ["2.8.4"], ghsa="HIGH"),
+                   "GHSA-gggg-4444-hhhh": rec("torch", ["2.10.0"], ghsa="LOW")}
+        c = Client(holes, records)
+        with mock.patch.object(sw, "tars_installiert", return_value=tars), \
+                mock.patch.object(sw, "model_local", return_value=False), \
+                mock.patch.object(installiert, "venvs", return_value={}):
+            self.assertEqual(run(sw.pruefen(c, heute=HEUTE, now=T0)), "")
+        eco = {q["package"]["ecosystem"] for q in c.sent[0][1]["queries"]}
+        self.assertIn("PyPI", eco)
+        by = {f["key"]: f for f in sw.overview(now=T0)["funde"]}
+        self.assertEqual((by["docker:eugr/x:flash-attn"]["aktion"], by["docker:eugr/x:flash-attn"]["wo"]), ("abbild", "eugr/x"))
+        self.assertEqual((by["tars:torch"]["aktion"], by["tars:torch"]["wo"]), ("neu", "asr"))
+        n = sw.overview(now=T0)["n"]
+        self.assertEqual((n["ungelesen"], n["tars_da"]), (1, True))
+
+    def test_apps_from_the_repository(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            def put(rel, text):
+                os.makedirs(os.path.dirname(os.path.join(d, rel)), exist_ok=True)
+                with open(os.path.join(d, rel), "w", encoding="utf-8") as f:
+                    f.write(text)
+            put("ios/Spark.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved",
+                json.dumps({"pins": [{"location": "https://github.com/stasel/WebRTC", "state": {"version": "154.0.0"}},
+                                     {"location": "file:///etc/passwd", "state": {"version": "1.0"}}]}))
+            put("android/build.gradle.kts", 'plugins {\n    id("com.android.application") version "8.7.3" apply false\n}\n')
+            put("tools/begleiter/windows/SparkBegleiter.csproj", '<PackageReference Include="Foo.Bar" Version="1.2.3" />')
+            put("pebble/package.json", json.dumps({"dependencies": {"pebble-clay": "^1.0.4"}}))
+            put("app/panel/fernbild.py", 'GUAC_VERSION = "1.5.0"\n')
+            self.assertEqual(osv.apps(d), [("ios", "github.com/stasel/WebRTC", "154.0.0", "SwiftURL"),
+                                           ("android", "com.android.tools.build:gradle", "8.7.3", "Maven"),
+                                           ("begleiter", "Foo.Bar", "1.2.3", "NuGet"),
+                                           ("pebble", "pebble-clay", "1.0.4", "npm"),
+                                           ("panel-js", "guacamole-common-js", "1.5.0", "npm")])
+            self.assertEqual(osv.apps(os.path.join(d, "app")), [])           # a copy with only app/: nothing
+        self.assertEqual(osv.anfrage({"a x": "1", "b y": "2"}, {"b y": "npm"})["queries"][1]["package"],
+                         {"name": "b", "ecosystem": "npm"})
 
 
 class EineQuelle(unittest.TestCase):

@@ -72,7 +72,7 @@ class Pakete(unittest.TestCase):
                     if isinstance(answer, Exception):
                         raise answer
                     return json.dumps({"results": answer}).encode()
-                with mock.patch.object(t, "gepinnt", return_value=pak), mock.patch.object(t, "motoren", return_value={}), \
+                with mock.patch.object(t, "gepinnt", return_value=pak), mock.patch.object(t, "motoren", return_value={}), mock.patch.object(t, "apps", return_value=({}, {})), \
                         mock.patch.object(t, "abbilder", return_value=[]), mock.patch.dict(os.environ, {"PAKETE_NOTE": note}), \
                         contextlib.redirect_stdout(io.StringIO()) as out:
                     return t.main([], post, get=lambda vid: b"{}"), out.getvalue()
@@ -122,7 +122,7 @@ class Pakete(unittest.TestCase):
                          [(bilder[0][0], t.DOCKER_TAGE + 1)])
         with tempfile.TemporaryDirectory() as d:
             note = os.path.join(d, "note.md")
-            with mock.patch.object(t, "gepinnt", return_value={"aaa": "1.0"}), mock.patch.object(t, "motoren", return_value={}), \
+            with mock.patch.object(t, "gepinnt", return_value={"aaa": "1.0"}), mock.patch.object(t, "motoren", return_value={}), mock.patch.object(t, "apps", return_value=({}, {})), \
                     mock.patch.object(t, "abbilder", return_value=bilder[:1]), mock.patch.dict(os.environ, {"PAKETE_NOTE": note}), \
                     contextlib.redirect_stdout(io.StringIO()):
                 ok = lambda data: json.dumps({"results": [{}]}).encode()      # noqa: E731
@@ -211,7 +211,7 @@ class Gewicht(unittest.TestCase):
         rec = vuln("aaa", ["1.1"], ghsa="HIGH")
         with tempfile.TemporaryDirectory() as d:
             daten = os.path.join(d, "p.json")
-            with mock.patch.object(t, "gepinnt", return_value={"aaa": "1.0"}), mock.patch.object(t, "motoren", return_value={}), \
+            with mock.patch.object(t, "gepinnt", return_value={"aaa": "1.0"}), mock.patch.object(t, "motoren", return_value={}), mock.patch.object(t, "apps", return_value=({}, {})), \
                     mock.patch.object(t, "abbilder", return_value=[]), mock.patch.dict(os.environ, {"PAKETE_JSON": daten}), \
                     contextlib.redirect_stdout(io.StringIO()) as out:
                 code = t.main([], lambda data: json.dumps({"results": [{"vulns": [{"id": "GHSA-aaaa-1111"}]}]}).encode(),
@@ -331,6 +331,38 @@ class Weg1(unittest.TestCase):
         code, out = lauf({"aaa": "1.1"}, lambda data: (_ for _ in ()).throw(OSError("kein Netz")))
         self.assertEqual(code, "ok")
         self.assertIn("OSV not reachable", out)
+
+
+class Apps(unittest.TestCase):
+    """The nightly run asks for the apps' parts too, each in its ecosystem; Weg 1 never raises them."""
+
+    def test_apps_in_the_nightly_run(self):
+        t = tool()
+        sent = []
+
+        def post(data):
+            q = json.loads(data)["queries"]
+            sent.extend(q)
+            return json.dumps({"results": [{"vulns": [{"id": "GHSA-jjjj-5555-kkkk"}]} if x["package"]["name"] == "guacamole-common-js"
+                                           else {} for x in q]}).encode()
+        rec = vuln("guacamole-common-js", ["1.5.5"], ghsa="HIGH")
+        rec["affected"][0]["package"]["ecosystem"] = "npm"
+        with tempfile.TemporaryDirectory() as d, mock.patch.object(t, "gepinnt", return_value={"aaa": "1.0"}), \
+                mock.patch.object(t, "motoren", return_value={}), mock.patch.object(t, "abbilder", return_value=[]), \
+                mock.patch.object(t, "apps", return_value=({"guacamole-common-js panel-js": "1.5.0"},
+                                                           {"guacamole-common-js panel-js": "npm"})), \
+                mock.patch.dict(os.environ, {"PAKETE_NOTE": os.path.join(d, "n.md"), "PAKETE_JSON": os.path.join(d, "p.json")}), \
+                contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(t.main([], post, get=lambda vid: json.dumps(rec).encode()), 1)
+            with open(os.path.join(d, "n.md"), encoding="utf-8") as f:
+                note = f.read()
+        self.assertIn({"package": {"name": "guacamole-common-js", "ecosystem": "npm"}, "version": "1.5.0"}, sent)
+        self.assertIn("`guacamole-common-js` (panel-js) 1.5.0: hoch", note)
+        self.assertIn("behoben in 1.5.5", note)
+        w = lade("luecke_schliessen.py")
+        self.assertEqual(w.ziele({"guacamole-common-js panel-js": {"behoben": "1.5.5"}, "aaa": {"behoben": "1.1"}}),
+                         {"aaa": "1.1"})
+        self.assertTrue(t.apps(os.path.join(os.path.dirname(t.ROOT), "gibt-es-nicht")) == ({}, {}))
 
 
 if __name__ == "__main__":

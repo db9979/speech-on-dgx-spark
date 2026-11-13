@@ -341,6 +341,7 @@ MODULE = {
     "tarswart": ("teilen", "Wärter: feste Handgriffe auf dem Modell-Rechner (Zustand, Einheiten starten, GPU) für ein Panel anderswo"),
     "gputakt": ("betrieb", "GPU-Taktgrenze: feste Werte, startet die root-Einheit nur bei Änderung, Stand für die GPU-Anzeige"),
     "schwachstellen_stand": ("betrieb", "Schwachstellen, das gespeicherte Ergebnis: Zahlen für Live und den Hinweis oben, nie ein Paketname"),
+    "installiert": ("betrieb", "Was ein Rechner wirklich installiert hat: Pakete der venvs, Pakete in den Docker-Abbildern"),
     "osv": ("betrieb", "OSV, die eine Stelle: Frage mit Namen und Versionen, Antwort nur Kennungen, Schweregrad (CVSS 3) und Version mit Fix"),
     "sysupdate": ("betrieb", "System-Updates je Rechner: Wunsch prüfen, apt-Ausgabe der root-Einheit in Namen und Versionen, Lauf n von m"),
     "rechner": ("teilen", "Werte eines Rechners: CPU (auch je Dienst), Speicher, Platte, Netz, Temperatur, Strom (für beide Rechner gleich)"),

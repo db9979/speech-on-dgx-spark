@@ -6,10 +6,12 @@ back. OSV's texts (summary, details) are never read. No network here: the caller
 netguard client on the Spark), so this file has no dependency and runs with GitHub's plain python3.
 """
 import json
+import os
 import re
 
 OSV_URL = "https://api.osv.dev/v1/querybatch"
 OSV_MAX = 2 * 1048576
+BATCH = 1000                                         # questions per batch, OSV's own limit
 VULN_URL = "https://api.osv.dev/v1/vulns/"           # + one id: weight and fixed versions of one hole
 VULN_MAX = 1048576
 OSV_ID = re.compile(r"[A-Z][A-Za-z0-9\-]{2,40}")
@@ -31,9 +33,71 @@ FIX = re.compile(r"[0-9][0-9A-Za-z.+!\-]{0,39}")
 
 
 def anfrage(pak, oekosystem="PyPI"):
-    """The batch question for {name: version} (a name with a space is asked as its first word)."""
-    return {"queries": [{"package": {"name": n.split(" ")[0], "ecosystem": oekosystem}, "version": v}
+    """The batch question for {name: version} (a name with a space is asked as its first word); oekosystem is one
+    for all or {name: ecosystem} (PyPI where it names none)."""
+    def oeko(n):
+        return oekosystem.get(n, "PyPI") if isinstance(oekosystem, dict) else oekosystem
+    return {"queries": [{"package": {"name": n.split(" ")[0], "ecosystem": oeko(n)}, "version": v}
                         for n, v in pak.items()]}
+
+
+# the apps' and companions' parts (Paket 3): where they are written down in the repository, the one list
+APP_TEILE = {"ios": "iPhone-App", "android": "Android-App", "pebble": "Pebble-App", "begleiter": "Begleiter", "panel-js": "Panel (JavaScript)"}
+GRADLE_PLUGIN = {"com.android.application": "com.android.tools.build:gradle",
+                 "org.jetbrains.kotlin.android": "org.jetbrains.kotlin:kotlin-gradle-plugin"}
+GRADLE_ID = re.compile(r'id\("([a-z0-9.]+)"\) version "([0-9][0-9A-Za-z.\-]{0,39})"')
+NUGET = re.compile(r'<PackageReference Include="([A-Za-z0-9.\-]{1,80})" Version="([0-9][0-9A-Za-z.\-]{0,39})"')
+VENDOR_JS = (("app/panel/fernbild.py", re.compile(r'^GUAC_VERSION = "([0-9][0-9.]{0,19})"', re.M), "guacamole-common-js"),)
+
+
+def _lies(root, rel):
+    try:
+        with open(os.path.join(root, rel), encoding="utf-8") as f:
+            return f.read()
+    except OSError:
+        return ""
+
+
+def apps(root):
+    """[(teil, name, version, ecosystem)] of what the apps and companions bring along, read from the repository at
+    root (nothing in a copy with only app/): the iPhone app's Swift packages (Package.resolved), the Android app's
+    build plugins, the companions' NuGet packages, the npm packages of the Pebble app and the JavaScript the panel
+    ships vendored (guacamole-common-js)."""
+    out = []
+    try:
+        res = json.loads(_lies(root, "ios/Spark.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved") or "{}")
+    except ValueError:
+        res = {}
+    for pin in res.get("pins") or []:
+        loc, ver = str((pin or {}).get("location", "")), str(((pin or {}).get("state") or {}).get("version") or "")
+        m = re.fullmatch(r"https://(github\.com/[A-Za-z0-9_.\-]{1,60}/[A-Za-z0-9_.\-]{1,60}?)(?:\.git)?", loc)
+        if m and FIX.fullmatch(ver):
+            out.append(("ios", m.group(1), ver, "SwiftURL"))
+    for n, v in GRADLE_ID.findall(_lies(root, "android/build.gradle.kts")):
+        if n in GRADLE_PLUGIN:
+            out.append(("android", GRADLE_PLUGIN[n], v, "Maven"))
+    for rel in ("tools/begleiter/windows/SparkBegleiter.csproj", "tools/begleiter/outlook-classic/SparkOutlook.csproj",
+                "tools/sparkhilfe/windows/SparkHilfe.csproj"):
+        out += [("begleiter", n, v, "NuGet") for n, v in NUGET.findall(_lies(root, rel))]
+    for rel in ("pebble/package.json", "pebble/zifferblatt/package.json"):
+        try:
+            deps = json.loads(_lies(root, rel) or "{}").get("dependencies") or {}
+        except ValueError:
+            deps = {}
+        for n, v in deps.items() if isinstance(deps, dict) else ():
+            v = str(v).lstrip("^~=")
+            if re.fullmatch(r"[a-z0-9@][a-z0-9._/\-]{0,80}", str(n)) and FIX.fullmatch(v):
+                out.append(("pebble", n, v, "npm"))
+    for rel, rx, name in VENDOR_JS:
+        m = rx.search(_lies(root, rel))
+        if m:
+            out.append(("panel-js", name, m.group(1), "npm"))
+    seen, uniq = set(), []
+    for x in out:
+        if (x[1], x[2], x[3]) not in seen:
+            seen.add((x[1], x[2], x[3]))
+            uniq.append(x)
+    return uniq
 
 
 def motoren(text):

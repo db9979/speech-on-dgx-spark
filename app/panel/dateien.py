@@ -352,6 +352,8 @@ DATEIEN = [
           lokal="Stand dieses Rechners, wird beim nächsten Prüfen neu geholt"),
     state("schwachstellen.json", "Schwachstellen: wann zuletzt geprüft, die Funde (Ort, Paketname, Version, OSV-Kennungen, Schweregrad, Version mit Fix, fester Handlungssatz), seit wann jeder Fund besteht", "Vulnerabilities: when last checked, the findings (place, package name, version, OSV ids, weight, version with the fix, fixed action), since when each finding exists",
           lokal="Stand dieses Rechners, wird beim nächsten Prüfen neu geholt"),
+    state("installiert-abbilder.json", "Schwachstellen: die Python-Pakete in den Docker-Abbildern der Modelle (Name und Version, je Digest einmal gelesen)", "Vulnerabilities: the Python packages inside the models' Docker images (name and version, read once per digest)",
+          lokal="Stand dieses Rechners, wird beim nächsten Prüfen neu gelesen"),
     state("system-updates-stand.json", "System-Updates dieses Rechners: verfügbare Pakete (Name, alte und neue Version, Quelle), Firmware- und Treiberstand, Neustart nötig, der letzte Lauf (n von m); schreibt die Einheit speech-spark-systemupdate", "System updates of this computer: available packages (name, old and new version, source), firmware and driver, restart needed, the last run (n of m); written by the unit speech-spark-systemupdate",
           lokal="Stand dieses Rechners, wird beim nächsten Prüfen neu geschrieben"),
     state("system-updates-wunsch.json", "Wunsch des Panels oder des Wärters für System-Updates (prüfen, einspielen, neu starten), Sekunden", "The panel's or the Wärter's wish for system updates (check, install, restart), seconds", lokal="wird von der Einheit sofort gelesen und gelöscht"),

@@ -34,6 +34,8 @@ a time (at most WINDOW seconds off) and a one-time number (each is taken once).
                                 versions in a fixed character set, counts) and whether its root unit runs
     systemupdate_tun <wort>     System-Updates: one wish of sysupdate.WUENSCHE (pruefen, einspielen, neustart) for the
                                 fixed root unit speech-spark-systemupdate; never a package, a source or a command
+    pakete                      Schwachstellen: what this computer really has installed (installiert.lesen: the Python
+                                packages of every venv and inside the engines' Docker images, names and versions only)
     stimmen                     the names of the designed voices in the speech output's voices folder (stimmablage)
     stimme_ablegen {name, wav, worte}   one sample of a designed voice (base64 WAV, checked by stimmablage.ablegen),
                                 only on its own path /v1/wart/stimme with the bigger limit STIMME_BODY
@@ -54,6 +56,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 
 import gputakt
+import installiert
 import llmstart
 import modelle
 import rechner
@@ -74,7 +77,7 @@ RATE = (40, 10)        # at most 40 requests in 10 seconds (the panel asks for t
 ACTIONS = ("start", "stop", "restart")
 COMMANDS = ("status", "einheit", "einstellen", "logs", "modelle", "wechseln", "messen", "platz", "eigen_dazu", "eigen_weg",
             "weiter", "update", "werkstatt", "werkstatt_auftrag", "werkstatt_eins", "werkstatt_weg", "systemupdate",
-            "systemupdate_tun", "stimmen", "stimme_ablegen", "stimme_weg")
+            "systemupdate_tun", "pakete", "stimmen", "stimme_ablegen", "stimme_weg")
 UPDATE_UNIT = "speech-spark-update"
 PAUSE_KEYS = ("on", "parts", "since", "until", "channel")   # what the panel needs of the pause (never who)
 WITH_DATA = ("einstellen", "eigen_dazu", "werkstatt_auftrag", "stimme_ablegen")
@@ -359,6 +362,13 @@ def systemupdate_daten():
     return dict(sysupdate.lesen(), unit=_systemupdate_laeuft(), opencode=werkstatt.installiert())
 
 
+def pakete_daten():
+    """Read only, asked by the panel's Schwachstellen every few hours: names and versions, one line with counts."""
+    d = installiert.lesen([x.get("image") for x in modelle.DOCKER.values() if isinstance(x, dict)])
+    print(f"waerter: pakete ok {len(d['venvs'])} {sum(len(v) for v in d['venvs'].values())}", flush=True)
+    return d
+
+
 def systemupdate_tun(was):
     """One fixed wish for this computer's root unit; it checks the wish again and runs only fixed commands."""
     if was not in sysupdate.WUENSCHE:
@@ -491,6 +501,8 @@ async def _wart(request, stimme):
         return JSONResponse(werkstatt_daten())
     if cmd == "systemupdate":
         return JSONResponse(systemupdate_daten())
+    if cmd == "pakete":
+        return JSONResponse(pakete_daten())
     try:
         if cmd == "einstellen":
             return JSONResponse(einstellen(daten))
