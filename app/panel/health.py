@@ -29,6 +29,8 @@ import httpx
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import guard  # noqa: E402
+import features  # noqa: E402
+import schwachstellen_stand  # noqa: E402
 import llm  # noqa: E402
 import steuer  # noqa: E402
 from common import STATE, klon_noetig, load_config, model_url, write_json  # noqa: E402
@@ -407,6 +409,7 @@ def alerts():
     out += entwickelnseite.alerts()  # local changes refused at an update or an install: the running version stayed
     import systemupdates
     out += systemupdates.alerts()    # security updates waiting on a computer, a restart needed (System-Updates)
+    out += schwachstellen_stand.hinweise(features.admin_on("schwachstellen"))   # a critical or high hole
     return out
 
 

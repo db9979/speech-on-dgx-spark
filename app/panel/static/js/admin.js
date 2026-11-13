@@ -67,6 +67,7 @@ function zustand(s){if(s)ZLAST=s;s=ZLAST;if(!s)return;
   if(typeof SECNEED!=='undefined')need.push(...SECNEED.map(x=>({...x,lvl:'warn'})));
   // security updates and a restart only the admin may start (systemupdates.js)
   if(window.SUNEED)need.push(...SUNEED);
+  if(window.SWNEED)need.push(...SWNEED);
   const dirty=[...document.querySelectorAll('.pane.dirty')].map(p=>{const b=document.querySelector(`#cfgnav button[data-p="${p.id.slice(5)}"]`);return b?b.firstChild.nodeValue.trim():p.id});
   if(dirty.length)need.push({lvl:'warn',text:t(`Nicht gespeichert: ${dirty.join(', ')}.`,`Not saved: ${dirty.join(', ')}.`),go:'cfg',btn:t('Öffnen','Open')});
   const al=(s.alerts||[]).filter(x=>x.level!=='info'),lvl=bad.length||need.some(x=>x.lvl==='bad')||al.some(x=>x.level==='bad')?'bad':need.length||unk.length||low||al.length?'warn':'ok';
@@ -93,7 +94,7 @@ window.zustand=zustand;
 const zAgo=s=>{if(!s)return t('noch nie','never');const m=Math.round((Date.now()/1e3-s)/60);return m<1?t('gerade eben','just now'):m<90?(L==='en'?m+' min ago':'vor '+m+' Min.'):m<2880?(L==='en'?Math.round(m/60)+' h ago':'vor '+Math.round(m/60)+' Std.'):(L==='en'?Math.round(m/1440)+' days ago':'vor '+Math.round(m/1440)+' Tagen')};
 function zTech(id){const d=$('ztech');d.open=true;const el=id&&$(id);(el?el.closest('.card'):d).scrollIntoView({behavior:'smooth',block:'start'})}
 // line icons (24 grid) of the tiles and of the cards under Zustand; a card without one shows none
-const ZCARD_ICO={zneed:'alert',zroom:'ear',zbg:'user',zsvc:'globe',zoffline:'globe',zwart:'pause',znas:'nas',znaszustand:'nas',znasquelle:'folder',zverbrauch:'bars',zstore:'copy',zdev:'dev',zsysup:'shield',zdocs:'doc'};
+const ZCARD_ICO={zneed:'alert',zroom:'ear',zbg:'user',zsvc:'globe',zoffline:'globe',zwart:'pause',znas:'nas',znaszustand:'nas',znasquelle:'folder',zverbrauch:'bars',zstore:'copy',zdev:'dev',zsysup:'shield',zschwach:'shield',zdocs:'doc'};
 function zIco(name,cls){return icNode(name,cls||'zico')}   // icons.js
 for(const [id,ic] of Object.entries(ZCARD_ICO)){const h=document.querySelector('#'+id+'>h2');if(h){const b=document.createElement('span');b.className='zbub';b.appendChild(zIco(ic));h.prepend(b)}}
 $('zgo').onclick=()=>sFlash($('zneed'));

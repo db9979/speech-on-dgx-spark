@@ -3565,6 +3565,22 @@ button.fzfname{background:none;border:0;padding:4px 0;color:var(--acc,inherit);c
 .sutap .zch{width:var(--ic-sm);height:var(--ic-sm);color:var(--faint);flex:none;margin-left:auto}
 .sunb{margin-top:10px;padding-top:10px;border-top:1px solid var(--line);font:var(--t-sub);color:var(--mut)}
 body.sudet #phead,body.sudet #mon>:not(#zsudet){display:none!important}
+body.swdet #phead,body.swdet #mon>:not(#zswdet){display:none!important}
+/* Zustand → Schwachstellen (schwachstellen.js): tiles per place, the filter, the findings grouped, the one picked beside */
+.swsub{margin:-6px 0 12px}.swtiles{grid-template-columns:repeat(5,minmax(0,1fr))}.swtile{min-height:0}
+.swseg{margin:4px 0 10px}
+.swsplit{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:12px;align-items:start}
+.swgrp{font:var(--t-cap);color:var(--mut);margin:12px 4px 6px}.swgrp:first-child{margin-top:0}
+.swlist{background:var(--card);border:1px solid var(--line);border-radius:var(--r-win);padding:4px}
+.swrow{display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;padding:10px 12px;border:0;border-bottom:1px solid var(--line);background:none;color:inherit;font:inherit;cursor:pointer;border-radius:var(--r-item)}
+.swrow:last-child{border-bottom:0}.swrow.sel{background:var(--acc-weak)}.swrow>span{flex:1;min-width:0}
+.swrow b{display:block;font-weight:600;overflow-wrap:anywhere}.swrow small{display:block;font:var(--t-sub);color:var(--mut)}
+.swrow>.swpill,.swpill{flex:none}.swdet{margin:0;position:sticky;top:12px}
+.swdhd{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.swdhd b{font:var(--t-head)}
+.swdl{display:grid;grid-template-columns:130px minmax(0,1fr);gap:8px 12px;margin:12px 0}.swdl dt{color:var(--mut)}.swdl dd{margin:0;overflow-wrap:anywhere}
+.swid{font:var(--t-mono)}.swtun{margin:10px 0}.swfoot{margin-top:12px;font:var(--t-sub)}.swleer{padding:12px 4px}
+.swsum{cursor:default}.swsum small{display:block;font:var(--t-sub);color:var(--mut)}
+@media (max-width:760px){.swtiles{grid-template-columns:repeat(2,minmax(0,1fr))}.swsplit{grid-template-columns:minmax(0,1fr)}.swdet{position:static}.swdl{grid-template-columns:100px minmax(0,1fr)}}
 .sudetail .suback{display:inline-flex;align-items:center;gap:4px;margin:0 0 6px;padding:6px 10px 6px 4px;border:0;background:none;color:var(--acc);font-weight:600}
 .sudetail .suback .ic{width:var(--ic-sm);height:var(--ic-sm)}
 .sudetail .sutitle{font:var(--t-head);margin:0 0 10px}

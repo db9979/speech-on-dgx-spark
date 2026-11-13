@@ -180,6 +180,14 @@ Auf GitHub empfohlen: 2FA mit Passkey, Ruleset auf `main` gegen Löschen und For
 - **Firmware von Hand**: die Anleitung „Firmware von Hand“ unten in den Einzelheiten unter *Zustand → System-Updates* (Knopf „Von Hand einspielen“) führt durch EEPROM, NVIDIA-Treiber und DGX OS.
 - **Nach dem Update auf V01.1.322** einmal auf jedem Rechner `sudo speech-spark update` (oder `sudo ./install.sh`), damit Unit und sudoers-Zeile da sind; bis dahin sagt die Seite „Ließ sich nicht starten“.
 
+### Schwachstellen (seit V01.1.418)
+
+*Funktionen → Schwachstellen* (aus, nur Admins, nie Gäste, kein Werkzeug für das Sprachmodell; `schwachstellen.py`, `osv.py`) zeigt unter *Zustand → Schwachstellen* bekannte Lücken in allem, was der Spark betreibt: die Python-Pakete des Panels, die Modell-Engines aus `install.sh`, Docker-Abbilder der Modelle älter als 90 Tage und die Sicherheits-Updates des Betriebssystems (nur wenn *System-Updates* an ist). Geprüft wird alle 6 Stunden und mit „Jetzt prüfen“.
+
+- **Nur Namen und Versionen nach außen**: Eine Sammelfrage mit Paketnamen und Versionen an `api.osv.dev`, danach je Kennung eine Frage nach Schweregrad und Fix, alles über den Netz-Wächter und nicht, solange der Notaus das Internet sperrt. Zurück kommen nur Kennungen, Zahlen und Versionen in festen Zeichen; die Texte von OSV liest der Spark nie.
+- **Fester Satz je Fund**: Neue Version nötig (ein Panel-Paket hebt der Lauf „Lücke schließen“ auf GitHub an, Engines ziehen ein Mensch oder ein Claude-Thread nach), Abbild erneuern, Betriebssystem einspielen oder noch kein Fix. Der Spark spielt hier nie selbst etwas ein.
+- **Ohne Antwort** bleibt der letzte Stand mit seinem Alter stehen („zuletzt ohne Antwort“). Live und der Hinweis oben zeigen nur Zahlen, nie Paketnamen.
+
 ## Notaus
 
 Der rote Knopf „Notaus“ (unten in der Seitenleiste, auf dem Handy oben unter Verwalten) hält den Spark in drei Stufen an. Auslösen geht ohne Code und nur nach oben, aufheben nur als Admin.

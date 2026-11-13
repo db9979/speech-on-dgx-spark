@@ -372,6 +372,8 @@ ADMIN_ON_OK = {
     "wartung.py:admin_on": "Spark-wide maintenance pause, only admins start it",
     "wartung.py:auto_on": "Spark-wide: the panel pauses a restarting part by itself, no profile involved",
     "gehaeuse.py:admin_on": "admin only: the case of the panel computer (display, LEDs, fans), no profile part",
+    "schwachstellen.py:admin_on": "admin only: known holes of the whole Spark, no profile part",
+    "health.py:alerts": "admin-only note on top: Schwachstellen counts (schwachstellen_stand.hinweise), Spark-wide",
     "systemupdates.py:admin_on": "admin only: the operating system of both computers, no profile part",
     "systemupdates.py:nacht_an": "admin only: the night run of one computer, no profile part",
     "rundlauf.py:an": "admin only: the round trip through the models with fixed words, no profile part",

@@ -519,9 +519,12 @@ Live overview, logs, watchers, backup, update, help and the admin pages.
 | `app/panel/naszustand.py` | Zustand der NAS. |
 | `app/panel/offline.py` | Ohne Internet: what the Spark needs to keep running in the home network alone, looked at on demand. |
 | `app/panel/offsite.py` | Sicherung nach außen: once a day an encrypted copy of the backup goes to a WebDAV folder (NAS, Nextcloud, Synology), off unless the main admin switches it on. |
+| `app/osv.py` | OSV, the one place: what goes out to the OSV database and how its answer is read, for the Spark (panel/schwachstellen.py, panel/systemupdates.py) and for Git … |
 | `app/panel/praxistest.py` | Status → Hands-on test: the points of the hands-on test, for admins only. |
 | `app/panel/quality.py` | Quality test of the assistant against the real language model: fixed questions with prepared tool results (a sandbox, nothing of a profile is read or changed … |
 | `app/panel/rundlauf.py` | Rundlauf-Wächter: a real round trip through the models every few minutes, part of the Dienst-Wächter. |
+| `app/panel/schwachstellen.py` | Schwachstellen: known holes in what the Spark runs, against the OSV database, with what to do. |
+| `app/panel/schwachstellen_stand.py` | Schwachstellen, the stored result and its counts (schwachstellen.py checks, this one only reads): kept apart so Live and the note on top (live.py, health.py) … |
 | `app/panel/speicher.py` | Eigener Speicher. |
 | `app/panel/system.py` | System page: backups, the live check of the real services and the alerts shown on top. |
 | `app/panel/systemupdates.py` | System-Updates. |
@@ -877,6 +880,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/rundlauf.json` | Test runs of the round-trip check (times in ms, fixed words) | – | no |
 | `state/satzende.json` | Turn end by tone: measurement at speaking pauses (numbers only) | – | no |
 | `state/schirm.key` | Key of the control centre on the screen (only the service user reads it) | service user only | no |
+| `state/schwachstellen.json` | Vulnerabilities: when last checked, the findings (place, package name, version, OSV ids, weight, version with the fix, fixed action), since when each finding exists | – | no |
 | `state/secret.key` | Key for everything sealed | is the key | no |
 | `state/setup.json` | Setup wizard done | – | yes |
 | `state/speech-active` | Time of last speech | – | no |
@@ -2932,12 +2936,12 @@ flowchart TD
   s12 -.->|redirect| s2
 ```
 
-1. <a id="kn-waechter-s1"></a>**A tool wants out**: Everything that goes to an address from settings or from outside text gets its access through netguard.client with a level (today 37 modules). Fixed own services like the language model go directly; which ones and why is listed in netguard.DIRECT_OK, a self-test keeps that list complete.
+1. <a id="kn-waechter-s1"></a>**A tool wants out**: Everything that goes to an address from settings or from outside text gets its access through netguard.client with a level (today 38 modules). Fixed own services like the language model go directly; which ones and why is listed in netguard.DIRECT_OK, a self-test keeps that list complete.
 2. <a id="kn-waechter-s2"></a>**Resolve the name once**: resolve() looks the name up exactly once. If it has several addresses, each one must be allowed, else it stops.
 3. <a id="kn-waechter-s3"></a>**Own service?**: The ports of the own services are closed on this machine: on loopback and on every own address in the LAN or VPN (own_addresses reads them again every minute). When the models run on another computer (models.host), its addresses count the same (model_addresses).
 4. <a id="kn-waechter-s4"></a>**Internet and kill switch on?**: If the address is public and the kill switch is at stage 1 or higher, nothing goes to the internet, whatever level the tool has. The home network stays reachable as the level allows.
 5. <a id="kn-waechter-s5"></a>**Public address?**: A public address is allowed at every level.
-6. <a id="kn-waechter-s6"></a>**Level „internet only“?**: What comes from search results or answers may never go to the home network (feeds, geraeteupdate, ghtoken, mailansicht, meldung, modellseite, remarkable, systemupdates, verbund).
+6. <a id="kn-waechter-s6"></a>**Level „internet only“?**: What comes from search results or answers may never go to the home network (feeds, geraeteupdate, ghtoken, mailansicht, meldung, modellseite, remarkable, schwachstellen, systemupdates, verbund).
 7. <a id="kn-waechter-s7"></a>**Never allowed?**: Link-local addresses (169.254.x, where cloud metadata answers), multicast, unspecified and reserved addresses are allowed at no level.
 8. <a id="kn-waechter-s8"></a>**Home network allowed?**: Home Assistant and other services in the home network (doclingdienst, esp32, hamelden, homeassistant, kiwix, offsite) always may. Calendars, contacts, mail and MCP (calendars, contacts, fundmail, mail, mcp, meinmcp, tasks) only when Settings → Security → Allow home network addresses is on.
 9. <a id="kn-waechter-s9"></a>**Connect to exactly this address**: The connection goes to the checked address, not to the name again. A second look-up could answer differently (DNS rebinding). The certificate is still checked for the name.
@@ -2953,7 +2957,7 @@ Applies at: [step 6](#kn-waechter-s6), [step 8](#kn-waechter-s8)
 
 | Level | Who uses it (from the code) | Internet | Home network |
 |---|---|---|---|
-| internet only | feeds, geraeteupdate, ghtoken, mailansicht, meldung, modellseite, remarkable, systemupdates, verbund | ✓ | ✕ |
+| internet only | feeds, geraeteupdate, ghtoken, mailansicht, meldung, modellseite, remarkable, schwachstellen, systemupdates, verbund | ✓ | ✕ |
 | user | calendars, contacts, fundmail, mail, mcp, meinmcp, tasks | ✓ | only with switch |
 | home | doclingdienst, esp32, hamelden, homeassistant, kiwix, offsite | ✓ | ✓ |
 | by target | anrufe, dienstwacht, halive, nas, nasquelle, netproxy, offline, speicher, telefon, zertpin | as the target is set | – |
@@ -3917,7 +3921,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Seal**: vault.seal turns the value into „enc1:“ and a Fernet token (encrypted and protected against change). A value already sealed stays as it is.
 5. <a id="kn-state-s5"></a>**Write atomically**: common.write_json writes into a fresh temporary file next to it, never through a link, gives it the rights of the old file (a new one is readable for the service only) and then swaps it in one step. A crash in the middle leaves the old file whole.
 6. <a id="kn-state-s6"></a>**Read**: A sealed value is opened with the key. If the key does not fit (backup from another Spark), an empty value comes back and the account has to be entered again. Older unsealed values are read and sealed the next time they are saved.
-7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 51), otherwise the line gives its reason (dateien.STATE_LOCAL, 114). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
+7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 51), otherwise the line gives its reason (dateien.STATE_LOCAL, 115). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
 8. <a id="kn-state-s8"></a>**Move backup?**: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup.
 9. <a id="kn-state-s9"></a>**Fine when restoring?**: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays.
 10. <a id="kn-state-s10"></a>**Put in place with a way back**: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back.
@@ -3928,7 +3932,7 @@ flowchart TD
 #### Numbers (from the code)
 
 - **51** files in every backup ([step 7](#kn-state-s7))
-- **114** files and folders that stay out with a reason ([step 7](#kn-state-s7))
+- **115** files and folders that stay out with a reason ([step 7](#kn-state-s7))
 - **8 MB** largest file when restoring ([step 9](#kn-state-s9))
 - **12** characters the move password has at least ([step 8](#kn-state-s8))
 

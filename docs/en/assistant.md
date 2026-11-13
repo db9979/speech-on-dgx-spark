@@ -1841,6 +1841,8 @@ Every function of the Spark with its switch, what it builds on, where you set it
 
 - **System updates at night on the model computer** (Features → Access → "System updates at night on the model computer"; builds on "System updates"): With Spark split: installs tars' operating system updates by itself between 03 and 05, through the Wärter's fixed command.
 
+- **Vulnerabilities** (Features → Access → "Vulnerabilities"): A card under Status → Summary and the page Status → Vulnerabilities show known holes in everything the Spark runs: the panel's Python packages, the model engines (vLLM, vllm-omni), the models' Docker images and the operating system's sec …
+
 - **Control centre on the screen** (Features → Access → "Control centre on the screen"): A screen on the panel computer's HDMI output shows the control centre: state and the day's numbers on top, in the middle which request runs through which stage right now and on which computer (with Spark split tars and the Pi with CPU, G …
 
 - **Switch models** (Features → Access → "Switch models"): Under Status → Models an admin switches the model of a kind: language model, image understanding, speech recognition, speech output or painting pictures.

@@ -37,7 +37,9 @@ from fastapi.responses import HTMLResponse, JSONResponse
 
 import dungeon_live
 import guard
+import features
 import quellenangabe
+import schwachstellen_stand
 import steckbrief
 from common import DayCounter, STATE, load_config, write_json
 from core import auth
@@ -1433,7 +1435,6 @@ def snapshot(view="admin", now=None):
         used.add("ged")
     try:
         import klaeren
-        import features
         kl = dict(klaeren.for_live(), weg_on=features.admin_on("klaerenweg")) if features.admin_on("klaeren") else None
     except Exception:
         kl = None
@@ -1749,6 +1750,12 @@ def snapshot(view="admin", now=None):
     if sup.get("on"):
         used.add("systemupdate")
     try:
+        swc = schwachstellen_stand.zahlen(features.admin_on("schwachstellen"), now)
+    except Exception:
+        swc = {"on": False}
+    if swc.get("on"):
+        used.add("schwachstellen")
+    try:
         import fernzugang
         fzg = fernzugang.for_live(now)
     except Exception:
@@ -1931,6 +1938,8 @@ def snapshot(view="admin", now=None):
             x["sub"] = werkstattseite.live_sub(wks)
         if x["id"] == "systemupdate" and sup.get("on"):   # System-Updates: per computer counts, running n of m, waiting (no package name)
             x["sub"] = systemupdates.live_sub(sup) or x["sub"]
+        if x["id"] == "schwachstellen" and swc.get("on"):   # Schwachstellen: findings, critical and high (counts, no name)
+            x["sub"] = schwachstellen_stand.live_sub(swc)
         if x["id"] == "llmapi" and lap.get("on"):   # Sprachmodell per API: keys, running, answers and tokens today (numbers)
             x["sub"] = llmapi.live_sub(lap)
         if x["id"] == "openwebui" and owu.get("on"):   # Open WebUI: profiles connected, whether the addresses are set (numbers)

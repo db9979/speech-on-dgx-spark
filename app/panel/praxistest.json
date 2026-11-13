@@ -5872,6 +5872,14 @@
 "text": "Auf tars sudo speech-spark modelle messen gemma4 ausführen (oder unter Zustand → Modelle bei Gemma 4 „Messen“). Nach dem Download steht unter Zustand → Modelle eine Messung mit Tokens pro Sekunde, Werkzeug ok oder falsch und Bildverständnis; das Sprachmodell läuft danach wieder wie vorher. Die Zahlen mit Qwen3.6 vergleichen und sagen, ob Gemma 4 bleiben soll.",
 "thread": "GPU-Taktgrenze auf tars einbauen",
 "test": "test_modelle.Katalog.test_messliste"
+},
+{
+"id": "P862",
+"v": 1418,
+"titel": "Schwachstellen-Seite",
+"text": "Unter Funktionen → Schwachstellen einschalten. Dann Zustand → Schwachstellen öffnen und „Jetzt prüfen“ tippen: nach etwa einer Minute stehen oben die Zahlen, darunter Kacheln für Pi, tars, Docker-Abbilder und Betriebssystem und die Funde nach dem, was zu tun ist. Einen Fund antippen: rechts (am Handy darunter) stehen Wo, Behoben in, Kennungen mit Link zu osv.dev und ein fester Satz, was zu tun ist. Im Überblick zeigt die Karte „Schwachstellen“ dieselben Zahlen, in Live steht nur die Anzahl.",
+"thread": "Schwachstellen gegen OSV prüfen",
+"test": "test_schwachstellen.Pruefen.test_only_names_out_only_ids_back_and_a_fixed_action"
 }
 ]
 }

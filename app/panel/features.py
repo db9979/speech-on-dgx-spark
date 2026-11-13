@@ -368,6 +368,7 @@ FEATURES = (
     F(**steckbrief.feature("systemupdates")),
     F(**steckbrief.feature("systemnachtpanel")),
     F(**steckbrief.feature("systemnachtmodelle")),
+    F(**steckbrief.feature("schwachstellen")),
     F(**steckbrief.feature("schirm")),
     F(**steckbrief.feature("modellwechsel")),
     F(**steckbrief.feature("modelleeigen")),

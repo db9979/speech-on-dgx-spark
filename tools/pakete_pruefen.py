@@ -24,6 +24,7 @@ verdict, nothing written).
 """
 import datetime
 import glob
+import importlib.util
 import json
 import os
 import re
@@ -31,25 +32,16 @@ import sys
 import urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OSV_URL = "https://api.osv.dev/v1/querybatch"       # as panel/systemupdates.OSV_URL (test_pakete_pruefen)
-OSV_MAX = 2 * 1048576
-OSV_ID = re.compile(r"[A-Z][A-Za-z0-9\-]{2,40}")
-PIN = re.compile(r"^([A-Za-z0-9][A-Za-z0-9._\-]{0,63})==([A-Za-z0-9.+!\-]{1,40})\s")     # as systemupdates.LOCK_LINE
-MAX_IDS = 5
-ALLE_IDS = 30                                        # ids asked for weight and fix per package
-VULN_URL = "https://api.osv.dev/v1/vulns/"           # + one id: weight and fixed versions of one hole
-VULN_MAX = 1048576
-# the weight of a hole, worst first (as the Spark's page shows it); GitHub's own words map onto it
-STUFEN = ("kritisch", "hoch", "mittel", "niedrig", "unbekannt")
-GHSA_STUFE = {"CRITICAL": "kritisch", "HIGH": "hoch", "MODERATE": "mittel", "MEDIUM": "mittel", "LOW": "niedrig"}
-VERSION = re.compile(r"^v?(\d+(?:\.\d+)*)(?:[-_.]?(a|b|c|rc|alpha|beta)[-_.]?(\d*))?(?:[-_.]?post[-_.]?(\d*))?"
-                     r"(?:[-_.]?dev[-_.]?(\d*))?(?:\+[A-Za-z0-9.]+)?$", re.I)
-# install.sh: the engines' versions (one line each, as install.sh reads them); the name on PyPI
-ENGINE = re.compile(r"^(VLLM|VLLM_OMNI|VLLM_LLM)_VERSION=([0-9][0-9A-Za-z.+!\-]{0,39})$", re.M)
-ENGINE_NAME = {"VLLM": "vllm", "VLLM_OMNI": "vllm-omni", "VLLM_LLM": "vllm"}
+# app/osv.py is the one place for what goes to OSV and how its answer is read (the Spark uses the same file)
+_spec = importlib.util.spec_from_file_location("osv", os.path.join(ROOT, "app", "osv.py"))
+osv = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(osv)
+OSV_URL, OSV_MAX, OSV_ID, PIN, MAX_IDS = osv.OSV_URL, osv.OSV_MAX, osv.OSV_ID, osv.PIN, osv.MAX_IDS
+VULN_URL, VULN_MAX, STUFEN = osv.VULN_URL, osv.VULN_MAX, osv.STUFEN
+vkey, cvss3, stufe_von, einzeln = osv.vkey, osv.cvss3, osv.stufe_von, osv.einzeln
 # modelle.py DOCKER: "image": "<name>@sha256:<64 hex>", and on the next line "seit": "YYYY-MM-DD"
 DOCKER = re.compile(r'"image":\s*"([a-z0-9][a-z0-9._/-]{0,127})@sha256:[0-9a-f]{64}",\s*\n\s*"seit":\s*"(\d{4}-\d{2}-\d{2})"')
-DOCKER_TAGE = 90
+DOCKER_TAGE = osv.DOCKER_TAGE
 
 
 def gepinnt(root=ROOT):
@@ -68,15 +60,7 @@ def motoren(root=ROOT):
     """{name: version} of the engines pinned in install.sh. A second vLLM with another version than VLLM_VERSION
     is asked as "vllm <version>" (the name sent to OSV is the first word)."""
     with open(os.path.join(root, "install.sh"), encoding="utf-8") as f:
-        text = f.read()
-    out = {}
-    for var, ver in ENGINE.findall(text):
-        name = ENGINE_NAME[var]
-        if out.get(name, ver) != ver:
-            name = f"{name} {ver}"
-        out[name] = ver
-    return out
-
+        return osv.motoren(f.read())
 
 def abbilder(root=ROOT):
     """[(image, day pinned)] of the model engines' Docker images (modelle.DOCKER)."""
@@ -90,139 +74,32 @@ def alt(bilder, heute):
 
 
 def frage(pak, post=None):
-    """{name: {"v": version, "ids": [...]}} for the packages OSV knows a hole in; raises when there is no answer."""
-    body = json.dumps({"queries": [{"package": {"name": n.split(" ")[0], "ecosystem": "PyPI"}, "version": v}
-                                   for n, v in pak.items()]}).encode()
+    """{name: {"v", "ids", "alle"}} for the packages OSV knows a hole in; raises when there is no answer."""
+    body = json.dumps(osv.anfrage(pak)).encode()
     if post is None:
         def post(data):
             req = urllib.request.Request(OSV_URL, data=data, headers={"Content-Type": "application/json"})
             with urllib.request.urlopen(req, timeout=60) as r:      # noqa: S310  (fixed https address)
                 return r.read(OSV_MAX + 1)
-    raw = post(body)
-    if len(raw) > OSV_MAX:
-        raise ValueError("answer too long")
-    res = (json.loads(raw) or {}).get("results")
-    if not isinstance(res, list) or len(res) != len(pak):
-        raise ValueError("answer does not fit the question")
-    warn = {}
-    for (n, v), x in zip(pak.items(), res):
-        ids = [str(y.get("id")) for y in (x or {}).get("vulns") or []
-               if isinstance(y, dict) and OSV_ID.fullmatch(str(y.get("id")))]
-        if ids:
-            warn[n] = {"v": v, "ids": ids[:MAX_IDS], "alle": ids[:ALLE_IDS]}
-    return warn
-
-
-def vkey(v):
-    """A sortable key for a PEP 440 version (release, pre, post, dev; local part ignored), None when it is no such
-    version. The Spark has no packaging library on GitHub's plain python3, so it is done here."""
-    m = VERSION.match(str(v or "").strip())
-    if not m:
-        return None
-    rel = tuple(int(x) for x in m.group(1).split("."))
-    rel = rel + (0,) * (8 - len(rel)) if len(rel) < 8 else rel
-    pre = {"a": 0, "alpha": 0, "b": 1, "beta": 1, "c": 2, "rc": 2}.get((m.group(2) or "").lower())
-    dev = m.group(5) is not None
-    post = int(m.group(4) or 0) if m.group(4) is not None else -1
-    if pre is None:
-        pre_key = (-1, 0) if dev and post < 0 else (3, 0)      # 1.0.dev1 < 1.0a1 < 1.0rc1 < 1.0
-    else:
-        pre_key = (pre, int(m.group(3) or 0))
-    return rel + pre_key + (post, 0 if dev else 1, int(m.group(5) or 0) if dev else 0)
-
-
-def cvss3(vector):
-    """The base score of a CVSS 3.0/3.1 vector (FIRST's formula), None for anything else."""
-    m = dict(x.split(":", 1) for x in str(vector or "").split("/")[1:] if ":" in x)
-    if not str(vector or "").startswith("CVSS:3"):
-        return None
-    try:
-        changed = m["S"] == "C"
-        av = {"N": .85, "A": .62, "L": .55, "P": .2}[m["AV"]]
-        ac = {"L": .77, "H": .44}[m["AC"]]
-        pr = {"N": .85, "L": .68 if changed else .62, "H": .5 if changed else .27}[m["PR"]]
-        ui = {"N": .85, "R": .62}[m["UI"]]
-        c, i, a = ({"H": .56, "L": .22, "N": 0}[m[k]] for k in ("C", "I", "A"))
-    except KeyError:
-        return None
-    iss = 1 - (1 - c) * (1 - i) * (1 - a)
-    impact = 7.52 * (iss - .029) - 3.25 * (iss - .02) ** 15 if changed else 6.42 * iss
-    if impact <= 0:
-        return 0.0
-    base = min((1.08 if changed else 1) * (impact + 8.22 * av * ac * pr * ui), 10)
-    n = round(base * 100000)                                       # Roundup of CVSS 3.1
-    return n / 100000 if n % 10000 == 0 else (n // 10000 + 1) / 10
-
-
-def stufe_von(score):
-    if score is None:
-        return "unbekannt"
-    return "kritisch" if score >= 9 else "hoch" if score >= 7 else "mittel" if score >= 4 else "niedrig"
-
-
-def norm(name):
-    return re.sub(r"[-_.]+", "-", str(name or "")).lower()
-
-
-def einzeln(vuln, name, ver):
-    """(stufe, score, fix) of one OSV record for package name at version ver: fix is the lowest "fixed" above ver
-    (None when OSV names none)."""
-    score = None
-    for s in vuln.get("severity") or []:
-        if isinstance(s, dict) and str(s.get("type", "")).startswith("CVSS_V3"):
-            x = cvss3(s.get("score"))
-            if x is not None:
-                score = x if score is None else max(score, x)
-    stufe = stufe_von(score)
-    if score is None:
-        stufe = GHSA_STUFE.get(str((vuln.get("database_specific") or {}).get("severity", "")).upper(), "unbekannt")
-    have, fixes = vkey(ver), []
-    for aff in vuln.get("affected") or []:
-        pkg = (aff or {}).get("package") or {}
-        if pkg.get("ecosystem") != "PyPI" or norm(pkg.get("name")) != norm(name):
-            continue
-        for rng in aff.get("ranges") or []:
-            for ev in (rng or {}).get("events") or []:
-                k = vkey((ev or {}).get("fixed"))
-                if k is not None and have is not None and k > have:
-                    fixes.append((k, str(ev["fixed"])))
-    return stufe, score, (min(fixes)[1] if fixes else None)
+    return osv.antwort(pak, post(body))
 
 
 def genauer(warn, get=None):
-    """Adds to every package in warn: "stufe" (worst), "score", "behoben" (the version closing every hole that has
-    a fix) and "ohne_fix" (holes OSV names no fix for). A missing answer leaves "unbekannt" and no fix."""
+    """Weight, fix and holes without a fix for every package in warn (app/osv.zusammen); a record that does not
+    come counts as unknown, without a fix."""
     if get is None:
         def get(vid):
             with urllib.request.urlopen(VULN_URL + vid, timeout=30) as r:   # noqa: S310  (fixed https address)
                 return r.read(VULN_MAX + 1)
     for n, w in warn.items():
-        stufen, scores, fixes, ohne = [], [], [], 0
+        records = []
         for vid in w.get("alle") or w["ids"]:
             try:
-                raw = get(vid)
-                if len(raw) > VULN_MAX:
-                    raise ValueError("answer too long")
-                vuln = json.loads(raw)
-                if not isinstance(vuln, dict):
-                    raise ValueError("no record")
+                records.append(osv.eintrag(get(vid)))
             except Exception:   # noqa: BLE001  (one record missing: that hole counts as unknown, without fix)
-                stufen.append("unbekannt")
-                ohne += 1
-                continue
-            st, sc, fix = einzeln(vuln, n.split(" ")[0], w["v"])
-            stufen.append(st)
-            if sc is not None:
-                scores.append(sc)
-            if fix:
-                fixes.append((vkey(fix), fix))
-            else:
-                ohne += 1
-        bekannt = [s for s in stufen if s != "unbekannt"]
-        w["stufe"] = min(bekannt, key=STUFEN.index) if bekannt else "unbekannt"
-        w["score"] = max(scores) if scores else None
-        w["behoben"] = max(fixes)[1] if fixes else None
-        w["ohne_fix"] = ohne
+                records.append(None)
+        w.update({k: v for k, v in osv.zusammen(dict(w, name=n.split(" ")[0]), records).items()
+                  if k in ("stufe", "score", "behoben", "ohne_fix")})
     return warn
 
 

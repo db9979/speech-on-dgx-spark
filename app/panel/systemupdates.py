@@ -46,6 +46,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import features  # noqa: E402
 import guard  # noqa: E402
 import notaus  # noqa: E402
+import osv  # noqa: E402
 import sysupdate  # noqa: E402
 from common import STATE, load_config, model_local, read_json, run, write_json  # noqa: E402
 from core import admin_code, admin_code_fresh, auth, json_body  # noqa: E402
@@ -61,13 +62,11 @@ LOOP = 30
 NIGHT = (3, 5)             # the same window as the Spark's own night update (update.NIGHT)
 MAX_BODY = 256
 LIVE_CACHE = 10
-OSV_URL = "https://api.osv.dev/v1/querybatch"
-OSV_MAX = 2 * 1048576
+OSV_URL, OSV_MAX = osv.OSV_URL, osv.OSV_MAX     # app/osv.py, the one place for OSV
 NPM_URL = "https://registry.npmjs.org/opencode-linux-{arch}/latest"
 NPM_MAX = 262144
 LOCKS = ("requirements-panel.lock",)
-LOCK_LINE = re.compile(r"^([A-Za-z0-9][A-Za-z0-9._\-]{0,63})==([A-Za-z0-9.+!\-]{1,40})\s")
-OSV_ID = re.compile(r"[A-Z][A-Za-z0-9\-]{2,40}")
+LOCK_LINE, OSV_ID = osv.PIN, osv.OSV_ID
 APP = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ROLLEN = sysupdate.ROLLEN
 NAMEN = {"panel": ("Panel", "Panel"), "modelle": ("Modelle", "Models")}
@@ -224,7 +223,7 @@ async def check_osv(c=None):
     """OSV warnings for the locked packages: only names and versions go out, only ids come back."""
     import netguard
     pak = gepinnt()
-    body = {"queries": [{"package": {"name": n, "ecosystem": "PyPI"}, "version": v} for n, v in pak.items()]}
+    body = osv.anfrage(pak)
     err, warn = "", {}
     try:
         if c is not None:
@@ -233,11 +232,7 @@ async def check_osv(c=None):
             async with netguard.client(netguard.PUBLIC, max_bytes=OSV_MAX, timeout=30, follow_redirects=False) as cl:
                 r = await cl.post(OSV_URL, json=body)
         r.raise_for_status()
-        res = (r.json() or {}).get("results") or []
-        for (n, v), x in zip(pak.items(), res if isinstance(res, list) else []):
-            ids = [str(y.get("id")) for y in (x or {}).get("vulns") or [] if isinstance(y, dict) and OSV_ID.fullmatch(str(y.get("id")))]
-            if ids:
-                warn[n] = {"v": v, "ids": ids[:sysupdate.MAX_IDS]}
+        warn = {n: {"v": w["v"], "ids": w["ids"][:sysupdate.MAX_IDS]} for n, w in osv.antwort(pak, r.json()).items()}
     except Exception as e:
         err = type(e).__name__
     print(f"systemupdate: osv {'fehler ' + err if err else 'ok'} {len(warn)} warnungen {len(pak)} pakete", flush=True)

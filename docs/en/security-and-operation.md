@@ -180,6 +180,14 @@ Recommended on GitHub: 2FA with a passkey, a ruleset on `main` against deletion 
 - **Firmware by hand**: the guide "Firmware by hand" at the bottom of the details under *Status → System updates* (button "Install by hand") walks through EEPROM, NVIDIA driver and DGX OS.
 - **After updating to V01.1.322** once on each computer `sudo speech-spark update` (or `sudo ./install.sh`), so that unit and sudoers line are there; until then the page says "Ließ sich nicht starten".
 
+### Vulnerabilities (since V01.1.418)
+
+*Features → Vulnerabilities* (off, admins only, never guests, no tool for the language model; `schwachstellen.py`, `osv.py`) shows under *Status → Vulnerabilities* known holes in everything the Spark runs: the panel's Python packages, the model engines from `install.sh`, the models' Docker images older than 90 days and the operating system's security updates (only when *System updates* is on). It checks every 6 hours and on "Jetzt prüfen".
+
+- **Only names and versions go out**: one batch question with package names and versions to `api.osv.dev`, then one question per id for weight and fix, all through the network guard and not while the Notaus blocks the internet. Only ids, numbers and versions in fixed characters come back; the Spark never reads OSV's texts.
+- **A fixed sentence per finding**: new version needed (the run "Lücke schließen" on GitHub raises a panel package, a person or a Claude thread pins engines anew), renew the image, install the operating system or no fix yet. The Spark never installs anything here itself.
+- **Without an answer** the last state stays with its age ("zuletzt ohne Antwort"). Live and the note on top show numbers only, never package names.
+
 ## Kill switch (Notaus)
 
 The red "Notaus" button (bottom of the sidebar, on phones at the top of Manage) stops the Spark in three stages. Triggering needs no code and only goes up; lifting is for admins only.

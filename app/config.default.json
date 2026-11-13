@@ -344,6 +344,7 @@
     "system_updates": false,
     "system_updates_night_panel": false,
     "system_updates_night_models": false,
+    "schwachstellen": false,
     "gehaeuse_art": "keins",
     "gehaeuse_wechsel_s": 6,
     "gehaeuse_hell": 60,

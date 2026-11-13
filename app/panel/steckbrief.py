@@ -875,6 +875,19 @@ STECKBRIEFE = {
         begleiter="spark", nur_spark=True,
         modul=("systemupdates", "betrieb", "System-Updates: Betriebssystem beider Rechner prüfen und fest "
                                            "einspielen, OpenCode und OSV, Firmware nur zeigen")),
+    # schwachstellen.py + ../osv.py (Dominik 2026-11-13 „1“): known holes in the Spark's packages, engines, Docker images
+    # and operating system against OSV, with a fixed action each; only names and versions go out, only ids come back;
+    # admins only, no tool for the model
+    "schwachstellen": Steckbrief(de="Schwachstellen", en="Vulnerabilities", gruppe="sec", schalter=("schwachstellen",),
+        anleitung="schwachstellen",
+        ohne_werkzeug=("ohne", "schwachstellen.py: nur der Admin im Panel, feste Prüfung gegen OSV mit festen "
+                               "Handlungssätzen; das Modell bekommt kein Werkzeug"),
+        live=("schwachstellen", "Schwachstellen", "OSV · nur Paketnamen und Versionen · Internet", "net", False,
+              "Kennungen, Schweregrad und Version mit Fix"),
+        log=("system", "schwachstellen"),
+        begleiter="spark", nur_spark=True,
+        modul=("schwachstellen", "betrieb", "Schwachstellen: Pakete, Engines, Docker-Abbilder und Betriebssystem "
+                                            "gegen OSV, je Fund ein fester Handlungssatz")),
     "systemnachtpanel": Steckbrief(de="System-Updates nachts auf dem Panel-Rechner",
         en="System updates at night on the panel computer", gruppe="sec", schalter=("system_updates_night_panel",),
         anleitung="systemnachtpanel", parent="systemupdates",

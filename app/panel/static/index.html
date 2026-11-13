@@ -76,6 +76,15 @@
     <div class="sugrid" id="zsugrid"></div>
     <div class="card zneed suneben"><h2>Nebenan</h2><div class="sunebenlist"></div><div class="mut" style="margin-top:6px">Nur Paketnamen und Versionsnummern, nie Inhalte. Eingespielt wird nur mit frischem Code und nie, während jemand spricht.</div></div>
   </div>
+  <div class="sudetail swpage" id="zswdet" hidden><button class="b suback" type="button" id="zswback"><i data-ic="back"></i><span>Überblick</span></button>
+    <h2 class="sutitle">Schwachstellen</h2>
+    <div class="mut swsub">Bekannte Lücken in allem, was der Spark betreibt, und was zu tun ist.</div>
+    <div class="card zhead sutop swtop" data-lvl="ok"><span class="zicon" aria-hidden="true"></span><div class="zht"><b class="swtopt">…</b><div class="mut swtopx"></div><span class="mut" id="zswmsg2"></span></div><button class="b zgo" type="button" id="zswcheck2">Jetzt prüfen</button></div>
+    <div class="dvtiles swtiles"></div>
+    <div class="segc swseg" role="group" aria-label="Schweregrad"></div>
+    <div class="swsplit"><div class="swfunde"></div><div class="card swdet" aria-live="polite"></div></div>
+    <div class="mut swfoot">Nach außen gehen nur Paketnamen und Versionen, zurück nur Kennungen, Zahlen und Versionen. Eingespielt wird hier nie etwas.</div>
+  </div>
   <div class="card znotaus" id="znotaus" hidden><h2>Was der Notaus gerade abhält <span class="mut" id="znsince"></span></h2><div id="znrows"></div>
     <div class="mut" style="margin-top:6px">Nur Art und Anzahl seit dem Auslösen, nie Inhalte.</div></div>
   <div class="card znotaus" id="znmine" hidden><h2>Mein Notaus von Profilen</h2><div class="mut">Diese Profile haben nur ihren eigenen Teil stillgelegt. Aufheben kann das Profil selbst mit PIN, oder du hier.</div><div id="znmrows"></div>
@@ -106,6 +115,7 @@
   <div class="card zneed" id="zstore" hidden><h2>Kopie meiner Daten</h2><div id="zstorelist"></div><div class="mut" style="margin-top:6px">Pro Profil nur Art, Zustand, Größen und Anzahlen, nie Dateinamen oder Inhalte.</div></div>
   <div class="card zneed" id="zdev" hidden><h2>Geräte-Updates</h2><div id="zdevlist"></div><div class="row" style="margin-top:8px"><button class="b" type="button" id="zdevcheck">Jetzt suchen</button><button class="b" type="button" id="zdevgo" style="display:none">Weiter verteilen</button><span class="mut" id="zdevmsg"></span></div><div class="mut" style="margin-top:6px">Nur Versionsnummern und Gerätenamen. Die Dateien kommen nur von GitHub und werden per Prüfsumme geprüft.</div></div>
   <div class="card zneed sysup" id="zsysup" hidden><h2>System-Updates<span class="pill subadge" id="zsubadge" hidden></span></h2><div class="mut">Betriebssystem, Programme und Firmware beider Rechner. Antippen öffnet die Einzelheiten.</div><div class="sulist" id="zsulist"></div><div class="row" style="margin-top:8px"><button class="b" type="button" id="zsucheck">Jetzt prüfen</button><button class="b" type="button" id="zsuopen">Einzelheiten</button><span class="mut" id="zsumsg"></span></div><div class="mut sunb">Nebenan, nicht doppelt: der Spark selbst unter Einstellungen → Update, Lautsprecher, Apps und Begleiter unter Zustand → Überblick → Geräte-Updates.</div></div>
+  <div class="card zneed sysup swcard" id="zschwach" hidden><h2>Schwachstellen<span class="pill subadge" id="zswbadge" hidden></span></h2><div class="mut">Bekannte Lücken in Paketen, Engines, Abbildern und Betriebssystem, geprüft gegen OSV.</div><div class="zrow sutap swsum"><span><b id="zswtext">…</b><small id="zswmsg"></small></span></div><div class="row" style="margin-top:8px"><button class="b" type="button" id="zswopen">Einzelheiten</button></div></div>
   <div class="card zneed" id="zdocs" hidden><h2>Eigene Dokumente</h2><div id="zdoclist"></div><div class="mut" style="margin-top:6px">Profilnamen, Speicher und Zahlen, nie Inhalte. Dokumentnamen nur, wenn jemand ein Dokument für alle freigegeben hat.</div></div>
   </div>
   <div id="memnote"></div>
@@ -293,6 +303,7 @@
       <div class="setrow"><div class="lbl"><b>System-Updates</b><span>Betriebssystem, OpenCode, Python-Pakete und Firmware beider Rechner im Blick; eingespielt wird nur auf deinen Knopfdruck mit Code.</span></div><label class="tgl"><input type="checkbox" id="chat.system_updates"><i></i></label></div>
       <div class="setrow" data-show="chat.system_updates" style="margin-left:18px"><div class="lbl"><b>System-Updates nachts auf dem Panel-Rechner</b><span>Nur Betriebssystem-Updates zwischen 03 und 05 Uhr, nie Firmware; neu gestartet wird erst nach deiner Freigabe.</span></div><label class="tgl"><input type="checkbox" id="chat.system_updates_night_panel"><i></i></label></div>
       <div class="setrow" data-show="chat.system_updates" style="margin-left:18px"><div class="lbl"><b>System-Updates nachts auf dem Modell-Rechner</b><span>Bei Spark teilen: nur Betriebssystem-Updates zwischen 03 und 05 Uhr, nie Treiber; neu gestartet wird erst nach deiner Freigabe.</span></div><label class="tgl"><input type="checkbox" id="chat.system_updates_night_models"><i></i></label></div>
+      <div class="setrow"><div class="lbl"><b>Schwachstellen</b><span>Prüft alle 6 Stunden gegen OSV, was der Spark betreibt; nach außen gehen nur Paketnamen und Versionen.</span></div><label class="tgl"><input type="checkbox" id="chat.schwachstellen"><i></i></label></div>
       <div class="setrow" data-teilen="1"><div class="lbl"><b>Steuerzentrale am Bildschirm</b><span>Alles auf einer Textanzeige am HDMI-Ausgang des Panel-Rechners; startet beim Booten ohne Anmeldung, nur Art, Ort, Zeit und Zahlen.</span></div><label class="tgl"><input type="checkbox" id="chat.schirm"><i></i></label></div>
       <div data-show="chat.schirm" style="margin-left:36px">
         <label for="chat.schirm_an">Anzeige an ab (Uhr)</label><input class="num" id="chat.schirm_an" type="number" min="0" max="23">
@@ -1624,6 +1635,7 @@
 <script src="/static/js/hintergrund.js"></script>
 <script src="/static/js/geraete.js"></script>
 <script src="/static/js/systemupdates.js"></script>
+<script src="/static/js/schwachstellen.js"></script>
 <script src="/static/js/dienste.js"></script>
 <script src="/static/js/wartung.js"></script>
 <script src="/static/js/verbessern.js"></script>
