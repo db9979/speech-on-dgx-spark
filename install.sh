@@ -1027,6 +1027,7 @@ fi
   printf ', /usr/bin/systemctl start --no-block speech-spark-update, /usr/bin/systemctl stop speech-spark-update'
   printf ', /usr/bin/systemctl start --no-block speech-spark-gehaeuse'   # B7: the case, from the panel's checked wish
   printf ', /usr/bin/systemctl start --no-block speech-spark-systemupdate'   # System-Updates: the checked wish (both computers)
+  printf ', /usr/bin/systemctl start --no-block speech-spark-gpu-takt'   # GPU-Taktgrenze: root reads the setting itself
   printf ', /usr/bin/systemctl enable --now speech-spark-schirm, /usr/bin/systemctl disable --now speech-spark-schirm, /usr/bin/systemctl start getty@tty1.service'   # B9
   printf ', /usr/bin/systemctl start --no-block speech-spark-wechsel'   # stage E4: takes the panel's checked wish
   printf ', /usr/bin/systemctl start --no-block speech-spark-werkstatt'   # Funktionen → Werkstatt: takes the checked wish
@@ -1584,6 +1585,31 @@ Environment=SPEECH_SPARK_PREFIX=$PREFIX SPEECH_SPARK_ETC=$ETC SPEECH_SPARK_VAR=$
 ExecStart=/bin/bash $PREFIX/app/speech-spark.sh systemupdate wunsch-intern
 TimeoutStartSec=2h
 UNIT
+# GPU-Taktgrenze (app/gputakt.py, Dominik 2026-11-13): a ceiling on the GPU clock for less power and heat. Root reads the
+# one setting watch.gpu_takt itself and knows only its fixed values (speech-spark.sh cmd_gputakt); it runs at every start
+# (a cap does not survive a restart) and when the panel or the Wärter starts it after the setting changed. Only where
+# nvidia-smi is (the model computer); on the Pi the condition skips it.
+cat >/etc/systemd/system/speech-spark-gpu-takt.service <<UNIT
+[Unit]
+Description=Speech on DGX Spark: GPU-Taktgrenze (nvidia-smi -lgc or -rgc from the setting)
+ConditionPathExists=/usr/bin/nvidia-smi
+After=nvidia-persistenced.service
+
+[Service]
+LogNamespace=speech-spark
+Type=oneshot
+MemoryMax=128M
+PrivateTmp=yes
+RuntimeDirectory=speech-spark-gpu-takt
+RuntimeDirectoryMode=0755
+RuntimeDirectoryPreserve=yes
+Environment=SPEECH_SPARK_PREFIX=$PREFIX SPEECH_SPARK_ETC=$ETC SPEECH_SPARK_VAR=$VAR
+ExecStart=/bin/bash $PREFIX/app/speech-spark.sh gputakt intern
+TimeoutStartSec=2min
+
+[Install]
+WantedBy=multi-user.target
+UNIT
 # Plan raspberry-split B9: the Steuerzentrale as text on the screen (steuerzentrale.py on tty1, no desktop, no sign-in).
 # Only where the panel runs; panel/schirm.py enables and starts it when the admin switches Funktionen → Steuerzentrale
 # on (then it comes up at every boot) and disables it again, then it starts the login prompt on tty1 itself. No
@@ -2002,6 +2028,8 @@ systemctl daemon-reload
 
 # ---------------------------------------------------------------- start
 say "Starting services"
+systemctl enable speech-spark-gpu-takt.service >/dev/null 2>&1 || true
+systemctl start --no-block speech-spark-gpu-takt.service 2>/dev/null || true   # the cap again after an update
 if [ "$MODE" = full ]; then
   systemctl disable --now speech-spark-watch.service 2>/dev/null || true
   rm -f /etc/systemd/system/speech-spark-watch.service

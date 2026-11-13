@@ -17,13 +17,20 @@ const zSeen=()=>!!$('mon')&&$('mon').classList.contains('on')&&!document.hidden;
 function zPollNow(){for(const [f] of ZPOLL)f()}
 function zPoll(list){for(const [n,ms] of list){const f=window[n];if(typeof f!=='function')continue;ZPOLL.push([f,ms]);setInterval(()=>{if(zSeen())f()},ms)}
   if(zSeen())zPollNow()}
+// GPU-Taktgrenze (gputakt.py): what root set, from the GPU's status (on this computer or through the Wärter)
+function gpuGrenze(g){const x=g&&g.grenze;if(!x||x.wort==='aus')return '';return x.wort==='fehler'?t('Taktgrenze: Fehler','Clock cap: error'):t('höchstens ','at most ')+x.wort+' MHz'}
+async function gpuTakt(){const el=$('gputakt');if(!el)return;let g;try{g=(await (await api('/api/status')).json()).gpu}catch(e){return}
+  const x=g&&g.grenze,w=$('watch.gpu_takt')?$('watch.gpu_takt').value:'aus';
+  const jetzt=g?t('Jetzt: Takt ','Now: clock ')+fmt(g.clock,' MHz')+' · '+fmt(g.power,' W')+' · '+fmt(g.temp,' °C'):t('Keine GPU erreichbar.','No GPU reachable.');
+  const st=!g?'':!x?t('Noch nicht gesetzt (nach dem Speichern oder dem nächsten Start).','Not set yet (after saving or the next start).'):x.wort==='fehler'?t('Setzen ging nicht, siehe Zustand → Logs.','Setting it failed, see Status → Logs.'):x.wort==='aus'?t('Keine Grenze gesetzt.','No cap set.'):t('Gesetzt: höchstens ','Set: at most ')+x.wort+' MHz.';
+  setHtml(el,`<div class="note">${esc(st+(x&&x.wort!==w&&x.wort!=='fehler'?' '+t('Die Wahl wirkt nach dem Speichern.','The choice takes effect after saving.'):'')+' '+jetzt)}</div>`)}
 async function refresh(){const seen=$('mon')&&$('mon').classList.contains('on')&&!document.hidden;
   if(updBusy()||!seen&&Date.now()-REFRESH_AT<30e3)return;REFRESH_AT=Date.now();
   let s;try{s=await (await api('/api/status')).json()}catch(e){$('hdr').textContent=t('Panel nicht erreichbar','Panel not reachable');return}
   const g=s.gpu||{},sy=s.system,H=s.history;
   $('hdr').textContent=(g.name||t('keine GPU','no GPU'))+' · '+new Date(s.time*1000).toLocaleTimeString();
   $('m-gpu').textContent=fmt(g.util,' %');$('m-mem').textContent=fmt(sy.mem_avail_gib,' GiB',1)+' / '+(sy.mem_total_gib??'–');
-  $('m-temp').textContent=fmt(g.temp,' °C')+' · '+fmt(g.power,' W');$('m-cpu').textContent=fmt(sy.cpu,' %');
+  $('m-temp').textContent=fmt(g.temp,' °C')+' · '+fmt(g.power,' W')+(gpuGrenze(g)?' · '+gpuGrenze(g):'');$('m-cpu').textContent=fmt(sy.cpu,' %');
   spark($('c-gpu'),H.map(x=>x.gpu),100);spark($('c-mem'),H.map(x=>x.avail),sy.mem_total_gib);spark($('c-temp'),H.map(x=>x.temp),100);spark($('c-cpu'),H.map(x=>x.cpu),100);
   showAlerts(s.alerts);zustand(s);if(typeof loadSecGlance==='function')loadSecGlance();
   setHtml($('memnote'),sy.mem_avail_gib!=null&&sy.mem_avail_gib<12&&!(s.alerts||[]).some(x=>x.kind==='memory')?`<div class="note">${t(`Nur noch ${fmt(sy.mem_avail_gib,' GiB',1)} frei. Unter ~8 GiB beendet DGX OS (earlyoom) Prozesse. Kleinere Modelle wählen oder einen Dienst stoppen.`,`Only ${fmt(sy.mem_avail_gib,' GiB',1)} free. Below ~8 GiB DGX OS (earlyoom) kills processes. Choose smaller models or stop a service.`)}</div>`:'');
@@ -441,7 +448,7 @@ $('asr.recognizer').addEventListener('change',asrRec);
 const cfgPane=p=>{document.querySelectorAll('#cfgnav button').forEach(b=>b.classList.toggle('on',b.dataset.p===p));
   document.querySelectorAll('.pane').forEach(x=>x.classList.toggle('on',x.id==='pane-'+p));try{localStorage.setItem('cfgpane',p)}catch{}};
 // phones: the settings open as a list of pages; a tapped page fills the screen with "back" on top
-document.querySelectorAll('#cfgnav button').forEach(b=>b.onclick=()=>{cfgPane(b.dataset.p);if(b.dataset.p==='voices')loadClone();if(b.dataset.p==='upd'||b.dataset.p==='bak')loadSys();if(b.dataset.p==='upd')ghAdmin();if(b.dataset.p==='start'){glance();loadSecGlance(true)}if(b.dataset.p==='sysc'&&window.liveMons)liveMons();document.querySelector('.cfgwrap').classList.add('sub');window.scrollTo(0,0)});
+document.querySelectorAll('#cfgnav button').forEach(b=>b.onclick=()=>{cfgPane(b.dataset.p);if(b.dataset.p==='voices')loadClone();if(b.dataset.p==='upd'||b.dataset.p==='bak')loadSys();if(b.dataset.p==='upd')ghAdmin();if(b.dataset.p==='start'){glance();loadSecGlance(true)}if(b.dataset.p==='sysc'&&window.liveMons)liveMons();if(b.dataset.p==='sysc')gpuTakt();document.querySelector('.cfgwrap').classList.add('sub');window.scrollTo(0,0)});
 $('cfgback').onclick=()=>{document.querySelector('.cfgwrap').classList.remove('sub');window.scrollTo(0,0)};
 // building blocks (V01.0.207): „Mehr“ unfolds the longer help right below its row; the password fields open on
 // „Ändern …“; the audio file for a new voice is picked with a normal button that shows the chosen name

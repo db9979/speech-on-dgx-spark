@@ -117,6 +117,7 @@ flowchart TB
 | `speech-spark-messen-wunsch` | – | Measure one model (Status → Models "Measure"), only on request |
 | `speech-spark-gehaeuse` | – | Set up the panel computer's case (Pironman 5: fan, OLED), only with `--gehaeuse` |
 | `speech-spark-systemupdate` | – | System updates: on the panel's (or the Wärter's) wish check the package sources, `apt-get upgrade --no-remove` from the fixed sources, a restart only on the admin's word (both computers) |
+| `speech-spark-gpu-takt` | – | GPU clock cap (Settings → Spark → Operation): root reads the setting itself and sets only the fixed values with `nvidia-smi`, at every start and after a change (only where a GPU is) |
 | `speech-spark-werkstatt` | – (the sandbox asks only 127.0.0.1:31006) | One order of the workshop (Features → Workshop): test run, code measurement, diagnosis, repair in the sandbox `speech-spark-werkstatt-lauf`, only with `--werkstatt`; plus `speech-spark-werkstatt-fw` (on 127.0.0.1 the sandbox reaches only the LLM-Tor) |
 | `speech-spark-lokaltest-umgebung` | – (fetches only packages with a checksum) | Develop on the Pi (`--entwickeln`, panel computer): the quick test's test environment, at night only for a new package list; the quick test itself runs as `speech-spark-lokaltest` without network; plus `speech-spark-entwickeln-fw` (the user `spark-dev` reaches only the LLM-Tor 31006) |
 | `speech-spark-auftrag` | – (no network but the LLM-Tor) | Code order in the chat (`--entwickeln`, panel computer): root takes the panel's wish, OpenCode works once as `spark-dev` on its own branch `opencode/auftrag-<n>`, at most 30 minutes; nothing is installed |
@@ -500,6 +501,7 @@ Live overview, logs, watchers, backup, update, help and the admin pages.
 | `app/panel/entwickelnseite.py` | Entwickeln auf dem Pi: the panel's side of app/entwickeln.py, for admins only, default off (admin switch chat.entwickeln). |
 | `app/panel/faelle.py` | Fälle: every problem becomes a case the moment it happens. |
 | `app/panel/ghtoken.py` | A read-only GitHub token for the Spark's own questions to api.github.com (Settings → Update). |
+| `app/gputakt.py` | GPU-Taktgrenze: a ceiling on the model computer's GPU clock for less power and heat at about the same speed. |
 | `app/panel/health.py` | Stability: a watchdog for hung speech services, a warning before memory runs out, and a live check of the real services (LLM answers, TTS speaks, ASR underst … |
 | `app/panel/hilfe.py` | Spark-Hilfe: the assistant answers questions about the Spark itself ("Wie bekomme ich schnellere Antworten?", "Was macht dieser Schalter?", "Was sollte ich h … |
 | `app/panel/klartext.py` | Klartext für Status → Improve. |

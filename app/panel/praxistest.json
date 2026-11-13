@@ -5856,6 +5856,14 @@
 "titel": "Käfer in der iPhone-App",
 "text": "In der iPhone-App (TestFlight nach diesem Stand) oben im Assistenten, unter Heute, im Verlauf, unter Meine Sachen und in den Einstellungen den Marienkäfer antippen. „Fehler oder Wunsch melden“ öffnet sich mit Fehler/Verbesserung; Entwurf anlegen zeigt „Seite: iPhone → …“ in der Vorschau.",
 "thread": "Fehler und Wünsche als Issue melden"
+},
+{
+"id": "P860",
+"v": 1416,
+"titel": "GPU-Taktgrenze",
+"text": "Unter Einstellungen → Spark → Betrieb → GPU-Taktgrenze „2400 MHz“ wählen und speichern. Nach ein paar Sekunden steht darunter „Gesetzt: höchstens 2400 MHz“ und unter Zustand → Überblick bei der GPU „höchstens 2400 MHz“; die Leistung der GPU sinkt beim Antworten um etwa 10 W, das Tempo bleibt. tars neu starten: die Grenze gilt danach wieder. Zurück auf „Aus“ hebt sie auf.",
+"thread": "GPU-Taktgrenze auf tars einbauen",
+"test": "test_gputakt.Root.test_only_the_two_fixed_commands"
 }
 ]
 }

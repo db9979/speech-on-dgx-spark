@@ -771,7 +771,7 @@ def unit_exists(unit):
 
 
 def gpu_stats():
-    """The GPU from nvidia-smi (name, load, temperature, power, clock, compute processes), None without one."""
+    """The GPU from nvidia-smi (name, load, temperature, power, clock, compute processes, the clock cap), None without one."""
     import shutil
     if not shutil.which("nvidia-smi"):
         return None
@@ -794,8 +794,9 @@ def gpu_stats():
         parts = [p.strip() for p in line.split(",")]
         if len(parts) == 3:
             procs.append({"pid": parts[0], "name": parts[1].split("/")[-1], "mem_mib": num(parts[2])})
+    import gputakt   # the clock cap root set (Einstellungen → Betrieb → GPU-Taktgrenze), its own module imports this one
     return {"name": g["name"], "util": num(g["utilization.gpu"]), "temp": num(g["temperature.gpu"]),
-            "power": num(g["power.draw"]), "clock": num(g["clocks.sm"]), "processes": procs}
+            "power": num(g["power.draw"]), "clock": num(g["clocks.sm"]), "processes": procs, "grenze": gputakt.stand()}
 
 
 # The engines load models with --trust-remote-code: any other repo could bring its own code along.

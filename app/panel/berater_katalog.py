@@ -214,7 +214,7 @@ OHNE = {
         "voicedesign_leerlauf_min", "voicedesign_model", "voicedesign_port",
     ),
     "watch": (
-        "warn_gib", "watchdog", "zeitserver",
+        "gpu_takt", "warn_gib", "watchdog", "zeitserver",
     ),
 }
 OHNE_PROFIL = (

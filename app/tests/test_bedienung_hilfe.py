@@ -37,7 +37,7 @@ def en_table():
 
 # words that read the same in English (names, units, technical terms) or are no words at all
 SAME_IN_EN = {
-    "English", "Strg K", "Update", "CPU", "systemd", "RTF", "Unit", "Status", "PID", "Home Assistant", "Port", "Key ID",
+    "English", "Strg K", "Update", "CPU", "2400 MHz", "2200 MHz", "2000 MHz", "systemd", "RTF", "Unit", "Status", "PID", "Home Assistant", "Port", "Key ID",
     "Team ID", "Tokens", "Text", "Backend:", "Seed", "Engine (vllm-omni)", "Engine (vLLM)", "bfloat16", "float16", "float32",
     "Base", "wav, mp3, m4a, …", "Reserve", "GiB", "Logs", "MB", "Version", "VoiceDesign", "Open WebUI", ": Server-Sent Events",
     "Hermes Agent", "OpenClaw", "curl", "10 min", "ASR", "TTS", "ASR-Engine", "TTS-Engine",

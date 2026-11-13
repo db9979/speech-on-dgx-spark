@@ -42,6 +42,7 @@
 #   speech-spark wissen messen [synth [anzahl] [--ohne-grenzen] | profil <name>] [--json]  times and memory of search, map and Finden
 #   speech-spark systemupdate [status]|pruefen  System-Updates: this computer's apt state, or check now (apt update, simulate)
 #   speech-spark systemupdate einspielen|neustart  the fixed apt run of the panel's „Jetzt einspielen“, or the restart it needs
+#   speech-spark gputakt [status]|setzen  GPU-Taktgrenze: the chosen and the set clock cap, or set it again now
 set -euo pipefail
 # runuser, nft, systemctl live in /usr/sbin on Debian and Raspberry Pi OS; a caller with PATH=/usr/bin:/bin (teilen.py
 # runs "teilen umzug-einspielen" that way) would not find them
@@ -1124,6 +1125,35 @@ sysup_neustart() {
   fi
 }
 
+# GPU-Taktgrenze (app/gputakt.py): root reads the one setting itself and runs one of two fixed nvidia-smi commands; the
+# outcome as one line "<word> <epoch>" in the runtime folder of the unit, which the panel and the Wärter read
+GPU_TAKT_STAND=${SPEECH_SPARK_GPU_TAKT:-/run/speech-spark-gpu-takt/stand}
+GPU_NVSMI=${SPEECH_SPARK_NVSMI:-/usr/bin/nvidia-smi}
+gputakt_setzen() {
+  local v ok
+  v=$(cfg '.watch.gpu_takt // "aus"' 2>/dev/null || echo aus)
+  case "$v" in
+    aus) timeout 20 "$GPU_NVSMI" -rgc >/dev/null 2>&1 && ok=1 ;;
+    2400|2200|2000) timeout 20 "$GPU_NVSMI" -lgc "0,$v" >/dev/null 2>&1 && ok=1 ;;
+    *) echo "gputakt: abgelehnt wert"; v=aus; timeout 20 "$GPU_NVSMI" -rgc >/dev/null 2>&1 && ok=1 ;;
+  esac
+  mkdir -p "$(dirname "$GPU_TAKT_STAND")"
+  if [ "${ok:-0}" = 1 ]; then
+    printf '%s %s\n' "$v" "$(date +%s)" >"$GPU_TAKT_STAND"; echo "gputakt: gesetzt $v"
+  else
+    printf 'fehler %s\n' "$(date +%s)" >"$GPU_TAKT_STAND"; echo "gputakt: fehler $v"; return 1
+  fi
+}
+
+cmd_gputakt() {
+  case "${1:-status}" in
+    intern) [ "${INVOCATION_ID:-}" ] || die "only inside its own unit"; [ -x "$GPU_NVSMI" ] || { echo "gputakt: ohne gpu"; return 0; }; gputakt_setzen ;;
+    setzen) need_root gputakt setzen; systemctl start speech-spark-gpu-takt ;;
+    status) echo "GPU-Taktgrenze: $(cfg '.watch.gpu_takt // "aus"')"; cat "$GPU_TAKT_STAND" 2>/dev/null || echo "noch nicht gesetzt" ;;
+    *) die "speech-spark gputakt [status]|setzen" ;;
+  esac
+}
+
 cmd_systemupdate() {
   local w
   case "${1:-status}" in
@@ -1174,8 +1204,9 @@ case "${1:-}" in
   werkstatt) shift; cmd_werkstatt "$@" ;;
   wissen) shift; cmd_wissen "$@" ;;
   systemupdate) shift; cmd_systemupdate "$@" ;;
+  gputakt) shift; cmd_gputakt "$@" ;;
   lokal) shift; cmd_lokal "$@" ;;
   entwickeln) shift; cmd_entwickeln "$@" ;;
-  ""|-h|--help|help) sed -n '2,44p' "$0" | sed 's/^# \{0,1\}//' ;;
+  ""|-h|--help|help) sed -n '2,45p' "$0" | sed 's/^# \{0,1\}//' ;;
   *) die "unknown command: $1 (see: speech-spark help)" ;;
 esac

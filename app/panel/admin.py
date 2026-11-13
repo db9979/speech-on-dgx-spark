@@ -860,6 +860,9 @@ def validate(new):
     if not isinstance(w.get("zeitserver", ""), str) or (w.get("zeitserver", "").strip() and not offline.zeitserver(w["zeitserver"])):
         raise HTTPException(400, "Zeitserver im Heimnetz: eine IP-Adresse im Heimnetz wie 192.168.178.1, oder leer.")
     w["zeitserver"] = offline.zeitserver(w.get("zeitserver", ""))
+    import gputakt   # GPU-Taktgrenze: only the fixed values, root reads it again itself (speech-spark gputakt intern)
+    if w.get("gpu_takt", "aus") not in gputakt.STUFEN:
+        raise HTTPException(400, "GPU-Taktgrenze: " + ", ".join(gputakt.STUFEN))
     lg = new["logs"]
     if not isinstance(lg["max_mb"], int) or not 50 <= lg["max_mb"] <= 20000:
         raise HTTPException(400, "logs max_mb must be 50..20000")
@@ -1084,6 +1087,9 @@ def _save_locked(new, old, by):
     undo.record(old, new, by, SENSITIVE)
     # models on another computer (Spark teilen): it takes the speech settings before its units restart below
     handed = steuer.einstellen(new) if steuer.remote(new) else True
+    if not steuer.remote(new):   # GPU-Taktgrenze on this computer (with the models apart, the Wärter starts it)
+        import gputakt
+        gputakt.anwenden(old, new)
     # the API key is read per request, so changing it needs no restart
     mem_changed = new["memory"] != old.get("memory")
     actions = {}  # unit name -> start | stop | restart

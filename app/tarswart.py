@@ -14,7 +14,8 @@ a time (at most WINDOW seconds off) and a one-time number (each is taken once).
                                 its clock (common.uhr: the time and whether a time server set it; Ohne Internet)
     einheit <start|stop|restart> <teil>   only parts of common.UNITS (speech and its engines)
     einstellen {settings}       the panel's speech settings (common.model_settings_take: known keys, same kind,
-                                never addresses, ports or backends, model ids only Qwen's)
+                                never addresses, ports or backends, model ids only Qwen's); a changed GPU-Taktgrenze
+                                starts root's fixed unit (gputakt.anwenden), which reads the value itself
     logs <teil> <n>             the last n (at most MAX_LINES) log lines of a model unit
     modelle                     what Zustand → Modelle needs from here: memory, measurement, switches,
                                 own models, whether a switch or a measurement runs
@@ -52,6 +53,7 @@ import uvicorn
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 
+import gputakt
 import llmstart
 import modelle
 import rechner
@@ -193,6 +195,7 @@ def einstellen(daten):
         raw[sec] = dict(raw.get(sec) or {}, **{k: new[sec][k] for k in daten[sec]})
     write_json(CONFIG_PATH, raw, indent=2)
     print("waerter: einstellen ok", flush=True)
+    gputakt.anwenden(cfg, load_config(), "waerter")   # GPU-Taktgrenze: root's unit, only when the setting changed
     return {"ok": True, "einstellungen": model_settings_hash(load_config())}
 
 

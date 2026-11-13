@@ -117,6 +117,7 @@ flowchart TB
 | `speech-spark-messen-wunsch` | – | Ein Modell messen (Zustand → Modelle „Messen“), nur auf Knopfdruck |
 | `speech-spark-gehaeuse` | – | Gehäuse des Panel-Rechners einrichten (Pironman 5: Lüfter, OLED), nur mit `--gehaeuse` |
 | `speech-spark-systemupdate` | – | System-Updates: auf Wunsch des Panels (bzw. des Wärters) die Paketquellen prüfen, `apt-get upgrade --no-remove` aus den festen Quellen, Neustart nur auf das Wort des Admins (beide Rechner) |
+| `speech-spark-gpu-takt` | – | GPU-Taktgrenze (Einstellungen → Spark → Betrieb): root liest die Einstellung selbst und setzt nur die festen Werte mit `nvidia-smi`, bei jedem Start und nach einer Änderung (nur wo eine GPU ist) |
 | `speech-spark-werkstatt` | – (die Sandbox fragt nur 127.0.0.1:31006) | Ein Auftrag der Werkstatt (Funktionen → Werkstatt): Testlauf, Code-Messung, Diagnose, Reparatur in der Sandbox `speech-spark-werkstatt-lauf`, nur mit `--werkstatt`; dazu `speech-spark-werkstatt-fw` (die Sandbox erreicht auf 127.0.0.1 nur das LLM-Tor) |
 | `speech-spark-lokaltest-umgebung` | – (holt nur Pakete mit Prüfsumme) | Entwickeln auf dem Pi (`--entwickeln`, Panel-Rechner): Testumgebung des Schnelltests, nachts nur bei neuer Paketliste; der Schnelltest selbst läuft als `speech-spark-lokaltest` ohne Netz; dazu `speech-spark-entwickeln-fw` (der Nutzer `spark-dev` erreicht nur das LLM-Tor 31006) |
 | `speech-spark-auftrag` | – (kein Netz außer dem LLM-Tor) | Code-Auftrag im Chat (`--entwickeln`, Panel-Rechner): root nimmt den Wunsch des Panels, OpenCode arbeitet einmal als `spark-dev` auf einem eigenen Zweig `opencode/auftrag-<n>`, höchstens 30 Minuten; eingespielt wird nichts |
@@ -500,6 +501,7 @@ Live-Übersicht, Logs, Wächter, Sicherung, Update, Hilfe und die Admin-Seiten.
 | `app/panel/entwickelnseite.py` | Entwickeln auf dem Pi im Panel: Seite mit lokalen Änderungen, Einspielen, Zweigen an GitHub, Terminal im Browser |
 | `app/panel/faelle.py` | Fälle: jedes Problem wird festgehalten |
 | `app/panel/ghtoken.py` | Lese-Token für GitHub |
+| `app/gputakt.py` | GPU-Taktgrenze: feste Werte, startet die root-Einheit nur bei Änderung, Stand für die GPU-Anzeige |
 | `app/panel/health.py` | Stabilität: Wächter für hängende Dienste, Echtprüfung |
 | `app/panel/hilfe.py` | Spark-Hilfe und Index der Doku |
 | `app/panel/klartext.py` | Klartext eines Falls: was, woher, warum, was hilft; Fehlercodes in Worten |
