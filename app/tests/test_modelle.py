@@ -148,7 +148,21 @@ class Katalog(unittest.TestCase):
         g = modelle.vllm_args(modelle.katalog()["gemma4-26b-a4b-nvfp4"], revision="a" * 40)
         self.assertNotIn("--trust-remote-code", g)
         self.assertEqual(g[g.index("--tool-call-parser") + 1], "gemma4")
-        self.assertNotIn("--speculative-config", g, "its drafter does not start in vLLM yet (2026-11)")
+        self.assertNotIn("--speculative-config", g, "the plain entry runs without its draft model")
+        # Dominik 2026-11-13 „1“ (47.3 tok/s without): the variant with Google's draft model, fetched beside it
+        self.assertEqual(modelle.messliste(["gemma4mtp"]), ["gemma4-26b-a4b-nvfp4-mtp"])
+        g = modelle.vllm_args(modelle.katalog()["gemma4-26b-a4b-nvfp4-mtp"], revision="a" * 40)
+        spec = json.loads(g[g.index("--speculative-config") + 1])
+        self.assertEqual(spec, {"model": "google/gemma-4-26B-A4B-it-assistant", "num_speculative_tokens": 4,
+                                "moe_backend": "triton"})
+        self.assertNotIn("--speculative-config", modelle.vllm_args(modelle.katalog()["gemma4-26b-a4b-nvfp4-mtp"],
+                                                                   revision="a" * 40, mtp=False))
+        base = modelle.katalog()["gemma4-26b-a4b-nvfp4-mtp"]
+        for bad in ({"entwurf": "../x"}, {"entwurf": "a/b; rm", "mtp": 4}, {"entwurf": "google/x", "mtp": 0}):
+            with self.assertRaises(modelle.Fehler, msg=bad):
+                modelle.pruefe_eintrag(dict(base, vllm=dict(base["vllm"], **bad)))
+        with self.assertRaises(modelle.Fehler, msg="a pinned entry fetches no unpinned draft model"):
+            modelle.pruefe_eintrag(dict(base, revision="a" * 40))
         # Dominik 2026-11-11: only models that run or were measured; the words of the ones gone are refused
         for gone in ("fp8", "gemma", "kolibri", "vl30", "dspark", "qwen36frei"):
             with self.assertRaises(modelle.Fehler, msg=gone):

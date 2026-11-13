@@ -5904,6 +5904,14 @@
 "text": "Pi updaten. Funktionen → Tempo und Genauigkeit → „Eindeutiges direkt abrufen“ ist an, ein Postfach ist verbunden. Im Chat fragen: „Was war meine letzte Bestellung?“. Die Antwort nennt eine echte Bestellbestätigung aus den Mails der letzten 30 Tage (oder sagt, dass keine da ist), nichts Erfundenes. Logs → Anfragen zeigt den Schritt „mail_search (Panel)“. Auch „Was habe ich zuletzt bestellt?“ ausprobieren.",
 "thread": "Fehler und Wünsche als Issue melden",
 "test": "test_fast_start.Direct.test_last_order_searches_the_mails"
+},
+{
+"id": "P866",
+"v": 1424,
+"titel": "Gemma 4 mit MTP messen",
+"text": "Auf tars sudo speech-spark modelle messen gemma4mtp ausführen. Unter Zustand → Modelle steht danach „Gemma 4 26B A4B NVFP4 mit Entwurfsmodell (MTP)“ mit seinen Tokens pro Sekunde; erwartet sind deutlich mehr als die 47,3 ohne. Werkzeug und Bild sollen ok bleiben.",
+"thread": "GPU-Taktgrenze auf tars einbauen",
+"test": "test_modelle.Katalog.test_messliste"
 }
 ]
 }

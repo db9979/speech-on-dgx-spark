@@ -108,6 +108,13 @@
       "betrieb": "resident"
     },
     {
+      "id": "gemma4-26b-a4b-nvfp4-mtp",
+      "basis": "gemma4-26b-a4b-nvfp4",
+      "name": {"de": "Gemma 4 26B A4B NVFP4 mit Entwurfsmodell (MTP)", "en": "Gemma 4 26B A4B NVFP4 with draft model (MTP)"},
+      "vllm": {"mtp": 4, "entwurf": "google/gemma-4-26B-A4B-it-assistant"},
+      "messen": "auf_wunsch"
+    },
+    {
       "id": "qwen3-4b-instruct-2507-fp8",
       "art": "helfer",
       "name": {"de": "Qwen3 4B Instruct 2507 FP8 (Hilfsmodell)", "en": "Qwen3 4B Instruct 2507 FP8 (helper model)"},

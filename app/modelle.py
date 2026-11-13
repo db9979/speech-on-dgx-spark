@@ -62,7 +62,11 @@ MESSEN = ("immer", "auf_wunsch")
 ANTEIL_MAX = 0.80
 MESS_PORT = 31016
 VLLM_KEYS = ("reasoning_parser", "tool_call_parser", "mtp", "max_seqs", "quantization", "bilder_pro_frage", "kv_cache_dtype",
-             "venv", "docker")
+             "venv", "docker", "entwurf")
+# a separate draft model for speculative decoding (Gemma 4's „assistant“, Dominik 2026-11-13 „1“): only a repository
+# name; fetched and checked like the weights, only for an entry still measured (no pinned revision), its MoE on Triton
+# (the recipe for Blackwell desktops: the drafter's default fused MoE path is not built there)
+ENTWURF_MOE = "triton"
 VENVS = ("llm",)                 # $PREFIX/venv-<name>: venv-llm (install.sh --llm)
 KV = ("fp8",)
 LOGPROBS_MAX = 20                # top_logprobs an engine started here gives (--max-logprobs; System One in llm_tor.py)
@@ -214,6 +218,9 @@ def _pruefe_vllm(m):
         raise Fehler("venv")
     if "docker" in v and (v["docker"] not in DOCKER or m["art"] != "llm" or "venv" in v):
         raise Fehler("docker")
+    if "entwurf" in v and (not isinstance(v["entwurf"], str) or not REPO.match(v["entwurf"]) or not v.get("mtp")
+                           or m["revision"] or "docker" in v):
+        raise Fehler("entwurf")
 
 
 def _aus_bildmodell(m):
@@ -414,13 +421,13 @@ def wahl_zeilen(art, kat=None):
 
 def messliste(was, kat=None):
     """The ids to measure, in catalog order: was = words llm, sehen, helfer (the entries marked "immer"), qwen36
-    (Qwen3.6 35B A3B NVFP4 with and without MTP), flash (Qwen3.8 Flash Next in Docker, measured only on request), gemma4 (Gemma 4 26B A4B NVFP4, on request);
+    (Qwen3.6 35B A3B NVFP4 with and without MTP), flash (Qwen3.8 Flash Next in Docker, measured only on request), gemma4 and gemma4mtp (Gemma 4 26B A4B NVFP4, the second with its draft model, on request);
     no word means llm and sehen. Only models that run or were measured stay in the catalog (Dominik 2026-11-11)."""
     kat = katalog() if kat is None else kat
     was = list(was) or ["llm", "sehen"]
     wunsch = {"qwen36": ("qwen36-35b-a3b-nvfp4", "qwen36-35b-a3b-nvfp4-ohne-mtp"),     # Dominik 2026-10-18 „ja 1“
               "flash": ("qwen38-flash-next-fp4",),     # Docker; share 0.65 never started (tars 2026-10-21)
-              "gemma4": ("gemma4-26b-a4b-nvfp4",)}     # Dominik 2026-11-13 „1“: a candidate, out again if it loses
+              "gemma4": ("gemma4-26b-a4b-nvfp4",), "gemma4mtp": ("gemma4-26b-a4b-nvfp4-mtp",)}     # Dominik 2026-11-13 „1“: a candidate, out again if it loses
     wunsch.update({i: (i,) for i, m in kat.items() if m.get("eigen") or docker_bild(m)})   # an own model by its id
     if any(w not in ("llm", "sehen", "helfer") and w not in wunsch for w in was):
         raise Fehler("was")
@@ -461,7 +468,10 @@ def vllm_args(m, port=MESS_PORT, revision="", mtp=True, uds=""):
         a += ["--tool-call-parser", v["tool_call_parser"], "--enable-auto-tool-choice"]
     if m["kann_sehen"]:      # a text-only model gets no picture flag at all
         a += ["--limit-mm-per-prompt.image", str(v.get("bilder_pro_frage", 2))]
-    if mtp and v.get("mtp"):
+    if mtp and v.get("mtp") and v.get("entwurf"):
+        a += ["--speculative-config", json.dumps({"model": v["entwurf"], "num_speculative_tokens": v["mtp"],
+                                                  "moe_backend": ENTWURF_MOE})]
+    elif mtp and v.get("mtp"):
         a += ["--speculative-config", json.dumps({"method": "mtp", "num_speculative_tokens": v["mtp"]})]
     return a + (DOCKER[v["docker"]]["args"] if uds else [])
 
@@ -839,7 +849,11 @@ def ohne_netz():
 def vorbereiten(m, hf_home=None):
     """Makes sure the weights are in the cache (download only the ERLAUBT kinds) and checks them. Returns the
     commit. A pinned revision is fetched exactly; an empty one takes the newest commit (only to measure)."""
-    return _laden(m["repo"], m["revision"], hf_ordner(m, hf_home))
+    commit = _laden(m["repo"], m["revision"], hf_ordner(m, hf_home))
+    entwurf = (m.get("vllm") or {}).get("entwurf") if m["engine"] == "vllm" else None
+    if entwurf:      # the draft model beside it, the newest commit (only entries still measured have one)
+        _laden(entwurf, "", hf_ordner({"repo": entwurf}, hf_home))
+    return commit
 
 
 # ---------------------------------------------------------------- measuring

@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.424** Gemma 4 mit Entwurfsmodell (MTP) messen, für mehr Tempo
 - **V01.1.423** Fix: keine falsche Startanzeige mit Hunderten Minuten mehr, während ein Modell gemessen wird
 - **V01.1.422** Prüfbitte: opentelemetry-api 1.45.1 → 1.45.2 in der Lock-Datei des Panels (GHSA-mf5v-w3w3-f6cg, mittel, CVSS 5.3); sonst bewegt sich kein Paket
 - **V01.1.421** Fix: „Was war meine letzte Bestellung?“ sucht in den Mails, statt eine Antwort zu erfinden
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.417** Gemma 4 lässt sich auf tars messen und mit Qwen3.6 vergleichen
 - **V01.1.416** GPU-Taktgrenze für den Modell-Rechner: weniger Strom und Wärme bei fast gleichem Tempo, unter Einstellungen → Spark → Betrieb
 - **V01.1.415** Käfer-Symbol oben rechts auf jeder Seite: Fehler oder Verbesserung melden, mit Seite, ihren Fehlern im Browser und den Logs
-- **V01.1.414** Testfix: Pakete öffnet den Posteingang wieder genau wie jeder andere Leser, ein Mail-Test wackelte deshalb
 
 
 
