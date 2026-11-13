@@ -296,7 +296,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Antwort bauen (chat._answer)
     "weiche": {
-        "stand": "dc8187e656",
+        "stand": "13052b11fc",
         "bezug": {
             "intent.GROUPS": ["s4", "s6"], "intent_bench.BENCH": ["s4", "s5"], "intent_alltag.ALLTAG": ["s14"],
             "weiche.KEEP_VERSIONS": ["s4"], "intent.Route": ["s6"], "intent.follow_up": ["s8"],
@@ -523,13 +523,15 @@ SEITEN = {
                "Admin-Regel, nie die Websuche bei einem privaten Satz (chat.PRIVATE_WORDS) und bei einem verneinten "
                "Satz nur ein lesendes ohne Internet, das dann mit Namen gerufen wird (chat.first_tool). Ein kurzer, eindeutiger Lesesatz („Wie ist "
                "das Wetter heute?“) wird mit „Eindeutiges direkt abrufen“ vom Panel selbst abgerufen, für morgen "
-               "und übermorgen mit dem Datum, das das Panel ausrechnet.",
+               "und übermorgen mit dem Datum, das das Panel ausrechnet; „Was war meine letzte Bestellung?“ sucht es mit "
+               "festen Wörtern in den Mails (intent.DIRECT_ARGS).",
                "One single clear group, one required tool and only that one of the group offered: the first round "
                "must call exactly that one („What will the weather be?“). A must is never a changing tool from an admin "
                "rule, never the web search for a private sentence (chat.PRIVATE_WORDS) and for a negated sentence only "
                "a reading one without the internet, which is then called by name (chat.first_tool). A short, clear reading sentence („What is "
                "the weather today?“) is fetched by the panel itself with „Fetch clear questions directly“, for "
-               "tomorrow and the day after with the date the panel works out.")),
+               "tomorrow and the day after with the date the panel works out; „What was my last order?“ is searched in "
+               "the mails with fixed words (intent.DIRECT_ARGS).")),
             S("s15", "frage", ("Rückfrage zum Weg?", "Ask which way?"),
               ("intent.ask_route · nur vor einer Änderung", "intent.ask_route · only before a change"),
               ("Mit Funktionen → Rückfrage zum Weg (Standard aus) fragt das Panel, bevor sich etwas ändert, welcher Weg "

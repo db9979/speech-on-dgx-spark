@@ -248,7 +248,7 @@ def trace(text, ch, today=None, english=False, before=""):
     need = chat.needed(text, names, ch.get("tool_words", "")) if names else []
     force = intent.forced(route, need, names) if names else None
     direct = intent.direct(text, names) if names else None
-    args = intent.direct_args(text, today) if direct in ("weather", "calendar_events") and today else {}
+    args = intent.direct_args(text, today, direct) if direct and today else {}
     group = ack.group_of(route.names, direct)
     sentence = ack.phrase(group, None, english, bump=False) if group else None
     try:

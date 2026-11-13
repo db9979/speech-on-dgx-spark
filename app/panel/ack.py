@@ -369,7 +369,7 @@ def group_of(route_names, direct=None, local=False, web=False):
         return "wetter"
     if direct in ("calendar_events",):
         return "kalender"
-    if direct in ("mail_list",):
+    if direct in ("mail_list", "mail_search"):
         return "mail"
     if direct in ("parcels",):
         return "paket"

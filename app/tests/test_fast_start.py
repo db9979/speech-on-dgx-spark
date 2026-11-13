@@ -240,6 +240,28 @@ class Direct(unittest.TestCase):
             self.assertEqual(intent.direct(text, offered), want, text)
         self.assertIsNone(intent.direct("Welche Termine habe ich heute?", {"daily_briefing"}))
 
+    def test_last_order_searches_the_mails(self):
+        """Issue 3 in spark-meldungen: „Was war meine letzte Bestellung?“ looked only in Finden, and the model made a
+        mail up. An order is confirmed by mail: the panel searches the mails itself with fixed words, never the
+        question's; a question about something else stays with the model."""
+        import datetime
+        import weiche
+        offered = {"mail_search", "parcels", "mail_list"}
+        day = datetime.date(2026, 11, 13)
+        for text, want in (("Was war meine letzte Bestellung?", "mail_search"), ("was war meine letzte bestellung", "mail_search"),
+                           ("Meine letzten Bestellungen", "mail_search"), ("Was habe ich zuletzt bestellt?", "mail_search"),
+                           ("Wann hab ich zuletzt was bestellt?", "mail_search"), ("Was war meine letzte Bestellung bei Thomann?", None),
+                           ("Wo ist meine Bestellung?", None), ("Bestell mir Milch", None)):
+            self.assertEqual(intent.direct(text, offered), want, text)
+        self.assertEqual(intent.direct_args("Was war meine letzte Bestellung?", day, "mail_search"),
+                         {"query": "bestell", "days": 30})
+        self.assertEqual(intent.direct_args("Was war meine letzte Bestellung morgen?", day, "mail_search")["query"], "bestell")
+        self.assertEqual(intent.direct_args("Wie wird das Wetter morgen?", day, "weather"), {"date": "2026-11-14"})
+        self.assertEqual(intent.direct_args("Wo ist mein Paket morgen?", day, "parcels"), {})   # no date for other tools
+        self.assertIsNone(intent.direct("Was war meine letzte Bestellung?", {"parcels"}))   # only what the turn offers
+        w = weiche.trace("Was war meine letzte Bestellung?", {}, day)
+        self.assertEqual((w["names"], w["direct"]), (["paket"], "mail_search"))
+
     def test_panel_calls_the_tool_and_saves_a_round(self):
         p = profile("Direkt1")
         evs = ask(p, [{"role": "user", "content": "Welche Erinnerungen habe ich?"}])

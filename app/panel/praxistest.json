@@ -5896,6 +5896,14 @@
 "text": "Nach dem Update (tars zuerst) Zustand → Schwachstellen öffnen und „Jetzt prüfen“ tippen. Die Kachel tars · Python nennt jetzt einige hundert geprüfte Pakete (nicht mehr nur 2 aus install.sh); Docker-Abbilder zeigt „n Pakete in 1 Abbildern“ (beim ersten Mal „1 noch nicht gelesen“, nach einigen Minuten noch einmal prüfen); Apps und Begleiter nennt die geprüften Teile. Ein Fund unter tars nennt seine venv (z. B. venv-asr).",
 "thread": "Schwachstellen gegen OSV prüfen",
 "test": "test_schwachstellen.Paket3.test_tars_docker_and_apps_join_the_check"
+},
+{
+"id": "P865",
+"v": 1421,
+"titel": "Letzte Bestellung aus den Mails",
+"text": "Pi updaten. Funktionen → Tempo und Genauigkeit → „Eindeutiges direkt abrufen“ ist an, ein Postfach ist verbunden. Im Chat fragen: „Was war meine letzte Bestellung?“. Die Antwort nennt eine echte Bestellbestätigung aus den Mails der letzten 30 Tage (oder sagt, dass keine da ist), nichts Erfundenes. Logs → Anfragen zeigt den Schritt „mail_search (Panel)“. Auch „Was habe ich zuletzt bestellt?“ ausprobieren.",
+"thread": "Fehler und Wünsche als Issue melden",
+"test": "test_fast_start.Direct.test_last_order_searches_the_mails"
 }
 ]
 }

@@ -839,7 +839,15 @@ DIRECT = (
     ("calendar_events", re.compile(r"(?i)\s*((welche|was für) termine (hab(e)? ich|stehen( heute)? an|gibt es)( heute)?|"
                                    r"hab(e)? ich heute (noch )?(einen |irgendwelche )?termine?|(meine|die) termine heute|"
                                    r"was steht heute (in |im )?(meinem )?kalender)" + _END)),
+    # Issue 3 in spark-meldungen (V01.1.421): an order is confirmed by mail, so the panel searches the mails itself
+    # (DIRECT_ARGS) instead of leaving it to a model that looked only in Finden and then made a mail up
+    ("mail_search", re.compile(r"(?i)\s*(was (war|ist) (meine|die) (letzte|neueste) bestellung|(meine|die) letzten? "
+                               r"bestellung(en)?|was hab(e)? ich (zuletzt|als letztes|kürzlich|neulich) bestellt|"
+                               r"wann hab(e)? ich (zuletzt|das letzte mal) (etwas |was )?bestellt)" + _END)),
 )
+# the fixed arguments of a DIRECT tool that needs some (fixed words, never the question's): „bestell“ finds
+# Bestellung, Bestellbestätigung and bestellt in the text of every mail of the last 30 days (mail.DAYS)
+DIRECT_ARGS = {"mail_search": {"query": "bestell", "days": 30}}
 
 
 # V01.0.362: tomorrow / the day after: the same tools with the date the panel works out (direct_args), nothing else
@@ -852,10 +860,15 @@ DIRECT_LATER = (
 )
 
 
-def direct_args(text, today):
-    """The arguments for a DIRECT_LATER question: {"date": "YYYY-MM-DD"} for morgen/übermorgen, else {}.
-    `today` is the local date (chat.local_now), passed in so the rule never reads the clock itself."""
+def direct_args(text, today, name=None):
+    """The arguments for a DIRECT tool: its fixed ones (DIRECT_ARGS), else for a DIRECT_LATER question (weather,
+    calendar_events) {"date": "YYYY-MM-DD"} for morgen/übermorgen, else {}. `today` is the local date
+    (chat.local_now), passed in so the rule never reads the clock itself."""
     import datetime
+    if name in DIRECT_ARGS:
+        return dict(DIRECT_ARGS[name])
+    if name not in (None, "weather", "calendar_events"):
+        return {}
     m = re.search(r"(?i)(?<!\w)(übermorgen|morgen)(?!\w)", str(text or ""))
     if not m:
         return {}

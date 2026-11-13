@@ -1269,8 +1269,8 @@ async def _prompt(z):
     if not z.direct and z.route.names == ["spark"] and z.who and z.own_browser and "spark_hilfe" in {t["function"]["name"] for t in z.tools} \
             and not z.pics and not z.role_cmd and not z.room_far and not z.ha_direct and not z.ha_wait and not z.local_task:
         z.direct = "spark_hilfe"
-    z.direct_args = z.intent.direct_args(z.ask_text, chat.local_now(z.body.get("tz")).date()) \
-        if z.direct in ("weather", "calendar_events") else {}
+    z.direct_args = z.intent.direct_args(z.ask_text, chat.local_now(z.body.get("tz")).date(), z.direct) \
+        if z.direct else {}
     # Rückfrage (klaeren.py, Stufe C): the person chose among a tool's candidates; the panel runs that tool again with
     # the same arguments and the chosen target fixed (ctx "pin", never an argument the model could write)
     z.kl_pin = None

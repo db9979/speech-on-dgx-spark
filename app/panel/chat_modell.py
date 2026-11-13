@@ -297,7 +297,7 @@ async def model_turn(*, acked, body, c, came_from, carry, ccfg, cfg, check_on, e
             if filler and st["first"]:
                 st["first"] = False
                 await sentences.put(filler[1] if chat.guess_language(messages[-1]["content"]) == "English" else filler[0])
-            dargs = getattr(turn, "direct_args", None) or {}   # only a date the panel worked out (intent.direct_args)
+            dargs = getattr(turn, "direct_args", None) or {}   # a date the panel worked out or fixed words (intent.direct_args)
             result = await run_tool(direct, dict(dargs), st)
             if getattr(turn, "steps_on", False):   # Ablauf zeigen: the tool the panel called itself
                 await out.put(ablauf.step(direct, result, time.time() - t_dr))
