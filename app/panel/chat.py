@@ -2576,7 +2576,7 @@ async def _answer(request, turn):
             # „Melden“ under the answer and „Mach ein Issue draus“ (meldung.py): question and answer in memory only
             if not screen and not getattr(turn, "mcp", None) and (getattr(turn, "role_cmd", None) or ("",))[0] not in ("meldung", "bewertung"):
                 aid = await asyncio.to_thread(meldung.keep_answer, tr, who, turn.ask_text, trace["said"], trace["calls"],
-                                              found, body.get("client") or "web")
+                                              found, body.get("client") or "web", None, getattr(turn, "src", None))
                 if aid:
                     yield f"data: {json.dumps({'type': 'melden', 'id': aid})}\n\n"
             if tr:

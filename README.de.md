@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.410** Antwort-Meldungen zeigen auch, was die Werkzeuge zurückgaben: so ist klar, ob Werkzeug oder Modell falsch lag
 - **V01.1.409** Quellenangabe: unter jeder Wissensantwort steht, woher sie stammt, „Woher weißt du das?“ geht ohne Modell, am Lautsprecher ein kurzer Satz
 - **V01.1.408** Falsche Antwort als Issue melden: „Mach ein Issue draus“ oder „Melden“ unter der Antwort, mit Frage, Antwort, Quelle und Weg der Anfrage; auf Wunsch direkt an GitHub
 - **V01.1.407** Fix: Logs eines Dienstes zeigen keine Wochen alten Fehler mehr, als wären sie neu
@@ -51,7 +52,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.404** Stand der Technik: neuere Modell-Engine mit drei geschlossenen Lücken, MCP in der neuen Fassung 2026-07-28, nächtliche Lückenprüfung auch für den Modell-Rechner
 - **V01.1.403** Testfix: ein Chat-Test räumt seine Einladungen weg, ein Seitenhöhen-Test wackelt nicht mehr
 - **V01.1.402** Hörstück-Stimmen: „▶ Probe“ wartet, bis VoiceDesign geladen ist, und eine Diskussion spricht mit den beschriebenen Rollenstimmen; kommt VoiceDesign nicht, sagt das Drehbuch warum
-- **V01.1.401** Steckbriefe für die Gruppe „Tempo und Genauigkeit“: ihre 18 Funktionen stehen je an einer Stelle
 - **V01.1.400** Ein Gesprächszug in sieben festen Stufen: wer fragt, Rechte und Sperren, wartendes Ja, Werkzeuge und Prompt haben je ihren Platz; für dich ändert sich nichts
 
 

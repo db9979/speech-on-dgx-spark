@@ -7,7 +7,7 @@ const RP={d:null,cur:null,skip:new Set(),root:null,busy:false,thread:null};
 const RP_ST={entwurf:['Entwurf','Draft'],gesendet:['gesendet','sent'],lokal:['nur lokal','local only'],sendet:['wird gesendet','sending']};
 const RP_CH={panel:['Panel','panel'],app:['iPhone-App','iPhone app'],android:['Android-App','Android app'],telegram:['Telegram','Telegram'],
   sprache:['Sprache','voice'],esp32:['Lautsprecher','speaker'],pebble:['Pebble-Uhr','Pebble watch'],begleiter:['Begleiter','companion']};
-const RP_PART={qa:['Frage/Antwort','question/answer'],source:['Quelle','source'],way:['Weg','way'],requests:['Anfrage','request'],lines:['Logzeile','log line'],applog:['App','app'],system:['System','system']};
+const RP_PART={qa:['Frage/Antwort','question/answer'],results:['Werkzeug-Ergebnis','tool result'],source:['Quelle','source'],way:['Weg','way'],requests:['Anfrage','request'],lines:['Logzeile','log line'],applog:['App','app'],system:['System','system']};
 const rpWhen=x=>x?new Date(x*1000).toLocaleString([], {dateStyle:'short',timeStyle:'short'}):'';
 const rpArea=k=>{const a=((RP.d||{}).areas||[]).find(x=>x.key===k);return a?t(a.name[0],a.name[1]):k};
 function rpMsg(x,err){const m=RP.root&&RP.root.querySelector('.rpmsg');if(m){m.textContent=x||'';m.className='fh rpmsg'+(err?' err':'')}}
@@ -59,7 +59,7 @@ function rpShow(root,r){RP.root=root;RP.cur=r;const p=r.preview||{};if(Array.isA
     <div class="fh err rpleak" hidden></div>
     <ul class="facts rplines">${(r.lines||[]).map(x=>`<li><label class="chk"><input type="checkbox" data-rpline="${x.n}"${RP.skip.has(x.n)?'':' checked'}> <small class="mut">${esc(t(...(RP_PART[x.part]||[x.part,x.part])))}</small> <code></code></label></li>`).join('')
       ||`<li class="mut"><span>${esc(t('Keine Logzeilen dabei.','No log lines included.'))}</span></li>`}</ul>
-    ${r.raw?`<details class="rpraw"><summary>${esc(t('Frage und Antwort im Klartext (nur auf dem Spark)','Question and answer in plain words (on the Spark only)'))}</summary><pre class="rprawq"></pre><pre class="rprawa"></pre><pre class="rprawsrc"></pre></details>`:''}
+    ${r.raw?`<details class="rpraw"><summary>${esc(t('Frage und Antwort im Klartext (nur auf dem Spark)','Question and answer in plain words (on the Spark only)'))}</summary><pre class="rprawq"></pre><pre class="rprawa"></pre><pre class="rprawsrc"></pre><pre class="rprawres"></pre></details>`:''}
     <details open><summary>${esc(t('Text der Meldung','Text of the report'))}</summary><b class="rptitle"></b><pre class="rpbody"></pre></details>
     <div class="row rpgo" style="margin-top:8px;flex-wrap:wrap;gap:6px">
       <button class="b p" type="button" data-rpsend="gh">${esc(t('An GitHub senden','Send to GitHub'))}</button>
@@ -69,7 +69,8 @@ function rpShow(root,r){RP.root=root;RP.cur=r;const p=r.preview||{};if(Array.isA
   // log lines as text only, never as markup
   root.querySelectorAll('.rplines code').forEach((c,i)=>{c.textContent=r.lines[i].line});
   if(r.raw){root.querySelector('.rprawq').textContent=t('Frage: ','Question: ')+(r.raw.q||'');root.querySelector('.rprawa').textContent=t('Antwort: ','Answer: ')+(r.raw.a||'');
-    root.querySelector('.rprawsrc').textContent=(r.raw.src||[]).length?t('Quelle: ','Source: ')+r.raw.src.join(' · '):''}
+    root.querySelector('.rprawsrc').textContent=(r.raw.src||[]).length?t('Quelle: ','Source: ')+r.raw.src.join(' · '):'';
+    root.querySelector('.rprawres').textContent=(r.raw.res||[]).length?t('Ergebnisse der Werkzeuge:\n','Tool results:\n')+r.raw.res.join('\n'):''}
   rpPaint(root,p);
   root.querySelector('[data-rpback]').onclick=()=>rpList(root);
   root.querySelectorAll('[data-rpline]').forEach(cb=>cb.onchange=async()=>{const n=+cb.dataset.rpline;if(cb.checked)RP.skip.delete(n);else RP.skip.add(n);

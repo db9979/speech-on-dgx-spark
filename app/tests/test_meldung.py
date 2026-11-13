@@ -520,6 +520,36 @@ class AnswerReports(Base):
         self.assertEqual(sorted(d["skip"]), sorted(x["n"] for x in d["lines"] if x["part"] == "qa"))
         self.assertNotIn("RpBruno", json.dumps(d["preview"]))
 
+    def test_tool_results_go_along_unticked(self):
+        """Issue 1 (2026-11-13): whether the tool or the model was wrong shows only with what the tool gave back."""
+        c, uid = profile("RpTilo")
+        aid = meldung.keep_answer(None, {"id": uid}, "welches Paket kommt heute?", "Es kommt heute keins.",
+                                  [{"name": "parcels", "args": "", "result": "Pakete laut deinen Mails:\nDHL-Paket: kommt heute."}])
+        self.assertTrue(aid)
+        d = c.post("/api/report/answer", json={"id": aid, "text": "Antwort widerspricht der Meldung"}).json()
+        res = [x for x in d["lines"] if x["part"] == "results"]
+        self.assertEqual(len(res), 1)
+        self.assertIn("DHL-Paket: kommt heute.", res[0]["line"])
+        self.assertIn(res[0]["n"], d["skip"])
+        self.assertNotIn("kommt heute.", d["preview"]["body"])
+        self.assertIn("DHL-Paket: kommt heute.", d["raw"]["res"][0])
+        q = c.post("/api/report/preview", json={"id": d["id"], "skip": []}).json()
+        self.assertIn("Ergebnisse der Werkzeuge", q["body"])
+
+    def test_source_is_the_note_of_this_device(self):
+        """The source part is the Quellenangabe record of the same turn (keyed by the device, profiles.quelle), not a
+        guess from the client name."""
+        import quellenangabe
+        uid = "rp-src"
+        quellenangabe.merke(uid, "dev-a", [{"tool": "parcels", "de": "Pakete", "en": "Parcels", "art": "eigen", "n": 1,
+                                             "mehr": []}], "")
+        aid = meldung.keep_answer(None, {"id": uid}, "kommt ein Paket?", "Nein.", [{"name": "parcels", "args": ""}],
+                                  None, "web", None, "dev-a")
+        self.assertEqual(meldung._answers[aid]["src"], ["Pakete (eigen, 1)"])
+        aid = meldung.keep_answer(None, {"id": uid}, "kommt ein Paket?", "Nein.", [{"name": "parcels", "args": ""}],
+                                  None, "web", None, "dev-b")
+        self.assertEqual(meldung._answers[aid]["src"], ["Werkzeug: parcels"])
+
     def test_direct_sends_anonymized_with_question_and_answer(self):
         meldung.token_save(TOKEN)
         helpers.set_config(report_direct=True)

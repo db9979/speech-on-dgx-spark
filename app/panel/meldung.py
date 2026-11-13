@@ -47,6 +47,7 @@ import features
 import guard
 import logfilter
 import profiles
+import quellenangabe
 import vault
 from common import STATE, load_config, write_json
 import core
@@ -512,7 +513,7 @@ def title(d):
     return f"[{AREAS[d['area']][0]}] {first}"[:110]
 
 
-SECTIONS = (("qa", "Frage und Antwort"), ("source", "Quelle der Antwort"), ("way", "Weg der Anfrage"),
+SECTIONS = (("qa", "Frage und Antwort"), ("results", "Ergebnisse der Werkzeuge"), ("source", "Quelle der Antwort"), ("way", "Weg der Anfrage"),
             ("requests", "Anfragen (Logs → Anfragen)"), ("lines", "Logzeilen (Diagnose)"), ("applog", "App-Protokoll"),
             ("system", "System"))
 
@@ -550,8 +551,9 @@ def _sign(rid, text):
 
 
 def default_skip(d):
-    """Question and answer go to GitHub only when ticked in the preview (Dominik 2026-11-13, 3c)."""
-    return [n for n, k, _ in numbered(d) if k == "qa"]
+    """Question, answer and what the tools gave back go to GitHub only when ticked in the preview (Dominik
+    2026-11-13, 3c)."""
+    return [n for n, k, _ in numbered(d) if k in ("qa", "results")]
 
 
 def preview(d, skip=None):
@@ -910,7 +912,7 @@ async def by_phrase(uid, name, text, channel="sprache"):
 # only anonymized and only when ticked in the preview, or with „Direkt an GitHub senden“ (chat.report_direct, 3c).
 ANSWER_S, MAX_ANSWERS, MAX_ANSWERS_UID = 24 * 3600, 400, 20
 PHRASE_S, WAIT_S, LOGS_S = 600, 180, 3600
-MAX_Q, MAX_A, MAX_SRC = 2000, 4000, 12
+MAX_Q, MAX_A, MAX_SRC, MAX_RES = 2000, 4000, 12, 600
 AID = re.compile(r"[0-9a-f]{12}")
 _answers = {}         # aid -> {"t", "uid", "q", "a", "way", "src", "client"}: memory only, 24 hours
 _wait = {}            # uid -> (report id, time): the next message is the description („Was war falsch?“)
@@ -965,13 +967,12 @@ def _way(tr):
     return out
 
 
-def _sources(uid, client, calls, items):
+def _sources(uid, src, calls, items):
     """Where the answer came from: the source note of quellenangabe.py when it is there, else the tools of the
     answer and the titles and addresses of the found pages (data, never a command)."""
     out = []
-    try:
-        import quellenangabe   # thread „Quellenangabe bei Antworten einbauen“; missing before its version
-        q = quellenangabe.letzte(uid, client)
+    try:    # src: the device key of the turn (profiles.quelle), as quellenangabe.merke used it
+        q = quellenangabe.letzte(uid, src) if src else None
     except Exception:
         q = None
     if isinstance(q, dict):
@@ -994,7 +995,18 @@ def _sources(uid, client, calls, items):
     return out[:2 * MAX_SRC]
 
 
-def keep_answer(tr, who, ask, said, calls=None, items=None, client="", now=None):
+def _results(calls):
+    """What each tool gave back (the panel's own sentences or outside text, data only): shows whether the tool or the
+    model was wrong (Issue 1, 2026-11-13: the parcel note said „kommt heute“, the answer said none)."""
+    out = []
+    for c in (calls or [])[:MAX_SRC]:
+        if isinstance(c, dict) and c.get("name") and c.get("result"):
+            text = re.sub(r"\s+", " ", str(c["result"]))[:MAX_RES].strip()
+            out.append(f"{str(c['name'])[:60]}: {text}")
+    return out
+
+
+def keep_answer(tr, who, ask, said, calls=None, items=None, client="", now=None, src=None):
     """Called once when an answer is done (chat.py). Keeps a profile's question and answer in memory only (24 hours)
     so „Mach ein Issue draus“ or „Melden“ can bind a report to it. Returns the id for the button, else None. Never
     for guests, never over MCP (who is None there), never raises."""
@@ -1004,7 +1016,7 @@ def keep_answer(tr, who, ask, said, calls=None, items=None, client="", now=None)
             return None
         now = time.time() if now is None else now
         rec = {"t": now, "uid": uid, "q": clean_text(ask, MAX_Q), "a": clean_text(said, MAX_A), "way": _way(tr),
-               "src": _sources(uid, client, calls, items), "client": str(getattr(tr, "client", "") or client or "")[:12],
+               "src": _sources(uid, src, calls, items), "res": _results(calls), "client": str(getattr(tr, "client", "") or client or "")[:12],
                "tt": float(getattr(tr, "t0", now) or now)}
         aid = secrets.token_hex(6)
         with _lock:
@@ -1061,11 +1073,13 @@ def create_answer(uid, name, channel, aid, text="", staff=False, now=None):
     d["parts"]["qa"] = [ln[:LINE_MAX] for ln in qa]
     d["parts"]["way"] = _clip([an.text(x, log=True) for x in a["way"]])
     d["parts"]["source"] = _clip([an.text(x) for x in a["src"]])
+    d["parts"]["results"] = [an.text(x)[:LINE_MAX * 2] for x in a.get("res") or []]
     d["parts"]["lines"] = _clip([an.text(x, log=True) for x in _around(a["tt"], staff, now)])
     d["parts"]["system"] = d["parts"]["system"] + [an.text(x, log=True) for x in _model()]
     d["counts"] = dict(an.n)
     # in plain words, on the Spark only: the reporter and the admins (3a); never in a log line, never to GitHub
-    d["raw"] = {"q": a["q"], "a": a["a"], "src": a["src"][:2 * MAX_SRC], "t": round(a["t"], 1)}
+    d["raw"] = {"q": a["q"], "a": a["a"], "src": a["src"][:2 * MAX_SRC], "res": (a.get("res") or [])[:MAX_SRC],
+                "t": round(a["t"], 1)}
     d["answer"] = True
     with _lock:
         _write(d)
