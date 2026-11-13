@@ -143,6 +143,20 @@ STECKBRIEFE = {
         anleitung="lokal", me="setbox",
         ohne_werkzeug=("regel", "lokal.py: schaut vor der Antwort in den eigenen Quellen nach"), begleiter="talk",
         modul=("lokal", "wissen", "Erst lokal suchen, bevor etwas nach außen geht")),
+    # quellenangabe.py (Dominik 2026-11-13): under every answer that wants to know something the sources that ran,
+    # by fixed rules; „Woher weißt du das?“ answered by the panel; a hint when the source does not fit the question
+    "quelle": Steckbrief(de="Quellenangabe", en="Source note", gruppe="talk", schalter=("source_note",),
+        anleitung="quelle", me="setbox",
+        ohne_werkzeug=("regel", "quellenangabe.py: „Woher weißt du das?“ beantwortet das Panel aus der letzten Antwort"),
+        live=("quelle", "Quellenangabe", "Quellen unter Antworten · auf dem Spark", "spark", False, "Zeile"),
+        log=("chat", "quelle"), begleiter="talk",
+        modul=("quellenangabe", "gespraech", "Quellenangabe: woher eine Antwort stammt, nach festen Regeln, "
+                                             "„Woher weißt du das?“, Hinweis bei unpassender Quelle")),
+    # the spoken sentence at the end of an answer at a speaker, phone, watch, Siri or in the car: a preference,
+    # because the Spark says something more without being asked
+    "quellesagen": Steckbrief(de="Quelle im Gespräch ansagen", en="Say the source in conversation", gruppe="talk",
+        schalter=("source_note",), anleitung="quellesagen", pref="quelle_sagen", parent="quelle", me="setbox",
+        ohne_werkzeug=("ohne", "ein Satz am Ende einer gesprochenen Antwort"), begleiter="voice"),
     "roles": Steckbrief(de="Rollen per Sprache", en="Roles by voice", gruppe="talk", schalter=("roles",),
         anleitung="roles", me="setbox",
         ohne_werkzeug=("regel", "roles.py: „Sei der Butler“, „Welche Rollen gibt es?“, „Sei wieder normal“"),

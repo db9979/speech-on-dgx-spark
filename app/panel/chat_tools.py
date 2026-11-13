@@ -21,6 +21,7 @@ import kiwix  # noqa: E402
 import mail  # noqa: E402
 import notaus  # noqa: E402
 import profiles  # noqa: E402
+import quellenangabe  # noqa: E402  (Quellenangabe: the titles of the pages under an answer)
 import gemerkt  # noqa: E402  (Gemerkt-Hinweis: the chip under an answer that remembered something)
 import recall  # noqa: E402
 import senden  # noqa: E402
@@ -132,7 +133,7 @@ async def _run(t, name, args, st):
             # Tagesaktuell (frisch.py): the person's own words and the query decide the period, fixed words only
             own = getattr(t, "ask_text", "") or ""
             result, sources = await chat.web_search(t.c, t.ccfg, query, frisch.zeitraum(own, query), frisch.news(own, query))
-            await t.out.put({"type": "sources", "items": sources})
+            await quellenangabe.links(t.out, st, sources)
             return result
         except Exception as e:
             if not isinstance(e, dienstwacht.Down):
@@ -142,7 +143,7 @@ async def _run(t, name, args, st):
                 try:
                     result, sources = await kiwix.web_instead(wiki._query(query))
                     print("chat: web search failed, answered from Kiwix:", type(e).__name__, flush=True)
-                    await t.out.put({"type": "sources", "items": sources})
+                    await quellenangabe.links(t.out, st, sources)
                     return result
                 except (httpx.HTTPError, ValueError) as e2:
                     print("kiwix: web search fallback failed", type(e2).__name__, flush=True)
@@ -622,5 +623,5 @@ async def briefing_text(t, st):
             parts.append(f"Topic '{q}':\n{r[0][:2500]}")
             srcs += r[1][:2]
     if srcs:
-        await t.out.put({"type": "sources", "items": srcs})
+        await quellenangabe.links(t.out, st, srcs)
     return "\n\n".join(parts)

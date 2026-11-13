@@ -2237,7 +2237,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "1. Frage kommt an: chat() prüft das Rate-Limit, setzt die Marke „Sprache läuft“ (Hintergrundarbeit wartet) und zeigt den anderen Geräten des Profils „antwortet gerade“. Dann bereitet chat_turn.prepare Rechte, Sperren, Systemprompt und die angebotenen Werkzeuge vor; _answer übernimmt. Ist das Sprachmodell pausiert (Wartungspause, Notbetrieb), kommt sofort ein fester Satz; im Notbetrieb mit Parakeet vorher die festen Befehle ohne Modell (notbetrieb.antwort: Home Assistant, Uhrzeit, Erinnerungen). Mit „Einfaches sofort beantworten“ bekommen Uhrzeit, Datum, Rechnungen (rechnen.calc), Datumsrechnungen und Einheiten als ganzer kurzer Satz den festen Satz des Panels, ohne Modell und ohne Sofort-Satz davor (sofort.answer, höchstens 80 Zeichen). Ebenso kommt die Rückfrage zum Weg nur als feste Frage des Panels mit ihren Knöpfen, ohne Modell und ohne Werkzeug. 2. Strom öffnen, Sofort-Satz: Zwei Warteschlangen verbinden alles: eine für die Ereignisse ans Gerät, eine für Sätze an die Sprachausgabe. Ist die Sofortige Rückmeldung frei, spielt sofort ein aufgenommener Satz (ohne GPU); bleibt die Antwort danach still, kommt einmal ein Brücken-Satz. 3. Was das Panel selbst erledigt: Hat die Vorbere"
+"text": "1. Frage kommt an: chat() prüft das Rate-Limit, setzt die Marke „Sprache läuft“ (Hintergrundarbeit wartet) und zeigt den anderen Geräten des Profils „antwortet gerade“. Dann bereitet chat_turn.prepare Rechte, Sperren, Systemprompt und die angebotenen Werkzeuge vor; _answer übernimmt. Ist das Sprachmodell pausiert (Wartungspause, Notbetrieb), kommt sofort ein fester Satz; im Notbetrieb mit Parakeet vorher die festen Befehle ohne Modell (notbetrieb.antwort: Home Assistant, Uhrzeit, Erinnerungen). Mit „Einfaches sofort beantworten“ bekommen Uhrzeit, Datum, Rechnungen (rechnen.calc), Datumsrechnungen und Einheiten als ganzer kurzer Satz den festen Satz des Panels, ohne Modell und ohne Sofort-Satz davor (sofort.answer, höchstens 80 Zeichen). Ebenso kommt die Rückfrage zum Weg nur als feste Frage des Panels mit ihren Knöpfen, ohne Modell und ohne Werkzeug, und „Woher weißt du das?“ als feste Antwort des Panels aus der gemerkten Quelle der letzten Antwort (quellenangabe.antwort). 2. Strom öffnen, Sofort-Satz: Zwei Warteschlangen verbinden alles: eine für die Ereignisse ans Gerät, eine für Sätze an die Sprachausgabe. Ist die Sofortige Rückmeldung frei, spielt sofort ein aufgenommener Satz "
 },
 {
 "lang": "de",
@@ -2245,7 +2245,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "itung entschieden, dass das Panel selbst handelt (ein Schaltbefehl, Zustände lesen, „Erst lokal suchen“, ein eindeutiger Lesewunsch), läuft das jetzt. Das Ergebnis geht wie ein Werkzeug-Ergebnis an das Modell, fremder Text eingepackt als Daten; „Erst lokal“ bringt die besten Treffer aller freigegebenen Quellen mit Quelle und Datum, bei beides dazu die Websuche des Panels mit den eigenen Worten, und eine Mail darunter sperrt die Antwort wie eine gelesene Mail. Ein Artikel aus dem eigenen Kiwix und die Seiten der Websuche stehen danach als Quelle unter der Antwort; am Ende zählt das Panel die Herkunft („Aus: 2 Mails, 1 Termin“) und bietet bei intern ohne Web „Auch im Internet suchen“ an (chat_modell.herkunft_und_chip). 4. Runde vorbereiten: Angeboten wird die Liste ohne gesperrte, wegen Fehlern gestoppte oder zu oft genutzte Werkzeuge. Verlangt die Frage ein Werkzeug, muss das Modell eines wählen (tool_choice), mit eigener Temperatur. Die fünfte Runde hat keine Liste mehr: das Modell hört, dass es jetzt antworten soll. Geräte ohne Bildschirm (Lautsprecher, Telefon, Uhr, Siri, Android-Assistent, CarPlay) bekommen höchstens 700 Tokens; eine längere Antwort endet am letzten ganzen Satz."
+"text": "(ohne GPU); bleibt die Antwort danach still, kommt einmal ein Brücken-Satz. 3. Was das Panel selbst erledigt: Hat die Vorbereitung entschieden, dass das Panel selbst handelt (ein Schaltbefehl, Zustände lesen, „Erst lokal suchen“, ein eindeutiger Lesewunsch), läuft das jetzt. Das Ergebnis geht wie ein Werkzeug-Ergebnis an das Modell, fremder Text eingepackt als Daten; „Erst lokal“ bringt die besten Treffer aller freigegebenen Quellen mit Quelle und Datum, bei beides dazu die Websuche des Panels mit den eigenen Worten, und eine Mail darunter sperrt die Antwort wie eine gelesene Mail. Ein Artikel aus dem eigenen Kiwix und die Seiten der Websuche stehen danach als Quelle unter der Antwort; am Ende zählt das Panel die Herkunft („Aus: 2 Mails, 1 Termin“) und bietet bei intern ohne Web „Auch im Internet suchen“ an (chat_modell.herkunft_und_chip). Mit der Quellenangabe (quellenangabe.py) steht stattdessen unter jeder Wissensantwort jede gelaufene lesende Quelle („Quelle: 2 Mails, Websuche“ oder „nichts nachgeschlagen, nur Modellwissen“), mit Hinweis, wenn sie nicht zur Klasse der Quellen-Weiche passt; am Lautsprecher kurz gesprochen (chat_modell.quellenangabe_zeile). 4. Runde vorbereiten: "
 },
 {
 "lang": "de",
@@ -2253,7 +2253,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": " Gibt ein Werkzeug den festen Satz des Panels zurück (Sofort-Karte von Finden: ein Treffer klar vorn), endet die Antwort dort: gezeigt wird der ganze Satz, gesprochen seine kurze Form, das Modell wird nicht mehr gefragt. 5. Streamen und in Sätze schneiden: Die Antwort kommt Stück für Stück. Denktext und als Text geschriebene Werkzeugaufrufe werden nie gezeigt oder gesprochen. split_sentences schneidet fertige Sätze ab („z. B.“ und „5. Oktober“ sind kein Satzende); ein langer erster Satz geht schon am Komma los, damit der erste Ton früh kommt. 6. Zahl ohne Beleg?: Bei Datenfragen vergleicht answercheck jede Uhrzeit, jedes Datum, jeden Spielstand und Betrag im Satz mit allem, was das Modell bekommen hat. Nach einem Kalender-Abruf zählen nur Angaben aus dieser Antwort, nicht aus früheren; ein zitierter Termin-Titel muss im Ergebnis stehen. Mit „Antwort-Prüfung erweitern“ auch Temperaturen, km und Prozent (gerundet zählt, answercheck.MORE_SLACK) und jeder zitierte Name in jeder Datenantwort. Mit „Rechnen mit festem Werkzeug“ rechnet rechnen.fix vorher jede Rechnung im Satz nach, auch mit Zahlwörtern („17 mal 23 ist 381“, „sechs mal sechs ist 35“) und setzt das Ergebnis des Panels ein; "
+"text": "Angeboten wird die Liste ohne gesperrte, wegen Fehlern gestoppte oder zu oft genutzte Werkzeuge. Verlangt die Frage ein Werkzeug, muss das Modell eines wählen (tool_choice), mit eigener Temperatur. Die fünfte Runde hat keine Liste mehr: das Modell hört, dass es jetzt antworten soll. Geräte ohne Bildschirm (Lautsprecher, Telefon, Uhr, Siri, Android-Assistent, CarPlay) bekommen höchstens 700 Tokens; eine längere Antwort endet am letzten ganzen Satz. Gibt ein Werkzeug den festen Satz des Panels zurück (Sofort-Karte von Finden: ein Treffer klar vorn), endet die Antwort dort: gezeigt wird der ganze Satz, gesprochen seine kurze Form, das Modell wird nicht mehr gefragt. 5. Streamen und in Sätze schneiden: Die Antwort kommt Stück für Stück. Denktext und als Text geschriebene Werkzeugaufrufe werden nie gezeigt oder gesprochen. split_sentences schneidet fertige Sätze ab („z. B.“ und „5. Oktober“ sind kein Satzende); ein langer erster Satz geht schon am Komma los, damit der erste Ton früh kommt. 6. Zahl ohne Beleg?: Bei Datenfragen vergleicht answercheck jede Uhrzeit, jedes Datum, jeden Spielstand und Betrag im Satz mit allem, was das Modell bekommen hat. Nach einem Kalender-Abruf zählen nur "
 },
 {
 "lang": "de",
@@ -2261,7 +2261,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "seine Ergebnisse zählen hier als belegt (answercheck.calc_facts). Solange das an ist, kommt jeder Satz erst fertig. 7. Tat ohne Werkzeug?: Behauptet ein Satz eine Tat („ist jetzt an“, „habe eingetragen“), muss in dieser Antwort ein Werkzeug dieser Art geklappt haben (taten.check). Ein Satz, der einen Werkzeugaufruf oder eine Tat nur ankündigt („Ich rufe das Timer-Werkzeug auf …“), wird nie gesagt; kommt danach kein Werkzeug, sagt das Panel am Ende seinen festen Satz (taten.announces). Klappt ein Werkzeug der behaupteten Art später in derselben Antwort („Ich mache das Lied.“ vor musik_machen), fällt der Satz still weg. Gilt, wenn ein änderndes Werkzeug oder gar keines angeboten war. 8. Zeigen und sprechen: Ein geprüfter Satz geht als Text ans Gerät und in die Warteschlange der Sprachausgabe; Codeblöcke werden nur gezeigt. Ein schon gesagter Satz aus einer früheren Runde wird ausgelassen. Die Sprachausgabe fasst nach dem ersten Satz alles Wartende zu einem Stück zusammen, damit die Stimme ruhig bleibt. Hat der Hörer noch mehr als 3 s Ton, geht ein solches Stück als Folgesatz (X-Spark-Folgesatz) und lässt erste Sätze anderer Antworten vor. 9. Datenfrage ohne Nachsehen?: Braucht die Fr"
+"text": "Angaben aus dieser Antwort, nicht aus früheren; ein zitierter Termin-Titel muss im Ergebnis stehen. Mit „Antwort-Prüfung erweitern“ auch Temperaturen, km und Prozent (gerundet zählt, answercheck.MORE_SLACK) und jeder zitierte Name in jeder Datenantwort. Mit „Rechnen mit festem Werkzeug“ rechnet rechnen.fix vorher jede Rechnung im Satz nach, auch mit Zahlwörtern („17 mal 23 ist 381“, „sechs mal sechs ist 35“) und setzt das Ergebnis des Panels ein; seine Ergebnisse zählen hier als belegt (answercheck.calc_facts). Solange das an ist, kommt jeder Satz erst fertig. 7. Tat ohne Werkzeug?: Behauptet ein Satz eine Tat („ist jetzt an“, „habe eingetragen“), muss in dieser Antwort ein Werkzeug dieser Art geklappt haben (taten.check). Ein Satz, der einen Werkzeugaufruf oder eine Tat nur ankündigt („Ich rufe das Timer-Werkzeug auf …“), wird nie gesagt; kommt danach kein Werkzeug, sagt das Panel am Ende seinen festen Satz (taten.announces). Klappt ein Werkzeug der behaupteten Art später in derselben Antwort („Ich mache das Lied.“ vor musik_machen), fällt der Satz still weg. Gilt, wenn ein änderndes Werkzeug oder gar keines angeboten war. 8. Zeigen und sprechen: Ein geprüfter Satz geht als Text a"
 },
 {
 "lang": "de",
@@ -2269,7 +2269,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "age ein Werkzeug und das Modell antwortet ohne eines, wird die ganze Runde nie gesagt. Das Modell wird einmal neu gefragt, mit dem Hinweis, zuerst das Werkzeug zu nutzen. 10. Werkzeug gewünscht?: Hat das Modell keinen Werkzeugaufruf geschrieben oder ist die Länge erreicht, ist die Antwort fertig. Bei erreichter Länge wird bis zum letzten Satzende gesprochen, der Rest fällt weg. 11. Werkzeuge ausführen: Halbe Worte vor dem Aufruf werden zurückgenommen, ein fertiger Satz bleibt. Jeder Aufruf geht über chat_tools.run; das Ergebnis kommt als Werkzeug-Nachricht zurück. Scheitert ein Werkzeug zweimal gleich, wird es für diese Antwort gestoppt. Hatte keine Regel die Frage erkannt, zählt die Weiche die Gruppe des ersten Werkzeugs und das feste Hinweiswort (weiche.learn), nie ein Wort der Frage. Lesende Werkzeuge (Kalender, Wetter, Pakete) nehmen ihre Daten aus dem Speicher ihres Dienstes, solange sie frisch genug sind (Vorrat je Profil, vorrat.take); ein älterer Stand wartet höchstens 2.0 s auf den Server und kommt sonst mit Stand und Tag („Stand gestern 18:00“, frisch.stand), „schau nochmal nach“ fragt immer den Server. Jede Antwort hält fest, wie lange die Werkzeuge warteten und woher je"
+"text": "ns Gerät und in die Warteschlange der Sprachausgabe; Codeblöcke werden nur gezeigt. Ein schon gesagter Satz aus einer früheren Runde wird ausgelassen. Die Sprachausgabe fasst nach dem ersten Satz alles Wartende zu einem Stück zusammen, damit die Stimme ruhig bleibt. Hat der Hörer noch mehr als 3 s Ton, geht ein solches Stück als Folgesatz (X-Spark-Folgesatz) und lässt erste Sätze anderer Antworten vor. 9. Datenfrage ohne Nachsehen?: Braucht die Frage ein Werkzeug und das Modell antwortet ohne eines, wird die ganze Runde nie gesagt. Das Modell wird einmal neu gefragt, mit dem Hinweis, zuerst das Werkzeug zu nutzen. 10. Werkzeug gewünscht?: Hat das Modell keinen Werkzeugaufruf geschrieben oder ist die Länge erreicht, ist die Antwort fertig. Bei erreichter Länge wird bis zum letzten Satzende gesprochen, der Rest fällt weg. 11. Werkzeuge ausführen: Halbe Worte vor dem Aufruf werden zurückgenommen, ein fertiger Satz bleibt. Jeder Aufruf geht über chat_tools.run; das Ergebnis kommt als Werkzeug-Nachricht zurück. Scheitert ein Werkzeug zweimal gleich, wird es für diese Antwort gestoppt. Hatte keine Regel die Frage erkannt, zählt die Weiche die Gruppe des ersten Werkzeugs und das feste Hin"
 },
 {
 "lang": "de",
@@ -2309,7 +2309,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/chat.py chat: Rate-Limit, Sprache zuerst, „antwortet gerade“ (Schritt 1) - app/panel/chat.py _answer: führt Modellseite, Sprachausgabe und Ereignisse zu einem Strom zusammen (Schritt 4, Schritt 5, Schritt 11) - app/panel/laufend.py add: die laufende Antwort für Notaus Stufe 3 (Schritt 14) - app/panel/chat_ton.py speech_out: Sätze an die Sprachausgabe, Ton als Strom (Schritt 8) - app/panel/chat_modell.py model_turn: Runden mit dem Modell, Werkzeuge, Prüfungen (Schritt 4, Schritt 11) - app/panel/chat_modell.py herkunft_und_chip: Herkunftszeile und „Auch im Internet suchen“ unter der Antwort (Schritt 3) - app/panel/chat.py split_sentences: schneidet fertige Sätze ab (Schritt 5) - app/panel/chat.py said_key: erkennt einen schon gesagten Satz (Schritt 8) - app/panel/chat.py no_code: Codeblöcke nur zeigen, nie sprechen (Schritt 8) - app/panel/chat.py loop_count: zählt Fehlschläge für Fehlerschleife stoppen (Schritt 11) - app/panel/answercheck.py known: alle Angaben, die das Modell bekommen hat (Schritt 6) - app/panel/answercheck.py unsupported: Angaben im Satz ohne Beleg (Schritt 6) - app/panel/answercheck.py fresh: nach dem Kalender nur Angaben dieser Antwort (Schritt 6) - a"
+"text": "- app/panel/chat.py chat: Rate-Limit, Sprache zuerst, „antwortet gerade“ (Schritt 1) - app/panel/chat.py _answer: führt Modellseite, Sprachausgabe und Ereignisse zu einem Strom zusammen (Schritt 4, Schritt 5, Schritt 11) - app/panel/laufend.py add: die laufende Antwort für Notaus Stufe 3 (Schritt 14) - app/panel/chat_ton.py speech_out: Sätze an die Sprachausgabe, Ton als Strom (Schritt 8) - app/panel/chat_modell.py model_turn: Runden mit dem Modell, Werkzeuge, Prüfungen (Schritt 4, Schritt 11) - app/panel/chat_modell.py herkunft_und_chip: Herkunftszeile und „Auch im Internet suchen“ unter der Antwort (Schritt 3) - app/panel/chat_modell.py quellenangabe_zeile: Quellenangabe unter der Antwort, am Lautsprecher kurz gesprochen (Schritt 3) - app/panel/chat.py split_sentences: schneidet fertige Sätze ab (Schritt 5) - app/panel/chat.py said_key: erkennt einen schon gesagten Satz (Schritt 8) - app/panel/chat.py no_code: Codeblöcke nur zeigen, nie sprechen (Schritt 8) - app/panel/chat.py loop_count: zählt Fehlschläge für Fehlerschleife stoppen (Schritt 11) - app/panel/answercheck.py known: alle Angaben, die das Modell bekommen hat (Schritt 6) - app/panel/answercheck.py unsupported: Angaben "
 },
 {
 "lang": "de",
@@ -2317,7 +2317,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "pp/panel/rechnen.py fix: Rechnungen im Satz nachrechnen und berichtigen (Schritt 6) - app/panel/taten.py check: Tat behauptet, aber kein Werkzeug hat es geschafft (Schritt 7) - app/panel/taten.py announces: Werkzeugaufruf oder Tat nur angekündigt (Schritt 7, Schritt 12) - app/panel/taten.py sentence: der feste ehrliche Satz (Schritt 12) - app/panel/frisch.py nachsatz: Stand-Hinweis, wenn etwas nicht aktuell war (Schritt 12)"
+"text": "im Satz ohne Beleg (Schritt 6) - app/panel/answercheck.py fresh: nach dem Kalender nur Angaben dieser Antwort (Schritt 6) - app/panel/rechnen.py fix: Rechnungen im Satz nachrechnen und berichtigen (Schritt 6) - app/panel/taten.py check: Tat behauptet, aber kein Werkzeug hat es geschafft (Schritt 7) - app/panel/taten.py announces: Werkzeugaufruf oder Tat nur angekündigt (Schritt 7, Schritt 12) - app/panel/taten.py sentence: der feste ehrliche Satz (Schritt 12) - app/panel/frisch.py nachsatz: Stand-Hinweis, wenn etwas nicht aktuell war (Schritt 12)"
 },
 {
 "lang": "de",
@@ -11892,6 +11892,30 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Quellenangabe",
+"text": "Quellenangabe (Funktionen → Gespräch → „Quellenangabe“, Schalter chat.source_note, aus; freigegeben für jedes Profil; panel/quellenangabe.py): Unter jeder Antwort, die etwas wissen will, steht, woher sie stammt, geschrieben vom Panel mit festen Regeln aus dem, was in dieser Antwort wirklich gelaufen ist, nie vom Modell: jedes lesende Werkzeug, das nicht fehlschlug, mit seinem lesbaren Namen (werkzeuge.label, „Websuche“, „Termine lesen“, „Eigene Dokumente“), dazu die Treffer von „Erst lokal“ als Arten und Anzahlen („2 Mails“, „eigene Daten ohne Treffer“). Ohne jede Quelle: „Quelle: nichts nachgeschlagen, nur Modellwissen“. Werkzeuge, die etwas ändern (taten.KIND), zählen nicht; eine reine Handlung („Licht an“) bekommt keine Zeile. Ob ein Werkzeug eigene Daten oder die Welt liest, sagen die Gruppen der Weiche (intent.GROUPS mit quellen.OWN_GROUPS und WORLD_GROUPS). Hinweis bei unpassender Quelle: die Klasse der Quellen-Weiche (von „Erst lokal“ oder, ohne es, dieselben festen Regeln ohne Probe) gegen die gelaufenen Quellen: intern ohne eigene Daten „Achtung: nicht in deinen Daten nachgesehen“, extern ohne Web, Archiv, Wetter oder Bahn „Achtung: nicht im Internet nachgesehen“. Die Zeil"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Quellenangabe",
+"text": "e kommt im selben Ereignis wie die Herkunftszeile von „Erst lokal“ und ersetzt sie, so zeigen Panel, Android, iPhone, Begleiter und Telegram sie ohne eigene Änderung. „Woher weißt du das?“ („Quelle?“, „Was war deine Quelle?“, „Where did you get that?“, nur als ganze Nachricht) beantwortet das Panel ohne Modell aus der letzten Antwort dieses Profils auf diesem Gerät (nur im Speicher, 30 Minuten): jede Quelle mit den Suchwörtern des Aufrufs, den Titeln der Treffer und der Webseiten, gesprochen ohne Aufzählungszeichen; Titel und Suchwörter ohne Markup, die Antwort ist wie eine aus fremdem Text markiert (der nächste Zug beginnt gesperrt). Quelle im Gespräch ansagen (Vorliebe quelle_sagen, an, Ich → Gespräch → „Quelle ansagen“): am Lautsprecher, Telefon, an der Uhr, über Siri und im Auto ein kurzer Satz am Ende („Quelle: Websuche.“). Nie für Gäste, fremde Stimmen oder MCP. Sehen: Logs → Anfragen zeigt bei jeder Anfrage „Quelle: …“ (nur Werkzeugnamen, Hinweis orange); Logs → Bereich „Gespräch“ quelle: Zeile N Quellen | Hinweis keiner|intern|extern | gesagt|nicht gesagt, quelle: Nachfrage beantwortet, quelle: keine Zeile (keine Wissensfrage); Zustand → Live, Kasten Quellenangabe: Zeilen, "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Quellenangabe",
+"text": "Hinweise, Nachfragen und gesagte Sätze von heute. Selbsttest test_quellenangabe, Praxistests P853, P854."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Hilfe zum Spark (standardmäßig aus)",
 "text": "Hilfe zum Spark (standardmäßig aus): Fragen zum Spark selbst beantwortet der Assistent mit spark_hilfe aus Anleitungen, Schaltern, eigenen Einstellungen unter Ich, festen Empfehlungen und dieser Doku (app/panel/hilfe_docs.json, erzeugt von python3 app/panel/hilfe.py --docs). Gesucht wird mit festen Regeln auf dem Spark, nichts verlässt das Haus; jeder Treffer kommt mit Weg und dem eigenen Stand. Rechte: Spark-Einstellungen, Spark-Schalter, „Sicherheit auf einen Blick“ und Betriebsdoku nur für Admins (Verwalter nur Funktionsschalter); Profile Anleitungen ohne Admin-Schritte und eigene Einstellungen; Gäste nichts. Treffer sind Daten, nie Anweisung; Schlüssel, PINs und Namen anderer Profile kommen nie vor. „Einstellungen vorschlagen“ (spark_vorschlag) zeigt eine Karte mit Schaltern vorher/nachher. Das Modell schaltet nie: feste Regeln prüfen (nur Schalter für die eigene Arbeit des Assistenten, nie Sicherheit, nichts nach außen; Profile nur Eigenes, Spark-Schalter nur Admin, ausschalten nie für alle), erst „Übernehmen“ ändert über POST /api/hilfe/karte/{id} (Browser-Anmeldung, CSRF, Rate-Limit, für Spark-Schalter Admin und Code, Admin-Protokoll mit Rückgängig). Eine Karte gilt zehn Min"
 },
@@ -12422,6 +12446,22 @@
 "head": "Alle Funktionen",
 "title": "Alle Funktionen",
 "text": "- Erst lokal suchen (Funktionen → Gespräch → „Erst lokal suchen“; Ich → Gespräch): Ob eine Frage in deine eigenen Daten, ins Web oder in beides gehört, entscheidet die Quellen-Weiche mit festen Regeln (nie das Modell); was keine Regel kennt, prüft sie mit einem kurzen Blick in deinen Finden-Index."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Alle Funktionen",
+"title": "Alle Funktionen",
+"text": "- Quellenangabe (Funktionen → Gespräch → „Quellenangabe“; Ich → Gespräch): Unter jeder Antwort, die etwas wissen will, steht, woher sie stammt: „Quelle: 2 Mails, Termine lesen, Websuche“ oder „nichts nachgeschlagen, nur Modellwissen“."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Alle Funktionen",
+"title": "Alle Funktionen",
+"text": "- Quelle im Gespräch ansagen (Funktionen → Gespräch → „Quelle im Gespräch ansagen“; baut auf „Quellenangabe“; Ich → Gespräch): Am Lautsprecher, am Telefon, an der Uhr, über Siri und im Auto siehst du keine Zeile unter der Antwort."
 },
 {
 "lang": "de",
@@ -19717,7 +19757,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "1. Question arrives: chat() checks the rate limit, sets the mark „speech is running“ (background work waits) and shows the profile's other devices „answering“. Then chat_turn.prepare works out rights, locks, system prompt and the offered tools; _answer takes over. When the language model pauses (maintenance pause, emergency mode), a fixed sentence comes at once; in emergency mode with Parakeet the fixed commands come first, without a model (notbetrieb.antwort: Home Assistant, time, reminders). With „Answer simple things at once“ the time, the date, calculations (rechnen.calc), date calculations and units as a whole short sentence get the panel's fixed sentence, without a model and without an instant sentence before it (sofort.answer, at most 80 characters). The question which way likewise comes only as the panel's fixed question with its buttons, without a model and without a tool. 2. Open the stream, instant sentence: Two queues connect everything: one for events to the device, one for sentences to speech output. When the instant acknowledgement is allowed, a recorded sentence plays at once (no GPU); if the answer then stays silent, one bridge sentence follows. 3. What the panel d"
+"text": "1. Question arrives: chat() checks the rate limit, sets the mark „speech is running“ (background work waits) and shows the profile's other devices „answering“. Then chat_turn.prepare works out rights, locks, system prompt and the offered tools; _answer takes over. When the language model pauses (maintenance pause, emergency mode), a fixed sentence comes at once; in emergency mode with Parakeet the fixed commands come first, without a model (notbetrieb.antwort: Home Assistant, time, reminders). With „Answer simple things at once“ the time, the date, calculations (rechnen.calc), date calculations and units as a whole short sentence get the panel's fixed sentence, without a model and without an instant sentence before it (sofort.answer, at most 80 characters). The question which way likewise comes only as the panel's fixed question with its buttons, without a model and without a tool, and „Where did you get that?“ as the panel's fixed answer from the kept source of the last answer (quellenangabe.antwort). 2. Open the stream, instant sentence: Two queues connect everything: one for events to the device, one for sentences to speech output. When the instant acknowledgement is allowed, a "
 },
 {
 "lang": "en",
@@ -19725,7 +19765,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "oes itself: When the preparation decided that the panel acts itself (a switch command, reading states, „search locally first“, a clear reading request), it runs now. The result goes to the model like a tool result, outside text wrapped as data; „local first“ brings the best hits of every released source with source and date, for both also the panel's web search with the own words, and a mail among them locks the answer like a read mail. An article from the own Kiwix and the pages of the web search then stand as sources under the answer; at the end the panel counts the origin („From: 2 mails, 1 appointment“) and for internal without the web offers „Also search the web“ (chat_modell.herkunft_und_chip). 4. Prepare a round: Offered is the list without locked tools, tools stopped after errors or used too often. When the question needs a tool, the model must choose one (tool_choice), with its own temperature. The fifth round has no list: the model is told to answer now. Devices without a screen (speaker, phone, watch, Siri, Android assistant, CarPlay) get at most 700 tokens; a longer answer ends at its last full sentence. When a tool hands back the panel's fixed sentence (Find's Sofort-K"
+"text": "recorded sentence plays at once (no GPU); if the answer then stays silent, one bridge sentence follows. 3. What the panel does itself: When the preparation decided that the panel acts itself (a switch command, reading states, „search locally first“, a clear reading request), it runs now. The result goes to the model like a tool result, outside text wrapped as data; „local first“ brings the best hits of every released source with source and date, for both also the panel's web search with the own words, and a mail among them locks the answer like a read mail. An article from the own Kiwix and the pages of the web search then stand as sources under the answer; at the end the panel counts the origin („From: 2 mails, 1 appointment“) and for internal without the web offers „Also search the web“ (chat_modell.herkunft_und_chip). With the source note (quellenangabe.py) every knowledge answer instead names each reading source that ran („Source: 2 mails, Web search“ or „nothing looked up, model knowledge only“), with a note when it does not fit the source switch's class; at a speaker said briefly (chat_modell.quellenangabe_zeile). 4. Prepare a round: Offered is the list without locked tools, "
 },
 {
 "lang": "en",
@@ -19733,7 +19773,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "arte: one hit clearly ahead), the answer ends there: the whole sentence is shown, its short form spoken, the model is not asked again. 5. Stream and cut into sentences: The answer comes piece by piece. Thinking and tool calls written as text are never shown or spoken. split_sentences cuts finished sentences off („z. B.“ and „5. Oktober“ are no sentence end); a long first sentence goes at a comma, so the first sound comes early. 6. Figure without proof?: For data questions answercheck compares every time, date, score and amount in the sentence with everything the model was given. After a calendar read only figures from this answer count, not from earlier ones; a quoted appointment title must be in the result. With „Extended answer check“ also temperatures, km and percentages (rounded counts, answercheck.MORE_SLACK) and every quoted name in every data answer. With „Exact calculations“ rechnen.fix first computes every calculation in the sentence again, number words too („17 times 23 is 381“, „six times six is 35“) and puts in the panel's result; its results count as proven here (answercheck.calc_facts). While that is on, every sentence comes only when it is complete. 7. Deed without a"
+"text": "tools stopped after errors or used too often. When the question needs a tool, the model must choose one (tool_choice), with its own temperature. The fifth round has no list: the model is told to answer now. Devices without a screen (speaker, phone, watch, Siri, Android assistant, CarPlay) get at most 700 tokens; a longer answer ends at its last full sentence. When a tool hands back the panel's fixed sentence (Find's Sofort-Karte: one hit clearly ahead), the answer ends there: the whole sentence is shown, its short form spoken, the model is not asked again. 5. Stream and cut into sentences: The answer comes piece by piece. Thinking and tool calls written as text are never shown or spoken. split_sentences cuts finished sentences off („z. B.“ and „5. Oktober“ are no sentence end); a long first sentence goes at a comma, so the first sound comes early. 6. Figure without proof?: For data questions answercheck compares every time, date, score and amount in the sentence with everything the model was given. After a calendar read only figures from this answer count, not from earlier ones; a quoted appointment title must be in the result. With „Extended answer check“ also temperatures, km and"
 },
 {
 "lang": "en",
@@ -19741,7 +19781,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": " tool?: When a sentence claims a deed („is on now“, „entered it“), a tool of that kind must have worked in this answer (taten.check). A sentence that only announces a tool call or a deed („I'm calling the timer tool …“) is never said; when no tool follows, the panel says its fixed sentence at the end (taten.announces). When a tool of the claimed kind works later in the same answer („I'm making the song.“ before musik_machen), the sentence is left out silently. Applies when a changing tool or none at all was offered. 8. Show and speak: A checked sentence goes to the device as text and into the speech output queue; code blocks are only shown. A sentence already said in an earlier round is left out. After the first sentence speech output joins everything waiting into one piece, so the voice stays calm. When the listener still has more than 3 s of audio, such a piece goes as a follow-up sentence (X-Spark-Folgesatz) and lets first sentences of other answers go first. 9. Data question without looking?: When the question needs a tool and the model answers without one, the whole round is never said. The model is asked once more, told to use the tool first. 10. Tool wanted?: When the model "
+"text": " percentages (rounded counts, answercheck.MORE_SLACK) and every quoted name in every data answer. With „Exact calculations“ rechnen.fix first computes every calculation in the sentence again, number words too („17 times 23 is 381“, „six times six is 35“) and puts in the panel's result; its results count as proven here (answercheck.calc_facts). While that is on, every sentence comes only when it is complete. 7. Deed without a tool?: When a sentence claims a deed („is on now“, „entered it“), a tool of that kind must have worked in this answer (taten.check). A sentence that only announces a tool call or a deed („I'm calling the timer tool …“) is never said; when no tool follows, the panel says its fixed sentence at the end (taten.announces). When a tool of the claimed kind works later in the same answer („I'm making the song.“ before musik_machen), the sentence is left out silently. Applies when a changing tool or none at all was offered. 8. Show and speak: A checked sentence goes to the device as text and into the speech output queue; code blocks are only shown. A sentence already said in an earlier round is left out. After the first sentence speech output joins everything waiting in"
 },
 {
 "lang": "en",
@@ -19749,7 +19789,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "wrote no tool call or hit the length limit, the answer is done. At the length limit it is spoken up to the last sentence end, the rest is dropped. 11. Run the tools: Half words before the call are taken back, a finished sentence stays. Every call goes through chat_tools.run; the result comes back as a tool message. A tool that fails twice the same way is stopped for this answer. When no rule recognized the question, the switch counts the group of the first tool and the fixed hint word (weiche.learn), never a word of the question. Reading tools (calendar, weather, parcels) take their data from their service's memory while it is fresh enough (Vorrat je Profil, vorrat.take); an older reading waits at most 2.0 s for the server and otherwise comes with its time and day („as of yesterday 18:00“, frisch.stand), „look again“ always asks the server. Every answer keeps how long the tools waited and where each service came from (latency, Status → Checks). 12. Honest closing sentences: When a sentence fell out because of a figure, the panel says „I have no more precise details on that.“; when a deed fell out, a fixed sentence from taten.sentence. When a service came only with an older reading,"
+"text": "to one piece, so the voice stays calm. When the listener still has more than 3 s of audio, such a piece goes as a follow-up sentence (X-Spark-Folgesatz) and lets first sentences of other answers go first. 9. Data question without looking?: When the question needs a tool and the model answers without one, the whole round is never said. The model is asked once more, told to use the tool first. 10. Tool wanted?: When the model wrote no tool call or hit the length limit, the answer is done. At the length limit it is spoken up to the last sentence end, the rest is dropped. 11. Run the tools: Half words before the call are taken back, a finished sentence stays. Every call goes through chat_tools.run; the result comes back as a tool message. A tool that fails twice the same way is stopped for this answer. When no rule recognized the question, the switch counts the group of the first tool and the fixed hint word (weiche.learn), never a word of the question. Reading tools (calendar, weather, parcels) take their data from their service's memory while it is fresh enough (Vorrat je Profil, vorrat.take); an older reading waits at most 2.0 s for the server and otherwise comes with its time and d"
 },
 {
 "lang": "en",
@@ -19789,7 +19829,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/chat.py chat: rate limit, speech first, „answering“ (step 1) - app/panel/chat.py _answer: joins model side, speech output and events into one stream (step 4, step 5, step 11) - app/panel/laufend.py add: the running answer for kill switch stage 3 (step 14) - app/panel/chat_ton.py speech_out: sentences to the speech output, sound as a stream (step 8) - app/panel/chat_modell.py model_turn: rounds with the model, tools, checks (step 4, step 11) - app/panel/chat_modell.py herkunft_und_chip: line of origin and „Also search the web“ under the answer (step 3) - app/panel/chat.py split_sentences: cuts finished sentences off (step 5) - app/panel/chat.py said_key: spots a sentence already said (step 8) - app/panel/chat.py no_code: code blocks only shown, never spoken (step 8) - app/panel/chat.py loop_count: counts failures for stop error loops (step 11) - app/panel/answercheck.py known: every figure the model was given (step 6) - app/panel/answercheck.py unsupported: figures in the sentence without proof (step 6) - app/panel/answercheck.py fresh: after the calendar only this answer's figures (step 6) - app/panel/rechnen.py fix: compute calculations in the sentence again and correc"
+"text": "- app/panel/chat.py chat: rate limit, speech first, „answering“ (step 1) - app/panel/chat.py _answer: joins model side, speech output and events into one stream (step 4, step 5, step 11) - app/panel/laufend.py add: the running answer for kill switch stage 3 (step 14) - app/panel/chat_ton.py speech_out: sentences to the speech output, sound as a stream (step 8) - app/panel/chat_modell.py model_turn: rounds with the model, tools, checks (step 4, step 11) - app/panel/chat_modell.py herkunft_und_chip: line of origin and „Also search the web“ under the answer (step 3) - app/panel/chat_modell.py quellenangabe_zeile: source note under the answer, said briefly at a speaker (step 3) - app/panel/chat.py split_sentences: cuts finished sentences off (step 5) - app/panel/chat.py said_key: spots a sentence already said (step 8) - app/panel/chat.py no_code: code blocks only shown, never spoken (step 8) - app/panel/chat.py loop_count: counts failures for stop error loops (step 11) - app/panel/answercheck.py known: every figure the model was given (step 6) - app/panel/answercheck.py unsupported: figures in the sentence without proof (step 6) - app/panel/answercheck.py fresh: after the calendar only"
 },
 {
 "lang": "en",
@@ -19797,7 +19837,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "t them (step 6) - app/panel/taten.py check: deed claimed, no tool managed it (step 7) - app/panel/taten.py announces: tool call or deed only announced (step 7, step 12) - app/panel/taten.py sentence: the fixed honest sentence (step 12) - app/panel/frisch.py nachsatz: stand note when something was not current (step 12)"
+"text": " this answer's figures (step 6) - app/panel/rechnen.py fix: compute calculations in the sentence again and correct them (step 6) - app/panel/taten.py check: deed claimed, no tool managed it (step 7) - app/panel/taten.py announces: tool call or deed only announced (step 7, step 12) - app/panel/taten.py sentence: the fixed honest sentence (step 12) - app/panel/frisch.py nachsatz: stand note when something was not current (step 12)"
 },
 {
 "lang": "en",
@@ -29092,6 +29132,30 @@
 "src": "assistant",
 "file": "Assistant and panel",
 "head": "Voice chat",
+"title": "Source note",
+"text": "Source note (Features → Conversation → \"Source note\", switch chat.source_note, off; released for every profile; panel/quellenangabe.py): under every answer that wants to know something it says where it came from, written by the panel with fixed rules from what really ran in this answer, never by the model: every reading tool that did not fail, with its readable name (werkzeuge.label, \"Web search\", \"Read appointments\", \"Own documents\"), plus the hits of \"Look locally first\" as kinds and numbers (\"2 mails\", \"own data, no hits\"). Without any source: \"Source: nothing looked up, model knowledge only\". Tools that change something (taten.KIND) do not count; a plain action (\"light on\") gets no line. Whether a tool reads the own data or the world comes from the switch's groups (intent.GROUPS with quellen.OWN_GROUPS and WORLD_GROUPS). Note when the source does not fit: the source switch's class (from \"Look locally first\" or, without it, the same fixed rules without the probe) against the sources that ran: internal without own data \"Note: not looked up in your own data\", external without the web, archive, weather or trains \"Note: not looked up on the web\". The line comes in the same event as "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Source note",
+"text": "the line of origin of \"Look locally first\" and replaces it, so panel, Android, iPhone, Begleiter and Telegram show it without a change of their own. \"Where did you get that?\" (\"Source?\", \"What was your source?\", \"Woher weißt du das?\", only as the whole message) is answered by the panel without the model from the last answer of this profile on this device (only in memory, 30 minutes): every source with the call's search words, the titles of the hits and the web pages, spoken without list marks; titles and search words without markup, the answer is marked like one from outside text (the next turn starts locked). Say the source in conversation (preference quelle_sagen, on, Me → Conversation → \"Say the source\"): at a speaker, the phone, the watch, via Siri and in the car one short sentence at the end (\"Source: Web search.\"). Never for guests, other voices or MCP. See: Logs → Requests shows \"Source: …\" on every request (tool names only, the note in orange); Logs → area \"Conversation\" quelle: Zeile N Quellen | Hinweis keiner|intern|extern | gesagt|nicht gesagt, quelle: Nachfrage beantwortet, quelle: keine Zeile (keine Wissensfrage); Status → Live, box Source note: lines, notes, questions"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Source note",
+"text": " and spoken sentences of today. Self-test test_quellenangabe, practice tests P853, P854."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
 "title": "Help with the Spark (off by default)",
 "text": "Help with the Spark (off by default): questions about the Spark itself the assistant answers with spark_hilfe from guides, switches, own settings under Me, fixed recommendations and these docs (app/panel/hilfe_docs.json, built by python3 app/panel/hilfe.py --docs). The search runs by fixed rules on the Spark, nothing leaves the house; each hit comes with its path and how it stands for you. Rights: Spark settings, Spark switches, \"Security at a glance\" and operating docs only for admins (a manager only feature switches); profiles get guides without admin steps and their own settings; guests nothing. Hits are data, never instructions; keys, PINs and names of other profiles never appear. \"Suggesting settings\" (spark_vorschlag) shows a card with switches before/after. The model never switches: fixed rules check (only switches for the assistant's own work, never security, nothing to the outside; profiles only their own, Spark switches only admin, switching off never for everybody), and only \"Apply\" changes through POST /api/hilfe/karte/{id} (browser login, CSRF, rate limit, for Spark switches admin and code, admin log with undo). A card lasts ten minutes, once, only for this profile; \"U"
 },
@@ -29622,6 +29686,22 @@
 "head": "All functions",
 "title": "All functions",
 "text": "- Look locally first (Features → Conversation → \"Look locally first\"; Me → Conversation): Whether a question belongs to your own data, the web or both is decided by the source switch with fixed rules (never the model); what no rule knows it checks with a short look in your Find index."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "All functions",
+"title": "All functions",
+"text": "- Source note (Features → Conversation → \"Source note\"; Me → Conversation): Under every answer that wants to know something it says where it came from: \"Source: 2 mails, Read appointments, Web search\" or \"nothing looked up, model knowledge only\"."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "All functions",
+"title": "All functions",
+"text": "- Say the source in conversation (Features → Conversation → \"Say the source in conversation\"; builds on \"Source note\"; Me → Conversation): At a speaker, on the phone, the watch, via Siri and in the car you see no line under the answer."
 },
 {
 "lang": "en",

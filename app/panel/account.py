@@ -2038,7 +2038,7 @@ ALLOW = {"tool_think": "toolthink", "route": "routing", "direct_read": "direct",
          "chats": "chats", "chatall": "messages_all", "chatann": "messages_announce", "verbund": "verbund",
          "rate": "bewerten", "rateback": "bewertenzurueck", "beratnote": "beraterhinweis", "beratask": "beraterchat",
          "beratme": "beratermich", "klaeren": "klaeren", "klaeren_merken": "klaerenmerken",
-         "tagebuch": "tagebuch", "warum": "beraterwarum", "unklaranon": "weicheunklar",
+         "tagebuch": "tagebuch", "warum": "beraterwarum", "unklaranon": "weicheunklar", "quellesagen": "quellesagen",
          "stimmdesign": "stimmdesign"}
 
 

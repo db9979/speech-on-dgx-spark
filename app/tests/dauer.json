@@ -247,6 +247,7 @@
 "test_pruefzugang": 1.5,
 "test_quellen": 2.9,
 "test_quellen_bench": 10.0,
+"test_quellenangabe": 0.5,
 "test_rauchtest": 1.8,
 "test_rechnen": 0.5,
 "test_rechner": 0.5,

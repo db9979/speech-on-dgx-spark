@@ -72,6 +72,18 @@ class Rec:
         self.kind = kind if kind in ("profile", "guest", "admin", "spark") else "guest"
         self.device = safe(str(device or "")[:40]) or ""
         self.intent, self.steps, self.marks, self.errors, self.done = "", [], {}, [], False
+        self.quelle, self.qwarn = "", ""   # Quellenangabe (quellenangabe.py): readable tool names, the hint's word
+
+    def source(self, names, warn=""):
+        """The sources of the answer (werkzeuge.label words, cut at whole names to fit SAFE) and the hint's word."""
+        out = ""
+        for n in str(names or "").split(", "):
+            nxt = (out + ", " + n) if out else n
+            if safe(nxt) is None:
+                break
+            out = nxt
+        self.quelle = out
+        self.qwarn = warn if warn in ("intern", "extern") else ""
 
     def ms(self, t):
         return max(0, int(round((float(t) - self.t0) * 1000)))
@@ -114,7 +126,7 @@ class Rec:
     def data(self):
         return {"id": self.id, "t": round(self.t0, 3), "client": self.client, "who": self.who, "kind": self.kind,
                 "device": self.device, "intent": self.intent, "steps": self.steps, "marks": self.marks,
-                "errors": self.errors, "status": self.status()}
+                "errors": self.errors, "status": self.status(), "quelle": self.quelle, "qwarn": self.qwarn}
 
 
 def start(t0, client, who=None, kind="guest", device="", ort=""):

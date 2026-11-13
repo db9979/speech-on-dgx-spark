@@ -161,6 +161,9 @@ function rpill(text,cls){return el('span','rpill'+(cls?' '+cls:''),text)}
 const rvote=x=>(x.vote||{}).v||'';
 function rthumb(x){const v=rvote(x);if(!v)return null;const s=el('span','rvote '+(v==='gut'?'up':'dn'));s.appendChild(icNode(v==='gut'?'up_thumb':'down_thumb'));s.title=v==='gut'?t('Gut bewertet','Rated good'):t('Schlecht bewertet','Rated bad');s.setAttribute('aria-label',s.title);return s}
 function rreason(x){const g=(x.vote||{}).grund,r=(RQ.data&&RQ.data.reasons||{})[g];return r?t(r[0],r[1]):''}
+// Quellenangabe (quellenangabe.py): the sources of the answer in readable tool names, the hint when they did not fit
+const RQWARN={intern:['nicht in eigenen Daten nachgesehen','not looked up in own data'],extern:['nicht im Internet nachgesehen','not looked up on the web']};
+function rquelle(x){if(!x.quelle)return null;const p=rpill(t('Quelle: ','Source: ')+(x.quelle==='Modellwissen'?t('Modellwissen','model knowledge'):x.quelle)+(x.qwarn&&RQWARN[x.qwarn]?' · '+t(...RQWARN[x.qwarn]):''),'q'+(x.qwarn?' warn':''));return p}
 function rchain(x){const c=el('span','rchain');let n=0;
   (x.steps||[]).filter(s=>s.k!=='weiche'&&s.k!=='check').forEach(s=>{if(n++)c.append(el('s'));
     if(s.k==='tool'){const b=el('i','rtool'+((s.x||{}).ok===false?' bad':''),wzName(s.n));b.title=s.n;c.append(b)}else{const i=el('i');i.style.background=RK[s.k][0];i.title=s.n;c.append(i)}});return c}
@@ -168,7 +171,7 @@ function rlist(items){const box=el('div','rlist');
   for(const x of items){const b=el('button','rq'+(x.id===RQ.sel?' on':'')+(x.status==='err'?' err':x.status==='slow'?' slow':''));b.type='button';
     const top=el('div','rtop');top.append(el('span','rt',rtime(x)),el('b','',x.name));top.append(el('span','rdev',' · '+(x.device||RCLIENT[x.client]||x.client)));
     top.append(el('span','rid',' · '+x.id),el('span','rdur',rsec(rfirst(x))));const th=rthumb(x);if(th)top.append(th);b.append(top);
-    const row=el('div','rrow');if(x.intent)row.append(rpill(x.intent,'int'));row.append(rchain(x));b.append(row);
+    const row=el('div','rrow');if(x.intent)row.append(rpill(x.intent,'int'));row.append(rchain(x));const q=rquelle(x);if(q)row.append(q);b.append(row);
     b.onclick=()=>{RQ.sel=x.id;RQ.lines=null;rrender();if(PHONE.matches)window.scrollTo(0,0)};box.append(b)}
   if(!items.length)box.append(el('div','lempty',RQ.data&&!RQ.data.on?t('Die Aufzeichnung ist aus: Einstellungen → Spark → Betrieb → Anfragen verfolgen.','Recording is off: Settings → Spark → Operation → Trace requests.'):t('Keine Anfragen in diesem Zeitraum.','No requests in this time range.')));
   return box}
@@ -219,7 +222,7 @@ function rdetail(x){const box=el('div','rdet');
   box.append(el('h3','',t(`Anfrage ${x.id} von ${x.name} · ${rtime(x)}`,`Request ${x.id} from ${x.name} · ${rtime(x)}`)));
   const rounds=(x.steps||[]).filter(s=>s.k==='llm').length,tools=(x.steps||[]).filter(s=>s.k==='tool').length,m=x.marks||{};
   const sub=el('div','rsub');sub.append(document.createTextNode((x.device?x.device+' · ':'')+(RCLIENT[x.client]||x.client)+' · '+t('Absicht ','intent ')));sub.append(rpill(x.intent||'–','int'));
-  sub.append(document.createTextNode(' · '+t(`${rounds} Runde(n) · ${tools} Werkzeug(e)`,`${rounds} round(s) · ${tools} tool(s)`)+(m.sound!=null?' · '+t('erster Ton ','first sound ')+rsecs(m.sound):'')+' · '+t('fertig ','done ')+rsecs(m.end||0)));box.append(sub);
+  sub.append(document.createTextNode(' · '+t(`${rounds} Runde(n) · ${tools} Werkzeug(e)`,`${rounds} round(s) · ${tools} tool(s)`)+(m.sound!=null?' · '+t('erster Ton ','first sound ')+rsecs(m.sound):'')+' · '+t('fertig ','done ')+rsecs(m.end||0)));box.append(sub);const qd=rquelle(x);if(qd){const qb=el('div','rsub');qb.append(qd);box.append(qb)}
   if((x.errors||[]).length){const eb=el('div','lasterr');for(const c of x.errors){const r=el('div','',t('Fehler: ','Error: ')+rerr(c)+' ');r.append(el('code','lcode',c));eb.append(r)}box.append(eb)}
   if(rvote(x)){const v=x.vote,vb=el('div','rvoted '+(v.v==='gut'?'up':'dn'));const r=rreason(x);
     vb.append(icNode(v.v==='gut'?'up_thumb':'down_thumb'),el('b','',' '+t(`Bewertet nach ${v.after} s`,`Rated after ${v.after} s`)+(r?' · '+t('Grund: ','Reason: ')+r:'')));

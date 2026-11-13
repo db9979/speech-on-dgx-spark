@@ -17,7 +17,9 @@ import json
 import llm
 import notbetrieb
 import profiles
+import quellenangabe
 import re
+import saetze
 import stufe
 import taten
 import tidy
@@ -39,18 +41,67 @@ async def llm_start_satz(en):
         return ""
 
 
-async def herkunft_und_chip(turn, found, st, searches, trace, out, who, src, messages):
+async def quellenangabe_zeile(turn, found, st, trace, out, who, src, messages, sentences, tr, lokal, quellen):
+    """Quellenangabe (quellenangabe.py): for an answer that wants to know something, the line of its sources by
+    fixed rules, the hint when they do not fit the question's class (the class „Erst lokal“ worked out, else the
+    same fixed rules without the probe: nothing is searched for it), the record for „Woher weißt du das?“, the
+    column in Logs → Anfragen and, at a speaker, phone, watch, Siri or in the car with the preference on, one short
+    sentence at the end. An answer that only did something (a tool that changes, nothing read) gets none.
+    Returns the line {"de", "en", "arten"} for the "herkunft" event, or None. lokal and quellen: the modules, handed
+    in by herkunft_und_chip, which imports them."""
+    ccfg = getattr(turn, "ccfg", None)
+    parts = quellenangabe.teile(trace["calls"], quellen.werkzeug_art, found, lokal.art, lokal.ARTEN)
+    kind = getattr(turn, "lk_kind", "") or ""
+    if getattr(turn, "lk_why", None) is None:
+        try:
+            kind = quellen.klasse(messages[-1]["content"], None, {"route": getattr(turn, "route", None), "eigen": False,
+                                                                  "tool_words": (ccfg or {}).get("tool_words", "")})[0]
+        except Exception:
+            kind = ""
+    if not parts and (kind not in quellen.CLASSES or st["acts"]):
+        print("quelle: keine Zeile (keine Wissensfrage)", flush=True)
+        return None
+    warn = quellenangabe.warnung(kind, parts)
+    en = chat.guess_language(messages[-1]["content"]) == "English"
+    quellenangabe.merke(who["id"], src, parts, warn, st.get("links"))
+    quellenangabe.note("zeile")
+    if warn:
+        quellenangabe.note("warnung")
+    if tr:   # Logs → Anfragen: the readable tool names and the hint's word only (tracelog.SAFE)
+        tr.source(", ".join(p["de"] for p in parts) or "Modellwissen", warn)
+    said = ""
+    if saetze.channel(turn) in saetze.SPOKEN and features.allowed(quellenangabe.SAY_KEY, who["id"], ccfg):
+        said = quellenangabe.satz(parts, warn, en)
+        await out.put({"type": "text", "delta": " " + said})
+        trace["said"] += " " + said
+        await sentences.put(said)
+        quellenangabe.note("gesagt")
+    print(f"quelle: Zeile {len(parts)} Quellen | Hinweis {warn or 'keiner'} | "
+          + ("gesagt" if said else "nicht gesagt"), flush=True)
+    return {"de": quellenangabe.zeile(parts, warn), "en": quellenangabe.zeile(parts, warn, True),
+            "arten": [[p["tool"], p["n"]] for p in parts]}
+
+
+async def herkunft_und_chip(turn, found, st, searches, trace, out, who, src, messages, sentences=None, tr=None):
     """Under an answer of the quick look (plan such-index/zuverlaessig.md step 5), by fixed rules of the panel, never
     the model: the Herkunft line („Aus: 2 Mails, 1 Termin, Internet“, lokal.herkunft: kinds and numbers only) and, for
     an answer of the class intern that did not go to the web, the chip „Auch im Internet suchen“ (lokal.web_offer:
     kept for the next message of this device, with the question's own words only). Never after mail (a mail among
     the hits or read by a tool: chat.LOCKED_AFTER_MAIL), at the Notaus, without the web for this turn (turn.web_ok:
-    offered, service there, no answer from mail carried along) or for the chip's own answer."""
+    offered, service there, no answer from mail carried along) or for the chip's own answer. With the Quellenangabe
+    released (quellenangabe.py) its line takes the Herkunft line's place under every answer that wants to know
+    something, with or without the quick look."""
     import lokal
     import notaus
     import quellen
     web = bool(searches or (found or {}).get("web"))
-    line = lokal.herkunft(found, web)
+    line = lokal.herkunft(found, web) if found is not None else None
+    mine = None
+    if features.allowed(quellenangabe.KEY, who["id"], getattr(turn, "ccfg", None)) and getattr(turn, "own_browser", False) \
+            and not getattr(turn, "mcp", False) and trace["said"].strip():
+        mine = await quellenangabe_zeile(turn, found, st, trace, out, who, src, messages, sentences, tr, lokal, quellen)
+    if found is None and not mine:   # no quick look and no Quellenangabe: nothing under the answer
+        return
     chip = bool(getattr(turn, "lk_kind", "") == "intern" and getattr(turn, "web_ok", False) and not getattr(turn, "web_tap", "")
                 and not web and not st["mail"] and not (found or {}).get("mail") and trace["said"].strip()
                 and "web_search" not in notaus.locked_tools(notaus.level(), set(), bool(notaus.own(who["id"]))))
@@ -59,8 +110,10 @@ async def herkunft_und_chip(turn, found, st, searches, trace, out, who, src, mes
         quellen.note("herkunft")
     if chip:
         quellen.note("chip")
-    print("lokal: Herkunft " + (str(sum(n for _, n in line["arten"])) + " Treffer" if line else "keine")
-          + (" | Internet-Chip angeboten" if chip else " | kein Internet-Chip"), flush=True)
+    if found is not None:
+        print("lokal: Herkunft " + (str(sum(n for _, n in line["arten"])) + " Treffer" if line else "keine")
+              + (" | Internet-Chip angeboten" if chip else " | kein Internet-Chip"), flush=True)
+    line = mine or line   # the Quellenangabe names every source, the Herkunft only the quick look's
     if line or chip:
         await out.put(dict({"type": "herkunft", "de": line["de"] if line else "", "en": line["en"] if line else ""},
                            **({"web": list(lokal.WEB_CHIP)} if chip else {})))
@@ -75,14 +128,14 @@ async def model_turn(*, acked, body, c, came_from, carry, ccfg, cfg, check_on, e
     verbrauch.WHO.set(verbrauch.who_of(who))   # what this answer asks the models counts for this profile
     try:
         if fixed:   # Einfaches sofort beantworten (sofort.py): the panel's fixed sentence, no model
-            kind, note = fixed
+            kind, note, spoken = (*fixed, fixed[1])[:3]   # a third part: said instead of the shown one
             print("chat: feste Antwort,", kind, flush=True)
             if tr:
                 tr.step("prep", "Feste Antwort (Panel)", time.time(), panel=True)
             trace["calls"].append({"name": "Feste Antwort (Panel)", "args": "", "result": kind})
             await out.put({"type": "text", "delta": note})
             trace["said"] += note
-            await sentences.put(note)
+            await sentences.put(spoken)
             return
         if wartung.paused("llm"):
             # Wartungspause (wartung.py): the fixed sentence at once, never the model's time-out; in Notbetrieb with
@@ -226,11 +279,11 @@ async def model_turn(*, acked, body, c, came_from, carry, ccfg, cfg, check_on, e
                     st["docs"] = True
                 arch = [h for h in found["hits"] if h.get("source")]
                 if arch:     # an archive article stands under the answer like a web page, with its book's date
-                    await out.put({"type": "sources", "items": [h["source"] for h in arch]})
+                    await quellenangabe.links(out, st, [h["source"] for h in arch])
                     for h in arch:   # an old book gets its date said (frisch.nachsatz)
                         frisch.note_archive(h.get("date"), getattr(turn, "vorrat", None))
                 if found.get("web") and found["web"].get("sources"):   # the panel's own web search, under the answer
-                    await out.put({"type": "sources", "items": found["web"]["sources"]})
+                    await quellenangabe.links(out, st, found["web"]["sources"])
                 if any(h["src"] == "fund" for h in found["hits"]):
                     # „In Finden ansehen“ (step 5): the way to the page Finden with the question's own search words
                     await out.put({"type": "goto", "to": "fund", "q": lokal.query(messages[-1]["content"])[:120]})
@@ -560,8 +613,8 @@ async def model_turn(*, acked, body, c, came_from, carry, ccfg, cfg, check_on, e
                 await out.put({"type": "text", "delta": " " + tip})
                 trace["said"] += " " + tip
                 await sentences.put(tip)
-        if who and local_task:
-            await herkunft_und_chip(turn, lk_found, st, searches, trace, out, who, src, messages)
+        if who:   # „Erst lokal“'s Herkunft and chip, the Quellenangabe (quellenangabe.py) for every answer
+            await herkunft_und_chip(turn, lk_found, st, searches, trace, out, who, src, messages, sentences, tr)
         zeit = verbrauch.warn(who["id"]) if who else ""
         if zeit:   # Kontingent (verbrauch.py): one fixed sentence under the answer, once per period
             note = verbrauch.warn_text(zeit, chat.guess_language(messages[-1]["content"]) == "English")

@@ -26,6 +26,7 @@ import profiles  # noqa: E402
 import recall  # noqa: E402
 import answercheck  # noqa: E402
 import taten  # noqa: E402  (Taten prüfen, Fehlerschleife stoppen)
+import quellenangabe  # noqa: E402  (Quellenangabe: „Woher weißt du das?“)
 import hintergrund  # noqa: E402
 import homeassistant  # noqa: E402
 import mail  # noqa: E402
@@ -2141,6 +2142,16 @@ async def _answer(request, turn):
                               guess_language(messages[-1]["content"]) == "English")
     if getattr(turn, "weg_q", None):   # Rückfragen der Weiche (klaeren weg): only the panel's fixed question, no model
         fixed = ("rueckfrage weg", turn.weg_q)
+    elif who and own_browser and not getattr(turn, "mcp", False) and messages and messages[-1]["role"] == "user" \
+            and not turn.pics and quellenangabe.frage(messages[-1]["content"]) and features.allowed(quellenangabe.KEY, who["id"], ccfg):
+        # „Woher weißt du das?“ (quellenangabe.py): the sources of the last answer of this profile on this device,
+        # the panel's fixed words, never the model; shown in full, said without the list's marks
+        en_q = guess_language(messages[-1]["content"]) == "English"
+        fixed = ("quelle", *quellenangabe.antwort(who["id"], src, en_q))
+        if quellenangabe.fremd(who["id"], src):   # titles and search words from outside: marked like outside text
+            out.put_nowait({"type": "outside"})
+        quellenangabe.note("frage")
+        print("quelle: Nachfrage beantwortet", flush=True)
     # "Sofortige Rückmeldung" (ack.py): right away a ready-made sentence of what the Spark does now, chosen by fixed
     # rules (Weiche group, "Erst lokal", a direct fetch) and played from a recording (no GPU); never small talk
     ack_lang, acked = None, False

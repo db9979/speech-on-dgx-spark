@@ -37,6 +37,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 
 import dungeon_live
 import guard
+import quellenangabe
 import steckbrief
 from common import DayCounter, STATE, load_config, write_json
 from core import auth
@@ -1438,6 +1439,10 @@ def snapshot(view="admin", now=None):
         kl = None
     if kl is not None:
         used.add("klaeren")
+    # Quellenangabe (quellenangabe.py): lines, hints, questions and spoken sentences of today (numbers only)
+    qa = quellenangabe.for_live() if load_config().get("chat", {}).get("source_note") is True else None
+    if qa is not None:
+        used.add("quelle")
     try:
         import chats
         cht = chats.for_live(now)
@@ -2004,6 +2009,9 @@ def snapshot(view="admin", now=None):
                                                                                  if cht.get("call_assist_waiting") else "")
                               if cht.get("call_assist") else "")
                            if cht.get("call_on") else ""))
+        if x["id"] == "quelle" and qa is not None:   # Quellenangabe: numbers only, never a source's name or a title
+            x["sub"] = (f"heute {qa['zeile']} Zeilen · {qa['warnung']} Hinweise · {qa['frage']} Nachfragen · "
+                        f"{qa['gesagt']} gesagt")
         if x["id"] == "taten":  # Taten prüfen, Fehlerschleife: counts of today, never a sentence
             x["sub"] = (f"{tat.get('held', 0)} Sätze zurückgehalten · {tat.get('loop', 0)} Schleifen gestoppt heute"
                         + (f" · {tat['klage']} Beschwerden erkannt" if tat.get("klage") else ""))

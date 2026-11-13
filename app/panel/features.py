@@ -120,6 +120,8 @@ FEATURES = (
     F(**steckbrief.feature("wiki")),
     F(**steckbrief.feature("kiwix")),
     F(**steckbrief.feature("lokal")),
+    F(**steckbrief.feature("quelle")),
+    F(**steckbrief.feature("quellesagen")),
     F(**steckbrief.feature("roles")),
     F(**steckbrief.feature("style")),
     F(**steckbrief.feature("follow")),

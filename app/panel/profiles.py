@@ -1146,6 +1146,7 @@ SETTINGS = {
     "learn": (True, lambda v: isinstance(v, bool)),
     "trace_name": (False, lambda v: isinstance(v, bool)),   # Logs → Anfragen may show this profile's name (tracelog.py)
     "unklar_anon": (True, lambda v: isinstance(v, bool)),   # its unclear questions anonymized on Funktionen → Weiche (weiche_unklar.py)
+    "quelle_sagen": (True, lambda v: isinstance(v, bool)),  # the source said at the end of a spoken answer (quellenangabe.py)
     # documents (wissen.py): photos and scans read by the model, meaning search, keeping the originals
     "doc_due": (False, lambda v: isinstance(v, bool)),
     # "Mit Docling lesen" (doclingdienst.py): a preference, on unless the profile says no (its files leave the Spark)

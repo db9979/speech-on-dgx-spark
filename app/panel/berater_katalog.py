@@ -95,6 +95,8 @@ ENTRIES = {
                         de="Sofortige Rückmeldung", en="Instant reply", way="Funktionen", restart=""),
     "erst_lokal": dict(stufe=C, art="switch", sec="chat", key="local_first",
                        de="Erst lokal suchen", en="Look locally first", way="Funktionen", restart=""),
+    "quellenangabe": dict(stufe=C, art="switch", sec="chat", key="source_note",
+                          de="Quellenangabe", en="Source note", way="Funktionen", restart=""),
     # ---- P: a profile's own settings (Ich → Gespräch); `need` is the function the Spark must allow
     "p_laenge": dict(stufe=P, art="profile", key="length", choices=profiles.CHOICES["length"], need="",
                      de="Antwortlänge", en="Answer length", way="Ich → Gespräch", restart=""),
@@ -227,7 +229,7 @@ OHNE_PROFIL = (
         "report_notify", "rm_inbox", "rm_morning", "rm_morning_at", "rm_week", "rm_tidy", "rm_model", "rm_color", "rm_tasks_cal", "rm_tasks_lists", "rm_tasks_mail",
         "rm_tasks_new", "rm_tasks_note", "role", "roles",
         "room_tell", "speak", "style", "svc_device", "svc_night", "svc_note", "telefon_anrufbar", "tg_ha", "tg_images", "tg_private",
-        "tg_push", "tg_voice", "timing", "trace_name", "turn", "unklar_anon", "tz", "voice",
+        "tg_push", "tg_voice", "timing", "trace_name", "turn", "unklar_anon", "quelle_sagen", "tz", "voice",
 )
 
 

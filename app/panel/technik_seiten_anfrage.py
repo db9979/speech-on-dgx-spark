@@ -296,7 +296,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Antwort bauen (chat._answer)
     "weiche": {
-        "stand": "1f9018d02c",
+        "stand": "dc8187e656",
         "bezug": {
             "intent.GROUPS": ["s4", "s6"], "intent_bench.BENCH": ["s4", "s5"], "intent_alltag.ALLTAG": ["s14"],
             "weiche.KEEP_VERSIONS": ["s4"], "intent.Route": ["s6"], "intent.follow_up": ["s8"],
@@ -784,9 +784,9 @@ SEITEN = {
         "heute": [],
     },
     "antwort": {
-        "stand": "0f9a2f5dfd",
+        "stand": "5e3345ca8e",
         "bezug": {
-            "chat.MAX_SAVES": ["s11"], "chat.LOOP_SAME": ["s11"], "chat._answer": ["s4", "s5", "s11"], "chat_modell.model_turn": ["s4", "s11"], "chat_modell.herkunft_und_chip": ["s3"], "chat_ton.speech_out": ["s8"],
+            "chat.MAX_SAVES": ["s11"], "chat.LOOP_SAME": ["s11"], "chat._answer": ["s4", "s5", "s11"], "chat_modell.model_turn": ["s4", "s11"], "chat_modell.herkunft_und_chip": ["s3"], "chat_modell.quellenangabe_zeile": ["s3"], "chat_ton.speech_out": ["s8"],
             "chat.split_sentences": ["s5"], "chat.said_key": ["s8"], "chat.no_code": ["s8"],
             "chat.loop_count": ["s11"], "answercheck.known": ["s6"], "answercheck.unsupported": ["s6"],
             "answercheck.fresh": ["s6"], "rechnen.fix": ["s6"],
@@ -816,7 +816,8 @@ SEITEN = {
                "beantworten“ bekommen Uhrzeit, Datum, Rechnungen (rechnen.calc), Datumsrechnungen und Einheiten als ganzer kurzer Satz den "
                "festen Satz des Panels, ohne Modell und ohne Sofort-Satz davor (sofort.answer, höchstens "
                "{sofort.MAX_CHARS} Zeichen). Ebenso kommt die Rückfrage zum Weg nur als feste Frage des Panels mit "
-               "ihren Knöpfen, ohne Modell und ohne Werkzeug.",
+               "ihren Knöpfen, ohne Modell und ohne Werkzeug, und „Woher weißt du das?“ als feste Antwort des Panels "
+               "aus der gemerkten Quelle der letzten Antwort (quellenangabe.antwort).",
                "chat() checks the rate limit, sets the mark „speech is running“ (background work waits) and shows the "
                "profile's other devices „answering“. Then chat_turn.prepare works out rights, locks, system prompt and "
                "the offered tools; _answer takes over. When the language model pauses (maintenance pause, emergency "
@@ -825,7 +826,8 @@ SEITEN = {
                "once“ the time, the date, calculations (rechnen.calc), date calculations and units as a whole short sentence get the panel's fixed "
                "sentence, without a model and without an instant sentence before it (sofort.answer, at most "
                "{sofort.MAX_CHARS} characters). The question which way likewise comes only as the panel's fixed "
-               "question with its buttons, without a model and without a tool.")),
+               "question with its buttons, without a model and without a tool, and „Where did you get that?“ as the "
+               "panel's fixed answer from the kept source of the last answer (quellenangabe.antwort).")),
             S("s2", "schritt", ("Strom öffnen, Sofort-Satz", "Open the stream, instant sentence"),
               ("drei Aufgaben: Modell, Sprachausgabe, Brücke", "three tasks: model, speech output, bridge"),
               ("Zwei Warteschlangen verbinden alles: eine für die Ereignisse ans Gerät, eine für Sätze an die "
@@ -843,14 +845,20 @@ SEITEN = {
                "den eigenen Worten, und eine Mail darunter sperrt die Antwort wie eine gelesene Mail. Ein Artikel aus "
                "dem eigenen Kiwix und die Seiten der Websuche stehen danach als Quelle unter der Antwort; am Ende "
                "zählt das Panel die Herkunft („Aus: 2 Mails, 1 Termin“) und bietet bei intern ohne Web „Auch im "
-               "Internet suchen“ an (chat_modell.herkunft_und_chip).",
+               "Internet suchen“ an (chat_modell.herkunft_und_chip). Mit der Quellenangabe (quellenangabe.py) "
+               "steht stattdessen unter jeder Wissensantwort jede gelaufene lesende Quelle („Quelle: 2 Mails, Websuche“ "
+               "oder „nichts nachgeschlagen, nur Modellwissen“), mit Hinweis, wenn sie nicht zur Klasse der "
+               "Quellen-Weiche passt; am Lautsprecher kurz gesprochen (chat_modell.quellenangabe_zeile).",
                "When the preparation decided that the panel acts itself (a switch command, reading states, „search "
                "locally first“, a clear reading request), it runs now. The result goes to the model like a tool "
                "result, outside text wrapped as data; „local first“ brings the best hits of every released source with "
                "source and date, for both also the panel's web search with the own words, and a mail among them locks "
                "the answer like a read mail. An article from the own Kiwix and the pages of the web search then stand "
                "as sources under the answer; at the end the panel counts the origin („From: 2 mails, 1 appointment“) "
-               "and for internal without the web offers „Also search the web“ (chat_modell.herkunft_und_chip).")),
+               "and for internal without the web offers „Also search the web“ (chat_modell.herkunft_und_chip). With the "
+               "source note (quellenangabe.py) every knowledge answer instead names each reading source that ran "
+               "(„Source: 2 mails, Web search“ or „nothing looked up, model knowledge only“), with a note when it does "
+               "not fit the source switch's class; at a speaker said briefly (chat_modell.quellenangabe_zeile).")),
             S("s4", "schritt", ("Runde vorbereiten", "Prepare a round"),
               ("höchstens vier Werkzeug-Runden", "at most four tool rounds"),
               ("Angeboten wird die Liste ohne gesperrte, wegen Fehlern gestoppte oder zu oft genutzte Werkzeuge. "
@@ -1055,6 +1063,7 @@ SEITEN = {
             ("chat_ton.speech_out", ("Sätze an die Sprachausgabe, Ton als Strom", "sentences to the speech output, sound as a stream")),
             ("chat_modell.model_turn", ("Runden mit dem Modell, Werkzeuge, Prüfungen", "rounds with the model, tools, checks")),
             ("chat_modell.herkunft_und_chip", ("Herkunftszeile und „Auch im Internet suchen“ unter der Antwort", "line of origin and „Also search the web“ under the answer")),
+            ("chat_modell.quellenangabe_zeile", ("Quellenangabe unter der Antwort, am Lautsprecher kurz gesprochen", "source note under the answer, said briefly at a speaker")),
             ("chat.split_sentences", ("schneidet fertige Sätze ab", "cuts finished sentences off")),
             ("chat.said_key", ("erkennt einen schon gesagten Satz", "spots a sentence already said")),
             ("chat.no_code", ("Codeblöcke nur zeigen, nie sprechen", "code blocks only shown, never spoken")),
@@ -1074,7 +1083,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Werkzeuge (chat_tools.run)
     "werkzeuge": {
-        "stand": "97a94c8145",
+        "stand": "6ba43404a2",
         "bezug": {
             "chat.LOCKED_OUTSIDE": ["s4"], "notaus.INTERNET_TOOLS": ["s3"], "werkzeuge.NAMES": ["s11"],
             "chat_tools.run": ["s2", "s7"], "chat.wrap_outside": ["s9"], "chat.LOCKED_AFTER_MAIL": ["s4"],

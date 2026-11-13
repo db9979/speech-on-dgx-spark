@@ -5801,6 +5801,22 @@
 "text": "Admin: unter „Probleme melden“ „Antwort-Meldungen direkt an GitHub“ an (frischer Code). Sag nach einer Antwort „Mach ein Issue draus: die Antwort stimmt nicht“. Im Repo spark-meldungen erscheint sofort ein Issue mit Label falsche-antwort, Frage und Antwort anonymisiert, ohne Namen oder Mail-Adressen.",
 "thread": "Fehler per Assistent als Issue melden",
 "test": "test_meldung.AnswerReports.test_direct_sends_anonymized_with_question_and_answer"
+},
+{
+"id": "P853",
+"v": 1409,
+"titel": "Quellenangabe unter Antworten",
+"text": "Funktionen → Gespräch → „Quellenangabe“ an. Im Chat „Wer war Goethe?“ fragen: unter der Antwort steht „Quelle: nichts nachgeschlagen, nur Modellwissen“ oder „Quelle: Websuche“. Dann „Was steht heute in meinem Kalender?“: „Quelle: Termine lesen“. Danach „Woher weißt du das?“: der Assistent zählt sofort jede Quelle mit Suchwörtern und Seiten auf. Unter Zustand → Logs → Anfragen steht bei jeder dieser Anfragen „Quelle: …“.",
+"thread": "Quellenangabe bei Antworten einbauen",
+"test": "test_quellenangabe.Chat.test_line_and_question_without_the_model"
+},
+{
+"id": "P854",
+"v": 1409,
+"titel": "Quelle im Gespräch ansagen",
+"text": "Am Lautsprecher oder im Auto eine Wissensfrage stellen („Wie hoch ist die Zugspitze?“): am Ende sagt der Assistent kurz „Quelle: …“. Ausschalten unter Ich → Gespräch → „Quelle ansagen“; danach kein Satz mehr, „Woher weißt du das?“ geht weiter.",
+"thread": "Quellenangabe bei Antworten einbauen",
+"test": "test_quellenangabe.Gesagt.test_spoken_channels_only"
 }
 ]
 }

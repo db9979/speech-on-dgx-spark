@@ -38,6 +38,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeout
 
 import features
+import intent
 import lokal
 
 PROBE_MS = 150             # the probe's whole budget
@@ -180,6 +181,21 @@ def _probe(text, uid, ctx):
             "leer": ("extern", "Probe leer")}[got]
 
 
+# tools outside the Weiche's groups that read the world (intent.GROUPS knows the rest)
+WELT_WERKZEUGE = {"read_page"}
+
+
+def werkzeug_art(tool):
+    """For the Quellenangabe (quellenangabe.teile): "eigen" (a tool of the person's own data), "welt" (the web, the
+    archive, weather, trains …) or "" by the Weiche's groups of the tool."""
+    g = {name for name, (tools, _) in intent.GROUPS.items() if tool in tools}
+    if tool in WELT_WERKZEUGE or g & (WORLD_GROUPS | {"archiv", "paket"}) and not g & OWN_GROUPS:
+        return "welt"
+    if g & (OWN_GROUPS | {"dokument"}):
+        return "eigen"
+    return ""
+
+
 def klasse(text, uid, ctx):
     """(class, reasons): "intern", "extern", "beides" or "" and a list of fixed words (GRUENDE). Only the person's own
     words and the Weiche's groups (ctx["route"], an intent.Route; ctx["tool_words"], the admin's must words). The
@@ -189,7 +205,6 @@ def klasse(text, uid, ctx):
     import ablauf
     import chat
     import homeassistant
-    import intent
     text = str(text or "")[:2000]
     route = ctx.get("route") or intent.Route([], {})
     if not text.strip() or chat.SMALLTALK.fullmatch(text):
