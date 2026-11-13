@@ -18,7 +18,7 @@
 #   speech-spark pause status      is a Wartungspause running, how long still
 #   speech-spark weiter            end the Wartungspause
 #   speech-spark modelle liste     the model catalog (app/modelle.json)
-#   speech-spark modelle messen [llm] [sehen] [helfer] [qwen36] [flash] [eigen-…] [--yes]  measure catalog models; the running language model pauses meanwhile
+#   speech-spark modelle messen [llm] [sehen] [helfer] [qwen36] [flash] [gemma4] [eigen-…] [--yes]  measure catalog models; the running language model pauses meanwhile
 #   speech-spark teilen [status]   split install (panel on another computer): door, panel computers, fingerprint
 #   speech-spark teilen firewall [aus]  the door's ports only from the panel computer (nftables), or off again
 #   speech-spark teilen code       on the model computer: show a pairing code (10 min, once) and wait for the panel
@@ -631,7 +631,7 @@ cmd_modelle() {
         || die "vLLM is not installed ($PREFIX/venv-llm); run sudo ./install.sh --llm first"
       im_gang "$MESS_UNIT" "$MESS_WUNSCH_UNIT" && die "a measurement is running already: sudo speech-spark logs messen"
       im_gang speech-spark-update && die "an update is running; measure afterwards"
-      ids=$(as_panel_user ../modelle.py messliste "${was[@]}") || die "speech-spark modelle messen [llm] [sehen] [helfer] [qwen36] [flash] [eigen-…] [--yes]"
+      ids=$(as_panel_user ../modelle.py messliste "${was[@]}") || die "speech-spark modelle messen [llm] [sehen] [helfer] [qwen36] [flash] [gemma4] [eigen-…] [--yes]"
       echo "Messen: $ids"
       echo "Das lädt fehlende Modelle, stoppt das laufende Sprachmodell für die Messung (pro Modell etwa 10 bis 25 Minuten) und startet es danach wieder."
       if [ "$yes" != 1 ]; then
@@ -656,7 +656,7 @@ cmd_modelle() {
     zurueckholen) [ $# -ge 2 ] || die "speech-spark modelle zurueckholen llm|sehen|asr|tts|bild"; run_wechsel "$2" zurueck ;;
     entfernen) [ $# -ge 2 ] || die "speech-spark modelle entfernen <id> [--yes]"; cmd_entfernen "$2" "${3:-}" ;;
     wunsch-intern) [ "${INVOCATION_ID:-}" ] || die "only inside its own unit"; cmd_wunsch_intern ;;
-    *) die "speech-spark modelle liste|messen [llm] [sehen] [helfer] [qwen36] [flash] [eigen-…] [--yes]|wechseln <art> <id>|zurueckholen <art>|entfernen <id>" ;;
+    *) die "speech-spark modelle liste|messen [llm] [sehen] [helfer] [qwen36] [flash] [gemma4] [eigen-…] [--yes]|wechseln <art> <id>|zurueckholen <art>|entfernen <id>" ;;
   esac
 }
 

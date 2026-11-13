@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.417** Gemma 4 can be measured on tars and compared with Qwen3.6
 - **V01.1.416** GPU clock cap for the model computer: less power and heat at almost the same speed, under Settings → Spark → Operation
 - **V01.1.415** Ladybug on top right of every page: report a fault or an improvement, with the page, its errors in the browser and the logs
 - **V01.1.414** Test fix: parcels opens the inbox exactly like every other reader again, a mail test flickered because of it
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.410** Answer reports also show what the tools gave back: so it is clear whether the tool or the model was wrong
 - **V01.1.409** Source note: every knowledge answer says where it came from, "Where did you get that?" works without the model, a short sentence at the speaker
 - **V01.1.408** Report a wrong answer as an issue: "Make an issue of it" or "Report" under the answer, with question, answer, source and the way of the request; straight to GitHub if wanted
-- **V01.1.407** Fix: the logs of a service no longer show weeks-old errors as if they were new
 
 
 

@@ -5864,6 +5864,14 @@
 "text": "Unter Einstellungen → Spark → Betrieb → GPU-Taktgrenze „2400 MHz“ wählen und speichern. Nach ein paar Sekunden steht darunter „Gesetzt: höchstens 2400 MHz“ und unter Zustand → Überblick bei der GPU „höchstens 2400 MHz“; die Leistung der GPU sinkt beim Antworten um etwa 10 W, das Tempo bleibt. tars neu starten: die Grenze gilt danach wieder. Zurück auf „Aus“ hebt sie auf.",
 "thread": "GPU-Taktgrenze auf tars einbauen",
 "test": "test_gputakt.Root.test_only_the_two_fixed_commands"
+},
+{
+"id": "P861",
+"v": 1417,
+"titel": "Gemma 4 messen",
+"text": "Auf tars sudo speech-spark modelle messen gemma4 ausführen (oder unter Zustand → Modelle bei Gemma 4 „Messen“). Nach dem Download steht unter Zustand → Modelle eine Messung mit Tokens pro Sekunde, Werkzeug ok oder falsch und Bildverständnis; das Sprachmodell läuft danach wieder wie vorher. Die Zahlen mit Qwen3.6 vergleichen und sagen, ob Gemma 4 bleiben soll.",
+"thread": "GPU-Taktgrenze auf tars einbauen",
+"test": "test_modelle.Katalog.test_messliste"
 }
 ]
 }

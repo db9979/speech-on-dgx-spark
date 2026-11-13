@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.417** Gemma 4 lässt sich auf tars messen und mit Qwen3.6 vergleichen
 - **V01.1.416** GPU-Taktgrenze für den Modell-Rechner: weniger Strom und Wärme bei fast gleichem Tempo, unter Einstellungen → Spark → Betrieb
 - **V01.1.415** Käfer-Symbol oben rechts auf jeder Seite: Fehler oder Verbesserung melden, mit Seite, ihren Fehlern im Browser und den Logs
 - **V01.1.414** Testfix: Pakete öffnet den Posteingang wieder genau wie jeder andere Leser, ein Mail-Test wackelte deshalb
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.410** Antwort-Meldungen zeigen auch, was die Werkzeuge zurückgaben: so ist klar, ob Werkzeug oder Modell falsch lag
 - **V01.1.409** Quellenangabe: unter jeder Wissensantwort steht, woher sie stammt, „Woher weißt du das?“ geht ohne Modell, am Lautsprecher ein kurzer Satz
 - **V01.1.408** Falsche Antwort als Issue melden: „Mach ein Issue draus“ oder „Melden“ unter der Antwort, mit Frage, Antwort, Quelle und Weg der Anfrage; auf Wunsch direkt an GitHub
-- **V01.1.407** Fix: Logs eines Dienstes zeigen keine Wochen alten Fehler mehr, als wären sie neu
 
 
 

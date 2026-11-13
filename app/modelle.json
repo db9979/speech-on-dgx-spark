@@ -77,6 +77,37 @@
       "betrieb": "resident"
     },
     {
+      "id": "gemma4-26b-a4b-nvfp4",
+      "art": "llm",
+      "name": {
+        "de": "Gemma 4 26B A4B NVFP4 (sieht, zum Messen)",
+        "en": "Gemma 4 26B A4B NVFP4 (can see, for measuring)"
+      },
+      "engine": "vllm",
+      "repo": "unsloth/gemma-4-26B-A4B-it-NVFP4",
+      "revision": "",
+      "lizenz": "Apache-2.0",
+      "gewerblich": true,
+      "platte_gb": 17,
+      "need_gib": 32,
+      "gemessen": false,
+      "anteil": 0.25,
+      "kontext": 131072,
+      "kontext_max": 262144,
+      "kann_sehen": true,
+      "werkzeuge": true,
+      "vllm": {
+        "reasoning_parser": "gemma4",
+        "tool_call_parser": "gemma4",
+        "max_seqs": 8,
+        "kv_cache_dtype": "fp8",
+        "bilder_pro_frage": 4
+      },
+      "anfrage": {"chat_template_kwargs": {"enable_thinking": false}},
+      "messen": "auf_wunsch",
+      "betrieb": "resident"
+    },
+    {
       "id": "qwen3-4b-instruct-2507-fp8",
       "art": "helfer",
       "name": {"de": "Qwen3 4B Instruct 2507 FP8 (Hilfsmodell)", "en": "Qwen3 4B Instruct 2507 FP8 (helper model)"},

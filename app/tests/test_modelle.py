@@ -142,6 +142,13 @@ class Katalog(unittest.TestCase):
         # the big download in Docker only when asked for by name
         self.assertNotIn("qwen38-flash-next-fp4", modelle.messliste(["llm", "sehen", "helfer"]))
         self.assertEqual(modelle.messliste(["flash"]), ["qwen38-flash-next-fp4"])
+        # Dominik 2026-11-13 „1“: Gemma 4 26B A4B only when asked for by name, natively, never with remote code
+        self.assertNotIn("gemma4-26b-a4b-nvfp4", modelle.messliste(["llm", "sehen", "helfer"]))
+        self.assertEqual(modelle.messliste(["gemma4"]), ["gemma4-26b-a4b-nvfp4"])
+        g = modelle.vllm_args(modelle.katalog()["gemma4-26b-a4b-nvfp4"], revision="a" * 40)
+        self.assertNotIn("--trust-remote-code", g)
+        self.assertEqual(g[g.index("--tool-call-parser") + 1], "gemma4")
+        self.assertNotIn("--speculative-config", g, "its drafter does not start in vLLM yet (2026-11)")
         # Dominik 2026-11-11: only models that run or were measured; the words of the ones gone are refused
         for gone in ("fp8", "gemma", "kolibri", "vl30", "dspark", "qwen36frei"):
             with self.assertRaises(modelle.Fehler, msg=gone):
