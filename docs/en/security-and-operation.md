@@ -538,7 +538,7 @@ Every install and update runs the panel's self-test (`app/tests`) against fake L
 
 ## Logs
 
-All speech services log into their own journal (`journalctl --namespace=speech-spark -u 'speech-spark-*'`), capped at 500 MB and 14 days; journald deletes older entries automatically. Adjustable under Settings → Operation, effective after the next update. The panel's constant status polls are not logged at all.
+All speech services log into their own journal (`journalctl --namespace=speech-spark -u 'speech-spark-*'`), capped at 500 MB and 14 days; journald deletes older entries automatically. Adjustable under Settings → Operation, effective after the next update. The panel's constant status polls are not logged at all. The logs of a service show only lines from this journal (since V01.1.407): if a service wrote nothing for longer than the retention time, the view stays empty instead of showing weeks-old lines from before the own journal.
 
 **Without profile names** (since V01.0.443): journal lines name a profile only if it agreed under Me → Conversation → Privacy (the same switch as for Logs → Requests); otherwise they say "Profil" and the end of its id, e.g. "iphone: paired for Profil 3f2a". The admin log still names who changed something.
 

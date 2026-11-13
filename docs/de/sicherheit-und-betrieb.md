@@ -538,7 +538,7 @@ Jede Installation und jedes Update führt den Selbsttest des Panels aus (`app/te
 
 ## Logs
 
-Alle Speech-Dienste schreiben in ein eigenes Journal (`journalctl --namespace=speech-spark -u 'speech-spark-*'`), das auf 500 MB und 14 Tage begrenzt ist; ältere Einträge löscht journald automatisch. Einstellbar unter Einstellungen → Betrieb, wirksam nach dem nächsten Update. Die ständigen Statusabfragen des Panels landen gar nicht erst im Log.
+Alle Speech-Dienste schreiben in ein eigenes Journal (`journalctl --namespace=speech-spark -u 'speech-spark-*'`), das auf 500 MB und 14 Tage begrenzt ist; ältere Einträge löscht journald automatisch. Einstellbar unter Einstellungen → Betrieb, wirksam nach dem nächsten Update. Die ständigen Statusabfragen des Panels landen gar nicht erst im Log. Die Logs eines Dienstes zeigen nur Zeilen aus diesem Journal (seit V01.1.407): Hat ein Dienst länger als die Aufbewahrungszeit nichts geschrieben, bleibt die Anzeige leer, statt Wochen alte Zeilen aus der Zeit vor dem eigenen Journal zu zeigen.
 
 **Ohne Profilnamen** (ab V01.0.443): Journalzeilen nennen ein Profil nur, wenn es unter Ich → Gespräch → Datenschutz zugestimmt hat (derselbe Schalter wie für Logs → Anfragen); sonst steht dort „Profil“ und das Ende der Kennung, z. B. „iphone: paired for Profil 3f2a“. Das Admin-Protokoll nennt weiter, wer etwas geändert hat.
 

@@ -5777,6 +5777,14 @@
 "text": "Wenn du den Spark in Claude oder Open WebUI als MCP-Server verbunden hast: dort einmal neu verbinden und ein Werkzeug aufrufen (z. B. „Welche Stimmen hat der Spark?“). Es geht wie vorher, egal ob das Programm die alte oder die neue Fassung spricht.",
 "thread": "Prüfen, ob alles Stand der Technik ist",
 "test": "test_mcpserver.Modern.test_mcp_2026_07_28_and_the_older_way"
+},
+{
+"id": "P850",
+"v": 1407,
+"titel": "Logs zeigen keine alten Fehler mehr",
+"text": "Pi updaten. Danach Zustand → Logs, Dienst ASR-Engine: Dort stehen nur Zeilen der letzten 14 Tage (oder gar keine), keine Zeilen vom Oktober mehr.",
+"thread": "Prüfen, ob alles Stand der Technik ist",
+"test": "test_logfilter.UnitJournalTest.test_old_lines_never_count_as_current"
 }
 ]
 }

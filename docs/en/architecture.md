@@ -4584,7 +4584,7 @@ flowchart TD
 2. <a id="kn-journal-s2"></a>**Fixed words and numbers**: Every line of the panel starts with a word from logfilter.AREAS (36 areas) and carries only fixed words and numbers. A profile appears there only through profiles.log_name: its name only with its consent, else „Profil“ and the end of its ID. test_log_luecken wants a line for every outcome of every action.
 3. <a id="kn-journal-s3"></a>**Detail on?**: For some areas the admin can switch on extra lines, at most 240 minutes. They too carry only numbers and decisions; a restart switches them off.
 4. <a id="kn-journal-s4"></a>**Polls quiet**: Successful status polls the panel makes every few seconds write no line.
-5. <a id="kn-journal-s5"></a>**Own part with a limit**: install.sh writes the limit for space and age from logs.max_mb and logs.keep_days. journald deletes older lines itself. A change applies after the next update or install.sh.
+5. <a id="kn-journal-s5"></a>**Own part with a limit**: install.sh writes the limit for space and age from logs.max_mb and logs.keep_days. journald deletes older lines itself. A change applies after the next update or install.sh. common.journal reads the last lines of a service only from this part; if it has none there, the view stays empty. It asks the system journal only on a computer without this part, otherwise weeks-old errors would look new.
 6. <a id="kn-journal-s6"></a>**The admin opens the diagnosis**: Admin only, at most 60 calls per minute.
 7. <a id="kn-journal-s7"></a>**Filter from the fixed list?**: Areas, time window (up to 24 hours) and number of lines (up to 1000) come only from fixed lists. Nothing the browser sends reaches a shell.
 8. <a id="kn-journal-s8"></a>**Read the journal**: read_journal asks journalctl with the namespace, for old installs without it the system journal. At most 20000 lines and 2 MB of text.
@@ -4622,7 +4622,7 @@ flowchart TD
 - `app/panel/logfilter.py` `summary`: counts, history, hint ([step 11](#kn-journal-s11))
 - `app/panel/logfilter.py` `detail`: detail, numbers only ([step 12](#kn-journal-s12))
 - `app/common.py` `JOURNAL_NAMESPACE`: the own part ([step 5](#kn-journal-s5))
-- `app/common.py` `journal`: last lines of a service ([step 1](#kn-journal-s1))
+- `app/common.py` `journal`: last lines of a service ([step 5](#kn-journal-s5))
 - `app/common.py` `quiet_access_log`: status polls quiet ([step 4](#kn-journal-s4))
 - `app/panel/profiles.py` `log_name`: profile by name only with consent ([step 2](#kn-journal-s2))
 

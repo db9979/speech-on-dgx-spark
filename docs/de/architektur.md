@@ -4584,7 +4584,7 @@ flowchart TD
 2. <a id="kn-journal-s2"></a>**Feste Wörter und Zahlen**: Jede Zeile des Panels beginnt mit einem Wort aus logfilter.AREAS (36 Bereiche) und trägt nur feste Wörter und Zahlen. Ein Profil steht dort nur über profiles.log_name: sein Name nur mit seiner Zustimmung, sonst „Profil“ und das Ende der ID. test_log_luecken verlangt für jede Aktion eine Zeile je Ergebnis.
 3. <a id="kn-journal-s3"></a>**Ausführlich an?**: Für einige Bereiche kann der Admin zusätzliche Zeilen einschalten, höchstens 240 Minuten. Auch sie tragen nur Zahlen und Entscheidungen; ein Neustart schaltet sie aus.
 4. <a id="kn-journal-s4"></a>**Abfragen still**: Erfolgreiche Statusabfragen, die das Panel alle paar Sekunden stellt, schreiben keine Zeile.
-5. <a id="kn-journal-s5"></a>**Eigener Bereich mit Grenze**: install.sh schreibt die Grenze für Platz und Alter aus logs.max_mb und logs.keep_days. Ältere Zeilen löscht journald selbst. Eine Änderung wirkt nach dem nächsten Update oder install.sh.
+5. <a id="kn-journal-s5"></a>**Eigener Bereich mit Grenze**: install.sh schreibt die Grenze für Platz und Alter aus logs.max_mb und logs.keep_days. Ältere Zeilen löscht journald selbst. Eine Änderung wirkt nach dem nächsten Update oder install.sh. Die letzten Zeilen eines Dienstes liest common.journal nur aus diesem Bereich; hat er dort nichts, bleibt die Anzeige leer. Das Systemjournal fragt es nur auf einem Rechner ohne diesen Bereich, sonst stünden Wochen alte Fehler da wie neue.
 6. <a id="kn-journal-s6"></a>**Admin öffnet die Diagnose**: Nur der Admin, höchstens 60 Abrufe pro Minute.
 7. <a id="kn-journal-s7"></a>**Filter aus der festen Liste?**: Bereiche, Zeitfenster (bis 24 Stunden) und Zeilenzahl (bis 1000) kommen nur aus festen Listen. Nichts, was der Browser schickt, erreicht eine Shell.
 8. <a id="kn-journal-s8"></a>**Journal lesen**: read_journal fragt journalctl mit dem Namespace, bei alten Installationen ohne ihn das System-Journal. Höchstens 20000 Zeilen und 2 MB Text.
@@ -4622,7 +4622,7 @@ flowchart TD
 - `app/panel/logfilter.py` `summary`: Zähler, Verlauf, Hinweis ([Schritt 11](#kn-journal-s11))
 - `app/panel/logfilter.py` `detail`: Ausführlich, nur Zahlen ([Schritt 12](#kn-journal-s12))
 - `app/common.py` `JOURNAL_NAMESPACE`: der eigene Bereich ([Schritt 5](#kn-journal-s5))
-- `app/common.py` `journal`: letzte Zeilen eines Dienstes ([Schritt 1](#kn-journal-s1))
+- `app/common.py` `journal`: letzte Zeilen eines Dienstes ([Schritt 5](#kn-journal-s5))
 - `app/common.py` `quiet_access_log`: Statusabfragen still ([Schritt 4](#kn-journal-s4))
 - `app/panel/profiles.py` `log_name`: Profil nur mit Zustimmung beim Namen ([Schritt 2](#kn-journal-s2))
 

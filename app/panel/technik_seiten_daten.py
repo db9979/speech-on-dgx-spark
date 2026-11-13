@@ -522,11 +522,11 @@ SEITEN = {
 
     # ------------------------------------------------------------------ journald
     "journal": {
-        "stand": "2d9c2f502e",
+        "stand": "586953749f",
         "bezug": {
             "logfilter.logfilter": ["s6"], "logfilter.read_journal": ["s8"], "logfilter.redact": ["s9"],
             "logfilter.parse": ["s10"], "logfilter.summary": ["s11"], "logfilter.detail": ["s12"],
-            "common.JOURNAL_NAMESPACE": ["s5"], "common.journal": ["s1"], "common.quiet_access_log": ["s4"],
+            "common.JOURNAL_NAMESPACE": ["s5"], "common.journal": ["s5"], "common.quiet_access_log": ["s4"],
         },
         "kurz": ("Alle Dienste des Spark schreiben ihre Zeilen in einen eigenen Bereich des Systemjournals "
                  "(Namespace speech-spark), mit eigener Grenze für Platz und Alter. Das Panel liest diese Zeilen nur "
@@ -570,9 +570,14 @@ SEITEN = {
             S("s5", "schritt", ("Eigener Bereich mit Grenze", "Own part with a limit"),
               ("journald@speech-spark.conf", "journald@speech-spark.conf"),
               ("install.sh schreibt die Grenze für Platz und Alter aus logs.max_mb und logs.keep_days. Ältere Zeilen "
-               "löscht journald selbst. Eine Änderung wirkt nach dem nächsten Update oder install.sh.",
+               "löscht journald selbst. Eine Änderung wirkt nach dem nächsten Update oder install.sh. Die letzten "
+               "Zeilen eines Dienstes liest common.journal nur aus diesem Bereich; hat er dort nichts, bleibt die "
+               "Anzeige leer. Das Systemjournal fragt es nur auf einem Rechner ohne diesen Bereich, sonst stünden "
+               "Wochen alte Fehler da wie neue.",
                "install.sh writes the limit for space and age from logs.max_mb and logs.keep_days. journald deletes "
-               "older lines itself. A change applies after the next update or install.sh.")),
+               "older lines itself. A change applies after the next update or install.sh. common.journal reads the "
+               "last lines of a service only from this part; if it has none there, the view stays empty. It asks the "
+               "system journal only on a computer without this part, otherwise weeks-old errors would look new.")),
             S("s6", "schritt", ("Admin öffnet die Diagnose", "The admin opens the diagnosis"),
               ("GET /api/logfilter", "GET /api/logfilter"),
               ("Nur der Admin, höchstens {guard.RATE.logs.1} Abrufe pro Minute.",

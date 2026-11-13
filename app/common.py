@@ -564,19 +564,20 @@ JOURNAL_NAMESPACE = "speech-spark"
 
 
 def journal(unit, lines, fmt="cat"):
-    """Last lines a unit logged: its own namespace first, then the system journal (installs
-    from before the namespace)."""
+    """Last lines a unit logged, from its own namespace. The system journal only when this computer has no
+    namespace yet (install from before it): every unit with logs has LogNamespace, so what the system journal
+    still holds about it is from before the switch, weeks old, and must not show up as the current state
+    (13.11.2026: an ASR error from 06.10 looked like a fresh one, because the engine had logged nothing new)."""
     import subprocess
     base = ["journalctl", "-u", unit, "-n", str(lines), "--no-pager", "-o", fmt]
-    out = ""
     for cmd in (base[:1] + [f"--namespace={JOURNAL_NAMESPACE}"] + base[1:], base):
         try:
-            out = subprocess.run(cmd, capture_output=True, text=True, timeout=10).stdout
+            r = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
         except Exception:
             continue
-        if out.strip() and "-- No entries --" not in out:
-            return out
-    return out
+        if "No journal files" not in (r.stderr or ""):
+            return r.stdout
+    return ""
 
 
 def quiet_access_log(paths=("/health", "/api/status", "/api/update", "/api/bench", "/api/logs/", "/api/logfilter")):

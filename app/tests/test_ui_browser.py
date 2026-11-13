@@ -1151,7 +1151,10 @@ class Browser(unittest.TestCase):
                         await pg.evaluate("goSec('praxis')")
                         await pg.wait_for_selector("#ptmain details[open] .pt-row", timeout=20000)
                         first = await pg.evaluate("document.querySelector('#ptmain details[open] .pt-row').dataset.id")
-                        newest = max(praxistest.punkte(), key=lambda x: x["v"])["id"]
+                        # the open part is the first tier with points, newest first (a point with a self-test is
+                        # „abgedeckt“ and never on top, even when it is the newest)
+                        rows = [x for x in praxistest.seite()["punkte"] if not x["stand"] and not x["alt"]]
+                        newest = next(x["id"] for t in praxistest.STUFEN for x in rows if x["stufe"] == t)
                         self.assertEqual(first, newest, name)
                         await pg.click(f"#ptmain .pt-row[data-id={first}] .pt-ok")
                         await pg.wait_for_selector(f"#ptmain .pt-row[data-id={first}] .pt-chip.pt-ok", state="attached", timeout=20000)   # in „Erledigt“, folded

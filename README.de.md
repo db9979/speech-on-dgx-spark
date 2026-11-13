@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.407** Fix: Logs eines Dienstes zeigen keine Wochen alten Fehler mehr, als wären sie neu
 - **V01.1.406** Steckbriefe für die letzten 65 Funktionen, die mit Werkzeugen: alle 298 Funktionen stehen jetzt je an einer Stelle
 - **V01.1.405** Steckbriefe für jede Funktion ohne eigenes Werkzeug: 233 von 298 Funktionen stehen jetzt je an einer Stelle
 - **V01.1.404** Stand der Technik: neuere Modell-Engine mit drei geschlossenen Lücken, MCP in der neuen Fassung 2026-07-28, nächtliche Lückenprüfung auch für den Modell-Rechner
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.400** Ein Gesprächszug in sieben festen Stufen: wer fragt, Rechte und Sperren, wartendes Ja, Werkzeuge und Prompt haben je ihren Platz; für dich ändert sich nichts
 - **V01.1.399** Schwere Arbeit im zweiten Prozess: Dokumente entstehen neben dem Panel, Sprache und Seiten bleiben flott; der Dungeon erreicht Live über eine Tür
 - **V01.1.398** Verdeckter Prüfsatz für die Weiche: 168 Alltagssätze, an denen niemand die Regeln eingestellt hat; die Weiche trifft 81 % davon (bei den eigenen Testsätzen 100 %) und darf nicht schlechter werden
-- **V01.1.397** Steckbrief pro Funktion: alles, was eine Funktion in den Listen braucht (Namen, Live, Logs, Abdeckung, Hilfesatz), steht an einer Stelle; Pilot „Rechnen“, jede neue Funktion beginnt damit
 
 
 

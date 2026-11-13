@@ -173,3 +173,36 @@ class OverviewTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class UnitJournalTest(unittest.TestCase):
+    """common.journal (Zustand → Logs of one service, crash reason of an engine): an empty namespace stays
+    empty, the system journal only answers on a computer without the namespace (13.11.2026: an ASR error
+    from 06.10 showed up as if it were current)."""
+
+    def lauf(self, ns_err):
+        import common
+        calls = []
+
+        def run(cmd, **kw):
+            calls.append(cmd)
+            if any(c.startswith("--namespace=") for c in cmd):
+                return mock.Mock(stdout="-- No entries --\n", stderr=ns_err)
+            return mock.Mock(stdout="2026-10-06T14:50:00+0200 tars engine.sh[1]: ValueError: No available memory\n",
+                             stderr="")
+        with mock.patch("subprocess.run", run):
+            return common.journal("speech-spark-asr-engine", 100), calls
+
+    def test_old_lines_never_count_as_current(self):
+        import common
+        out, calls = self.lauf("")
+        self.assertEqual(len(calls), 1)
+        self.assertNotIn("ValueError", out)
+        with mock.patch("subprocess.run", lambda cmd, **kw: mock.Mock(
+                stdout="-- No entries --\n", stderr="")):
+            self.assertIsNone(common.engine_crash_reason("speech-spark-asr-engine"))
+
+    def test_computer_without_namespace_still_shows_its_lines(self):
+        out, calls = self.lauf("No journal files were found.\n")
+        self.assertEqual(len(calls), 2)
+        self.assertIn("ValueError", out)
