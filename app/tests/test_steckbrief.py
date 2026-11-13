@@ -4,7 +4,8 @@
   Spickzettel, technik, Begleiter);
 - no old table names a part of it again (rule 12: one source);
 - a new function comes with a Steckbrief: OHNE_ALT, the functions without one, only shrinks (V01.1.397: all but
-  „Rechnen“; V01.1.401: the group „Tempo und Genauigkeit“; V01.1.403: every function without a tool of its own).
+  „Rechnen“; V01.1.401: the group „Tempo und Genauigkeit“; V01.1.405: every function without a tool of its own;
+  V01.1.406: the last 65, the functions with tools; it is empty now and stays so).
 
 Reads only app/, so it runs in the app/-only copy too. No wall clock dependence.
 """
@@ -26,15 +27,7 @@ import werkzeug_abdeckung  # noqa: E402
 import werkzeuge  # noqa: E402
 
 PANEL = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "panel")
-OHNE_ALT = ('agent', 'auswertungen', 'begleiter', 'begleiterbedienen', 'begleitertun', 'beobachten', 'bilder',
-            'calendar', 'chats', 'contacts', 'docaudio', 'docbrief', 'doclink', 'docshared', 'documents',
-            'docyoutube', 'entwickelnauftrag', 'erstellen', 'erstellenbilder', 'erstellenvorlagen', 'esp32', 'feeds',
-            'fuerdich', 'fund', 'ha', 'hacam', 'hilfe', 'hilfeseite', 'hilfevorschlag', 'history', 'hoerstueck',
-            'hoerstueckdisk', 'iphone', 'kiwix', 'mail', 'mappen', 'memory', 'messages_all', 'messages_announce',
-            'musik', 'musikbearbeiten', 'nasablage', 'naszustand', 'parcels', 'proactive', 'remarkable', 'reminders',
-            'rmaufgaben', 'rmsend', 'rmtodo', 'rmweb', 'rueckgaengig', 'schreib', 'search', 'sparkzustand',
-            'tagebuch', 'tasks', 'telefonanrufen', 'tidy', 'tipps', 'tippssaetze', 'transit', 'vorgaenge', 'weather',
-            'wiki')
+OHNE_ALT = ()   # V01.1.406: every function has its Steckbrief; stays empty
 
 
 def source(name):
@@ -52,12 +45,17 @@ class Steckbrief(unittest.TestCase):
             if s.parent:
                 self.assertIn(s.parent, features.BY_KEY, key)
             # a tool or the reason why there is none, never both
-            self.assertNotEqual(bool(s.werkzeuge), bool(s.ohne_werkzeug), key)
+            has_tools = bool(s.werkzeuge or s.auch)
+            self.assertNotEqual(has_tools, bool(s.ohne_werkzeug), key)
             for tool, names in s.werkzeuge.items():
                 self.assertEqual(werkzeuge.NAMES[tool], names, key)
-                self.assertEqual(live.TOOLS[tool], s.live[0], key)
-            if s.werkzeuge:
-                self.assertEqual(werkzeug_abdeckung.TOOLS[key], tuple(s.werkzeuge), key)
+                self.assertEqual(live.TOOLS[tool], s.knoten.get(tool) or s.live[0], key)
+            for tool in s.auch:   # a tool of another function: that one has it
+                self.assertIn(tool, werkzeuge.NAMES, key)
+                self.assertNotIn(tool, s.werkzeuge, key)
+            self.assertEqual(sorted(set(s.knoten) - set(s.werkzeuge)), [], key)
+            if has_tools:
+                self.assertEqual(werkzeug_abdeckung.TOOLS[key], tuple(s.werkzeuge) + s.auch, key)
             else:
                 self.assertNotIn(key, werkzeug_abdeckung.TOOLS, key)
                 art, why = s.ohne_werkzeug
@@ -68,11 +66,18 @@ class Steckbrief(unittest.TestCase):
             if s.log:
                 area = dict(logfilter.AREAS)[s.log[0]]
                 self.assertRegex(s.log[1] + ": x", area, key)
-            if s.nur_eigenes_wort:
-                tool = s.nur_eigenes_wort[1][0]
+            for tool, mod in s.eigenes_wort.items():
                 self.assertIn(tool, s.werkzeuge, key)
-                self.assertEqual(werkzeug_abdeckung.BY_WORD[tool], s.nur_eigenes_wort[0], key)
-                self.assertIn(s.nur_eigenes_wort[1], spickzettel.KURZ, key)
+                self.assertEqual(werkzeug_abdeckung.BY_WORD[tool], mod, key)
+            for entry in s.kurz:
+                self.assertIn(entry[0], set(s.werkzeuge) | set(s.auch), key)
+                self.assertIn(entry, spickzettel.KURZ, key)
+            for tool, pair in s.saetze.items():
+                self.assertIn(tool, set(s.werkzeuge) | set(s.auch), key)
+                self.assertEqual(werkzeug_abdeckung.SENTENCES[tool], pair, key)
+            if s.begleiter_teile:
+                self.assertEqual(features.DESK[key], s.begleiter_teile, key)
+                self.assertFalse(s.begleiter, f"{key}: Begleiter parts or the reason why there are none, never both")
             if s.modul:
                 self.assertTrue(any(os.path.isfile(os.path.join(d, s.modul[0] + ".py")) for d in (PANEL, os.path.dirname(PANEL))),
                                 key)
@@ -90,7 +95,8 @@ class Steckbrief(unittest.TestCase):
         """One source: what a Steckbrief holds stands nowhere else as a literal: not as a key or element of the table
         it feeds, not as the first word of an F(...) or of an example sentence."""
         tables = {"features.py": ("FEATURES", "DESK_SKIP", "DESK", "SPARK_ONLY"), "werkzeuge.py": ("NAMES",),
-                  "live.py": ("TOOLS", "TARGETS", "RETURNS"), "werkzeug_abdeckung.py": ("TOOLS", "RULES", "WITHOUT", "BY_WORD"),
+                  "live.py": ("TOOLS", "TARGETS", "RETURNS"), "werkzeug_abdeckung.py": ("TOOLS", "RULES", "WITHOUT", "BY_WORD",
+                                                                                         "SENTENCES"),
                   "technik.py": ("MODULE",), "spickzettel.py": ("KURZ",)}
         found = {}
         for name, names in tables.items():
@@ -118,7 +124,8 @@ class Steckbrief(unittest.TestCase):
                             found.setdefault(k.value, set()).add(f"{name} {targets[0]}")
         feature_tables = {"features.py FEATURES", "features.py DESK_SKIP", "features.py DESK", "features.py SPARK_ONLY",
                           "werkzeug_abdeckung.py TOOLS", "werkzeug_abdeckung.py RULES", "werkzeug_abdeckung.py WITHOUT"}
-        tool_tables = {"werkzeuge.py NAMES", "live.py TOOLS", "werkzeug_abdeckung.py BY_WORD", "spickzettel.py KURZ"}
+        tool_tables = {"werkzeuge.py NAMES", "live.py TOOLS", "werkzeug_abdeckung.py BY_WORD", "werkzeug_abdeckung.py SENTENCES",
+                       "spickzettel.py KURZ"}
         for key, s in steckbrief.STECKBRIEFE.items():
             # each name only against the tables that hold that kind of name (a feature's key may also be the name of
             # a Live node of its own, which stays in live.py until the Steckbrief carries it)

@@ -176,13 +176,7 @@ AREA_COLOR = {"alltag": "#1f7a5c", "termine": "#2b5fb8", "nachrichten": "#8a4fb0
               "wissen": "#15808f", "machen": "#b23a6b", "gedaechtnis": "#6c6a1f", "auftraege": "#4a5568",
               "spark": "#9a6f08"}
 # tools a module offers only on the person's own word (werkzeug_abdeckung.BY_WORD): (tool, de, en)
-KURZ = (("speaker_volume", "Mach leiser", "Quieter"),
-        ("undo_last", "Mach das rückgängig", "Undo that"),
-        ("proactive_pause", "Meld dich heute nicht mehr", "No more notes today"),
-        ("remarkable_page", "Schick den Artikel aufs reMarkable", "Send the article to the reMarkable"),
-        ("remarkable_library", "Was liegt auf meinem reMarkable?", "What is on my reMarkable?"),
-        ("nas_zustand", "Ist die Synology voll?", "Is the Synology full?"),
-        ("offen_zeigen", "Was ist noch offen?", "What is still open?")) + steckbrief.spickzettel()   # with a Steckbrief
+KURZ = steckbrief.spickzettel()   # every short command stands in its function's Steckbrief (steckbrief.py)
 # easily mixed up: (de, en, the Weiche group it lands in or "" for a plain answer, what happens de/en, a tool that
 # must be usable for the line to show or "")
 VERWECHSELT = (

@@ -11,6 +11,8 @@ Read by (each takes only its own part, the order of its own table stays):
   werkzeug_abdeckung.TOOLS / BY_WORD             the tools of the function, offered only on the person's own word
   werkzeug_abdeckung.RULES / WITHOUT             ohne_werkzeug(art)  why the function has no tool
   spickzettel.KURZ           spickzettel()       an example sentence for a tool offered only on the own word
+  werkzeug_abdeckung.SENTENCES saetze()          a typical request per tool
+  features.DESK              desk()              the Begleiter parts that carry the function
   technik.MODULE             module()            group and German line of the function's module
   features.DESK_SKIP         begleiter()         why the Begleiter has no part of its own
 
@@ -31,11 +33,17 @@ class Steckbrief(NamedTuple):
     pref: str = ""              # features.Feature.pref: a preference, on unless the profile switched it off
     parent: str = ""            # the function it builds on
     me: str = ""                # the Ich page where the profile sets it up
-    werkzeuge: dict = {}        # tool -> (de, en)
+    werkzeuge: dict = {}        # its own tools: tool -> (de, en); the first function in features.FEATURES that offers a
+                                # tool owns it
+    auch: tuple = ()            # tools of other functions it offers too (werkzeug_abdeckung.TOOLS)
+    knoten: dict = {}           # tool -> Live node, where it is not the node of its own (live)
     ohne_werkzeug: tuple = ()   # (regel|ohne, why) when it has no tool: werkzeug_abdeckung.RULES / WITHOUT
     live: tuple = ()            # (node, label, detail, kind, own_service, returns)
     log: tuple = ()             # (logfilter area, first word of the lines)
-    nur_eigenes_wort: tuple = ()  # (module, (tool, example de, example en)): tool offered only on the person's word
+    eigenes_wort: dict = {}     # tool -> module: offered only on the person's own word (werkzeug_abdeckung.BY_WORD)
+    kurz: tuple = ()            # ((tool, example de, example en), ...): the cheat sheet's short commands (spickzettel.KURZ)
+    saetze: dict = {}           # tool -> (typical request de, en): it must reach the tool's group (SENTENCES)
+    begleiter_teile: tuple = ()  # the Begleiter parts that carry it (features.DESK, begleiter.PARTS)
     modul: tuple = ()           # (module, technik group, German line)
     begleiter: str = ""         # why the Begleiter has no part of its own: a kind (talk, voice, spark, link, device,
                                 # panel) or its own sentence; "" when the function it builds on says it
@@ -50,8 +58,8 @@ STECKBRIEFE = {
         anleitung="rechnen", werkzeuge={"rechnen": ("Rechnen", "Calculate")},
         live=("rechnen", "Rechnen", "fester Rechner · auf dem Spark", "spark", False, "Ergebnis"),
         log=("chat", "rechnen"),
-        nur_eigenes_wort=("rechnen", ("rechnen", "Rechne 19 Prozent von 249 Euro aus", "Calculate 19 percent of 249 "
-                                                                                       "euros")),
+        eigenes_wort={"rechnen": "rechnen"},
+        kurz=(("rechnen", "Rechne 19 Prozent von 249 Euro aus", "Calculate 19 percent of 249 euros"),),
         modul=("rechnen", "gespraech", "Rechnen mit festem Werkzeug: eigener Parser statt eval, Datumsrechnung, "
                                        "Nachrechnen in Antworten"),
         begleiter="talk"),
@@ -1121,6 +1129,361 @@ STECKBRIEFE = {
     "bewertenzurueck": Steckbrief(de="Rückmeldung, wenn es behoben ist", en="Feedback when it is fixed",
         gruppe="talk", schalter=("bewerten_back",), anleitung="bewertenzurueck", pref="rate_back", parent="bewerten",
         me="setbox", ohne_werkzeug=("ohne", "meldet sich von selbst")),
+    "search": Steckbrief(de="Websuche", en="Web search", gruppe="talk", schalter=("search",), anleitung="search",
+        werkzeuge={"web_search": ("Websuche", "Web search")}, knoten={"web_search": "web"},
+        saetze={"web_search": ("Was gibt es Neues in den Nachrichten?", "What is new in the news?")},
+        begleiter="talk"),
+    "wiki": Steckbrief(de="Wikipedia direkt", en="Wikipedia straight away", gruppe="talk", schalter=("wiki",),
+        anleitung="wiki", me="setbox",
+        werkzeuge={"wikipedia": ("Wikipedia", "Wikipedia"), "article_more": ("Artikel weiterlesen", "Read on")},
+        knoten={"wikipedia": "wiki", "article_more": "wiki"},
+        saetze={"wikipedia": ("Schau in Wikipedia nach Albert Einstein", "Look up Albert Einstein in Wikipedia")},
+        begleiter="talk", modul=("wiki", "wissen", "Wikipedia für „Was ist …?“")),
+    "kiwix": Steckbrief(de="Eigenes Kiwix-Archiv", en="Own Kiwix archive", gruppe="talk", schalter=("kiwix",),
+        anleitung="kiwix", me="setbox", werkzeuge={"archive_search": ("Eigenes Archiv", "Own archive")},
+        auch=("article_more",), knoten={"archive_search": "kiwix"},
+        saetze={"archive_search": ("Schau in meinem Archiv nach Sauerteig", "Look in my archive for sourdough")},
+        begleiter="talk", modul=("kiwix", "wissen", "Eigenes Kiwix als Wissensquelle ohne Internet")),
+    "hilfe": Steckbrief(de="Hilfe zum Spark", en="Help with the Spark", gruppe="talk", schalter=("spark_help",),
+        anleitung="hilfe", me="setbox", werkzeuge={"spark_hilfe": ("Spark-Hilfe", "Spark help")},
+        knoten={"spark_hilfe": "hilfe"},
+        saetze={"spark_hilfe": ("Wie stelle ich die Websuche ein?", "How do I set up the web search?")},
+        begleiter="talk", modul=("hilfe", "betrieb", "Spark-Hilfe und Index der Doku")),
+    "hilfevorschlag": Steckbrief(de="Einstellungen vorschlagen", en="Suggesting settings", gruppe="talk",
+        schalter=("spark_suggest",), anleitung="hilfevorschlag", parent="hilfe", me="setbox",
+        werkzeuge={"spark_vorschlag": ("Spark-Vorschlag", "Spark suggestion")}, knoten={"spark_vorschlag": "hilfe"},
+        saetze={"spark_vorschlag": ("Was empfiehlst du mir an Einstellungen?", "Which settings do you recommend?")}),
+    "hilfeseite": Steckbrief(de="Frag Spark auf jeder Seite", en="Ask Spark on every page", gruppe="talk",
+        schalter=("spark_drawer",), anleitung="hilfeseite", parent="hilfe", me="setbox", auch=("spark_hilfe",)),
+    # tipps.py: the assistant points out a function that would help and helps setting it up
+    "tipps": Steckbrief(de="Funktionen vorschlagen", en="Suggesting functions", gruppe="talk",
+        schalter=("feature_tips",), anleitung="tipps", parent="hilfe", me="setbox", auch=("spark_hilfe",),
+        modul=("tipps", "gespraech", "Schlägt passende Funktionen vor, die noch aus sind")),
+    # saetze.py: functions that are on but never used, with a sentence to say (Ich → Was ich kann)
+    "tippssaetze": Steckbrief(de="Das kannst du auch sagen", en="You can also say", gruppe="talk",
+        schalter=("feature_sentences",), anleitung="tippssaetze", parent="tipps", me="kannbox",
+        auch=("spark_hilfe",)),
+    "memory": Steckbrief(de="Gedächtnis", en="Memory", gruppe="data", schalter=("memory",), anleitung="memory",
+        me="factbox", werkzeuge={"memory_save": ("Merken", "Remember"), "memory_forget": ("Vergessen", "Forget")},
+        knoten={"memory_save": "mem", "memory_forget": "mem"},
+        saetze={"memory_save": ("Merk dir, dass ich Tee mag", "Remember that I like tea"), "memory_forget": ("Vergiss, dass ich Tee mag", "Forget that I like tea")},
+        begleiter="link"),
+    "history": Steckbrief(de="Frühere Gespräche", en="Past conversations", gruppe="data", schalter=("history",),
+        anleitung="history", me="setbox",
+        werkzeuge={"history_search": ("Frühere Gespräche", "Earlier conversations")},
+        knoten={"history_search": "mem"},
+        saetze={"history_search": ("Haben wir schon mal darüber gesprochen?", "Did we talk about this before?")},
+        begleiter="panel"),
+    "documents": Steckbrief(de="Eigene Dokumente", en="Own documents", gruppe="data", schalter=("documents",),
+        anleitung="documents", me="docbox",
+        werkzeuge={"document_search": ("Eigene Dokumente", "Own documents"), "document_list": ("Dokumentliste", "Document list")},
+        knoten={"document_search": "mem", "document_list": "mem"},
+        saetze={"document_search": ("Wann läuft meine Versicherung ab?", "When does my insurance end?"), "document_list": ("Welche Dokumente habe ich?", "Which documents do I have?")},
+        begleiter_teile=("folder",),
+        modul=("documents", "wissen", "Dokumente pro Profil in wissen.db: Text, Abschnitte mit Kontextzeile, Suche, Vektoren als float16")),
+    "docshared": Steckbrief(de="Gemeinsame Dokumente", en="Shared documents", gruppe="data",
+        schalter=("doc_shared",), anleitung="docshared", parent="documents", me="docbox", auch=("document_search",)),
+    "remarkable": Steckbrief(de="reMarkable-Notizen", en="reMarkable notes", gruppe="data", schalter=("remarkable",),
+        anleitung="remarkable", parent="docpics", me="rmbox",
+        werkzeuge={"remarkable_library": ("reMarkable-Ablage", "reMarkable library")}, auch=("document_search",),
+        knoten={"remarkable_library": "rm"}, eigenes_wort={"remarkable_library": "rmliste"},
+        kurz=(("remarkable_library", "Was liegt auf meinem reMarkable?", "What is on my reMarkable?"),),
+        modul=("remarkable", "dienste", "reMarkable-Notizbücher als Wissen")),
+    "rmsend": Steckbrief(de="Aufs reMarkable schicken", en="Sending to the reMarkable", gruppe="data",
+        schalter=("remarkable_send",), anleitung="rmsend", parent="remarkable", me="rmbox",
+        werkzeuge={"remarkable_note": ("Notiz aufs reMarkable", "Note to the reMarkable"), "remarkable_sent": ("Aufs reMarkable Gelegtes", "Put on the reMarkable")},
+        knoten={"remarkable_note": "rm", "remarkable_sent": "rm"},
+        eigenes_wort={"remarkable_note": "remarkable", "remarkable_sent": "remarkable"}),
+    "rmtodo": Steckbrief(de="Aufgaben vom reMarkable", en="Tasks from the reMarkable", gruppe="data",
+        schalter=("remarkable_plus",), anleitung="rmplus", parent="rmsend", me="rmbox", auch=("remarkable_library",)),
+    "rmweb": Steckbrief(de="Webseiten und Anhänge aufs reMarkable", en="Web pages and attachments to the reMarkable",
+        gruppe="data", schalter=("remarkable_plus",), anleitung="rmplus", parent="rmsend", me="rmbox",
+        werkzeuge={"remarkable_page": ("Webseite aufs reMarkable", "Web page to the reMarkable"), "remarkable_attachment": ("Mail-Anhang aufs reMarkable", "Mail attachment to the reMarkable")},
+        knoten={"remarkable_page": "rm", "remarkable_attachment": "rm"},
+        eigenes_wort={"remarkable_page": "remarkable", "remarkable_attachment": "remarkable"},
+        kurz=(("remarkable_page", "Schick den Artikel aufs reMarkable", "Send the article to the reMarkable"),)),
+    "rmaufgaben": Steckbrief(de="Aufgabenblatt zum Ankreuzen", en="Task sheet to tick", gruppe="data",
+        schalter=("remarkable_tasks",), anleitung="rmaufgaben", parent="rmpapier", me="rmbox",
+        werkzeuge={"remarkable_sheet": ("Blatt aufs reMarkable", "Sheet to the reMarkable")},
+        knoten={"remarkable_sheet": "rm"}, eigenes_wort={"remarkable_sheet": "remarkable"},
+        modul=("rmaufgaben", "dienste", "Aufgabenblatt zum Ankreuzen aufs reMarkable")),
+    # Dokumente erstellen (docmake.py, plan dokumente-erstellen): letters, presentations, tables ... as files
+    "erstellen": Steckbrief(de="Dokumente erstellen", en="Creating documents", gruppe="data", schalter=("doc_make",),
+        anleitung="erstellen", parent="documents", me="docbox",
+        werkzeuge={"document_plan": ("Dokument planen", "Plan document"), "document_change": ("Dokument ändern", "Change document"), "document_status": ("Dokument-Stand", "Document status"), "document_send": ("Dokument senden", "Send document")},
+        knoten={"document_plan": "make", "document_change": "make", "document_status": "make", "document_send": "make"},
+        saetze={"document_plan": ("Mach eine Präsentation über den Mauerfall", "Make a presentation about the fall of the Berlin Wall")}),
+    "erstellenvorlagen": Steckbrief(de="Eigene Vorlagen", en="Own templates", gruppe="data",
+        schalter=("doc_make_templates",), anleitung="erstellenvorlagen", parent="erstellen", me="docbox",
+        auch=("document_plan",)),
+    # pictures for slides from the own Kiwix (docmake.wiki_pictures; Präsentationen professionell, point 5)
+    "erstellenbilder": Steckbrief(de="Bilder aus dem Kiwix", en="Pictures from the Kiwix", gruppe="data",
+        schalter=("doc_make_wikipics",), anleitung="erstellenbilder", parent="erstellen", me="docbox",
+        auch=("document_plan",)),
+    # Bilder malen (bilder.py, bild_server.py, plan bildgenerierung): FLUX.2 [klein] on the Spark, installed by install.sh --bild
+    "bilder": Steckbrief(de="Bilder malen", en="Painting pictures", gruppe="data", schalter=("bilder",),
+        anleitung="bilder", me="bildbox", werkzeuge={"bild_malen": ("Bild malen", "Paint picture")},
+        knoten={"bild_malen": "bild"},
+        saetze={"bild_malen": ("Mal mir eine Katze auf einem Skateboard", "Paint me a cat on a skateboard")},
+        begleiter="panel", modul=("bilder", "wissen", "Bilder malen: Wunsch prüfen, Auftrag, Ablage, Bildkarte")),
+    # Musik machen (musik.py, musik_server.py, plan musik M1): ACE-Step 1.5 on the model computer, install.sh --musik
+    "musik": Steckbrief(de="Musik machen", en="Making music", gruppe="data", schalter=("musik",), anleitung="musik",
+        me="musikbox", werkzeuge={"musik_machen": ("Musik machen", "Make music")}, knoten={"musik_machen": "musik"},
+        saetze={"musik_machen": ("Mach mir ein Lied über unsere Katze", "Make me a song about our cat")},
+        begleiter="panel",
+        modul=("musik", "wissen", "Musik machen: Wunsch prüfen, Modell wählen, Auftrag, Ablage, Liedkarte, Musik testen je Modell")),
+    # Musik bearbeiten (musik.py, plan musik-experte, Stufe E1): an own song or an own file changed into a new version
+    # (Abschnitt neu, Verlängern, Musikrichtung, Remix, Schneiden, Tempo und Tonart); the panel picks the song
+    "musikbearbeiten": Steckbrief(de="Musik bearbeiten", en="Editing music", gruppe="data",
+        schalter=("musik_bearbeiten",), anleitung="musikbearbeiten", parent="musik", me="musikbox",
+        werkzeuge={"musik_bearbeiten": ("Musik bearbeiten", "Edit music")}, knoten={"musik_bearbeiten": "musik"},
+        saetze={"musik_bearbeiten": ("Mach mein letztes Lied 30 Sekunden länger", "Make my last song 30 seconds longer")}),
+    "docbrief": Steckbrief(de="Steckbrief und Tags", en="Document card and tags", gruppe="data",
+        schalter=("doc_brief",), anleitung="docbrief", parent="documents", me="docbox", auch=("document_search",)),
+    # Auswertungen je Dokument (auswertung.py, plan open-notebook Stufe 2): Kurzfassung and Kernaussagen by themselves in
+    # quiet minutes, the rest per click; every point with its place, checked by the panel's fixed rules, never the model
+    "auswertungen": Steckbrief(de="Auswertungen", en="Analyses", gruppe="data", schalter=("doc_auswertung",),
+        anleitung="auswertungen", parent="documents", me="docbox",
+        werkzeuge={"dokument_auswertung": ("Auswertung eines Dokuments", "Analysis of a document")},
+        knoten={"dokument_auswertung": "mem"},
+        saetze={"dokument_auswertung": ("Was sind die Kernaussagen im Mietvertrag?", "What are the key points of the lease?")}),
+    # Aufnahmen abschreiben (abschrift.py, plan open-notebook Stufe 3a): recordings uploaded under Ich → Dokumente are
+    # transcribed by the own speech recognition in quiet minutes, 30 s at a time; the transcript is outside text
+    "docaudio": Steckbrief(de="Aufnahmen abschreiben", en="Transcribe recordings", gruppe="data",
+        schalter=("doc_audio",), anleitung="docaudio", parent="documents", me="docbox", auch=("document_search",)),
+    # Links als Dokument (doklink.py, plan open-notebook Stufe 4): public pages and files behind addresses the person
+    # gives become documents (netguard.hole_oeffentlich, wissen.aufnehmen); "Neu abrufen" only on a click; outside text
+    "doclink": Steckbrief(de="Links als Dokument", en="Links as documents", gruppe="data", schalter=("doc_link",),
+        anleitung="doclink", parent="documents", me="docbox",
+        werkzeuge={"link_als_dokument": ("Link als Dokument", "Link as document")}, auch=("document_search",),
+        knoten={"link_als_dokument": "links"},
+        saetze={"link_als_dokument": ("Speicher https://example.org/artikel als Dokument", "Save https://example.org/article as a document")}),
+    # YouTube-Links abschreiben (ytquelle.py, plan open-notebook Stufe 3b): a YouTube link given through Links als
+    # Dokument (so doc_link too) is fetched as its sound track by the pinned yt-dlp, only through the netguard proxy
+    # (netproxy.py, fixed host list), and transcribed like a recording; without yt-dlp the link says how to install it
+    "docyoutube": Steckbrief(de="YouTube-Links abschreiben", en="Transcribe YouTube links", gruppe="data",
+        schalter=("doc_youtube", "doc_link"), anleitung="docyoutube", parent="docaudio", me="docbox",
+        auch=("link_als_dokument", "document_search")),
+    # Mappen (mappen.py, plan open-notebook Stufe 1, Dominik 2026-10-30 „1a 2a“): own documents, Wissensbuch pages and
+    # notes bundled per undertaking, a context level per entry; a conversation bound to a Mappe gets its entries as data
+    "mappen": Steckbrief(de="Mappen", en="Collections", gruppe="data", schalter=("mappen",), anleitung="mappen",
+        parent="documents", me="mpbox",
+        werkzeuge={"mappe_liste": ("Mappen auflisten", "List collections"), "mappe_stand": ("Mappe ansehen", "Show collection"), "mappe_dazu": ("In Mappe legen", "Put into collection")},
+        knoten={"mappe_liste": "mem", "mappe_stand": "mem", "mappe_dazu": "mem"},
+        saetze={"mappe_liste": ("Welche Mappen habe ich?", "Which collections do I have?"), "mappe_stand": ("Was liegt in der Mappe Urlaub?", "What is in the collection Holiday?"), "mappe_dazu": ("Leg den Mietvertrag in die Mappe Wohnung", "Put the lease into the collection Flat")},
+        begleiter="set up, looked at and deleted on the panel's page Mappen and in the iPhone app; its tools and the Mappe filter of document_search and fund_suche work in Frag Spark like in every answer",
+        modul=("mappen", "wissen", "Mappen: Dokumente, Seiten und Notizen bündeln, Kontext-Stufe je Eintrag (aus, kurz, ganz) nach festen Regeln")),
+    # Hörstück aus einer Mappe (hoerstueck.py, plan open-notebook Stufe 5, Push 5a; Dominik: drei feste Stimmen, die der
+    # Admin wählt): a talk of two or three voices about one Mappe, the model writes only a script, the panel checks every
+    # line by fixed rules and the speech output reads it line by line in quiet minutes
+    "hoerstueck": Steckbrief(de="Hörstück aus einer Mappe", en="Audio overview", gruppe="data",
+        schalter=("hoerstueck",), anleitung="hoerstueck", parent="mappen", me="mpbox",
+        werkzeuge={"hoerstueck_machen": ("Hörstück machen", "Make audio overview")},
+        knoten={"hoerstueck_machen": "mem"},
+        saetze={"hoerstueck_machen": ("Mach ein Hörstück aus der Mappe Wohnung", "Make an audio overview of the collection Flat")},
+        begleiter="listened to in the panel, the iPhone app (native player) and Telegram; made, looked at and deleted on the panel's page Mappen; hoerstueck_machen works in Frag Spark like in every answer",
+        modul=("hoerstueck", "wissen", "Hörstück aus einer Mappe: Drehbuch nur als JSON, jede Zeile fest geprüft, Zeile für Zeile gesprochen")),
+    # Hörstück als Diskussion (hoerstueck_diskussion.py, plan open-notebook hoerstueck-diskussion, Dominik 2026-11-10
+    # „als Schalter für Diskussion“): plan, chapters with contributions of several sentences, role cards and a fixed
+    # measure per chapter; off, the Hörstück stays as before
+    "hoerstueckdisk": Steckbrief(de="Hörstück als Diskussion", en="Audio overview as a discussion", gruppe="data",
+        schalter=("hoerstueck_diskussion",), anleitung="hoerstueckdisk", parent="hoerstueck", me="mpbox",
+        auch=("hoerstueck_machen",)),
+    # Finden (fund.py, plan such-index, Stufe A): one index over the own data with fields and tags, the page Finden,
+    # Strg K and the tool fund_suche; each source follows its own function (documents, NAS, reMarkable, Wissensbuch)
+    "fund": Steckbrief(de="Finden in allen Daten", en="Find in all data", gruppe="data", schalter=("fund",),
+        anleitung="fund", me="fundbox", werkzeuge={"fund_suche": ("In allen Daten finden", "Find in all data")},
+        knoten={"fund_suche": "mem"},
+        saetze={"fund_suche": ("Such meine Rechnung von Thomann", "Find my invoice from Thomann")},
+        begleiter_teile=("find",),
+        modul=("fund", "wissen", "Finden: Suchindex über die eigenen Daten, Felder und Schlagworte nach festen Regeln, Blind-Marken je Profil")),
+    "proactive": Steckbrief(de="Von selbst melden", en="Speaking up by itself", gruppe="day",
+        schalter=("proactive",), anleitung="proactive", pref="pro_on", me="probox",
+        werkzeuge={"home_rules_list": ("Smart-Home-Regeln", "Smart home rules"), "home_rule_delete": ("Regel löschen", "Delete rule"), "proactive_pause": ("Meldungen pausieren", "Pause notes")},
+        knoten={"home_rules_list": "ha", "home_rule_delete": "ha", "proactive_pause": "mem"},
+        eigenes_wort={"home_rules_list": "hamelden", "home_rule_delete": "hamelden", "proactive_pause": "aendern"},
+        kurz=(("proactive_pause", "Meld dich heute nicht mehr", "No more notes today"),), begleiter_teile=("notes",),
+        modul=("proactive", "dienste", "Meldet sich von selbst, wenn etwas Echtes passiert")),
+    "hacam": Steckbrief(de="Kamerabild beschreiben", en="Describe a camera picture", gruppe="day",
+        schalter=("ha_camera", "homeassistant"), anleitung="hacam", pref="pro_ha_cam", parent="proactive",
+        me="probox", werkzeuge={"camera_describe": ("Kamerabild", "Camera picture")},
+        knoten={"camera_describe": "ha"},
+        saetze={"camera_describe": ("Was sieht die Kamera an der Haustür?", "What does the camera at the front door see?")}),
+    "reminders": Steckbrief(de="Timer und Erinnerungen", en="Timers and reminders", gruppe="day",
+        schalter=("reminders",), anleitung="reminders",
+        werkzeuge={"reminder_set": ("Erinnerung stellen", "Set reminder"), "reminder_list": ("Erinnerungen zeigen", "List reminders"), "reminder_cancel": ("Erinnerung löschen", "Cancel reminder")},
+        knoten={"reminder_set": "mem", "reminder_list": "mem", "reminder_cancel": "mem"},
+        saetze={"reminder_set": ("Erinnere mich in zehn Minuten an den Tee", "Remind me about the tea in ten minutes"), "reminder_list": ("Welche Erinnerungen habe ich?", "Which reminders do I have?"), "reminder_cancel": ("Lösch die Erinnerung zum Ofen", "Delete the reminder about the oven")},
+        begleiter_teile=("capture", "notes")),
+    # Alles Offene im Assistenten (vorgaenge.py, plan assistent-zentrale): cards with buttons in the conversation, Später,
+    # the page Offen; a child row under Timer und Erinnerungen (the Funktionen page is near its height limit)
+    "vorgaenge": Steckbrief(de="Alles Offene im Assistenten", en="Everything open in the assistant", gruppe="day",
+        schalter=("vorgaenge",), anleitung="vorgaenge", parent="reminders", me="vgbox",
+        werkzeuge={"offen_zeigen": ("Was offen ist", "What is open")}, knoten={"offen_zeigen": "cal"},
+        eigenes_wort={"offen_zeigen": "vorgaenge"},
+        kurz=(("offen_zeigen", "Was ist noch offen?", "What is still open?"),), begleiter_teile=("actions", "offen"),
+        modul=("vorgaenge", "dienste", "Alles Offene im Assistenten: Karten mit Knöpfen, Später, Seite Offen, Ja-Knopf, Telegram-Knöpfe")),
+    "tasks": Steckbrief(de="Listen für Einkauf und Aufgaben", en="Lists for shopping and tasks", gruppe="day",
+        schalter=("tasks",), anleitung="tasks", me="taskbox",
+        werkzeuge={"tasks_show": ("Liste zeigen", "Show list"), "tasks_add": ("Auf die Liste", "Add to list"), "tasks_change": ("Liste ändern", "Change list")},
+        knoten={"tasks_show": "cal", "tasks_add": "cal", "tasks_change": "cal"},
+        saetze={"tasks_show": ("Was steht auf der Einkaufsliste?", "What is on the shopping list?"), "tasks_add": ("Setz Milch auf die Einkaufsliste", "Put milk on the shopping list"), "tasks_change": ("Hak Milch ab", "Tick off milk")},
+        begleiter_teile=("lists",),
+        modul=("tasks", "dienste", "Listen für Einkauf und Aufgaben, wie Apple Erinnerungen: Farbe, Reihenfolge, Info je Eintrag, Erinnern zur Uhrzeit")),
+    "agent": Steckbrief(de="Aufträge", en="Jobs", gruppe="day", schalter=("agent",), anleitung="agent",
+        me="agentbox",
+        werkzeuge={"agent_list": ("Agenten zeigen", "List agents"), "agent_task": ("Agent beauftragen", "Agent task"), "agent_schedule": ("Agent planen", "Schedule agent"), "routine_save": ("Ablauf speichern", "Save routine"), "agent_change": ("Auftrag ändern", "Change job")},
+        knoten={"agent_list": "mem", "agent_task": "mem", "agent_schedule": "mem", "routine_save": "mem", "agent_change": "mem"},
+        saetze={"agent_list": ("Was machen meine Agenten?", "What are my agents doing?"), "agent_schedule": ("Plane einen Agenten für jeden Montag", "Plan an agent for every Monday"), "agent_change": ("Pausiere den Agenten mit dem Wochenbericht", "Pause the agent with the weekly report")},
+        begleiter="panel", modul=("agent", "dienste", "Aufträge im Hintergrund, Zeitpläne, Routinen")),
+    # watches (beobachten.py): admin release only, every profile with agent functions, never guests
+    "beobachten": Steckbrief(de="Beobachten", en="Watching", gruppe="day", schalter=("agent_watch",),
+        anleitung="beobachten", parent="agent", me="agentbox",
+        werkzeuge={"agent_watch": ("Beobachten anlegen", "Set up watching")}, auch=("agent_change",),
+        knoten={"agent_watch": "mem"},
+        saetze={"agent_watch": ("Beobachte den Preis der Bauknecht B6R 88", "Watch the price of the Bauknecht B6R 88")},
+        modul=("beobachten", "dienste", "Beobachten: Funde prüfen, nur Neues melden (Eigene Aufgaben)")),
+    # chats.py (plan plaene/messenger.md): chats between the people of this Spark, like a messenger; since V01.0.488
+    # also what "Nachrichten an andere" did (plan plaene/nachrichten-in-chats.md): "Sag Anna …", "an alle", Durchsagen
+    "chats": Steckbrief(de="Chats", en="Chats", gruppe="day", schalter=("chats",), anleitung="chats", me="setbox",
+        werkzeuge={"message_send": ("Nachricht senden", "Send message"), "message_read": ("Nachrichten lesen", "Read messages")},
+        knoten={"message_send": "mem", "message_read": "mem"},
+        saetze={"message_send": ("Schick Anna eine Nachricht, dass ich später komme", "Send Anna a message that I will be late"), "message_read": ("Habe ich neue Nachrichten?", "Do I have new messages?")},
+        begleiter="panel", modul=("chats", "geraete", "Chats zwischen den Profilen, verschlüsselt")),
+    "messages_all": Steckbrief(de="Nachricht an alle", en="Message to everybody", gruppe="day",
+        schalter=("messages_all",), anleitung="messages_all", pref="msg_all", parent="chats", me="setbox",
+        auch=("message_send",)),
+    "calendar": Steckbrief(de="Kalender", en="Calendar", gruppe="day", schalter=("calendar",), anleitung="calendar",
+        me="calbox",
+        werkzeuge={"calendar_events": ("Termine lesen", "Read appointments"), "calendar_add": ("Termin eintragen", "Add appointment"), "calendar_change": ("Termin ändern", "Change appointment"), "daily_briefing": ("Tagesüberblick", "Daily briefing")},
+        knoten={"calendar_events": "cal", "calendar_add": "cal", "calendar_change": "cal", "daily_briefing": "cal"},
+        saetze={"calendar_events": ("Welche Termine habe ich morgen?", "Which appointments do I have tomorrow?"), "calendar_add": ("Trag morgen um 10 einen Termin beim Zahnarzt ein", "Put a dentist appointment tomorrow at 10 in my calendar"), "calendar_change": ("Verschieb den Zahnarzttermin auf Freitag", "Move the dentist appointment to Friday"), "daily_briefing": ("Was hab ich heute vor?", "What am I up to today?")},
+        begleiter_teile=("agenda", "capture")),
+    "weather": Steckbrief(de="Wetter", en="Weather", gruppe="day", schalter=("weather",), anleitung="weather",
+        me="wxbox", werkzeuge={"weather": ("Wetter", "Weather")}, knoten={"weather": "weather"},
+        saetze={"weather": ("Wie wird das Wetter morgen?", "What will the weather be like tomorrow?")},
+        begleiter="panel", modul=("weather", "dienste", "Wetter von Open-Meteo als feste Sätze")),
+    # feeds.py (Dominik 2026-10-17, plan reddit/plan.md): own Reddit inbox, subreddits and other feeds, read only
+    "feeds": Steckbrief(de="Reddit und Feeds", en="Reddit and feeds", gruppe="day", schalter=("feeds",),
+        anleitung="feeds", me="feedbox", werkzeuge={"feeds_news": ("Reddit und Feeds", "Reddit and feeds")},
+        knoten={"feeds_news": "feeds"},
+        saetze={"feeds_news": ("Was gibt's Neues auf Reddit?", "What's new on Reddit?")}, begleiter="panel",
+        modul=("feeds", "dienste", "Reddit und Feeds: eigener Reddit-Posteingang, Subreddits und RSS, nur lesen")),
+    "mail": Steckbrief(de="E-Mail lesen", en="Reading e-mail", gruppe="post", schalter=("mail",), anleitung="mail",
+        me="mailbox",
+        werkzeuge={"mail_list": ("Mails auflisten", "List mails"), "mail_search": ("Mails suchen", "Search mails"), "mail_read": ("Mail lesen", "Read mail"), "mail_draft": ("Mail-Entwurf", "Mail draft")},
+        knoten={"mail_list": "mail", "mail_search": "mail", "mail_read": "mail", "mail_draft": "mail"},
+        saetze={"mail_list": ("Habe ich neue Mails?", "Do I have new mail?"), "mail_read": ("Lies mir die Mail von Anna vor", "Read me the mail from Anna")},
+        begleiter_teile=("post",), modul=("mail", "post", "Mail lesen per IMAP")),
+    "tidy": Steckbrief(de="Postfach aufräumen", en="Inbox tidying", gruppe="post", schalter=("mail_tidy",),
+        anleitung="tidy", parent="mail", me="mailbox",
+        werkzeuge={"mail_tidy_overview": ("Postfach-Überblick", "Mailbox overview"), "mail_tidy_propose": ("Postfach aufräumen", "Tidy mailbox")},
+        knoten={"mail_tidy_overview": "mail", "mail_tidy_propose": "mail"},
+        saetze={"mail_tidy_overview": ("Räum mein Postfach auf", "Tidy up my inbox")},
+        modul=("tidy", "post", "Posteingang aufräumen")),
+    "parcels": Steckbrief(de="Pakete", en="Parcels", gruppe="post", schalter=("parcels",), anleitung="parcels",
+        parent="mail", me="mailbox", werkzeuge={"parcels": ("Pakete", "Parcels")}, knoten={"parcels": "parcels"},
+        saetze={"parcels": ("Wann kommt meine Amazon-Bestellung?", "When does my Amazon order arrive?")},
+        modul=("parcels", "dienste", "Pakete aus Versand-Mails")),
+    # fuerdich.py (plan persoenlicher-assistent, Dominik 2026-10-18): bills, contracts, orders, offers, open replies and
+    # phishing found in the own mails by fixed rules; tab „Für dich“ on the mail page
+    "fuerdich": Steckbrief(de="Für dich aus Mails", en="For you from mail", gruppe="post",
+        schalter=("mail_insight",), anleitung="fuerdich", parent="mail", me="mailbox",
+        werkzeuge={"fuer_dich": ("Für dich", "For you"), "fuer_dich_tun": ("Für dich: erledigen", "For you: act")},
+        knoten={"fuer_dich": "mail", "fuer_dich_tun": "mail"},
+        saetze={"fuer_dich": ("Was muss ich diese Woche erledigen?", "What do I have to do this week?"), "fuer_dich_tun": ("Die Rechnung von Nummer zwei ist erledigt", "Number two is done")},
+        modul=("fuerdich", "dienste", "Für dich: findet Rechnungen, Verträge, Bestellungen, Angebote, offene Antworten, Phishing; letzte Lesung versiegelt")),
+    "schreib": Steckbrief(de="Schreibhilfe", en="Writing help", gruppe="post", schalter=("write_help",),
+        anleitung="schreib", me="writebox", begleiter_teile=("write", "mail", "office"),
+        ohne_werkzeug=("ohne", "das Modell formuliert selbst"),
+        modul=("schreib", "gespraech", "Schreibhilfe: korrigieren, kürzen, übersetzen, entwerfen")),
+    "contacts": Steckbrief(de="Kontakte", en="Contacts", gruppe="post", schalter=("contacts",), anleitung="contacts",
+        me="conbox", werkzeuge={"contacts_search": ("Kontakte", "Contacts")}, knoten={"contacts_search": "contacts"},
+        saetze={"contacts_search": ("Wie ist die Telefonnummer von Anna?", "What is Anna's phone number?")},
+        begleiter="panel",
+        modul=("contacts", "post", "Kontakte per CardDAV: Seite Kontakte wie Apple, ändern nur mit Schalter, zurück mit ETag")),
+    "ha": Steckbrief(de="Home Assistant", en="Home Assistant", gruppe="home", schalter=("homeassistant",),
+        anleitung="ha", me="habox",
+        werkzeuge={"home_assistant": ("Smart Home", "Smart home"), "home_assistant_action": ("Geräte schalten", "Switch devices"), "home_assistant_states": ("Zustände lesen", "Read states"), "home_assistant_history": ("Verlauf", "History"), "home_assistant_todo": ("Home-Assistant-Listen", "Home Assistant lists")},
+        knoten={"home_assistant": "ha", "home_assistant_action": "ha", "home_assistant_states": "ha", "home_assistant_history": "ha", "home_assistant_todo": "ha"},
+        saetze={"home_assistant": ("Mach das Licht im Wohnzimmer aus", "Switch off the light in the living room"), "home_assistant_states": ("Ist die Haustür zu?", "Is the front door closed?"), "home_assistant_history": ("Wann ist die Waschmaschine fertig?", "When is the washing machine done?")},
+        begleiter_teile=("home",)),
+    "esp32": Steckbrief(de="Eigene Lautsprecher (ESP32)", en="Own speakers (ESP32)", gruppe="home",
+        schalter=("esp32",), anleitung="esp32", me="espbox", werkzeuge={"speaker_volume": ("Lautstärke", "Volume")},
+        knoten={"speaker_volume": "geraete"}, eigenes_wort={"speaker_volume": "aendern"},
+        kurz=(("speaker_volume", "Mach leiser", "Quieter"),), begleiter="device",
+        modul=("esp32", "geraete", "Eigene ESP32-Lautsprecher und ihre Firmware")),
+    "messages_announce": Steckbrief(de="Durchsagen auf Lautsprechern", en="Announcements on speakers", gruppe="home",
+        schalter=("messages_announce",), anleitung="messages_announce", parent="chats", me="setbox",
+        werkzeuge={"message_announce": ("Durchsage", "Announcement")}, knoten={"message_announce": "mem"},
+        saetze={"message_announce": ("Durchsage im Wohnzimmer: Essen ist fertig", "Announcement in the living room: dinner is ready")}),
+    # the Spark calls (telefon_anruf.py, T4): wake-up calls and reminders the profile ordered, call backs; the
+    # preference telefon_anrufbar lets each profile say no
+    "telefonanrufen": Steckbrief(de="Telefon: der Spark ruft an", en="Phone: the Spark calls", gruppe="home",
+        schalter=("telefon_anrufen", "telefon"), anleitung="telefonanrufen", pref="telefon_anrufbar",
+        parent="telefon", me="telbox", werkzeuge={"anruf_planen": ("Anrufen lassen", "Have the Spark call")},
+        knoten={"anruf_planen": "telefon"},
+        saetze={"anruf_planen": ("Ruf mich morgen um sieben an", "Call me tomorrow at seven")}),
+    "transit": Steckbrief(de="Bus und Bahn", en="Bus and train", gruppe="go", schalter=("transit",),
+        anleitung="transit", me="trbox", werkzeuge={"transit": ("Bus und Bahn", "Transit")},
+        knoten={"transit": "transit"},
+        saetze={"transit": ("Wann fährt die nächste S-Bahn?", "When does the next S-Bahn leave?")},
+        begleiter="panel", modul=("transit", "dienste", "Bus und Bahn")),
+    "begleiter": Steckbrief(de="Spark-Begleiter am PC und Mac", en="Spark companion on PC and Mac", gruppe="go",
+        schalter=("desk",), anleitung="begleiter", me="deskbox",
+        werkzeuge={"pc_action": ("Rechner-Aktion", "Computer action"), "pc_send": ("An den Rechner", "Send to computer")},
+        knoten={"pc_action": "desk", "pc_send": "desk"},
+        eigenes_wort={"pc_action": "begleiter", "pc_send": "begleiter"},
+        begleiter_teile=("ask", "dictate", "notes", "status", "notaus", "files", "screen", "context", "actions", "act", "wake", "speak", "inbox", "quiet", "meeting", "daily", "view"),
+        modul=("begleiter", "geraete", "Spark-Begleiter für Windows und Mac")),
+    "begleitertun": Steckbrief(de="Begleiter darf am PC handeln", en="Companion may act on the PC", gruppe="go",
+        schalter=("desk_act",), anleitung="begleitertun", parent="begleiter", me="deskbox", auch=("pc_action",)),
+    # Stufe 3 (bedienen.py): the Spark operates the own computer step by step, every step confirmed there
+    "begleiterbedienen": Steckbrief(de="Spark bedient den Rechner", en="Spark operates the computer", gruppe="go",
+        schalter=("desk_operate",), anleitung="begleiterbedienen", parent="begleiter", me="deskbox",
+        werkzeuge={"pc_look": ("Bildschirm ansehen", "Look at the screen")}, knoten={"pc_look": "desk"},
+        eigenes_wort={"pc_look": "begleiter"}),
+    "iphone": Steckbrief(de="iPhone-App", en="iPhone app", gruppe="go", schalter=("iphone",), anleitung="iphone",
+        me="appbox", werkzeuge={"iphone_action": ("iPhone-Aktion", "iPhone action")},
+        knoten={"iphone_action": "push"}, saetze={"iphone_action": ("Ruf Mama an", "Call Mum")}, begleiter="device",
+        modul=("iphone", "geraete", "iPhone-App: Kopplung und Rechte")),
+    # codeauftrag.py (package 3b): an admin types a code order in the panel's or the app's chat; OpenCode works on it once
+    # as spark-dev on its own branch, the card shows the change; installing stays the admin's step with a fresh code
+    "entwickelnauftrag": Steckbrief(de="Code-Auftrag im Chat", en="Code order in the chat", gruppe="sec",
+        schalter=("entwickeln_auftrag",), anleitung="entwickelnauftrag", parent="entwickeln",
+        werkzeuge={"code_auftrag": ("Code-Auftrag", "Code order")}, knoten={"code_auftrag": "mem"},
+        eigenes_wort={"code_auftrag": "codeauftrag"},
+        saetze={"code_auftrag": ("Code-Auftrag: im Wetter soll die Windrichtung stehen", "Code order: show the wind direction in the weather")},
+        nur_spark=True),
+    # nasablage.py (S4): spark_ablage at a place in the home network; made documents and, after "Ja", own things go
+    # into Erstellt/, files put into Eingang/ come into Dokumente; the only folder the Spark writes to
+    "nasablage": Steckbrief(de="Ablage-Ordner", en="Filing folder", gruppe="data", schalter=("nas_drop",),
+        anleitung="nasablage", parent="nas", me="storebox",
+        werkzeuge={"nas_ablegen": ("Auf der NAS ablegen", "Save to the NAS")}, knoten={"nas_ablegen": "nasablage"},
+        eigenes_wort={"nas_ablegen": "nasablage"},
+        modul=("nasablage", "betrieb", "Ablage-Ordner: spark_ablage im Heimnetz, der einzige Ordner, in den der Spark schreibt; Eingang wird zu Dokumenten")),
+    # naszustand.py (S6): the main admin lets the Spark read how the NAS is doing (SNMPv3); only admin profiles ask
+    "naszustand": Steckbrief(de="Zustand der NAS", en="NAS status", gruppe="data", schalter=("nas_status",),
+        anleitung="naszustand", parent="nas", werkzeuge={"nas_zustand": ("Zustand der NAS", "NAS status")},
+        knoten={"nas_zustand": "naszustand"}, eigenes_wort={"nas_zustand": "naszustand"},
+        kurz=(("nas_zustand", "Ist die Synology voll?", "Is the Synology full?"),),
+        modul=("naszustand", "betrieb", "Zustand der NAS: Volumes, Pools, USB-Platten, RAID, Festplatten und Temperatur über SNMPv3 (nur lesen, nur Admin)")),
+    "tagebuch": Steckbrief(de="Spark-Tagebuch", en="Spark diary", gruppe="talk", schalter=("tagebuch",),
+        anleitung="tagebuch", me="setbox", werkzeuge={"spark_tagebuch": ("Spark-Tagebuch", "Spark diary")},
+        knoten={"spark_tagebuch": "mem"},
+        saetze={"spark_tagebuch": ("Was hast du heute für mich gemacht?", "What did you do for me today?")},
+        begleiter="talk", modul=("tagebuch", "wissen", "Spark-Tagebuch: was der Spark selbst getan hat")),
+    # Zustand per Sprache (zustand_wz.py, plan werkzeug-abdeckung Paket 4): „Läuft alles?“, „Wann wurde gesichert?“
+    "sparkzustand": Steckbrief(de="Zustand per Sprache", en="Status by voice", gruppe="talk",
+        schalter=("status_voice",), anleitung="sparkzustand",
+        werkzeuge={"spark_zustand": ("Spark-Zustand", "Spark status")}, knoten={"spark_zustand": "mem"},
+        eigenes_wort={"spark_zustand": "zustand_wz"},
+        saetze={"spark_zustand": ("Wann wurde zuletzt gesichert?", "When was the last backup?")}, begleiter="talk"),
+    # Ändern per Sprache (aendern.py, plan werkzeug-abdeckung Paket 6): „Mach das rückgängig“ nach dem Ja
+    "rueckgaengig": Steckbrief(de="Rückgängig per Sprache", en="Undo by voice", gruppe="talk",
+        schalter=("undo_voice",), anleitung="rueckgaengig", werkzeuge={"undo_last": ("Rückgängig", "Undo")},
+        knoten={"undo_last": "mem"}, eigenes_wort={"undo_last": "aendern"},
+        kurz=(("undo_last", "Mach das rückgängig", "Undo that"),), begleiter="talk"),
 }
 
 
@@ -1136,7 +1499,8 @@ def werkzeug_namen():
 
 
 def live_werkzeuge():
-    return {tool: s.live[0] for s in STECKBRIEFE.values() for tool in s.werkzeuge}
+    return {tool: s.knoten.get(tool) or s.live[0] for s in STECKBRIEFE.values() for tool in s.werkzeuge
+            if s.knoten.get(tool) or s.live}
 
 
 def live_knoten():
@@ -1152,7 +1516,7 @@ def log_woerter(area):
 
 
 def abdeckung():
-    return {key: tuple(s.werkzeuge) for key, s in STECKBRIEFE.items() if s.werkzeuge}
+    return {key: tuple(s.werkzeuge) + s.auch for key, s in STECKBRIEFE.items() if s.werkzeuge or s.auch}
 
 
 def ohne_werkzeug(art):
@@ -1165,11 +1529,19 @@ def nur_spark():
 
 
 def nur_eigenes_wort():
-    return {s.nur_eigenes_wort[1][0]: s.nur_eigenes_wort[0] for s in STECKBRIEFE.values() if s.nur_eigenes_wort}
+    return {tool: mod for s in STECKBRIEFE.values() for tool, mod in s.eigenes_wort.items()}
 
 
 def spickzettel():
-    return tuple(s.nur_eigenes_wort[1] for s in STECKBRIEFE.values() if s.nur_eigenes_wort)
+    return tuple(k for s in STECKBRIEFE.values() for k in s.kurz)
+
+
+def saetze():
+    return {tool: pair for s in STECKBRIEFE.values() for tool, pair in s.saetze.items()}
+
+
+def desk():
+    return {key: s.begleiter_teile for key, s in STECKBRIEFE.items() if s.begleiter_teile}
 
 
 def begleiter():

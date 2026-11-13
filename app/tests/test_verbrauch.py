@@ -16,6 +16,7 @@ import glob
 import json
 import os
 import re
+import time
 import unittest
 from unittest import mock
 
@@ -425,9 +426,12 @@ class Pages(unittest.TestCase):
         verbrauch.clear()
         profile("Vbseite")
         uid = uid_of("Vbseite")
+        # the page asks the panel with the real clock: the days lie before now, never before a fixed moment (with T
+        # the background rows fell out of the 30 days on 2026-11-13 and the test went red without a push)
+        now = time.time()
         for i in range(30):
-            verbrauch.add("llm", "Gespräch", uid, 4000 + 100 * i, 2000, 300, ms=1800, now=T - 86400 * i)
-            verbrauch.add("llm", "Steckbrief", "s", 9000, 0, 600, ms=4000, now=T - 86400 * i)
+            verbrauch.add("llm", "Gespräch", uid, 4000 + 100 * i, 2000, 300, ms=1800, now=now - 86400 * i)
+            verbrauch.add("llm", "Steckbrief", "s", 9000, 0, 600, ms=4000, now=now - 86400 * i)
         verbrauch.add("llm", "Gespräch", uid, 52000, 30000, 900, ms=2100)
         verbrauch.add("asr", "Frage hören", uid, amount=64.5, ms=300)
         verbrauch.add("tts", "Antwort sprechen", uid, amount=128.0)

@@ -56,21 +56,9 @@ _lock = threading.RLock()
 # Where each tool goes: a target of the picture. Every tool of chat.py and the extras must be here
 # (tests/test_live.py), so a new tool shows on the monitor too (Dominik 2026-10-10: keep it current).
 TOOLS = {
-    "calendar_add": "cal", "calendar_events": "cal", "daily_briefing": "cal", "tasks_add": "cal", "tasks_change": "cal", "calendar_change": "cal",
-    "agent_change": "mem", "home_rule_delete": "ha", "proactive_pause": "mem", "speaker_volume": "geraete", "undo_last": "mem",
-    "tasks_show": "cal", "home_assistant": "ha", "home_assistant_action": "ha", "home_assistant_history": "ha", "camera_describe": "ha", "home_rules_list": "ha",
-    "home_assistant_states": "ha", "home_assistant_todo": "ha", "web_search": "web", "read_page": "pages",
-    "archive_search": "kiwix", "article_more": "wiki", "wikipedia": "wiki", "mail_draft": "mail", "mail_list": "mail",
-    "mail_read": "mail", "mail_search": "mail", "mail_tidy_overview": "mail", "mail_tidy_propose": "mail",
-    "fuer_dich": "mail", "fuer_dich_tun": "mail", "offen_zeigen": "cal",   # Offen lives on the Kalender node
-    "contacts_search": "contacts", "remarkable_note": "rm", "remarkable_page": "rm", "remarkable_attachment": "rm", "remarkable_sent": "rm", "remarkable_sheet": "rm", "remarkable_library": "rm", "iphone_action": "push", "weather": "weather",
-    "parcels": "parcels", "transit": "transit", "feeds_news": "feeds", "document_search": "mem", "document_list": "mem", "fund_suche": "mem", "mappe_liste": "mem", "mappe_stand": "mem", "mappe_dazu": "mem", "hoerstueck_machen": "mem", "link_als_dokument": "links", "dokument_auswertung": "mem", "history_search": "mem", "local_search": "mem",
-    "memory_forget": "mem", "memory_save": "mem", "reminder_cancel": "mem", "reminder_list": "mem", "reminder_set": "mem",
-    "message_announce": "mem", "message_read": "mem", "message_send": "mem", "agent_list": "mem",
-    "agent_schedule": "mem", "agent_task": "mem", "routine_save": "mem", "agent_watch": "mem",
+    "read_page": "pages", "local_search": "mem",
     # inside a job (auftragsplan.py): plan, question and proposal stay on the Spark
     "job_plan": "mem", "job_propose": "mem", "job_ask": "mem",
-    "spark_hilfe": "hilfe", "spark_vorschlag": "hilfe", "spark_tagebuch": "mem", "spark_zustand": "mem", "pc_action": "desk", "pc_send": "desk", "pc_look": "desk",
     # tools only programs use over MCP (mcpserver.py; transcribe/speak/voices show as Hören/Sprechen)
     "today": "cal", "action_status": "mem", "Vorschlag": "mem",
     # notes the Spark sends (push.py) and what it says by itself (proactive.py, live.note)
@@ -78,7 +66,7 @@ TOOLS = {
     # what the Spark does by itself with services (live.job): update check, backup to the NAS
     "GitHub": "github", "NAS-Sicherung": "nas", "Feeds": "feeds", "Geräte-Updates": "geraete", "System-Updates": "systemupdate",
     "Speicher-Abgleich": "speicher", "Speicher holen": "speicher", "Meine Daten packen": "mem", "Wissensordner-Abgleich": "nasquelle",
-    "Ablage-Eingang": "nasablage", "Ablegen": "nasablage", "nas_ablegen": "nasablage", "nas_zustand": "naszustand",
+    "Ablage-Eingang": "nasablage", "Ablegen": "nasablage",
     # Docling-Server (doclingdienst.py): a document read a second time in a quiet moment
     "Docling": "docling",
     "Web Push": "webpush", "Apple Push": "push", "Fernzugang-Assistent": "modell", "Android-App": "android", "Spark-Begleiter": "desk", "Telegram": "tg", "Panel-Seite": "page",
@@ -86,14 +74,12 @@ TOOLS = {
     "Erst lokal": "mem", "remarkable": "rm", "Ablauf": "mem", "Nachsortieren": "mem",
     # Probleme melden (meldung.py): a draft stays on the Spark, sending goes to GitHub
     "Meldung": "mem", "GitHub-Meldung": "issues",
-    # Dokumente erstellen (docmake.py): outline, change and status stay on the Spark; sending goes to its target
-    "document_plan": "make", "document_change": "make", "document_status": "make", "document_send": "make",
     # Bilder malen (bilder.py): the picture is painted on the Spark (bild_server.py, 127.0.0.1)
-    "bild_malen": "bild", "Bild malen": "bild", "Bild ändern (Panel)": "bild",
+    "Bild malen": "bild", "Bild ändern (Panel)": "bild",
     # Musik machen (musik.py): the song is made on the model computer (musik_server.py)
-    "musik_machen": "musik", "Musik machen": "musik", "code_auftrag": "mem", "Code-Auftrag": "mem", "musik_bearbeiten": "musik", "Musik bearbeiten": "musik",
+    "Musik machen": "musik", "Code-Auftrag": "mem", "Musik bearbeiten": "musik",
     # Der Spark ruft an (telefon_anruf.py): planned on the Spark, the call goes through the PBX
-    "anruf_planen": "telefon", "Anrufen lassen": "telefon",
+    "Anrufen lassen": "telefon",
     # the job itself (docmake._work): every part written by the language model, then the file built
     "document_write": "make", "document_build": "make",
     # before writing: the Kiwix article for the fact check and pictures (folien.py), the own documents
