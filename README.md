@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.423** Fix: no more wrong start display with hundreds of minutes while a model is measured
 - **V01.1.422** Check request: opentelemetry-api 1.45.1 → 1.45.2 in the panel's lock file (GHSA-mf5v-w3w3-f6cg, moderate, CVSS 5.3); no other package moves
 - **V01.1.421** Fix: "What was my last order?" searches the mails instead of making an answer up
 - **V01.1.420** Vulnerabilities, what really runs: tars reports the packages of every venv through the Wärter, the Docker images are read once per digest, plus what the iPhone app, Android app, companions, Pebble and the panel's JavaScript bring along (in the nightly run on GitHub too)
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.416** GPU clock cap for the model computer: less power and heat at almost the same speed, under Settings → Spark → Operation
 - **V01.1.415** Ladybug on top right of every page: report a fault or an improvement, with the page, its errors in the browser and the logs
 - **V01.1.414** Test fix: parcels opens the inbox exactly like every other reader again, a mail test flickered because of it
-- **V01.1.413** Vulnerabilities: the nightly run names weight and the version with the fix for every hole, a panel package is raised without Claude if wanted (tested first), and every new package version is checked at OSV before each push
 
 
 

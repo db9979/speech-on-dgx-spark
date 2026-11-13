@@ -47,6 +47,7 @@ START = re.compile(r"Start(ed|ing) speech-spark-llm")     # systemd's line: the 
 ZEIGEN_S = 15 * 60          # the result stays on the page and the banner this long after the end
 ALT_S = 3 * 3600            # a file whose step has not moved for this long is stale (a unit that was killed)
 ENGINE_ZUSTAND = {"blocked": "speicher", "error": "fehler"}   # engine.sh's state -> the fixed word shown
+LAEUFT = ("active", "activating", "reloading")   # systemctl is-active of speech-spark-llm while it really starts
 
 
 def _jetzt(now):
@@ -137,11 +138,14 @@ def erwartet(ziel, messung=None, zeiten=ZEITEN):
     return int(r["laden_s"]) if isinstance(r.get("laden_s"), (int, float)) and r["laden_s"] > 0 else 0
 
 
-def lesen(gesund, journal_text="", messung=None, modell="", now=None, path=DATEI, zeiten=ZEITEN, engine=ENGINE):
+def lesen(gesund, journal_text="", messung=None, modell="", now=None, path=DATEI, zeiten=ZEITEN, engine=ENGINE, einheit=None):
     """What the page, the banner and the chat show: None when nothing runs (and no result is still shown), else
     {vorgang, ziel, schritt, n, seit, dauer_s, schritt_s, erwartet_s, teil, ende, ergebnis, grund}. gesund: the
     engine's /health answers; journal_text: its journal lines or a function giving them (only matched against TEILE,
-    read only while step 4 runs); modell: the configured id (a plain restart)."""
+    read only while step 4 runs); modell: the configured id (a plain restart); einheit: speech-spark-llm's state from
+    systemctl or a function giving it (asked only when the state says "loading"; None: not known). engine.sh writes "loading" when it starts and never again once vLLM runs, so a unit
+    that is stopped (a measurement stops it) leaves "loading" with the time of its last start behind: that is no
+    start (tars 2026-11-13: „Gewichte laden … 840:36 min“ while Gemma 4 was measured)."""
     t = int(_jetzt(now))
     d = read_json(path, {})
     if d.get("vorgang") in VORGAENGE and isinstance(d.get("seit"), dict) and d["seit"]:
@@ -160,6 +164,9 @@ def lesen(gesund, journal_text="", messung=None, modell="", now=None, path=DATEI
         d = {}
     e = read_json(engine, {})
     if gesund or e.get("status") not in ("loading", *ENGINE_ZUSTAND):
+        return None
+    einheit = einheit() if callable(einheit) and e.get("status") == "loading" else einheit
+    if e.get("status") == "loading" and einheit is not None and einheit not in LAEUFT:
         return None
     try:
         seit = int(datetime.fromisoformat(str(e.get("time", ""))).timestamp())
@@ -186,7 +193,9 @@ def hier(cfg, messung=None):
             gesund = r.status == 200
     except (OSError, ValueError):
         gesund = False
-    return lesen(gesund, lambda: journal("speech-spark-llm", 400), messung, str(c.get("modell") or ""))
+    from common import run
+    return lesen(gesund, lambda: journal("speech-spark-llm", 400), messung, str(c.get("modell") or ""),
+                 einheit=lambda: run(["systemctl", "is-active", "speech-spark-llm"])[1].strip() or None)
 
 
 def _zeile(d, t, messung, zeiten, phase_wort):

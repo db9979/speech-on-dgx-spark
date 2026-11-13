@@ -100,6 +100,23 @@ class Ablauf(unittest.TestCase):
             json.dump({"status": "ready"}, f)
         self.assertIsNone(self.lesen(T0))
 
+    def test_a_stopped_unit_left_loading_behind_is_no_start(self):
+        """tars 2026-11-13: a measurement stopped speech-spark-llm; engine.sh's "loading" of its start 14 hours before
+        stayed, and the page said „Neues Modell startet · Gewichte laden … 840:36 min“."""
+        with open(self.e, "w") as f:
+            json.dump({"status": "loading", "error": "x", "time": "2027-01-15T08:00:00+00:00"}, f)
+        def lesen(einheit):
+            return llmstart.lesen(False, JOURNAL, None, "qwen36-35b-a3b-nvfp4", now=1_800_050_436, path=self.f,
+                                  zeiten=self.z, engine=self.e, einheit=einheit)
+        for weg in ("inactive", "failed", "deactivating"):
+            self.assertIsNone(lesen(weg), weg)
+        for da in ("active", "activating", None):
+            self.assertEqual(lesen(da)["vorgang"], "neustart", da)
+        self.assertIsNone(lesen(lambda: "inactive"))     # asked only when the state says loading
+        with open(self.e, "w") as f:
+            json.dump({"status": "ready"}, f)
+        self.assertIsNone(lesen(lambda: self.fail("systemctl asked without a loading state")))
+
     def test_a_stale_file_and_bad_words_are_refused(self):
         llmstart.schritt("wechsel", 4, "qwen36-35b-a3b-nvfp4", now=T0, path=self.f)
         self.assertIsNone(self.lesen(T0 + llmstart.ALT_S + 1))       # a killed unit never shows forever

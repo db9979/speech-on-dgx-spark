@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older versions (V01.0.000 to V01.0.999 and the lines before version numbers): [CHANGELOG-V01.0.md](CHANGELOG-V01.0.md).
 
+- **V01.1.423** · 2026-11-13 · Fix Startanzeige: während einer Messung (oder wenn das Sprachmodell angehalten ist) zeigt Zustand → Modelle nicht mehr „Neues Modell startet · Gewichte laden … 840:36 min“; ein altes „loading“ zählt nur, solange die Einheit wirklich startet
 - **V01.1.422** · 2026-11-13 · Prüfbitte: opentelemetry-api 1.45.1 → 1.45.2 in der Lock-Datei des Panels (GHSA-mf5v-w3w3-f6cg, mittel, CVSS 5.3); sonst bewegt sich kein Paket
 - **V01.1.421** · 2026-11-13 · Fix letzte Bestellung (Issue 3 in spark-meldungen): „Was war meine letzte Bestellung?“, „Was habe ich zuletzt bestellt?“ und „Meine letzten Bestellungen“ sucht das Panel mit „Eindeutiges direkt abrufen“ selbst in den Mails (feste Wörter, 30 Tage), denn eine Bestellung wird per Mail bestätigt; vorher suchte das Modell nur in Finden und erfand dann eine Mail (P865)
 - **V01.1.420** · 2026-11-13 · Schwachstellen, was wirklich läuft: tars meldet die Pakete aller venvs über den Wärter, die Docker-Abbilder werden je Digest gelesen, dazu was iPhone-App, Android-App, Begleiter, Pebble und das Panel-JavaScript mitbringen (auch im Nachtlauf auf GitHub)
