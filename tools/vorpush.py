@@ -12,6 +12,11 @@ What it does, in this order, and it stops loudly at the first problem:
    red 10 h over night and nine pushes landed on it). Only a fix for it passes, with --rotfix. When GitHub cannot
    be asked, it says so and goes on (the full run on GitHub still decides).
 1. app/VERSION is higher than on origin/main and is the top line of CHANGELOG.md (bump forgotten or stale).
+1a. Known holes (Schwachstellen, Dominik 2026-11-13; security checklist "known holes are checked before a version with
+   new packages ships"): every package version that is new or changed against origin/main in app/requirements-*.lock
+   or among the engines in install.sh is asked at OSV (tools/pakete_pruefen.py, only names and versions go out). It
+   stops when a new version brings a hole the old one did not have; a raise that only closes holes passes. When OSV
+   cannot be asked, it says so and goes on (the nightly "Pakete prüfen" still asks).
 1b. The system packages GitHub "Tests" installs with apt (the `apt-get install` lines in .github/workflows/tests.yml,
    the one list): a missing one is installed here (apt-get as root, else with `sudo -n`); when that is not possible
    it stops at once with the exact command, never a red test_fernbild in the middle of the run (a cloud container
@@ -89,6 +94,49 @@ def check_version(base):
     if not top.startswith("- **" + mine + "**"):
         stop("the top line of CHANGELOG.md is not " + mine)
     print("vorpush: version " + mine + " (" + base + " " + theirs + ")", flush=True)
+
+
+def pakete_neu(base, root=ROOT):
+    """({name: version} new or changed against base, {name: version} of base) for the lock files and engines."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("pakete_pruefen", os.path.join(root, "tools", "pakete_pruefen.py"))
+    t = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(t)
+    jetzt = dict(t.gepinnt(root), **t.motoren(root))
+    with tempfile.TemporaryDirectory() as d:
+        for rel in [os.path.relpath(p, root) for p in __import__("glob").glob(os.path.join(root, "app", "requirements-*.lock"))] \
+                + ["install.sh"]:
+            r = subprocess.run(["git", "show", "%s:%s" % (base, rel)], cwd=root, capture_output=True)
+            if r.returncode == 0:
+                os.makedirs(os.path.join(d, os.path.dirname(rel)), exist_ok=True)
+                with open(os.path.join(d, rel), "wb") as f:
+                    f.write(r.stdout)
+        os.makedirs(os.path.join(d, "app"), exist_ok=True)
+        alt = dict(t.gepinnt(d), **(t.motoren(d) if os.path.exists(os.path.join(d, "install.sh")) else {}))
+    return {n: v for n, v in jetzt.items() if alt.get(n) != v}, alt, t
+
+
+def check_pakete(base, post=None):
+    """Stop 1a.: no new package version with a hole its old version did not have."""
+    neu, alt, t = pakete_neu(base)
+    if not neu:
+        return
+    frag = dict(neu, **{n + " alt": alt[n] for n in neu if n in alt and " " not in n})
+    try:
+        warn = t.frage(frag, post)
+    except Exception as e:   # noqa: BLE001  (no answer: the nightly run still asks)
+        print("vorpush: OSV not reachable (%s), %d new package versions unchecked" % (type(e).__name__, len(neu)), flush=True)
+        return
+    schlimm = []
+    for n, v in sorted(neu.items()):
+        ids = set((warn.get(n) or {}).get("ids") or [])
+        ids -= set((warn.get(n + " alt") or {}).get("ids") or [])
+        if ids:
+            schlimm.append("%s %s (%s)" % (n.split(" ")[0], v, ", ".join(sorted(ids))))
+    print("vorpush: %d new package versions asked at OSV, %d with a new hole" % (len(neu), len(schlimm)), flush=True)
+    if schlimm:
+        stop("known hole in a new package version: " + "; ".join(schlimm) + ". Take a version with the fix "
+             "(tools/pakete_pruefen.py names it) or keep the old one")
 
 
 def changed_files(base):
@@ -347,6 +395,7 @@ def main(argv):
     if only_list:
         return 0
     check_version(base)
+    check_pakete(base)
     system_packages()
     py = venv_python(True)   # many modules besides test_ui_browser open pages in Chromium
     regen_docs(py)

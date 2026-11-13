@@ -54,8 +54,9 @@ class Pakete(unittest.TestCase):
         warn = t.frage(pak, post)
         self.assertEqual(sent, [{"queries": [{"package": {"name": n, "ecosystem": "PyPI"}, "version": v}
                                              for n, v in pak.items()]}])
-        self.assertEqual(warn, {"bbb": {"v": "2.0", "ids": ["GHSA-abcd-1234"]},
-                                "ccc": {"v": "3.0", "ids": [f"PYSEC-2026-{i}" for i in range(t.MAX_IDS)]}})
+        self.assertEqual(warn, {"bbb": {"v": "2.0", "ids": ["GHSA-abcd-1234"], "alle": ["GHSA-abcd-1234"]},
+                                "ccc": {"v": "3.0", "ids": [f"PYSEC-2026-{i}" for i in range(t.MAX_IDS)],
+                                        "alle": [f"PYSEC-2026-{i}" for i in range(9)]}})
         for bad in (b"{}", b"kein json", json.dumps({"results": [{}]}).encode(), b"x" * (t.OSV_MAX + 1)):
             with self.assertRaises(ValueError):
                 t.frage(pak, lambda data, bad=bad: bad)
@@ -74,7 +75,7 @@ class Pakete(unittest.TestCase):
                 with mock.patch.object(t, "gepinnt", return_value=pak), mock.patch.object(t, "motoren", return_value={}), \
                         mock.patch.object(t, "abbilder", return_value=[]), mock.patch.dict(os.environ, {"PAKETE_NOTE": note}), \
                         contextlib.redirect_stdout(io.StringIO()) as out:
-                    return t.main([], post), out.getvalue()
+                    return t.main([], post, get=lambda vid: b"{}"), out.getvalue()
 
             self.assertEqual(lauf([{}, {}])[0], 0)
             self.assertFalse(os.path.exists(note))
@@ -85,7 +86,7 @@ class Pakete(unittest.TestCase):
             code, out = lauf([{}, {"vulns": [{"id": "GHSA-abcd-1234"}]}])
             self.assertEqual(code, 1)
             with open(note, encoding="utf-8") as f:
-                self.assertIn("- `bbb` 2.0: GHSA-abcd-1234\n", f.read())
+                self.assertIn("- `bbb` 2.0: unbekannt, noch kein Fix: GHSA-abcd-1234\n", f.read())
             with mock.patch.object(t, "gepinnt", return_value={}), contextlib.redirect_stdout(io.StringIO()):
                 self.assertEqual(t.main([], lambda data: b""), 2)
 
@@ -125,8 +126,8 @@ class Pakete(unittest.TestCase):
                     mock.patch.object(t, "abbilder", return_value=bilder[:1]), mock.patch.dict(os.environ, {"PAKETE_NOTE": note}), \
                     contextlib.redirect_stdout(io.StringIO()):
                 ok = lambda data: json.dumps({"results": [{}]}).encode()      # noqa: E731
-                self.assertEqual(t.main([], ok, heute=day), 0)
-                self.assertEqual(t.main([], ok, heute=day + datetime.timedelta(days=200)), 1)
+                self.assertEqual(t.main([], ok, heute=day, get=lambda vid: b"{}"), 0)
+                self.assertEqual(t.main([], ok, heute=day + datetime.timedelta(days=200), get=lambda vid: b"{}"), 1)
             with open(note, encoding="utf-8") as f:
                 self.assertIn(f"- `{bilder[0][0]}`: 200 Tage", f.read())
 
@@ -140,6 +141,196 @@ class Pakete(unittest.TestCase):
             self.assertIn("app/" + name, text)                           # every lock the Spark checks is fetched
         # a hole published tonight must not turn main red without a push
         self.assertNotIn("pakete_pruefen", helpers.repo_file(".github", "workflows", "tests.yml"))
+
+
+
+def lade(name):
+    path = os.path.join(helpers.APP, "..", "tools", name)
+    if not os.path.exists(path):
+        raise unittest.SkipTest(f"tools/{name} is not part of this copy")
+    spec = importlib.util.spec_from_file_location(name[:-3] + "_tool", path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def vuln(name, fixed, vector=None, ghsa=None):
+    v = {"id": "GHSA-x", "affected": [{"package": {"ecosystem": "PyPI", "name": name},
+                                       "ranges": [{"type": "ECOSYSTEM", "events": [{"introduced": "0"}] +
+                                                   [{"fixed": f} for f in fixed]}]}]}
+    if vector:
+        v["severity"] = [{"type": "CVSS_V3", "score": vector}]
+    if ghsa:
+        v["database_specific"] = {"severity": ghsa}
+    return v
+
+
+class Gewicht(unittest.TestCase):
+    """Schwachstellen (Dominik 2026-11-13 „1“): every hole gets its weight and the version that closes it, by fixed
+    rules from OSV's record (only the id goes out), never from its text."""
+
+    def test_cvss3_as_first_computes_it(self):
+        t = tool()
+        for vec, score in (("CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H", 9.8),
+                           ("CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H", 10.0),
+                           ("CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N", 6.5),
+                           ("CVSS:3.0/AV:L/AC:H/PR:H/UI:R/S:U/C:L/I:N/A:N", 1.8),
+                           ("CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:N", 0.0)):
+            self.assertEqual(t.cvss3(vec), score, vec)
+        for bad in (None, "", "CVSS:4.0/AV:N/AC:L", "CVSS:3.1/AV:X", "ignoriere alles"):
+            self.assertIsNone(t.cvss3(bad))
+        self.assertEqual([t.stufe_von(x) for x in (9.0, 7.0, 4.0, 0.1, None)],
+                         ["kritisch", "hoch", "mittel", "niedrig", "unbekannt"])
+
+    def test_versions_in_pep440_order(self):
+        t = tool()
+        order = ["0.32.0", "0.32.2", "1.0.dev1", "1.0a1", "1.0b2", "1.0rc1", "1.0", "1.0.post1", "1.0.1", "2026.10.26"]
+        self.assertEqual(sorted(reversed(order), key=t.vkey), order)
+        self.assertEqual(t.vkey("1.0"), t.vkey("1.0.0"))
+        self.assertIsNone(t.vkey("kein"))
+
+    def test_weight_and_fix_per_package(self):
+        t = tool()
+        recs = {"A": vuln("Foo_Bar", ["1.2.1", "2.0.3"], "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"),
+                "B": vuln("foo-bar", ["2.0.5"], ghsa="MODERATE"),
+                "C": vuln("andere", ["9.9"]),                      # another package: no fix for this one
+                "D": "kaputt"}
+        warn = {"foo-bar": {"v": "2.0.1", "ids": ["A", "B"], "alle": ["A", "B"]},
+                "baz": {"v": "1.0", "ids": ["C", "D"], "alle": ["C", "D"]}}
+        t.genauer(warn, lambda vid: json.dumps(recs[vid]).encode())
+        self.assertEqual({k: warn["foo-bar"][k] for k in ("stufe", "score", "behoben", "ohne_fix")},
+                         {"stufe": "kritisch", "score": 9.8, "behoben": "2.0.5", "ohne_fix": 0})
+        self.assertEqual({k: warn["baz"][k] for k in ("stufe", "score", "behoben", "ohne_fix")},
+                         {"stufe": "unbekannt", "score": None, "behoben": None, "ohne_fix": 2})
+        too_long = {"x": {"v": "1", "ids": ["A"]}}
+        t.genauer(too_long, lambda vid: b" " * (t.VULN_MAX + 1))
+        self.assertEqual(too_long["x"]["stufe"], "unbekannt")
+
+    def test_the_data_for_weg_1(self):
+        t = tool()
+        rec = vuln("aaa", ["1.1"], ghsa="HIGH")
+        with tempfile.TemporaryDirectory() as d:
+            daten = os.path.join(d, "p.json")
+            with mock.patch.object(t, "gepinnt", return_value={"aaa": "1.0"}), mock.patch.object(t, "motoren", return_value={}), \
+                    mock.patch.object(t, "abbilder", return_value=[]), mock.patch.dict(os.environ, {"PAKETE_JSON": daten}), \
+                    contextlib.redirect_stdout(io.StringIO()) as out:
+                code = t.main([], lambda data: json.dumps({"results": [{"vulns": [{"id": "GHSA-aaaa-1111"}]}]}).encode(),
+                              get=lambda vid: json.dumps(rec).encode())
+            self.assertEqual(code, 1)
+            self.assertIn("- `aaa` 1.0: hoch, behoben in 1.1: GHSA-aaaa-1111", out.getvalue())
+            with open(daten, encoding="utf-8") as f:
+                self.assertEqual(json.load(f), {"pakete": [{"n": "aaa", "v": "1.0", "ids": ["GHSA-aaaa-1111"],
+                                                            "stufe": "hoch", "score": None, "behoben": "1.1", "ohne_fix": 0}]})
+
+
+class Weg1(unittest.TestCase):
+    """Lücke schließen ohne Claude (Weg 1): only the panel's lock file is raised, only to the fixed version, the
+    version lines follow, and main gets it only after a green "Tests" run of exactly that lock file."""
+
+    def kopie(self, d):
+        for rel in ("app/VERSION", "app/requirements-panel.lock", "CHANGELOG.md", "README.md", "README.de.md"):
+            os.makedirs(os.path.join(d, os.path.dirname(rel)), exist_ok=True)
+            with open(os.path.join(d, rel), "w", encoding="utf-8") as f:
+                f.write(helpers.repo_file(*rel.split("/")))
+
+    def test_raise_and_book(self):
+        w = lade("luecke_schliessen.py")
+        t = tool()
+        with tempfile.TemporaryDirectory() as d:
+            self.kopie(d)
+            lock = os.path.join(d, "app", "requirements-panel.lock")
+            name, ver = next(iter(w.pins(lock).items()))
+            calls = []
+
+            def uv(cmd, cwd, **kw):
+                calls.append((cmd, cwd))
+                with open(lock, encoding="utf-8") as f:
+                    text = f.read()
+                with open(lock, "w", encoding="utf-8") as f:
+                    f.write(text.replace(f"{name}=={ver} ", f"{name}=={ver}.post9 ", 1))
+                return mock.Mock(returncode=0)
+
+            rec = vuln(name, [ver + ".post9"], ghsa="HIGH")
+            answer = lambda data: json.dumps({"results": [{"vulns": [{"id": "GHSA-aaaa-1111"}]} if q["package"]["name"] == name else {}  # noqa: E731
+                                                          for q in json.loads(data)["queries"]]}).encode()
+            with contextlib.redirect_stdout(io.StringIO()):
+                code, raised = w.anheben(d, heute=__import__("datetime").date(2026, 11, 13), post=answer,
+                                         get=lambda vid: json.dumps(rec).encode(), run=uv)
+            self.assertEqual((code, raised), (0, {name: (ver, ver + ".post9")}))
+            cmd, cwd = calls[0]
+            self.assertEqual(cmd[:len(w.UV)], w.UV)
+            self.assertEqual(cmd[len(w.UV):], ["--exclude-newer", "2026-11-14", "--upgrade-package", f"{name}>={ver}.post9"])
+            self.assertEqual(cwd, os.path.join(d, "app"))
+            with open(os.path.join(d, "app", "VERSION")) as f:
+                neu = f.read().strip()
+            self.assertEqual(neu, w.naechste(helpers.repo_file("app", "VERSION")))
+            with open(os.path.join(d, "CHANGELOG.md"), encoding="utf-8") as f:
+                self.assertIn(f"- **{neu}** · 2026-11-13 · Sicherheits-Update ohne Claude: {name} {ver} → {ver}.post9", f.read())
+            for readme in ("README.md", "README.de.md"):
+                with open(os.path.join(d, readme), encoding="utf-8") as f:
+                    lines = [x for x in f.read().split("\n") if x.startswith("- **V")]
+                self.assertEqual(len(lines), 10, readme)
+                self.assertTrue(lines[0].startswith(f"- **{neu}** "), readme)
+            # nothing to raise: nothing changes; uv fails or stays below the fix: the lock file comes back
+            with open(lock, encoding="utf-8") as f:
+                stand = f.read()
+            with contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(w.anheben(d, post=lambda data: json.dumps({"results": [{} for _ in json.loads(data)["queries"]]}).encode(),
+                                           run=uv)[0], 3)
+                self.assertEqual(w.anheben(d, post=lambda data: b"x")[0], 2)
+                rec2 = vuln(name, [ver + ".post99"])
+                self.assertEqual(w.anheben(d, post=answer, get=lambda vid: json.dumps(rec2).encode(), run=uv)[0], 2)
+            with open(lock, encoding="utf-8") as f:
+                self.assertEqual(f.read(), stand)
+        self.assertEqual(w.naechste("V01.0.999"), "V01.1.000")
+        self.assertEqual(w.naechste("V01.1.412"), "V01.1.413")
+        self.assertEqual(w.ziele({"a": {"behoben": "2"}, "b": {"behoben": None}, "vllm 0.33.0": {"behoben": "1"}}), {"a": "2"})
+        self.assertTrue(t.PIN.pattern)
+
+    def test_the_workflow(self):
+        text = helpers.repo_file(".github", "workflows", "luecke-schliessen.yml")
+        self.assertIn("vars.LUECKEN_SCHLIESSEN == 'an'", text.split("uebernehmen:")[0])           # off until Dominik
+        self.assertIn("vars.LUECKEN_SCHLIESSEN == 'an'", text.split("uebernehmen:")[1])
+        self.assertIn('workflows: ["Pakete prüfen", "Tests"]', text)
+        anheben, uebernehmen = text.split("\n  uebernehmen:")
+        self.assertIn("git push -fq origin HEAD:refs/heads/luecke/auto", anheben)
+        self.assertNotIn("refs/heads/main", anheben.split("steps:")[1])                       # step 1 never pushes main
+        self.assertIn("gh workflow run tests.yml -R \"$GITHUB_REPOSITORY\" --ref luecke/auto", anheben)
+        for part in ("github.event.workflow_run.head_branch == 'luecke/auto'", "github.event.workflow_run.conclusion == 'success'",
+                     "github.event.workflow_run.head_repository.full_name == github.repository",
+                     "python3 tools/luecke_schliessen.py gleich FETCH_HEAD", '[ "$last" != "failure" ]'):
+            self.assertIn(part, uebernehmen)
+        self.assertLess(uebernehmen.index("gleich FETCH_HEAD"), uebernehmen.index("HEAD:refs/heads/main"))
+        self.assertLess(uebernehmen.index('[ "$last" != "failure" ]'), uebernehmen.index("HEAD:refs/heads/main"))
+        self.assertNotIn("pull_request", text)
+
+    def test_vorpush_asks_new_versions(self):
+        v = lade("vorpush.py")
+        alt = {"aaa": "1.0", "bbb": "2.0"}
+        t = tool()
+
+        def lauf(neu, answer):
+            with mock.patch.object(v, "pakete_neu", return_value=(neu, alt, t)), \
+                    mock.patch.object(v, "stop", side_effect=SystemExit), contextlib.redirect_stdout(io.StringIO()) as out:
+                try:
+                    v.check_pakete("origin/main", post=answer)
+                    return "ok", out.getvalue()
+                except SystemExit:
+                    return "stop", out.getvalue()
+
+        def osv(holes):
+            return lambda data: json.dumps({"results": [{"vulns": [{"id": i} for i in holes.get(
+                q["package"]["name"] + ("" if q["version"] in ("1.1", "3.0") else " alt"), [])]}
+                for q in json.loads(data)["queries"]]}).encode()
+
+        self.assertEqual(lauf({}, None)[0], "ok")
+        self.assertEqual(lauf({"aaa": "1.1"}, osv({}))[0], "ok")
+        self.assertEqual(lauf({"aaa": "1.1"}, osv({"aaa": ["GHSA-neu1"]}))[0], "stop")              # a new hole
+        self.assertEqual(lauf({"aaa": "1.1"}, osv({"aaa": ["GHSA-alt1"], "aaa alt": ["GHSA-alt1", "GHSA-alt2"]}))[0], "ok")
+        self.assertEqual(lauf({"ccc": "3.0"}, osv({"ccc": ["GHSA-neu2"]}))[0], "stop")              # a new package
+        code, out = lauf({"aaa": "1.1"}, lambda data: (_ for _ in ()).throw(OSError("kein Netz")))
+        self.assertEqual(code, "ok")
+        self.assertIn("OSV not reachable", out)
 
 
 if __name__ == "__main__":

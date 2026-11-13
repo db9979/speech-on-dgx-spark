@@ -11,7 +11,8 @@ WFS = os.path.join(ROOT, ".github", "workflows")
 SIGNING = ("ANDROID_KEYSTORE", "ASC_KEY", "ASC_KEY_ID", "ASC_ISSUER_ID", "ASC_TEAM_ID", "MAC_DEVID_P12",
            "UPDATE_SIGNING_KEY")
 MOVER = "schluessel-umziehen.yml"       # reads the repository copies once to move them into the environment
-GIT_PUSH = {"screenshots.yml"}           # pushes with the checkout's own credentials
+GIT_PUSH = {"screenshots.yml",          # pushes with the checkout's own credentials
+            "luecke-schliessen.yml"}    # Weg 1: the branch luecke/auto, and main only after its green "Tests"
 
 
 def workflows():

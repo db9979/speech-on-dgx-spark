@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older versions (V01.0.000 to V01.0.999 and the lines before version numbers): [CHANGELOG-V01.0.md](CHANGELOG-V01.0.md).
 
+- **V01.1.413** · 2026-11-13 · Schwachstellen: der Nachtlauf nennt bei jeder Lücke Schweregrad und die Version mit dem Fix, ein Panel-Paket wird auf Wunsch ohne Claude angehoben (erst getestet), und vor jedem Push wird jede neue Paketversion bei OSV geprüft
 - **V01.1.412** · 2026-11-13 · Fix Pakete (Issue 2 in spark-meldungen): Versandmails zählen in jedem Ordner außer Gesendet, Entwürfe, Papierkorb, Spam und Sammelansichten, auch in eigenen Ordnern wie „Lieferungen“; der Mailserver sucht nur nach den Absendern der Paketdienste, so bleibt es auch bei vielen Ordnern schnell (P856)
 - **V01.1.411** · 2026-11-13 · Fix Pakete (Issue 1 in spark-meldungen): die Versandmails werden auch in den Ordnern gelesen, in die der Spark beim Aufräumen oder nach Mail-Regeln sortiert; vorher meldete „Von selbst“ ein Paket, das das Werkzeug Minuten später nicht mehr fand (P855)
 - **V01.1.410** · 2026-11-13 · Antwort-Meldungen mit Werkzeug-Ergebnissen (Issue 1 in spark-meldungen): der Bericht zeigt, was jedes Werkzeug zurückgab, so ist klar, ob Werkzeug oder Modell falsch lag; auf dem Spark im Klartext, an GitHub nur anonymisiert und angehakt

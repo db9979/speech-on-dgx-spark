@@ -136,9 +136,10 @@ Jede Änderung wird nicht nur gegen die Fallen oben geprüft, sondern auch dageg
 
 **Lieferkette und Betrieb**
 - [ ] Neue Pakete mit Version und Hash im Lock; neue Actions per SHA gepinnt, in der Fassung für Node 24 (🧪 test_workflows); Dependabot-Hinweise zeitnah übernehmen.
-- [ ] Die nächtliche Prüfung „Pakete prüfen“ fragt OSV nach jedem gepinnten Paket, auch nach vLLM und vllm-omni aus `install.sh`, und nennt jedes Docker-Abbild eines Modells, dessen Digest älter als 90 Tage ist (`seit` in `modelle.DOCKER`; 🧪 test_pakete_pruefen). Eine neue Engine-Version kommt als `*_VERSION=` in `install.sh`, ein neues Abbild mit `seit`.
+- [ ] Die nächtliche Prüfung „Pakete prüfen“ fragt OSV nach jedem gepinnten Paket, auch nach vLLM und vllm-omni aus `install.sh`, und nennt jedes Docker-Abbild eines Modells, dessen Digest älter als 90 Tage ist (`seit` in `modelle.DOCKER`; 🧪 test_pakete_pruefen). Jede Lücke bekommt dabei ihren Schweregrad (CVSS 3 oder GitHubs Einstufung) und die Version, die sie schließt. Eine neue Engine-Version kommt als `*_VERSION=` in `install.sh`, ein neues Abbild mit `seit`.
 - [ ] Geheimnisse nie im Repo (Secret Scanning mit Push-Schutz ist an).
-- [ ] Bekannte Schwachstellen in Abhängigkeiten werden geprüft, bevor eine Version mit neuen Paketen ausgeliefert wird.
+- [ ] Bekannte Schwachstellen in Abhängigkeiten werden geprüft, bevor eine Version mit neuen Paketen ausgeliefert wird: `tools/vorpush.py` fragt OSV nach jeder neuen oder geänderten Paketversion in den Lock-Dateien und bei den Engines in `install.sh` und hält an, wenn sie eine Lücke mitbringt, die die alte Version nicht hatte (🧪 test_pakete_pruefen).
+- [ ] Ein Panel-Paket mit Lücke und Fix hebt der Lauf „Lücke schließen“ ohne Claude an (Weg 1, nur mit der Repository-Variable `LUECKEN_SCHLIESSEN` = `an`): erst auf dem Zweig `luecke/auto`, nach grünem „Tests“ dort auf main, nur wenn die Lock-Datei genau die getestete ist und main nicht rot ist (🧪 test_pakete_pruefen, test_workflows).
 - [ ] Was als root läuft, ist ein fester Ablauf in einer eigenen Unit, gestartet über eine feste sudoers-Zeile; das Panel schreibt nur einen Wunsch aus einem festen Wort, nie einen Befehl, Namen oder Pfad. Ein Neustart nur auf das Wort des Admins (System-Updates).
 
 **Regelmäßige Prüfung**

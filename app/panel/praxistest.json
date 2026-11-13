@@ -5833,6 +5833,14 @@
 "text": "Eine Versandmail (DHL, Hermes, DPD, GLS, UPS, Amazon) liegt in einem eigenen Ordner, etwa „Lieferungen“ (von einer Regel in Apple Mail). Frag „Was bekomme ich heute per Post?“: die Antwort nennt das Paket. Eine Versandmail im Papierkorb oder Spam zählt nicht (GitHub-Issue 2).",
 "thread": "Fehler per Assistent als Issue melden",
 "test": "test_extras.Parcels.test_mail_in_another_folder_still_counts"
+},
+{
+"id": "P857",
+"v": 1413,
+"titel": "Lücke schließen ohne Claude",
+"text": "Auf GitHub unter Settings → Secrets and variables → Actions → Variables die Variable LUECKEN_SCHLIESSEN mit dem Wert an anlegen. Dann Actions → „Lücke schließen“ → Run workflow: der Lauf wird grün; gibt es kein Panel-Paket mit Lücke und Fix, steht im Schritt Raise „luecke: nichts“. Das Issue „Pakete mit bekannter Lücke“ nennt bei jedem Paket jetzt Schweregrad und „behoben in“.",
+"thread": "Schwachstellen gegen OSV prüfen",
+"test": "test_pakete_pruefen.Weg1.test_the_workflow"
 }
 ]
 }

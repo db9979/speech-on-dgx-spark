@@ -1,0 +1,139 @@
+name: Lücke schließen
+
+# Weg 1 (Schwachstellen, Dominik 2026-11-13 „1“): a panel package with a known hole and a fixed version is raised by
+# fixed rules, without Claude. Off until the repository variable LUECKEN_SCHLIESSEN is "an" (Settings → Secrets and
+# variables → Actions → Variables). Three steps, each a fixed command (tools/luecke_schliessen.py):
+#   1. after the nightly "Pakete prüfen" found holes (or by hand): raise on the newest main, push the branch luecke/auto
+#      and start "Tests" for it (a push with this job's token starts no workflow by itself; workflow_dispatch does).
+#   2. after "Tests" passed on luecke/auto: the same again on the newest main; pushed to main only when the lock file is
+#      byte for byte the tested one and the last "Tests" run of main is not red (PUSH-STOPP holds for this job too).
+#      The Spark installs it with the next green "Tests" run of main (the next push of anybody).
+#   3. anything else (vLLM, yt-dlp, Docker images, a hole without a fix, red tests) stays in the issue
+#      „Pakete mit bekannter Lücke“ for a person or a Claude thread.
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["Pakete prüfen", "Tests"]
+    types: [completed]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: luecke-schliessen
+  cancel-in-progress: false
+
+jobs:
+  anheben:
+    name: Anheben
+    if: >-
+      vars.LUECKEN_SCHLIESSEN == 'an' && github.ref == 'refs/heads/main' &&
+      (github.event_name == 'workflow_dispatch' ||
+       (github.event.workflow_run.name == 'Pakete prüfen' && github.event.workflow_run.conclusion == 'failure' &&
+        github.event.workflow_run.head_branch == 'main'))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: write       # only the branch luecke/auto
+      actions: write        # only to start "Tests" for that branch
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          ref: main
+          fetch-depth: 1
+          persist-credentials: true
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.11"
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6.0
+      - name: Raise
+        id: raise
+        env:
+          LUECKE_NOTE: ${{ runner.temp }}/luecke.md
+        run: |
+          set +e
+          python3 tools/luecke_schliessen.py anheben
+          code=$?
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          [ "$code" = 0 ] || [ "$code" = 3 ]
+      - name: Docs
+        if: steps.raise.outputs.code == '0'
+        run: |
+          python -m pip install -q --no-deps --require-hashes -r app/requirements-panel.lock
+          python app/panel/hilfe.py --docs
+      - name: Branch and tests
+        if: steps.raise.outputs.code == '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B luecke/auto
+          git add -A app CHANGELOG.md README.md README.de.md docs
+          git commit -qF - < "$RUNNER_TEMP/luecke.md"
+          git push -fq origin HEAD:refs/heads/luecke/auto
+          gh workflow run tests.yml -R "$GITHUB_REPOSITORY" --ref luecke/auto
+
+  uebernehmen:
+    name: Übernehmen
+    if: >-
+      vars.LUECKEN_SCHLIESSEN == 'an' && github.event_name == 'workflow_run' &&
+      github.event.workflow_run.name == 'Tests' && github.event.workflow_run.head_branch == 'luecke/auto' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_repository.full_name == github.repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: write       # main and the branch luecke/auto
+      actions: write        # to start "Tests" for main
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          ref: main
+          fetch-depth: 1
+          persist-credentials: true
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.11"
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6.0
+      # PUSH-STOPP: the newest finished "Tests" run of main (push) must not be red
+      - name: Main not red
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          last=$(gh run list -R "$GITHUB_REPOSITORY" -w tests.yml -b main -e push -s completed -L 1 --json conclusion --jq '.[0].conclusion // ""')
+          echo "main: $last"
+          [ "$last" != "failure" ]
+      # nothing left to raise (a thread raised it meanwhile): only the branch goes
+      - name: Raise on the newest main
+        id: raise
+        env:
+          LUECKE_NOTE: ${{ runner.temp }}/luecke.md
+          TESTED: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set +e
+          python3 tools/luecke_schliessen.py anheben
+          code=$?
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          [ "$code" = 0 ] || [ "$code" = 3 ] || exit 1
+          [ "$code" = 0 ] || exit 0
+          set -e
+          git fetch -q --depth 1 origin "$TESTED"
+          python3 tools/luecke_schliessen.py gleich FETCH_HEAD
+          python -m pip install -q --no-deps --require-hashes -r app/requirements-panel.lock
+          python app/panel/hilfe.py --docs
+      - name: Push main
+        if: steps.raise.outputs.code == '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A app CHANGELOG.md README.md README.de.md docs
+          git commit -qF - < "$RUNNER_TEMP/luecke.md"
+          git push -q origin HEAD:refs/heads/main
+          git push -q origin --delete luecke/auto || true
+          gh workflow run tests.yml -R "$GITHUB_REPOSITORY" --ref main
+      - name: Branch away
+        if: steps.raise.outputs.code == '3'
+        run: git push -q origin --delete luecke/auto || true

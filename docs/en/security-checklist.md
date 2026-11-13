@@ -136,9 +136,10 @@ Every change is checked not only against the traps above, but also against wheth
 
 **Supply chain and operation**
 - [ ] New packages with version and hash in the lock; new actions pinned by SHA, in their Node 24 version (🧪 test_workflows); adopt Dependabot alerts promptly.
-- [ ] The nightly check "Pakete prüfen" asks OSV about every pinned package, also vLLM and vllm-omni from `install.sh`, and names every Docker image of a model whose digest is older than 90 days (`seit` in `modelle.DOCKER`; 🧪 test_pakete_pruefen). A new engine version goes into `install.sh` as `*_VERSION=`, a new image with `seit`.
+- [ ] The nightly check "Pakete prüfen" asks OSV about every pinned package, also vLLM and vllm-omni from `install.sh`, and names every Docker image of a model whose digest is older than 90 days (`seit` in `modelle.DOCKER`; 🧪 test_pakete_pruefen). Every hole gets its weight (CVSS 3 or GitHub's rating) and the version that closes it. A new engine version goes into `install.sh` as `*_VERSION=`, a new image with `seit`.
 - [ ] Secrets never in the repo (secret scanning with push protection is on).
-- [ ] Known vulnerabilities in dependencies are checked before a version with new packages is shipped.
+- [ ] Known vulnerabilities in dependencies are checked before a version with new packages is shipped: `tools/vorpush.py` asks OSV about every new or changed package version in the lock files and among the engines in `install.sh` and stops when it brings a hole the old version did not have (🧪 test_pakete_pruefen).
+- [ ] A panel package with a hole and a fix is raised by the run "Lücke schließen" without Claude (Weg 1, only with the repository variable `LUECKEN_SCHLIESSEN` = `an`): first on the branch `luecke/auto`, after a green "Tests" there on main, only when the lock file is exactly the tested one and main is not red (🧪 test_pakete_pruefen, test_workflows).
 - [ ] What runs as root is a fixed run in a unit of its own, started through a fixed sudoers line; the panel only writes a wish of one fixed word, never a command, name or path. A restart only on the admin's word (system updates).
 
 **Regular review**

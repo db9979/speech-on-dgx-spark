@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.413** Schwachstellen: der Nachtlauf nennt bei jeder Lücke Schweregrad und die Version mit dem Fix, ein Panel-Paket wird auf Wunsch ohne Claude angehoben (erst getestet), und vor jedem Push wird jede neue Paketversion bei OSV geprüft
 - **V01.1.412** Fix Pakete: Versandmails zählen in jedem eigenen Ordner, nicht nur im Posteingang und den Spark-Ordnern
 - **V01.1.411** Fix Pakete: Versandmails zählen auch, wenn der Spark sie in einen seiner Ordner sortiert hat; vorher meldete „Von selbst“ ein Paket, das die Frage danach nicht mehr fand
 - **V01.1.410** Antwort-Meldungen zeigen auch, was die Werkzeuge zurückgaben: so ist klar, ob Werkzeug oder Modell falsch lag
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.406** Steckbriefe für die letzten 65 Funktionen, die mit Werkzeugen: alle 298 Funktionen stehen jetzt je an einer Stelle
 - **V01.1.405** Steckbriefe für jede Funktion ohne eigenes Werkzeug: 233 von 298 Funktionen stehen jetzt je an einer Stelle
 - **V01.1.404** Stand der Technik: neuere Modell-Engine mit drei geschlossenen Lücken, MCP in der neuen Fassung 2026-07-28, nächtliche Lückenprüfung auch für den Modell-Rechner
-- **V01.1.403** Testfix: ein Chat-Test räumt seine Einladungen weg, ein Seitenhöhen-Test wackelt nicht mehr
 
 
 
