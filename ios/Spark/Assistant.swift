@@ -18,6 +18,9 @@ final class Conversation: ObservableObject {
         /// 👍/👎 (Einstellungs-Assistent): the id the Spark gave this answer, and the vote once given
         var rateId: String?
         var rated: Bool?
+        /// „Melden“ (Probleme melden, Dominik 2026-11-13): the id the Spark gave this answer, and the outcome once sent
+        var reportId: String?
+        var reported: String?
         /// a picture painted for this answer (bilder.py): its job, and its prompt for the conversation list
         var picJob: String?
         var picPrompt: String?
@@ -113,6 +116,22 @@ final class Conversation: ObservableObject {
             _ = try await api.post("api/chat/rate", body)
             if let j = messages.firstIndex(where: { $0.id == id }) { messages[j].rated = good }
             notice = good ? String(localized: "Danke!") : String(localized: "Danke, notiert.")
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
+    /// „Melden“ under an answer (POST /api/report/answer): a report bound to exactly this answer. The Spark keeps a
+    /// draft (seen and sent under Einstellungen → Problem melden) or, with „Direkt an GitHub senden“, sends it at once.
+    func report(_ id: UUID, text: String) async {
+        guard let i = messages.firstIndex(where: { $0.id == id }), let aid = messages[i].reportId,
+              let api = SparkAPI.current else { return }
+        let body: [String: Any] = ["id": aid, "text": String(text.trimmingCharacters(in: .whitespacesAndNewlines).prefix(2000))]
+        do {
+            let d = try await api.post("api/report/answer", body)
+            let sent = (d["status"] as? String) == "gesendet"
+            let note = sent ? String(localized: "Als Issue gesendet.") : String(localized: "Entwurf angelegt. Du findest ihn bei „Problem melden“ in den Einstellungen.")
+            if let j = messages.firstIndex(where: { $0.id == id }) { messages[j].reported = note }
+            notice = note
         } catch {
             self.error = error.localizedDescription
         }
@@ -549,6 +568,7 @@ final class Conversation: ObservableObject {
             guard i < mine.count, mine[i].role == m.role else { return m }
             var k = m
             k.id = mine[i].id; k.label = mine[i].label; k.rateId = mine[i].rateId; k.rated = mine[i].rated
+            k.reportId = mine[i].reportId; k.reported = mine[i].reported
             k.wbId = mine[i].wbId; k.filed = mine[i].filed
             if k.picJob == nil { k.picJob = mine[i].picJob; k.picPrompt = mine[i].picPrompt }   // the painted picture stays
             return k
@@ -1112,6 +1132,7 @@ final class Conversation: ObservableObject {
                 case .sparkCall(let chat, let name, let video):   // the person said yes on this iPhone: CallKit starts it
                     CallCenter.shared.dial(chat: chat, name: name, video: video)
                 case .rate(let id): edit { $0.rateId = id }
+                case .report(let id): edit { $0.reportId = id }
                 case .picture(let job, let prompt): edit { $0.picJob = job; $0.picPrompt = prompt }
                 case .more(let kind, let items): edit { $0.more = items; $0.moreKind = kind }
                 case .step(let x): edit { $0.steps = ($0.steps ?? []) + [x] }

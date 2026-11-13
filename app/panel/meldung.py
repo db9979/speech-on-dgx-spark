@@ -16,6 +16,11 @@ repository the admin set (default db9979/spark-meldungen, private), with a fine-
 enters with a fresh code; it lives sealed in the vault (STATE/meldung-token.json) and is never shown or logged.
 Without a token "Im Browser öffnen" fills GitHub's "new issue" page instead (the person is signed in there itself).
 
+A report for one answer („Mach ein Issue draus“, „Melden“ under the answer, Dominik 2026-11-13) also carries question,
+answer, source and the way of the request. The one exception to "only what could go out": question, answer and
+source stay in plain words in its draft (the reporter and the admins see them); to GitHub they go only anonymized
+and ticked, or with chat.report_direct right away after the leak check (see keep_answer, by_answer, direct).
+
 Who: the admin switch chat.report and the profile's own switch report_on (both off), guests never. The main admin
 and admin profiles (not the Verwalter role) may add Diagnose lines (journal of the whole Spark, anonymized); a
 profile only gets its own requests (Logs → Anfragen, fixed words and numbers), the system state and its app's log.
@@ -36,8 +41,11 @@ from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 
+import coadmin
+import faelle
 import features
 import guard
+import logfilter
 import profiles
 import vault
 from common import STATE, load_config, write_json
@@ -91,7 +99,6 @@ def _staff(request):
     """(name, uid, logs) for the main admin or a profile with the admin role; logs: may add Diagnose
     lines. The Verwalter role is no staff here (Prüfung 2026-10-14, B): it reports like any profile and never sees,
     sends or deletes another profile's draft. None otherwise."""
-    import coadmin
     import core
     if request.headers.get(profiles.DEVICE_HEADER) or request.scope.get("speech_profile") or request.scope.get("speech_mcp"):
         return None
@@ -275,7 +282,6 @@ class Anon:
 
     def text(self, s, log=False):
         """One piece of text. log=True: a log line, where quotations and what follows content words go too."""
-        import logfilter
         s = str(s or "").replace("\r", " ").replace("\t", " ")
         s = logfilter.redact(s)
         for sec in self.k["secrets"]:
@@ -345,7 +351,6 @@ def leaks(text, k=None):
 # ---------------------------------------------------------------- what a report can carry
 def _journal(minutes):
     """Parsed journal lines of the last minutes (logfilter; empty where there is no journal)."""
-    import logfilter
     try:
         out = logfilter.read_journal(int(minutes))
     except Exception:
@@ -507,7 +512,8 @@ def title(d):
     return f"[{AREAS[d['area']][0]}] {first}"[:110]
 
 
-SECTIONS = (("requests", "Anfragen (Logs → Anfragen)"), ("lines", "Logzeilen (Diagnose)"), ("applog", "App-Protokoll"),
+SECTIONS = (("qa", "Frage und Antwort"), ("source", "Quelle der Antwort"), ("way", "Weg der Anfrage"),
+            ("requests", "Anfragen (Logs → Anfragen)"), ("lines", "Logzeilen (Diagnose)"), ("applog", "App-Protokoll"),
             ("system", "System"))
 
 
@@ -543,7 +549,13 @@ def _sign(rid, text):
     return hmac.new(_key, (rid + "\n" + hashlib.sha256(text.encode()).hexdigest()).encode(), hashlib.sha256).hexdigest()[:32]
 
 
-def preview(d, skip=()):
+def default_skip(d):
+    """Question and answer go to GitHub only when ticked in the preview (Dominik 2026-11-13, 3c)."""
+    return [n for n, k, _ in numbered(d) if k == "qa"]
+
+
+def preview(d, skip=None):
+    skip = default_skip(d) if skip is None else skip
     t, b = title(d), body(d, skip)
     found = leaks(t + "\n" + b)
     return {"title": t, "body": b, "leaks": found, "sig": _sign(d["id"], t + "\n" + b) if not found else ""}
@@ -554,6 +566,8 @@ def view(d, me=None, names=None):
     out["text"] = d["parts"]["text"]
     out["lines"] = [{"n": n, "part": k, "line": ln} for n, k, ln in numbered(d)]
     out["mine"] = me is not None and d.get("uid") == me
+    out["answer"] = bool(d.get("answer"))
+    out["skip"] = default_skip(d)
     if names is not None:
         out["by"] = names.get(d.get("uid"), "Admin" if not d.get("uid") else "?")
     return out
@@ -650,7 +664,7 @@ async def send(d, t, b):
     token = _token()
     if not token:
         raise HTTPException(409, "Kein GitHub-Token eingetragen. Nimm „Im Browser öffnen“ oder frag den Admin.")
-    payload = {"title": t, "body": b, "labels": ["von-spark", "bereich:" + d["area"]]}
+    payload = {"title": t, "body": b, "labels": ["von-spark", "bereich:" + d["area"]] + (["falsche-antwort"] if d.get("answer") else [])}
     try:
         async with await _client() as c:
             r = await c.post(f"{API}/repos/{repo()}/issues", headers=_headers(token), json=payload)
@@ -869,7 +883,7 @@ def phrase(text):
 
 def phrase_channel(client):
     return {"telegram": "telegram", "speaker": "esp32", "watch": "pebble", "app": "app", "car": "app", "siri": "app",
-            "android": "android", "desk": "begleiter"}.get(str(client or ""), "sprache")
+            "android": "android", "desk": "begleiter", "web": "panel"}.get(str(client or ""), "sprache")
 
 
 async def by_phrase(uid, name, text, channel="sprache"):
@@ -886,6 +900,335 @@ async def by_phrase(uid, name, text, channel="sprache"):
         await note_ready(uid, channel)
     return ("Ich habe einen Entwurf angelegt. Ansehen und senden kannst du ihn unter Ich → Probleme melden; "
             "erst nach deinem Blick geht etwas raus.")
+
+
+# ---------------------------------------------------------------- one answer as a report („Mach ein Issue draus“)
+# Dominik 2026-11-13: right after a wrong answer the person says „Mach ein Issue draus“ (or taps „Melden“ under the
+# answer) and gets a report bound to exactly that answer: the description, question and answer, the way of the
+# request (Weiche, tools, times, errors), where the answer came from, log lines around it, version and model.
+# Question and answer stay on the Spark in plain words (the reporter and the admins see them, 3a); to GitHub they go
+# only anonymized and only when ticked in the preview, or with „Direkt an GitHub senden“ (chat.report_direct, 3c).
+ANSWER_S, MAX_ANSWERS, MAX_ANSWERS_UID = 24 * 3600, 400, 20
+PHRASE_S, WAIT_S, LOGS_S = 600, 180, 3600
+MAX_Q, MAX_A, MAX_SRC = 2000, 4000, 12
+AID = re.compile(r"[0-9a-f]{12}")
+_answers = {}         # aid -> {"t", "uid", "q", "a", "way", "src", "client"}: memory only, 24 hours
+_wait = {}            # uid -> (report id, time): the next message is the description („Was war falsch?“)
+_ISSUE = re.compile(
+    r"(?is)^\s*(?:(?:hey |hallo |ok )?spark[\s,!.:]+)?(?:(?:nein,?\s*)?(?:das|es)\s+(?:war|ist)\s+(?:falsch|nicht richtig|"
+    r"verkehrt)\s*[,.!;:-]?\s*)?(?:"
+    r"mach(?:e)?(?:\s+da(?:r)?aus|\s+draus)?\s+(?:ein(?:en)?\s+)?(?:issue|fehlerbericht|ticket|fehlermeldung)(?:\s+da(?:r)?aus|\s+draus)?"
+    r"|melde\s+(?:das|diese\s+antwort|die\s+antwort)(?:\s+als\s+fehler)?"
+    r"|make\s+(?:an?\s+)?issue(?:\s+(?:of|from|out\s+of)\s+(?:it|that|this))?|report\s+(?:that|this(?:\s+answer)?)(?:\s+as\s+a\s+bug)?)"
+    r"(?:\s*[:,.!;-]\s*(.{3,1500}?))?\s*[.!]*\s*$")
+_NONE = re.compile(r"(?i)^\s*(nein|nichts|egal|abbrechen|weiß nicht|keine ahnung|no|nothing|cancel)\s*[.!]*\s*$")
+
+
+def answer_phrase(text):
+    """(True, description or "") when the whole message asks to make the last answer a report, else None."""
+    m = _ISSUE.match(str(text or "")[:1600])
+    return (True, clean_text(m.group(1) or "")) if m else None
+
+
+def wanted():
+    """Answers are kept for „Melden“ at all (tracelog.start makes a record for it)."""
+    try:
+        return admin_on()
+    except Exception:
+        return False
+
+
+def staff(uid):
+    """An admin profile (role Admin): its answer reports carry Diagnose lines like the panel's form."""
+    return bool(uid) and uid in coadmin.admin_uids()
+
+
+def _way(tr):
+    """The request's way in fixed words and numbers (tracelog.Rec: never the question, the answer or arguments)."""
+    if tr is None:
+        return []
+    try:
+        d = tr.data()
+    except Exception:
+        return []
+    out = [f"Gerät: {d.get('client') or '-'} · Weiche: {d.get('intent') or '-'} · Status: {d.get('status') or '-'}"
+           + (f" · Fehler: {', '.join(d['errors'])}" if d.get("errors") else "")]
+    for st in (d.get("steps") or [])[:40]:
+        x = st.get("x") or {}
+        ok = "" if x.get("ok", True) else " · nicht ok"
+        out.append(f"{st.get('a', 0) / 1000:5.1f} s  {st.get('k')}  {st.get('n')}  ({st.get('d', 0)} ms){ok}")
+    m = d.get("marks") or {}
+    out.append("Zeiten: " + " · ".join(f"{k} {v / 1000:.1f} s" for k, v in m.items() if isinstance(v, (int, float))))
+    q = getattr(tr, "quelle", None)
+    if isinstance(q, str) and q:
+        out.append("Quelle (fest): " + q[:200])
+    return out
+
+
+def _sources(uid, client, calls, items):
+    """Where the answer came from: the source note of quellenangabe.py when it is there, else the tools of the
+    answer and the titles and addresses of the found pages (data, never a command)."""
+    out = []
+    try:
+        import quellenangabe   # thread „Quellenangabe bei Antworten einbauen“; missing before its version
+        q = quellenangabe.letzte(uid, client)
+    except Exception:
+        q = None
+    if isinstance(q, dict):
+        for p in (q.get("parts") or [])[:MAX_SRC]:
+            if isinstance(p, dict):
+                more = ", ".join(str(x)[:80] for x in (p.get("mehr") or [])[:4])
+                out.append(f"{p.get('de') or p.get('tool') or '?'} ({p.get('art') or '-'}, {p.get('n') or 0})" + (f": {more}" if more else ""))
+        for t in (q.get("links") or [])[:MAX_SRC]:
+            out.append("Seite: " + str(t)[:200])
+        if q.get("warn"):
+            out.append("Hinweis: " + str(q["warn"])[:20])
+        if out:
+            return out[:2 * MAX_SRC]
+    for c in (calls or [])[:MAX_SRC]:
+        if isinstance(c, dict) and c.get("name"):
+            out.append("Werkzeug: " + str(c["name"])[:60] + (f" ({str(c.get('args'))[:160]})" if c.get("args") else ""))
+    for it in (items or [])[:MAX_SRC]:
+        if isinstance(it, dict):
+            out.append("Seite: " + " · ".join(str(it.get(k))[:160] for k in ("title", "url") if it.get(k)))
+    return out[:2 * MAX_SRC]
+
+
+def keep_answer(tr, who, ask, said, calls=None, items=None, client="", now=None):
+    """Called once when an answer is done (chat.py). Keeps a profile's question and answer in memory only (24 hours)
+    so „Mach ein Issue draus“ or „Melden“ can bind a report to it. Returns the id for the button, else None. Never
+    for guests, never over MCP (who is None there), never raises."""
+    try:
+        uid = who and who.get("id")
+        if not uid or not str(said or "").strip() or not admin_on() or not features.allowed("melden", uid):
+            return None
+        now = time.time() if now is None else now
+        rec = {"t": now, "uid": uid, "q": clean_text(ask, MAX_Q), "a": clean_text(said, MAX_A), "way": _way(tr),
+               "src": _sources(uid, client, calls, items), "client": str(getattr(tr, "client", "") or client or "")[:12],
+               "tt": float(getattr(tr, "t0", now) or now)}
+        aid = secrets.token_hex(6)
+        with _lock:
+            for k in [k for k, x in _answers.items() if now - x["t"] > ANSWER_S]:
+                _answers.pop(k, None)
+            mine = [k for k, x in _answers.items() if x["uid"] == uid]
+            for k in mine[:max(0, len(mine) - MAX_ANSWERS_UID + 1)]:
+                _answers.pop(k, None)
+            while len(_answers) >= MAX_ANSWERS:
+                _answers.pop(next(iter(_answers)))
+            _answers[aid] = rec
+        return aid
+    except Exception as e:
+        print("meldung: Antwort merken", type(e).__name__, flush=True)
+        return None
+
+
+def _last_answer(uid, now, within=PHRASE_S):
+    with _lock:
+        rows = [(k, x) for k, x in _answers.items() if x["uid"] == uid and now - x["t"] <= within]
+    return max(rows, key=lambda r: r[1]["t"]) if rows else None
+
+
+def _around(t, staff, now):
+    """Diagnose lines two minutes around the answer (only for staff: the journal is the whole Spark's; only while
+    the answer is at most an hour old). Errors, warnings and the areas of „Antworten und Werkzeuge“."""
+    if not staff or now - t > LOGS_S:
+        return []
+    keys = set(AREAS["antwort"][2])
+    out = []
+    for r in _journal(int((now - t) / 60) + 3):
+        w = logfilter._when(r.get("ts") or "")
+        if w is None or abs(w - t) > 120:
+            continue
+        if r.get("level") in ("err", "warn") or r.get("area") in keys:
+            out.append(f"{r.get('t') or ''} {r.get('msg') or ''}".strip())
+    return out[-MAX_LINES:]
+
+
+def create_answer(uid, name, channel, aid, text="", staff=False, now=None):
+    """A draft bound to one kept answer of the caller (its own only). Raises HTTPException (404 when it is gone)."""
+    now = time.time() if now is None else now
+    with _lock:
+        a = _answers.get(aid) if AID.fullmatch(str(aid or "")) else None
+    if not a or a["uid"] != uid or now - a["t"] > ANSWER_S:
+        raise HTTPException(404, "Diese Antwort ist zu alt oder nicht deine.")
+    desc = clean_text(text) or "(Beschreibung folgt)"
+    d = create(uid, name, channel, desc, "antwort", 10, reqs=False, sysinfo=True, staff=staff, now=now)
+    k = known()
+    an = Anon(k)
+    an.n = dict(d.get("counts") or {})
+    qa = ["Frage:"] + [an.text(x) for x in a["q"].splitlines() if x.strip()][:20] + ["Antwort:"] + \
+         [an.text(x) for x in a["a"].splitlines() if x.strip()][:40]
+    d["parts"]["qa"] = [ln[:LINE_MAX] for ln in qa]
+    d["parts"]["way"] = _clip([an.text(x, log=True) for x in a["way"]])
+    d["parts"]["source"] = _clip([an.text(x) for x in a["src"]])
+    d["parts"]["lines"] = _clip([an.text(x, log=True) for x in _around(a["tt"], staff, now)])
+    d["parts"]["system"] = d["parts"]["system"] + [an.text(x, log=True) for x in _model()]
+    d["counts"] = dict(an.n)
+    # in plain words, on the Spark only: the reporter and the admins (3a); never in a log line, never to GitHub
+    d["raw"] = {"q": a["q"], "a": a["a"], "src": a["src"][:2 * MAX_SRC], "t": round(a["t"], 1)}
+    d["answer"] = True
+    with _lock:
+        _write(d)
+    print(f"meldung: Antwort-Entwurf {d['id']} | {channel} | {len(d['parts']['way'])} Schritte | "
+          f"{len(d['parts']['source'])} Quellen | {len(d['parts']['lines'])} Logzeilen", flush=True)
+    try:   # the same report is a case for the Einstellungs-Assistent too (one capture, faelle.py)
+        if features.allowed("bewerten", uid):
+            faelle.by_phrase(uid, "schlecht", now=now)
+    except Exception as e:
+        print("meldung: Fall", type(e).__name__, flush=True)
+    return d
+
+
+def _model():
+    try:
+        c = features.chat_cfg()
+        m = str(c.get("model") or c.get("llm_model") or "")[:60]
+        return [f"Sprachmodell: {m}"] if m else []
+    except Exception:
+        return []
+
+
+def describe(d, text):
+    """The description that came after „Was war falsch?“ (or later in the panel)."""
+    text = clean_text(text)
+    an = Anon(known())
+    an.n = dict(d.get("counts") or {})
+    d["parts"]["text"] = an.text(text) if len(text) >= 3 else "(ohne Beschreibung)"
+    d["counts"] = dict(an.n)
+    with _lock:
+        _write(d)
+    return d
+
+
+def direct_on(c=None):
+    try:
+        return features.admin_on("meldendirekt", c)
+    except Exception:
+        return False
+
+
+async def direct(d, uid, channel):
+    """„Direkt an GitHub senden“ (chat.report_direct, off): the answer report goes out right away with question and
+    answer anonymized, only when the final leak check finds nothing and the limits allow it; else it stays a draft.
+    Returns a fixed sentence (German) or "" when it was not tried."""
+    if not direct_on() or not _token() or d.get("status") != "entwurf":
+        return ""
+    p = preview(d, skip=[])
+    if p["leaks"]:
+        _live_mark("gesperrt durch die Leck-Prüfung", channel)
+        print("meldung: direkt gesperrt durch die Leck-Prüfung:", ", ".join(p["leaks"]), flush=True)
+        return "Die Prüfung hat noch etwas Persönliches gefunden, deshalb liegt er als Entwurf unter Ich → Probleme melden."
+    try:
+        num = await _send_now(d, p, uid, channel, len(numbered(d)))
+    except HTTPException as e:
+        print("meldung: direkt nicht gesendet", e.status_code, flush=True)
+        return "Senden ging gerade nicht (" + str(e.detail).rstrip(".") + "), er liegt als Entwurf unter Ich → Probleme melden."
+    return f"Er ist als Issue Nummer {num} auf GitHub." if num else "Er ist auf GitHub."
+
+
+async def by_answer(uid, name, desc, channel="sprache", staff=False):
+    """„Mach ein Issue draus“: a report for the person's last answer of the last 10 minutes. Returns the sentence
+    the assistant says (German)."""
+    if not admin_on():
+        return "Probleme melden ist auf diesem Spark ausgeschaltet."
+    if not features.allowed("melden", uid):
+        return "Probleme melden geht für dich gerade nicht. " + features.missing_text("melden", uid)
+    now = time.time()
+    last = _last_answer(uid, now)
+    if not last:
+        print("meldung: Antwort melden | keine Antwort", flush=True)
+        return "Ich finde keine Antwort der letzten Minuten, aus der ich einen Bericht machen könnte."
+    try:
+        d = await asyncio.to_thread(create_answer, uid, name, channel, last[0], desc, staff, now)
+    except HTTPException as e:
+        return str(e.detail)
+    _live_mark("Antwort-Entwurf angelegt", channel)
+    if not desc:
+        with _lock:
+            _wait[uid] = (d["id"], now)
+        return "Ich habe einen Bericht zu meiner letzten Antwort angelegt. Was war falsch? Sag es mir in einem Satz."
+    sent = await direct(d, uid, channel)
+    if sent:
+        return "Ich habe einen Bericht zu meiner letzten Antwort angelegt. " + sent
+    if channel != "telegram":
+        await note_ready(uid, channel)
+    return ("Ich habe einen Bericht zu meiner letzten Antwort angelegt, mit Frage, Antwort und Ablauf. Ansehen und "
+            "senden kannst du ihn unter Ich → Probleme melden.")
+
+
+def waits(uid, now=None):
+    """The person's report waits for its description (asked „Was war falsch?“ less than three minutes ago)."""
+    now = time.time() if now is None else now
+    with _lock:
+        w = _wait.get(uid)
+        if w and now - w[1] > WAIT_S:
+            _wait.pop(uid, None)
+            w = None
+    return bool(w)
+
+
+async def by_description(uid, text, channel="sprache"):
+    """The message after „Was war falsch?“ is the description (the whole message, once). Returns the sentence."""
+    with _lock:
+        w = _wait.pop(uid, None)
+    d = _read(w[0]) if w else None
+    if not d or d.get("uid") != uid or d.get("status") != "entwurf":
+        return ""
+    d = await asyncio.to_thread(describe, d, "" if _NONE.match(str(text or "")) else text)
+    print(f"meldung: Beschreibung | {d['id']} | {len(d['parts']['text'])} Zeichen", flush=True)
+    sent = await direct(d, uid, channel)
+    if sent:
+        return "Danke, steht im Bericht. " + sent
+    if channel != "telegram":
+        await note_ready(uid, channel)
+    return "Danke, steht im Bericht. Ansehen und senden kannst du ihn unter Ich → Probleme melden."
+
+
+async def _send_now(d, p, uid, channel, lines):
+    """Sends the previewed text p to GitHub within the limits (by the button or „Direkt an GitHub senden“).
+    Returns the issue number; raises HTTPException (the draft stays)."""
+    now = time.time()
+    with _lock:
+        mine, total, last = _sent_count(_all(now), d.get("uid"), now)
+        if mine >= DAY_SENT_UID or total >= DAY_SENT_ALL:
+            raise HTTPException(429, "Für heute sind genug Meldungen gesendet. Der Entwurf bleibt.")
+        if now - last < GAP_S:
+            raise HTTPException(429, "Bitte eine Minute warten.")
+        d["status"] = "sendet"
+        _write(d)
+    t0 = time.time()
+    rec = None
+    try:
+        import live
+        rec = live.begin("web" if channel == "panel" else channel if channel in ("app", "telegram") else "other",
+                         "", uid=uid or None, auto=False, why="Problem melden")
+        if rec is not None:
+            rec.step("in", "Problem melden", t0)
+    except Exception:
+        rec = None
+    try:
+        num, url = await send(d, p["title"], p["body"])
+    except HTTPException:
+        d["status"] = "entwurf"
+        with _lock:
+            _write(d)
+        _live_mark("Senden fehlgeschlagen", channel)
+        print(f"meldung: Senden fehlgeschlagen {d['id']}", flush=True)
+        if rec is not None:
+            rec.step("tool", "GitHub-Meldung", t0, time.time(), ok=False)
+            live.end(rec, False)
+        raise
+    d.update(status="gesendet", issue={"number": num, "url": url, "t": int(time.time()), "lines": lines})
+    with _lock:
+        _write(d)
+    if rec is not None:
+        rec.step("tool", "GitHub-Meldung", t0, time.time(), ok=True)
+        live.end(rec, True)
+    _live_mark("gesendet", channel)
+    print(f"meldung: gesendet {d['id']} als Issue {num}", flush=True)
+    guard.log("report_sent", uid=uid or None, detail=f"Problem-Meldung an GitHub (Issue {num})")
+    await tell_admins(d)
+    return num
 
 
 # ---------------------------------------------------------------- endpoints
@@ -907,7 +1250,7 @@ async def get_reports(request: Request, id: str = ""):
     guard.limit(request, "report", uid=who["uid"] or None, admin=who["staff"])
     if id:
         d = _own(who, id)
-        return dict(view(d, who["uid"]), preview=preview(d))
+        return dict(view(d, who["uid"]), preview=preview(d), raw=d.get("raw"))
     items = _all()
     if not who["staff"]:
         items = [d for d in items if d.get("uid") == who["uid"]]
@@ -938,7 +1281,24 @@ async def post_draft(request: Request):
         b.get("minutes") if isinstance(b.get("minutes"), int) else 30, logs=b.get("logs") is True,
         reqs=b.get("requests", True) is True, sysinfo=b.get("system", True) is True, applog=applog,
         staff=who["staff"] and who["logs"], may_logs=who["logs"], tid=tid)
-    return dict(view(d, who["uid"]), preview=preview(d))
+    return dict(view(d, who["uid"]), preview=preview(d), raw=d.get("raw"))
+
+
+@router.post("/api/report/answer", dependencies=[Depends(assistant)])
+async def post_answer(request: Request):
+    """{id, text}: „Melden“ under an answer: a draft bound to that answer of the caller's own (the last 24 hours);
+    with „Direkt an GitHub senden“ on it goes out right away (see direct)."""
+    who = caller(request)
+    guard.limit(request, "report", uid=who["uid"] or None, admin=who["staff"])
+    b = await core.json_body(request, 4096)
+    if not AID.fullmatch(str(b.get("id") or "")) or not isinstance(b.get("text", ""), str):
+        raise HTTPException(400, "id and text")
+    d = await asyncio.to_thread(create_answer, who["uid"], who["name"], who["channel"], b["id"], b.get("text", ""),
+                                who["staff"] and who["logs"])
+    _live_mark("Antwort-Entwurf angelegt", who["channel"])
+    said = await direct(d, who["uid"], who["channel"]) if len(d["parts"]["text"]) >= 3 and b.get("text") else ""
+    d = _read(d["id"]) or d
+    return dict(view(d, who["uid"]), preview=preview(d), raw=d.get("raw"), said=said)
 
 
 @router.post("/api/report/preview", dependencies=[Depends(assistant)])
@@ -967,7 +1327,8 @@ async def post_send(request: Request):
         _live_mark("nur lokal behalten", who["channel"])
         await tell_admins(d)
         return view(d, who["uid"])
-    p = preview(d, _skip(b.get("skip") or []))
+    skip = _skip(b["skip"]) if "skip" in b else None
+    p = preview(d, skip)
     if p["leaks"]:
         _live_mark("gesperrt durch die Leck-Prüfung", who["channel"])
         print("meldung: gesperrt durch die Leck-Prüfung:", ", ".join(p["leaks"]), flush=True)
@@ -977,46 +1338,8 @@ async def post_send(request: Request):
         raise HTTPException(409, "Die Vorschau hat sich geändert. Bitte noch einmal ansehen.")
     if b.get("browser") is True:
         return {"url": browser_link(p["title"], p["body"])}
-    now = time.time()
-    with _lock:
-        mine, total, last = _sent_count(_all(now), d.get("uid"), now)
-        if mine >= DAY_SENT_UID or total >= DAY_SENT_ALL:
-            raise HTTPException(429, "Für heute sind genug Meldungen gesendet. Der Entwurf bleibt.")
-        if now - last < GAP_S:
-            raise HTTPException(429, "Bitte eine Minute warten.")
-        d["status"] = "sendet"
-        _write(d)
-    t0 = time.time()
-    rec = None
-    try:
-        import live
-        rec = live.begin("web" if who["channel"] == "panel" else who["channel"] if who["channel"] in ("app", "telegram") else "other",
-                         "", uid=who["uid"] or None, auto=False, why="Problem melden")
-        if rec is not None:
-            rec.step("in", "Problem melden", t0)
-    except Exception:
-        rec = None
-    try:
-        num, url = await send(d, p["title"], p["body"])
-    except HTTPException:
-        d["status"] = "entwurf"
-        with _lock:
-            _write(d)
-        _live_mark("Senden fehlgeschlagen", who["channel"])
-        if rec is not None:
-            rec.step("tool", "GitHub-Meldung", t0, time.time(), ok=False)
-            live.end(rec, False)
-        raise
-    d.update(status="gesendet", issue={"number": num, "url": url, "t": int(time.time()), "lines": len(numbered(d)) - len(set(b.get("skip") or []))})
-    with _lock:
-        _write(d)
-    if rec is not None:
-        rec.step("tool", "GitHub-Meldung", t0, time.time(), ok=True)
-        live.end(rec, True)
-    _live_mark("gesendet", who["channel"])
-    print(f"meldung: gesendet {d['id']} als Issue {num}", flush=True)
-    guard.log("report_sent", uid=who["uid"] or None, detail=f"Problem-Meldung an GitHub (Issue {num})")
-    await tell_admins(d)
+    skip = default_skip(d) if skip is None else skip
+    await _send_now(d, p, who["uid"], who["channel"], len(numbered(d)) - len(set(skip)))
     return view(d, who["uid"])
 
 

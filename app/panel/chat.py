@@ -45,6 +45,7 @@ import vorrang  # noqa: E402  (speech first: background work waits)
 import wartung  # noqa: E402  (Wartungspause: a fixed sentence while the model is updated)
 import stufe  # noqa: E402  (priority for people)
 import faelle  # noqa: E402  (Fälle: every problem a case, 👍/👎)
+import meldung  # noqa: E402  (Probleme melden: „Melden“ under an answer)
 import systemone  # noqa: E402  (Einordnung mit Wahrscheinlichkeit: Antworten im Hintergrund prüfen)
 import tracelog  # noqa: E402  (Logs → Anfragen: the way of each request)
 import features  # noqa: E402
@@ -2518,6 +2519,7 @@ async def _answer(request, turn):
     async def events():
         outside = carry in ("outside", "mail")
         asked = False   # the panel's own question (klaeren.py) already has its buttons: no Rückfrage-Karte
+        found = []      # the pages the answer rested on, for „Melden“ under it (meldung.keep_answer)
         # Notaus stage 3 (laufend.py): this answer ends at once with "ende"; the finally below stops model and voice
         running = laufend.add("chat", lambda: out.put_nowait({"type": "ende", "art": "notaus"}))
         try:
@@ -2532,6 +2534,8 @@ async def _answer(request, turn):
                     ev = {"type": "error", "code": ev.get("code") or "error"}
                 outside = outside or ev.get("type") in ("outside", "mail")
                 asked = asked or ev.get("type") == "choice"
+                if ev.get("type") == "sources" and isinstance(ev.get("items"), list) and len(found) < 12:
+                    found += ev["items"][:12 - len(found)]
                 yield f"data: {json.dumps(ev)}\n\n"
             await asyncio.to_thread(note_wait, turn, tm, t0, body.get("client") or "web")
             if tm["on"]:
@@ -2558,6 +2562,13 @@ async def _answer(request, turn):
                     systemone.check_later(ccfg, tr, who, turn.ask_text, trace["said"], trace["calls"], outside)
                 if rid:
                     yield f"data: {json.dumps({'type': 'rate', 'id': rid})}\n\n"
+            # „Melden“ under the answer and „Mach ein Issue draus“ (meldung.py): question and answer in memory only
+            if not screen and not getattr(turn, "mcp", None) and (getattr(turn, "role_cmd", None) or ("",))[0] not in ("meldung", "bewertung"):
+                aid = await asyncio.to_thread(meldung.keep_answer, tr, who, turn.ask_text, trace["said"], trace["calls"],
+                                              found, body.get("client") or "web")
+                if aid:
+                    yield f"data: {json.dumps({'type': 'melden', 'id': aid})}\n\n"
+            if tr:
                 import wissensbuch   # "Ins Wissensbuch" under an answer resting on own documents or Kiwix
                 fid = "" if screen else wissensbuch.keep_offer(who and who["id"], turn.ask_text, trace["said"])
                 if fid:

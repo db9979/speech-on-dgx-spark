@@ -465,6 +465,25 @@ async def _wer(z):
             z.role_cmd = ("meldung", "")
             print("meldung: fester Satz (fixed rule, no tools in this answer)", flush=True)
             z.system = z.per_turn(z.system, "Problem melden: " + z.note + " Sag genau das in einem Satz.")
+        # „Mach ein Issue draus“ right after an answer (meldung.answer_phrase, Dominik 2026-11-13): a report bound to
+        # the person's last answer; without a description the panel asks „Was war falsch?“ and the next message (once,
+        # within three minutes) becomes it. Fixed rules, the model only says the sentence
+        z.ia = None if z.rp else z.meldung.answer_phrase(z.messages[-1]["content"])
+        if z.ia:
+            z.note = z.role_note = await z.meldung.by_answer(z.who["id"], z.who["name"], z.ia[1],
+                                                              z.meldung.phrase_channel(z.body.get("client")),
+                                                              z.meldung.staff(z.who["id"]))
+            z.role_cmd = ("meldung", "")
+            print("meldung: fester Satz Antwort melden (fixed rule, no tools in this answer)", flush=True)
+            z.system = z.per_turn(z.system, "Problem melden: " + z.note + " Sag genau das, kurz.")
+        elif not z.rp and z.meldung.waits(z.who["id"]):
+            z.note = await z.meldung.by_description(z.who["id"], z.messages[-1]["content"],
+                                                    z.meldung.phrase_channel(z.body.get("client")))
+            if z.note:
+                z.role_note = z.note
+                z.role_cmd = ("meldung", "")
+                print("meldung: Beschreibung übernommen (fixed rule, no tools in this answer)", flush=True)
+                z.system = z.per_turn(z.system, "Problem melden: " + z.note + " Sag genau das, kurz.")
     # "Das war falsch" / "Gut so" right after an answer (faelle.phrase): the panel notes it for the last answer of
     # the last 10 minutes; the model only says the fixed sentence. Never over MCP or for a stranger's voice.
     if not z.role_cmd and z.who and not z.mcp and z.messages[-1]["role"] == "user":

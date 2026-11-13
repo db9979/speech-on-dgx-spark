@@ -22,6 +22,7 @@ import time
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 import guard
+import meldung
 from common import STATE, load_config
 from core import auth
 
@@ -119,7 +120,8 @@ class Rec:
 def start(t0, client, who=None, kind="guest", device="", ort=""):
     """A new record, or None while both admin switches are off (then nothing is kept at all). With only
     Zustand → Live on (live.py) the record is watched in memory and never written; with only the
-    Einstellungs-Assistent on (faelle.py) it is summed up at the end of the answer and never written.
+    Einstellungs-Assistent on (faelle.py) it is summed up at the end of the answer and never written; with only
+    Probleme melden on (meldung.py) its way goes with „Melden“ under the answer (memory only, 24 hours).
     Before the switches every request counts for "Aktiv 10 min" (aktiv.py; ort tells guests apart, never kept)."""
     try:
         import aktiv
@@ -127,7 +129,7 @@ def start(t0, client, who=None, kind="guest", device="", ort=""):
         import faelle
         import live
         keep, watch = on(), live.on()
-        if not keep and not watch and not faelle.wanted():
+        if not keep and not watch and not faelle.wanted() and not meldung.wanted():
             return None
         rec = Rec(t0, client, who, kind, device, persist=keep)
         if watch:

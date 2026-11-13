@@ -433,6 +433,118 @@ class Channels(Base):
             helpers.set_config(iphone=False)
 
 
+class AnswerReports(Base):
+    """„Mach ein Issue draus“ and „Melden“ under an answer (Dominik 2026-11-13): a report bound to exactly that
+    answer; question and answer stay on the Spark and go to GitHub only ticked or with „Direkt an GitHub senden“."""
+
+    def ask(self, c, text, client="web"):
+        r = c.post("/api/chat", json={"messages": [{"role": "user", "content": text}], "client": client})
+        return list(helpers.events(r))
+
+    def aid(self, evs):
+        ids = [e["id"] for e in evs if e["type"] == "melden"]
+        return ids[0] if ids else None
+
+    def tearDown(self):
+        helpers.set_config(report_direct=False)
+        super().tearDown()
+
+    def test_the_sentence(self):
+        A = meldung.answer_phrase
+        self.assertEqual(A("Mach ein Issue draus"), (True, ""))
+        self.assertEqual(A("Spark, mach daraus ein Issue: die Uhrzeit stimmt nicht"), (True, "die Uhrzeit stimmt nicht"))
+        self.assertEqual(A("Das war falsch, mach einen Fehlerbericht draus."), (True, ""))
+        self.assertEqual(A("Melde das als Fehler"), (True, ""))
+        self.assertEqual(A("make an issue of it: wrong date"), (True, "wrong date"))
+        for no in ("Wie mache ich ein Issue?", "Melde das Problem mit dem Wecker", "Mach ein Foto", "", None):
+            self.assertIsNone(A(no), no)
+
+    def test_off_no_button_and_never_for_guests(self):
+        helpers.set_config(report=False)
+        c, uid = profile("RpAnOff")
+        self.assertIsNone(self.aid(self.ask(c, "Wie spät ist es?")))
+        helpers.set_config(report=True)
+        self.assertIsNone(self.aid(self.ask(client(), "Wie spät ist es?")))          # a guest
+        block(self, uid)
+        self.assertIsNone(self.aid(self.ask(c, "Wie spät ist es?")))                  # blocked for this profile
+
+    def test_sentence_asks_what_was_wrong_and_takes_the_next_message(self):
+        meldung.token_save(TOKEN)
+        c, uid = profile("RpAnna")
+        self.assertTrue(self.aid(self.ask(c, "Wie heißt die Hauptstadt von Australien?")))
+        evs = self.ask(c, "Mach ein Issue draus")
+        self.assertIsNone(self.aid(evs))                       # the report's own answer gets no button
+        mine = [d for d in meldung._all() if d.get("uid") == uid]
+        self.assertEqual(len(mine), 1)
+        d = mine[0]
+        self.assertTrue(d["answer"])
+        self.assertEqual(d["status"], "entwurf")
+        self.assertEqual(d["raw"]["q"], "Wie heißt die Hauptstadt von Australien?")
+        self.assertTrue(d["raw"]["a"])
+        self.assertIn("Frage:", d["parts"]["qa"])
+        self.assertTrue(d["parts"]["way"])
+        self.assertTrue(meldung.waits(uid))
+        self.ask(c, "Die Hauptstadt ist Canberra, nicht Sydney")
+        self.assertFalse(meldung.waits(uid))
+        d = meldung._read(d["id"])
+        self.assertEqual(d["parts"]["text"], "Die Hauptstadt ist Canberra, nicht Sydney")
+        self.assertEqual([x for x in SENT if x[0] == "POST"], [])                     # without the switch: nothing out
+        # the preview leaves question and answer out until ticked
+        p = c.get("/api/report?id=" + d["id"]).json()
+        self.assertNotIn("Australien", p["preview"]["body"])
+        self.assertEqual(p["raw"]["q"], "Wie heißt die Hauptstadt von Australien?")
+        q = c.post("/api/report/preview", json={"id": d["id"], "skip": []}).json()
+        self.assertIn("Australien", q["body"])
+        # an old client without "skip" sends without them
+        r = c.post("/api/report/send", json={"id": d["id"], "sig": p["preview"]["sig"]})
+        self.assertEqual(r.status_code, 200, r.text)
+        body = [x for x in SENT if x[0] == "POST"][0][2]
+        self.assertNotIn("Australien", body["body"])
+        self.assertIn("falsche-antwort", body["labels"])
+
+    def test_no_answer_no_report(self):
+        c, uid = profile("RpAnLeer")
+        self.ask(c, "Mach ein Issue draus")
+        self.assertEqual([d for d in meldung._all() if d.get("uid") == uid], [])
+
+    def test_button_only_for_own_answers(self):
+        c, uid = profile("RpBruno")
+        aid = self.aid(self.ask(c, "Wie spät ist es?"))
+        o, _ = profile("RpOtto")
+        self.assertEqual(o.post("/api/report/answer", json={"id": aid, "text": "x"}).status_code, 404)
+        self.assertEqual(c.post("/api/report/answer", json={"id": "nope", "text": "x"}).status_code, 400)
+        r = c.post("/api/report/answer", json={"id": aid, "text": "Uhrzeit falsch"})
+        self.assertEqual(r.status_code, 200, r.text)
+        d = r.json()
+        self.assertEqual((d["status"], d["area"], d["answer"]), ("entwurf", "antwort", True))
+        self.assertEqual(sorted(d["skip"]), sorted(x["n"] for x in d["lines"] if x["part"] == "qa"))
+        self.assertNotIn("RpBruno", json.dumps(d["preview"]))
+
+    def test_direct_sends_anonymized_with_question_and_answer(self):
+        meldung.token_save(TOKEN)
+        helpers.set_config(report_direct=True)
+        c, uid = profile("RpDora")
+        aid = self.aid(self.ask(c, "Schreib RpDora eine Mail an dora@example.org"))
+        d = c.post("/api/report/answer", json={"id": aid, "text": "Falsche Adresse"}).json()
+        self.assertEqual(d["status"], "gesendet", d)
+        body = [x for x in SENT if x[0] == "POST"][0][2]["body"]
+        self.assertIn("Frage", body)
+        self.assertNotIn("dora@example.org", body)
+        self.assertNotIn("RpDora", body)
+        # the leak check still holds it back: something slipped into the stored answer
+        aid = self.aid(self.ask(c, "Wie spät ist es?"))
+        real = meldung.leaks
+        meldung.leaks = lambda text, k=None: ["Name"]
+        self.addCleanup(setattr, meldung, "leaks", real)
+        for x in meldung._all():          # the minute between two sends
+            if x.get("issue"):
+                x["issue"]["t"] -= 120
+                meldung._write(x)
+        d = c.post("/api/report/answer", json={"id": aid, "text": "noch einmal"}).json()
+        self.assertEqual(d["status"], "entwurf")
+        self.assertEqual(len([x for x in SENT if x[0] == "POST"]), 1)
+
+
 class Live(Base):
     def test_counts_only(self):
         c, _ = profile("RpLena")

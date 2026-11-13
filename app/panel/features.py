@@ -353,6 +353,7 @@ FEATURES = (
     F(**steckbrief.feature("mfa")),
     F(**steckbrief.feature("melden")),
     F(**steckbrief.feature("meldenadmin")),
+    F(**steckbrief.feature("meldendirekt")),
     F(**steckbrief.feature("verbrauch")),
     F(**steckbrief.feature("kontingent")),
     F(**steckbrief.feature("dienstwacht")),

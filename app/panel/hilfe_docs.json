@@ -1157,7 +1157,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": " und speichert nur seinen SHA-256-Hash in profiles.json. Die App bekommt ihn genau einmal und legt ihn im Schlüsselbund ab. 6. Jede Anfrage mit Schlüssel: profiles.current sucht den Hash des Schlüssels in der Geräteliste. Ein Geräteschlüssel geht vor dem Cookie; das Profil kommt so immer aus dem Schlüssel, nie aus dem, was die App schreibt. 7. Pfad für die App erlaubt?: Ein App-Schlüssel gilt nur für die 71 Pfade in profiles.APP_PATHS (Chat, Spracherkennung, Gespräche, Erinnerungen, Chats, Anrufe …), ein paar Lese-Muster, die Panel-Bereiche (Admin-Schalter iPhone-App mit Panel) und „Meine Sachen“ (iphone.THINGS, je Teil nur mit der Freigabe seiner eigenen Funktion). Alles andere sieht er ohne Profil. 8. App gerade aus oder Mein Notaus?: Ist die App vom Admin aus- oder für das Profil gesperrt, oder hat das Profil Mein Notaus an, gibt es für diese Anfrage kein Profil. Die App bekommt „gerade nicht“ (503), behält ihre Kopplung und geht wieder, sobald der Schalter zurück ist. 9. Wie ein Browser des Profils: Die App fragt über dieselben Endpunkte wie die Seite, mit denselben Grenzen. Was sie zusätzlich darf (Smart Home, CarPlay, Zuhören, Dokumente, Bilder), sagt ihr der Spark in /api/ip"
+"text": " und speichert nur seinen SHA-256-Hash in profiles.json. Die App bekommt ihn genau einmal und legt ihn im Schlüsselbund ab. 6. Jede Anfrage mit Schlüssel: profiles.current sucht den Hash des Schlüssels in der Geräteliste. Ein Geräteschlüssel geht vor dem Cookie; das Profil kommt so immer aus dem Schlüssel, nie aus dem, was die App schreibt. 7. Pfad für die App erlaubt?: Ein App-Schlüssel gilt nur für die 72 Pfade in profiles.APP_PATHS (Chat, Spracherkennung, Gespräche, Erinnerungen, Chats, Anrufe …), ein paar Lese-Muster, die Panel-Bereiche (Admin-Schalter iPhone-App mit Panel) und „Meine Sachen“ (iphone.THINGS, je Teil nur mit der Freigabe seiner eigenen Funktion). Alles andere sieht er ohne Profil. 8. App gerade aus oder Mein Notaus?: Ist die App vom Admin aus- oder für das Profil gesperrt, oder hat das Profil Mein Notaus an, gibt es für diese Anfrage kein Profil. Die App bekommt „gerade nicht“ (503), behält ihre Kopplung und geht wieder, sobald der Schalter zurück ist. 9. Wie ein Browser des Profils: Die App fragt über dieselben Endpunkte wie die Seite, mit denselben Grenzen. Was sie zusätzlich darf (Smart Home, CarPlay, Zuhören, Dokumente, Bilder), sagt ihr der Spark in /api/ip"
 },
 {
 "lang": "de",
@@ -1197,7 +1197,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 10 Minuten gilt ein Kopplungs-Code (Schritt 3) - 5 iPhones pro Profil (Schritt 2) - 71 feste Pfade für den App-Schlüssel (Schritt 7) - 30 Minuten gilt ein Android-Download-Link (Schritt 3) - 5 Downloads pro Android-Link (Schritt 3) - 10 Minuten gilt eine Kopplungszeile fürs Terminal (Schritt 3) - 5 Terminals pro Profil (Schritt 2) - 120 Sekunden nach der letzten Eingabe gilt ein Gerät als benutzt (Schritt 9) - 5 Minuten bis eine ungesehene Mitteilung aufs Handy nachkommt (Schritt 9)"
+"text": "- 10 Minuten gilt ein Kopplungs-Code (Schritt 3) - 5 iPhones pro Profil (Schritt 2) - 72 feste Pfade für den App-Schlüssel (Schritt 7) - 30 Minuten gilt ein Android-Download-Link (Schritt 3) - 5 Downloads pro Android-Link (Schritt 3) - 10 Minuten gilt eine Kopplungszeile fürs Terminal (Schritt 3) - 5 Terminals pro Profil (Schritt 2) - 120 Sekunden nach der letzten Eingabe gilt ein Gerät als benutzt (Schritt 9) - 5 Minuten bis eine ungesehene Mitteilung aufs Handy nachkommt (Schritt 9)"
 },
 {
 "lang": "de",
@@ -2981,7 +2981,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "1. Anfrage kommt an: Chat, Schreibhilfe, Dokumente erstellen und was der Spark von selbst tut, legen beim Start einen Datensatz an: Kanal, Art (Profil, Gast, Admin, Spark) und Gerät. Vor jedem Schalter zählt aktiv.py die Anfrage für „Aktiv 10 min“ (OLED, Monitoring, Live): ein Profil einmal, ein Gast je Gerät als gekürzter Hash, nichts vom Spark selbst, nur im Speicher. 2. Etwas eingeschaltet?: Ist weder „Anfragen verfolgen“ noch die Live-Seite noch der Einstellungs-Assistent an, gibt es keinen Datensatz. Übrig bleiben nur die Journal-Zeilen der Module. 3. Schritte mit festen Wörtern: Jeder Schritt (Weiche, Modellrunde, Werkzeug, Prüfung, Sprachausgabe) kommt mit Art, Name und Zeit dazu. Ein Wert geht nur hinein, wenn er eine Zahl oder ein kurzes festes Wort ist; alles andere wird verworfen. Frage, Antwort, Argumente und Ergebnisse kommen nie hinein. 4. Live-Seite an?: Bei eingeschalteter Live-Seite sieht live.py jeden Schritt sofort: welcher Dienst gefragt wird, was der Wächter entscheidet, was zurückkommt. Alles bleibt im Speicher und ist nach einem Neustart weg. 5. Journal-Zeilen der Module: Unabhängig davon schreibt jedes Modul seine Zeilen ins Journal des Spark. Jede Zeile beg"
+"text": "1. Anfrage kommt an: Chat, Schreibhilfe, Dokumente erstellen und was der Spark von selbst tut, legen beim Start einen Datensatz an: Kanal, Art (Profil, Gast, Admin, Spark) und Gerät. Vor jedem Schalter zählt aktiv.py die Anfrage für „Aktiv 10 min“ (OLED, Monitoring, Live): ein Profil einmal, ein Gast je Gerät als gekürzter Hash, nichts vom Spark selbst, nur im Speicher. 2. Etwas eingeschaltet?: Ist weder „Anfragen verfolgen“ noch die Live-Seite noch der Einstellungs-Assistent noch Probleme melden an, gibt es keinen Datensatz. Übrig bleiben nur die Journal-Zeilen der Module. 3. Schritte mit festen Wörtern: Jeder Schritt (Weiche, Modellrunde, Werkzeug, Prüfung, Sprachausgabe) kommt mit Art, Name und Zeit dazu. Ein Wert geht nur hinein, wenn er eine Zahl oder ein kurzes festes Wort ist; alles andere wird verworfen. Frage, Antwort, Argumente und Ergebnisse kommen nie hinein. 4. Live-Seite an?: Bei eingeschalteter Live-Seite sieht live.py jeden Schritt sofort: welcher Dienst gefragt wird, was der Wächter entscheidet, was zurückkommt. Alles bleibt im Speicher und ist nach einem Neustart weg. 5. Journal-Zeilen der Module: Unabhängig davon schreibt jedes Modul seine Zeilen ins Journal des "
 },
 {
 "lang": "de",
@@ -2989,7 +2989,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "innt mit einem Wort aus logfilter.AREAS (36 Bereiche), Profile nur über profiles.log_name. Ein Selbsttest prüft beides. 6. Ende und Bewertung: Am Ende bekommt der Datensatz seinen Zustand: Fehler, wenn ein Fehlerwort gesetzt ist, langsam, wenn der erste Ton später als 5.0 s kam, sonst gut. 7. Anfragen verfolgen an?: Ist nur Live oder der Einstellungs-Assistent an, endet der Datensatz hier. Er wird nirgends geschrieben. 8. Zeile „anfrage:“ ins Journal: Eine Zeile pro Anfrage: Kennung, Kanal, Einordnung, Werkzeuge mit ok oder nicht ok, Zeit bis zur Rückmeldung, bis zum ersten Ton und bis zum Ende. Ohne Namen. 9. Anfrage-Verlauf auf der Platte: Der Datensatz wird angehängt. Wird die Datei zu groß, bleiben nur die letzten 500 Anfragen der letzten 2880 Minuten. Die Datei ist in keiner Sicherung. 10. Admin liest Logs → Anfragen: Nur Admin und Mit-Admins lesen den Verlauf, mit Rate-Limit. Name und Gerät eines Profils stehen nur da, wenn das Profil es erlaubt; sonst heißt es „Profil“. Zu einer Anfrage zeigt das Panel die Journal-Zeilen aus ihrer Zeit. 11. Journal lesen und einordnen: logfilter liest höchstens 20000 Zeilen; an journalctl gehen nur Zahlen aus festen Listen. Jede Zeile bekomm"
+"text": "Spark. Jede Zeile beginnt mit einem Wort aus logfilter.AREAS (36 Bereiche), Profile nur über profiles.log_name. Ein Selbsttest prüft beides. 6. Ende und Bewertung: Am Ende bekommt der Datensatz seinen Zustand: Fehler, wenn ein Fehlerwort gesetzt ist, langsam, wenn der erste Ton später als 5.0 s kam, sonst gut. 7. Anfragen verfolgen an?: Ist nur Live, der Einstellungs-Assistent oder Probleme melden an, endet der Datensatz hier. Er wird nirgends geschrieben; seinen Weg hält meldung.keep_answer für „Melden“ höchstens 24 Stunden im Speicher. 8. Zeile „anfrage:“ ins Journal: Eine Zeile pro Anfrage: Kennung, Kanal, Einordnung, Werkzeuge mit ok oder nicht ok, Zeit bis zur Rückmeldung, bis zum ersten Ton und bis zum Ende. Ohne Namen. 9. Anfrage-Verlauf auf der Platte: Der Datensatz wird angehängt. Wird die Datei zu groß, bleiben nur die letzten 500 Anfragen der letzten 2880 Minuten. Die Datei ist in keiner Sicherung. 10. Admin liest Logs → Anfragen: Nur Admin und Mit-Admins lesen den Verlauf, mit Rate-Limit. Name und Gerät eines Profils stehen nur da, wenn das Profil es erlaubt; sonst heißt es „Profil“. Zu einer Anfrage zeigt das Panel die Journal-Zeilen aus ihrer Zeit. 11. Journal lesen u"
 },
 {
 "lang": "de",
@@ -2997,7 +2997,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "t ihren Bereich aus dem ersten Wort, ihre Stufe aus festen Fehlerwörtern; Tokens, Schlüssel und Passwörter werden geschwärzt, bevor die Zeile das Panel verlässt. 12. Diagnose mit festem Hinweis: Die Diagnose zählt Zeilen pro Bereich und zeigt zum neuesten Fehler einen festen Hinweis aus einer Liste, nie einen vom Modell."
+"text": "nd einordnen: logfilter liest höchstens 20000 Zeilen; an journalctl gehen nur Zahlen aus festen Listen. Jede Zeile bekommt ihren Bereich aus dem ersten Wort, ihre Stufe aus festen Fehlerwörtern; Tokens, Schlüssel und Passwörter werden geschwärzt, bevor die Zeile das Panel verlässt. 12. Diagnose mit festem Hinweis: Die Diagnose zählt Zeilen pro Bereich und zeigt zum neuesten Fehler einen festen Hinweis aus einer Liste, nie einen vom Modell."
 },
 {
 "lang": "de",
@@ -14485,6 +14485,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Zugang",
 "title": "Zugang",
+"text": "- Antwort-Meldungen direkt an GitHub (Funktionen → Zugang → „Antwort-Meldungen direkt an GitHub“; baut auf „Probleme melden“; Ich → Probleme melden): War eine Antwort falsch, sagst du direkt danach „Mach ein Issue draus“ (oder tippst „Melden“ unter der Antwort)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Zugang",
+"title": "Zugang",
 "text": "- Verbrauchszähler (Funktionen → Zugang → „Verbrauchszähler“; Ich → Verbrauch): Der Spark zählt, wie viel seine Modelle arbeiten: gelesene und geschriebene Tokens beim Sprachmodell (davon aus dem Zwischenspeicher), Fragen an die Einordnung, Sekunden beim Hören und Sprechen, Texte der Bedeutungssuche, nachsortierte T …"
 },
 {
@@ -16166,6 +16174,30 @@
 "head": "Probleme melden",
 "title": "Live",
 "text": "Live: Zustand → Live zeigt GitHub (Meldungen) mit Zahl der Entwürfe und der heute gesendeten, nie Inhalte."
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Probleme melden",
+"title": "Antwort als Fehler melden",
+"text": "Antwort als Fehler melden (ab V01.1.408, Dominik 2026-11-13): War eine Antwort falsch, sagt man direkt danach „Mach ein Issue draus“ („Mach daraus ein Issue: …“, „Melde das als Fehler“, „Das war falsch, mach einen Fehlerbericht draus“, englisch „Make an issue of it“) oder tippt „Melden“ unter der Antwort (Panel, Android-App, iPhone-App). Der Bericht hängt an genau dieser Antwort (die letzte der letzten 10 Minuten; der Knopf bis 24 Stunden): Beschreibung, Frage und Antwort, die Quelle der Antwort (die Quellenangabe, sonst Werkzeuge und gefundene Seiten), der Weg der Anfrage (Gerät, Weiche, jeder Schritt mit Zeit, Fehler), Version und Modell, für Admin-Profile Diagnose-Logzeilen zwei Minuten um die Antwort (Fehler, Warnungen und die Bereiche von „Antworten und Werkzeuge“, nur solange die Antwort höchstens eine Stunde alt ist). Ohne Beschreibung fragt der Spark „Was war falsch?“, und die nächste Nachricht innerhalb von drei Minuten wird die Beschreibung („nein“, „egal“ lässt sie leer). Frage und Antwort hält das Panel dafür nur im Speicher (24 Stunden, 20 je Profil, 400 insgesamt), nie für Gäste, nie über MCP. Ausnahme vom „nur anonymisiert gespeichert“: Im Entwurf auf dem Spark bleib"
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Probleme melden",
+"title": "Antwort als Fehler melden",
+"text": "en Frage, Antwort und Quelle im Klartext, sichtbar nur für das meldende Profil und die Admins (14 Tage, wie jeder Entwurf). An GitHub gehen sie nur anonymisiert und nur, wenn sie in der Vorschau angehakt sind (ab Werk abgehakt; ältere Apps ohne Haken-Liste senden ohne sie). Label falsche-antwort. Das Profil braucht dafür nur die Freigabe „Probleme melden“; mit „Bewerten“ zählt der Bericht zugleich als 👎-Fall für den Einstellungs-Assistenten."
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Probleme melden",
+"title": "Antwort-Meldungen direkt an GitHub",
+"text": "Antwort-Meldungen direkt an GitHub (ab V01.1.408, Unterschalter chat.report_direct, aus, frischer Code): Dann geht ein Antwort-Bericht mit Beschreibung sofort als Issue raus, mit Frage und Antwort anonymisiert, ohne Blick auf die Vorschau, aber nur, wenn die Leck-Prüfung nichts findet und die Grenzen es erlauben; sonst bleibt er ein Entwurf, und der Assistent sagt warum. So kann ein Claude-Thread das Issue direkt lesen und beheben. Logs: meldung: Antwort-Entwurf <id> | <weg> | n Schritte | n Quellen | n Logzeilen, meldung: Beschreibung | <id> | n Zeichen, meldung: direkt gesperrt durch die Leck-Prüfung: …, meldung: direkt nicht gesendet 429, meldung: Antwort melden | keine Antwort. API (Profil, iPhone-Schlüssel): POST /api/report/answer mit {id, text}; das Ereignis melden mit der Kennung kommt am Ende jeder Antwort, solange Probleme melden für das Profil frei ist."
 },
 {
 "lang": "de",
@@ -18629,7 +18661,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": " the keychain. 6. Every request with the key: profiles.current looks up the key's hash in the device list. A device key comes before the cookie; the profile always comes from the key, never from what the app writes. 7. Path allowed for the app?: An app key only works for the 71 paths in profiles.APP_PATHS (chat, speech recognition, conversations, reminders, chats, calls …), a few read patterns, the panel areas (admin switch iPhone app with panel) and \"My things\" (iphone.THINGS, each part only with the release of its own function). Everything else it sees without a profile. 8. App off right now or My kill switch?: If the app is switched off by the admin or blocked for the profile, or the profile has My kill switch on, this request has no profile. The app gets „not now“ (503), keeps its pairing and works again as soon as the switch is back. 9. Like a browser of the profile: The app asks through the same endpoints as the page, with the same limits. What it may do on top (smart home, CarPlay, listening, documents, pictures) the Spark tells it in /api/iphone/hello; the app only shows it and follows it. Calls between profiles ring through a VoIP push from Apple that carries only the call"
+"text": " the keychain. 6. Every request with the key: profiles.current looks up the key's hash in the device list. A device key comes before the cookie; the profile always comes from the key, never from what the app writes. 7. Path allowed for the app?: An app key only works for the 72 paths in profiles.APP_PATHS (chat, speech recognition, conversations, reminders, chats, calls …), a few read patterns, the panel areas (admin switch iPhone app with panel) and \"My things\" (iphone.THINGS, each part only with the release of its own function). Everything else it sees without a profile. 8. App off right now or My kill switch?: If the app is switched off by the admin or blocked for the profile, or the profile has My kill switch on, this request has no profile. The app gets „not now“ (503), keeps its pairing and works again as soon as the switch is back. 9. Like a browser of the profile: The app asks through the same endpoints as the page, with the same limits. What it may do on top (smart home, CarPlay, listening, documents, pictures) the Spark tells it in /api/iphone/hello; the app only shows it and follows it. Calls between profiles ring through a VoIP push from Apple that carries only the call"
 },
 {
 "lang": "en",
@@ -18661,7 +18693,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 10 minutes a pairing code is valid (step 3) - 5 iPhones per profile (step 2) - 71 fixed paths for the app key (step 7) - 30 minutes an Android download link is valid (step 3) - 5 downloads per Android link (step 3) - 10 minutes a terminal pairing line is valid (step 3) - 5 terminals per profile (step 2) - 120 seconds after the last input a device counts as in use (step 9) - 5 minutes until an unseen note follows to the phone (step 9)"
+"text": "- 10 minutes a pairing code is valid (step 3) - 5 iPhones per profile (step 2) - 72 fixed paths for the app key (step 7) - 30 minutes an Android download link is valid (step 3) - 5 downloads per Android link (step 3) - 10 minutes a terminal pairing line is valid (step 3) - 5 terminals per profile (step 2) - 120 seconds after the last input a device counts as in use (step 9) - 5 minutes until an unseen note follows to the phone (step 9)"
 },
 {
 "lang": "en",
@@ -20405,7 +20437,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "1. A request comes in: Chat, writing help, creating documents and what the Spark does by itself create a record at the start: channel, kind (profile, guest, admin, Spark) and device. Before any switch aktiv.py counts the request for „Aktiv 10 min“ (OLED, Monitoring, Live): a profile once, a guest per device as a shortened hash, nothing of the Spark itself, in memory only. 2. Anything switched on?: If neither „Trace requests“ nor the live page nor the settings assistant is on, there is no record. Only the modules' journal lines remain. 3. Steps with fixed words: Each step (switch, model round, tool, check, speech output) is added with kind, name and time. A value goes in only if it is a number or a short fixed word; anything else is dropped. Question, answer, arguments and results never go in. 4. Live page on?: With the live page on, live.py sees each step at once: which service is asked, what the guard decides, what comes back. Everything stays in memory and is gone after a restart. 5. Journal lines of the modules: Independently each module writes its lines into the Spark's journal. Every line starts with a word from logfilter.AREAS (36 areas), profiles only through profiles.log_na"
+"text": "1. A request comes in: Chat, writing help, creating documents and what the Spark does by itself create a record at the start: channel, kind (profile, guest, admin, Spark) and device. Before any switch aktiv.py counts the request for „Aktiv 10 min“ (OLED, Monitoring, Live): a profile once, a guest per device as a shortened hash, nothing of the Spark itself, in memory only. 2. Anything switched on?: If neither „Trace requests“ nor the live page nor the settings assistant nor Reporting problems is on, there is no record. Only the modules' journal lines remain. 3. Steps with fixed words: Each step (switch, model round, tool, check, speech output) is added with kind, name and time. A value goes in only if it is a number or a short fixed word; anything else is dropped. Question, answer, arguments and results never go in. 4. Live page on?: With the live page on, live.py sees each step at once: which service is asked, what the guard decides, what comes back. Everything stays in memory and is gone after a restart. 5. Journal lines of the modules: Independently each module writes its lines into the Spark's journal. Every line starts with a word from logfilter.AREAS (36 areas), profiles only "
 },
 {
 "lang": "en",
@@ -20413,7 +20445,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "me. A self-test checks both. 6. End and verdict: At the end the record gets its state: error if an error word is set, slow if the first sound came later than 5.0 s, else good. 7. Trace requests on?: If only Live or the settings assistant is on, the record ends here. It is written nowhere. 8. Line „anfrage:“ into the journal: One line per request: id, channel, class, tools with ok or not ok, time to the instant reply, to the first sound and to the end. Without names. 9. Request history on disk: The record is appended. When the file grows too big, only the last 500 requests of the last 2880 minutes stay. The file is in no backup. 10. Admin reads Logs → Requests: Only the admin and co-admins read the history, with a rate limit. A profile's name and device show only when the profile allows it; else it says „Profil“. For one request the panel shows the journal lines from its time. 11. Read and sort the journal: logfilter reads at most 20000 lines; only numbers from fixed lists reach journalctl. Each line gets its area from its first word, its level from fixed error words; tokens, keys and passwords are blacked out before the line leaves the panel. 12. Diagnosis with a fixed hint: The di"
+"text": "through profiles.log_name. A self-test checks both. 6. End and verdict: At the end the record gets its state: error if an error word is set, slow if the first sound came later than 5.0 s, else good. 7. Trace requests on?: If only Live, the settings assistant or Reporting problems is on, the record ends here. It is written nowhere; meldung.keep_answer keeps its way for „Report“ in memory for 24 hours at most. 8. Line „anfrage:“ into the journal: One line per request: id, channel, class, tools with ok or not ok, time to the instant reply, to the first sound and to the end. Without names. 9. Request history on disk: The record is appended. When the file grows too big, only the last 500 requests of the last 2880 minutes stay. The file is in no backup. 10. Admin reads Logs → Requests: Only the admin and co-admins read the history, with a rate limit. A profile's name and device show only when the profile allows it; else it says „Profil“. For one request the panel shows the journal lines from its time. 11. Read and sort the journal: logfilter reads at most 20000 lines; only numbers from fixed lists reach journalctl. Each line gets its area from its first word, its level from fixed error w"
 },
 {
 "lang": "en",
@@ -20421,7 +20453,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "agnosis counts lines per area and shows a fixed hint from a list for the newest error, never one from the model."
+"text": "ords; tokens, keys and passwords are blacked out before the line leaves the panel. 12. Diagnosis with a fixed hint: The diagnosis counts lines per area and shows a fixed hint from a list for the newest error, never one from the model."
 },
 {
 "lang": "en",
@@ -31653,6 +31685,14 @@
 "file": "Assistant and panel",
 "head": "Access",
 "title": "Access",
+"text": "- Answer reports straight to GitHub (Features → Access → \"Answer reports straight to GitHub\"; builds on \"Reporting problems\"; Me → Reporting problems): If an answer was wrong, say \"Make an issue of it\" right after it (or tap \"Report\" under the answer)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Access",
+"title": "Access",
 "text": "- Usage counter (Features → Access → \"Usage counter\"; Me → Usage): The Spark counts how much its models work: tokens read and written at the language model (of them from the cache), questions to the classifier, seconds of listening and speaking, texts of the meaning search, re-ranked hits and pictures."
 },
 {
@@ -33254,6 +33294,30 @@
 "head": "Reporting problems",
 "title": "Live",
 "text": "Live: Status → Live shows GitHub (reports) with the number of drafts and of those sent today, never contents."
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Reporting problems",
+"title": "Report an answer as wrong",
+"text": "Report an answer as wrong (since V01.1.408, Dominik 2026-11-13): if an answer was wrong, say right after it \"Mach ein Issue draus\" (\"Mach daraus ein Issue: …\", \"Melde das als Fehler\", \"Das war falsch, mach einen Fehlerbericht draus\", in English \"Make an issue of it\") or tap \"Report\" under the answer (panel, Android app, iPhone app). The report is bound to exactly that answer (the last one of the last 10 minutes; the button up to 24 hours): description, question and answer, where the answer came from (the source note, else tools and pages found), the way of the request (device, Weiche, every step with its time, errors), version and model, for admin profiles diagnose log lines two minutes around the answer (errors, warnings and the areas of \"Answers and tools\", only while the answer is at most an hour old). Without a description the Spark asks \"What was wrong?\", and the next message within three minutes becomes the description (\"nein\", \"egal\" leaves it empty). The panel keeps question and answer for this in memory only (24 hours, 20 per profile, 400 in all), never for guests, never over MCP. Exception to \"stored only anonymized\": in the draft on the Spark question, answer and source "
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Reporting problems",
+"title": "Report an answer as wrong",
+"text": "stay in plain words, visible only to the reporting profile and the admins (14 days, like every draft). To GitHub they go only anonymized and only when ticked in the preview (unticked by default; older apps without a tick list send without them). Label falsche-antwort. The profile only needs the release of \"Reporting problems\"; with \"Rating\" the report also counts as a 👎 case for the settings assistant."
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Reporting problems",
+"title": "Answer reports straight to GitHub",
+"text": "Answer reports straight to GitHub (since V01.1.408, sub-switch chat.report_direct, off, fresh code): then an answer report with a description goes out as an issue at once, with question and answer anonymized, without a look at the preview, but only when the leak check finds nothing and the limits allow it; else it stays a draft and the assistant says why. So a Claude thread can read the issue directly and fix it. Logs: meldung: Antwort-Entwurf <id> | <way> | n Schritte | n Quellen | n Logzeilen, meldung: Beschreibung | <id> | n Zeichen, meldung: direkt gesperrt durch die Leck-Prüfung: …, meldung: direkt nicht gesendet 429, meldung: Antwort melden | keine Antwort. API (profile, iPhone key): POST /api/report/answer with {id, text}; the event melden with the id comes at the end of every answer while Reporting problems is released for the profile."
 },
 {
 "lang": "en",

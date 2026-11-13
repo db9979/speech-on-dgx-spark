@@ -21150,6 +21150,66 @@
           }
         }
       }
+    },
+    "Als Issue gesendet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sent as an issue."
+          }
+        }
+      }
+    },
+    "Antwort als Fehler melden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Report this answer as wrong"
+          }
+        }
+      }
+    },
+    "Frage, Antwort, Quelle und Weg der Anfrage kommen mit. Auf dem Spark im Klartext, an GitHub nur anonymisiert.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Question, answer, source and the way of the request go along. On the Spark in plain words, to GitHub only anonymized."
+          }
+        }
+      }
+    },
+    "Antwort melden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Report answer"
+          }
+        }
+      }
+    },
+    "Bericht anlegen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make report"
+          }
+        }
+      }
+    },
+    "Entwurf angelegt. Du findest ihn bei „Problem melden“ in den Einstellungen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Draft made. You find it under \"Report a problem\" in the settings."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

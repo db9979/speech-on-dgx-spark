@@ -31,7 +31,7 @@ GRUND = ("aktiv", "arbeiter", "ausleiten", "beobachten", "dateien", "docrender",
 CHAT_KREIS = {"chat", "chat_modell", "chat_ton", "chat_tools", "chat_turn"}
 DUNGEON_KREIS = {"dungeon", "dungeon_auto", "dungeon_geschichten", "dungeon_gesicht"}
 MODUL_KREISE = (CHAT_KREIS, DUNGEON_KREIS)   # the cycles at module level on V01.1.395: they may only shrink
-LOKAL_MAX = 2947
+LOKAL_MAX = 2944
 KNOTEN_ALT = ('ablauf', 'abschrift', 'account', 'ack', 'admin', 'aendern', 'agent', 'android', 'angriffsprobe', 'anrufe',
     'answercheck', 'antwortvorschlag', 'apns', 'appmerken', 'appupdate', 'auftragsplan', 'auslassen', 'auswertung',
     'backup', 'bedienen', 'befund', 'begleiter', 'berater', 'berater_katalog', 'bilder', 'calendars', 'chat',

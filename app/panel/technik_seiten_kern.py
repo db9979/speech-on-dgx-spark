@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "llm": {
-        "stand": "2453b8f629",
+        "stand": "c8f6302179",
         "bezug": {
             "chat.chat": ["s1"], "chat._answer": ["s2", "s4", "s6"], "llm.model": ["s3"], "llm.known_model": ["s3"], "llm.url": ["s1"], "llm.complete": ["s1"],
             "chat.sampling": ["s4"], "chat.first_within": ["s8"], "chat.ContextFull": ["s7"],
@@ -1474,7 +1474,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Betrieb: Logs und Live
     "betrieb": {
-        "stand": "303238048f",
+        "stand": "1353fd84dc",
         "bezug": {
             "dienstwacht.FAIL_N": ["s5"], "dienstwacht.REPEAT": ["s5"], "backup.KEEP": ["s9"],
             "tracelog.safe": ["s3"], "tracelog.Rec": ["s3", "s6"], "tracelog.finish": ["s8", "s9"],
@@ -1508,9 +1508,10 @@ SEITEN = {
                "nothing of the Spark itself, in memory only.")),
             S("s2", "frage", ("Etwas eingeschaltet?", "Anything switched on?"),
               ("Anfragen verfolgen, Live oder Fälle", "trace requests, Live or cases"),
-              ("Ist weder „Anfragen verfolgen“ noch die Live-Seite noch der Einstellungs-Assistent an, gibt es keinen "
-               "Datensatz. Übrig bleiben nur die Journal-Zeilen der Module.",
-               "If neither „Trace requests“ nor the live page nor the settings assistant is on, there is no record. "
+              ("Ist weder „Anfragen verfolgen“ noch die Live-Seite noch der Einstellungs-Assistent noch Probleme melden "
+               "an, gibt es keinen Datensatz. Übrig bleiben nur die Journal-Zeilen der Module.",
+               "If neither „Trace requests“ nor the live page nor the settings assistant nor Reporting problems is on, "
+               "there is no record. "
                "Only the modules' journal lines remain."),
               ("stop", "nein", ("Kein Verlauf, nur Journal", "No history, only journal"))),
             S("s3", "schritt", ("Schritte mit festen Wörtern", "Steps with fixed words"),
@@ -1544,9 +1545,10 @@ SEITEN = {
                "later than {tracelog.SLOW_S} s, else good.")),
             S("s7", "frage", ("Anfragen verfolgen an?", "Trace requests on?"),
               ("sonst nur Live oder Fälle", "else only Live or cases"),
-              ("Ist nur Live oder der Einstellungs-Assistent an, endet der Datensatz hier. Er wird nirgends "
-               "geschrieben.",
-               "If only Live or the settings assistant is on, the record ends here. It is written nowhere."),
+              ("Ist nur Live, der Einstellungs-Assistent oder Probleme melden an, endet der Datensatz hier. Er wird "
+               "nirgends geschrieben; seinen Weg hält meldung.keep_answer für „Melden“ höchstens 24 Stunden im Speicher.",
+               "If only Live, the settings assistant or Reporting problems is on, the record ends here. It is written "
+               "nowhere; meldung.keep_answer keeps its way for „Report“ in memory for 24 hours at most."),
               ("stop", "nein", ("Nicht gespeichert", "Not stored"))),
             S("s8", "schritt", ("Zeile „anfrage:“ ins Journal", "Line „anfrage:“ into the journal"),
               ("Kanal, Werkzeuge, Zeiten, Zustand", "channel, tools, times, state"),

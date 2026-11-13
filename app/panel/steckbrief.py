@@ -533,6 +533,11 @@ STECKBRIEFE = {
     "feedsmelden": Steckbrief(de="Neues aus Feeds melden", en="Telling news from feeds", gruppe="day",
         schalter=("feeds", "proactive"), anleitung="feeds", pref="pro_feeds", parent="proactive", me="probox",
         ohne_werkzeug=("ohne", "meldet sich von selbst")),
+    # „Mach ein Issue draus“ (meldung.by_answer, Dominik 2026-11-13): a report for one answer goes out at once,
+    # anonymized, only when the leak check finds nothing; off, the draft waits for the person's look
+    "meldendirekt": Steckbrief(de="Antwort-Meldungen direkt an GitHub", en="Answer reports straight to GitHub",
+        gruppe="sec", schalter=("report_direct",), anleitung="meldendirekt", parent="melden", me="rpbox",
+        ohne_werkzeug=("regel", "meldung.py: „Mach ein Issue draus“ und „Melden“ unter der Antwort")),
     # postfach.py (plan kalender-mail Stufe 2, Mailclient Stufe A): on the page E-Mail read/unread, flag, archive, move
     # (also several at once), every folder read, own folders made, renamed, removed when empty
     "mailmanage": Steckbrief(de="Mails ordnen", en="Order mail", gruppe="post", schalter=("mail_manage", "mail"),

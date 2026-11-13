@@ -1809,6 +1809,8 @@ Jede Funktion des Spark mit ihrem Schalter, worauf sie aufbaut, wo man sie einri
 
 - **Admin über Meldungen informieren** (Funktionen → Zugang → „Admin über Meldungen informieren“; baut auf „Probleme melden“; Ich → Probleme melden): Sendet ein Profil eine Meldung an GitHub oder legt sie nur auf dem Spark ab, sagt der Assistent es den Admin-Profilen (Rolle Admin, der Haupt-Admin zuerst): bei offener Seite im Assistenten, sonst als Mitteilung aufs Gerät.
 
+- **Antwort-Meldungen direkt an GitHub** (Funktionen → Zugang → „Antwort-Meldungen direkt an GitHub“; baut auf „Probleme melden“; Ich → Probleme melden): War eine Antwort falsch, sagst du direkt danach „Mach ein Issue draus“ (oder tippst „Melden“ unter der Antwort).
+
 - **Verbrauchszähler** (Funktionen → Zugang → „Verbrauchszähler“; Ich → Verbrauch): Der Spark zählt, wie viel seine Modelle arbeiten: gelesene und geschriebene Tokens beim Sprachmodell (davon aus dem Zwischenspeicher), Fragen an die Einordnung, Sekunden beim Hören und Sprechen, Texte der Bedeutungssuche, nachsortierte T …
 
 - **Kontingent** (Funktionen → Zugang → „Kontingent“; baut auf „Verbrauchszähler“; Ich → Verbrauch): Jedes Profil hat beim Sprachmodell eine Grenze für den Tag, die Woche (ab Montag) und den Monat (ab dem 1.), jede einzeln, 0 heißt keine.

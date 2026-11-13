@@ -5785,6 +5785,22 @@
 "text": "Pi updaten. Danach Zustand → Logs, Dienst ASR-Engine: Dort stehen nur Zeilen der letzten 14 Tage (oder gar keine), keine Zeilen vom Oktober mehr.",
 "thread": "Prüfen, ob alles Stand der Technik ist",
 "test": "test_logfilter.UnitJournalTest.test_old_lines_never_count_as_current"
+},
+{
+"id": "P851",
+"v": 1408,
+"titel": "Falsche Antwort als Issue melden",
+"text": "Admin: Funktionen → Zugang → „Probleme melden“ an (Token gesetzt). Stell eine Frage, dann sag direkt danach „Mach ein Issue draus“. Der Spark fragt „Was war falsch?“; antworte in einem Satz. Unter Ich → Probleme melden liegt ein Entwurf mit deiner Beschreibung, Quelle und Weg der Anfrage; „Frage und Antwort im Klartext“ zeigt beides, in der Vorschau sind die Zeilen „Frage/Antwort“ abgehakt, bis du sie anhakst. Dann noch einmal mit „Melden“ unter einer Antwort (Panel und iPhone).",
+"thread": "Fehler per Assistent als Issue melden",
+"wichtig": true
+},
+{
+"id": "P852",
+"v": 1408,
+"titel": "Antwort-Meldung direkt an GitHub",
+"text": "Admin: unter „Probleme melden“ „Antwort-Meldungen direkt an GitHub“ an (frischer Code). Sag nach einer Antwort „Mach ein Issue draus: die Antwort stimmt nicht“. Im Repo spark-meldungen erscheint sofort ein Issue mit Label falsche-antwort, Frage und Antwort anonymisiert, ohne Namen oder Mail-Adressen.",
+"thread": "Fehler per Assistent als Issue melden",
+"test": "test_meldung.AnswerReports.test_direct_sends_anonymized_with_question_and_answer"
 }
 ]
 }

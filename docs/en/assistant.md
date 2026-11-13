@@ -1809,6 +1809,8 @@ Every function of the Spark with its switch, what it builds on, where you set it
 
 - **Tell admins about reports** (Features → Access → "Tell admins about reports"; builds on "Reporting problems"; Me → Reporting problems): When a profile sends a report to GitHub or keeps it on the Spark only, the assistant tells the admin profiles (role Admin, the main admin first): in the assistant when the page is open, else as a note on the device.
 
+- **Answer reports straight to GitHub** (Features → Access → "Answer reports straight to GitHub"; builds on "Reporting problems"; Me → Reporting problems): If an answer was wrong, say "Make an issue of it" right after it (or tap "Report" under the answer).
+
 - **Usage counter** (Features → Access → "Usage counter"; Me → Usage): The Spark counts how much its models work: tokens read and written at the language model (of them from the cache), questions to the classifier, seconds of listening and speaking, texts of the meaning search, re-ranked hits and pictures.
 
 - **Quota** (Features → Access → "Quota"; builds on "Usage counter"; Me → Usage): Every profile has a language model limit for the day, the week (from Monday) and the month (from the 1st), each on its own, 0 means none.

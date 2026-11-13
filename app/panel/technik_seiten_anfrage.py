@@ -784,7 +784,7 @@ SEITEN = {
         "heute": [],
     },
     "antwort": {
-        "stand": "bc04e4b6db",
+        "stand": "0f9a2f5dfd",
         "bezug": {
             "chat.MAX_SAVES": ["s11"], "chat.LOOP_SAME": ["s11"], "chat._answer": ["s4", "s5", "s11"], "chat_modell.model_turn": ["s4", "s11"], "chat_modell.herkunft_und_chip": ["s3"], "chat_ton.speech_out": ["s8"],
             "chat.split_sentences": ["s5"], "chat.said_key": ["s8"], "chat.no_code": ["s8"],
@@ -988,13 +988,17 @@ SEITEN = {
                "die Antwort läuft, steht sie in laufend: Notaus Stufe 3 beendet sie mit dem Ereignis „ende“, das Gerät "
                "hört dann auf und öffnet das Mikrofon nicht wieder. Stützt sich die "
                "Antwort auf mindestens zwei eigene Dokumente oder Kiwix-Artikel, merkt wissensbuch.keep_offer sie und "
-               "das Gerät zeigt „Ins Wissensbuch“; nur der Klick des Besitzers legt sie ab.",
+               "das Gerät zeigt „Ins Wissensbuch“; nur der Klick des Besitzers legt sie ab. Ist Probleme melden für das "
+               "Profil frei, merkt meldung.keep_answer Frage, Antwort, Quelle und Weg nur im Speicher (24 Stunden) und "
+               "das Gerät zeigt „Melden“; „Mach ein Issue draus“ danach legt den Bericht zu genau dieser Antwort an.",
                "The request trace is closed; cases and the background check run only after speaking. When the device "
                "aborts (barge-in, stop), model and speech output stop at once. While the answer runs it is listed in "
                "laufend: kill switch stage 3 ends it with the event „ende“, the device then stops and does not open the "
                "microphone again. When the answer rests on at least two own "
                "documents or Kiwix articles, wissensbuch.keep_offer keeps it and the device shows „To the knowledge "
-               "book“; only the owner's click files it.")),
+               "book“; only the owner's click files it. When Reporting problems is released for the profile, "
+               "meldung.keep_answer keeps question, answer, source and way in memory only (24 hours) and the device shows "
+               "„Report“; „Mach ein Issue draus“ afterwards makes the report for exactly this answer.")),
         ],
         "beispiele": [
             (("Plaudern ohne Werkzeug", "Small talk without a tool"),

@@ -7,7 +7,7 @@ const RP={d:null,cur:null,skip:new Set(),root:null,busy:false,thread:null};
 const RP_ST={entwurf:['Entwurf','Draft'],gesendet:['gesendet','sent'],lokal:['nur lokal','local only'],sendet:['wird gesendet','sending']};
 const RP_CH={panel:['Panel','panel'],app:['iPhone-App','iPhone app'],android:['Android-App','Android app'],telegram:['Telegram','Telegram'],
   sprache:['Sprache','voice'],esp32:['Lautsprecher','speaker'],pebble:['Pebble-Uhr','Pebble watch'],begleiter:['Begleiter','companion']};
-const RP_PART={requests:['Anfrage','request'],lines:['Logzeile','log line'],applog:['App','app'],system:['System','system']};
+const RP_PART={qa:['Frage/Antwort','question/answer'],source:['Quelle','source'],way:['Weg','way'],requests:['Anfrage','request'],lines:['Logzeile','log line'],applog:['App','app'],system:['System','system']};
 const rpWhen=x=>x?new Date(x*1000).toLocaleString([], {dateStyle:'short',timeStyle:'short'}):'';
 const rpArea=k=>{const a=((RP.d||{}).areas||[]).find(x=>x.key===k);return a?t(a.name[0],a.name[1]):k};
 function rpMsg(x,err){const m=RP.root&&RP.root.querySelector('.rpmsg');if(m){m.textContent=x||'';m.className='fh rpmsg'+(err?' err':'')}}
@@ -52,13 +52,14 @@ async function rpList(root){RP.root=root;RP.cur=null;RP.thread=null;
     try{await api('/api/report/delete',xjson('POST',{id:b.dataset.rpdel}));rpList(root)}catch(x){rpMsg(x.message,true)}})}
 // ---------------------------------------------------------------- the preview
 function rpCounts(c){const n=Object.entries(c||{}).filter(([,v])=>v);return n.length?n.map(([k,v])=>`${v}× [${k}]`).join(', '):t('nichts','nothing')}
-function rpShow(root,r){RP.root=root;RP.cur=r;const p=r.preview||{};
+function rpShow(root,r){RP.root=root;RP.cur=r;const p=r.preview||{};if(Array.isArray(r.skip)&&!RP.skip.size)RP.skip=new Set(r.skip);
   root.innerHTML=`<div class="row"><button class="b" type="button" data-rpback="1">‹ ${esc(t('Zurück','Back'))}</button></div>
     <h3 style="margin:10px 0 4px">${esc(t('Vorschau: genau das geht raus','Preview: exactly this goes out'))}</h3>
     <div class="fh">${esc(t('Ersetzt: ','Replaced: '))}${esc(rpCounts(r.counts))}. ${esc(t('Haken weg = diese Zeile geht nicht mit.','Untick = this line stays here.'))}</div>
     <div class="fh err rpleak" hidden></div>
     <ul class="facts rplines">${(r.lines||[]).map(x=>`<li><label class="chk"><input type="checkbox" data-rpline="${x.n}"${RP.skip.has(x.n)?'':' checked'}> <small class="mut">${esc(t(...(RP_PART[x.part]||[x.part,x.part])))}</small> <code></code></label></li>`).join('')
       ||`<li class="mut"><span>${esc(t('Keine Logzeilen dabei.','No log lines included.'))}</span></li>`}</ul>
+    ${r.raw?`<details class="rpraw"><summary>${esc(t('Frage und Antwort im Klartext (nur auf dem Spark)','Question and answer in plain words (on the Spark only)'))}</summary><pre class="rprawq"></pre><pre class="rprawa"></pre><pre class="rprawsrc"></pre></details>`:''}
     <details open><summary>${esc(t('Text der Meldung','Text of the report'))}</summary><b class="rptitle"></b><pre class="rpbody"></pre></details>
     <div class="row rpgo" style="margin-top:8px;flex-wrap:wrap;gap:6px">
       <button class="b p" type="button" data-rpsend="gh">${esc(t('An GitHub senden','Send to GitHub'))}</button>
@@ -67,6 +68,8 @@ function rpShow(root,r){RP.root=root;RP.cur=r;const p=r.preview||{};
     <div class="fh rpmsg" role="status"></div>`;
   // log lines as text only, never as markup
   root.querySelectorAll('.rplines code').forEach((c,i)=>{c.textContent=r.lines[i].line});
+  if(r.raw){root.querySelector('.rprawq').textContent=t('Frage: ','Question: ')+(r.raw.q||'');root.querySelector('.rprawa').textContent=t('Antwort: ','Answer: ')+(r.raw.a||'');
+    root.querySelector('.rprawsrc').textContent=(r.raw.src||[]).length?t('Quelle: ','Source: ')+r.raw.src.join(' · '):''}
   rpPaint(root,p);
   root.querySelector('[data-rpback]').onclick=()=>rpList(root);
   root.querySelectorAll('[data-rpline]').forEach(cb=>cb.onchange=async()=>{const n=+cb.dataset.rpline;if(cb.checked)RP.skip.delete(n);else RP.skip.add(n);
@@ -85,6 +88,27 @@ async function rpSend(root,how,b){const r=RP.cur,p=r.preview||{};if(RP.busy)retu
     if(how==='browser'){if(w&&/^https:\/\/github\.com\//.test(x.url||''))w.location.href=x.url;rpMsg(t('GitHub ist offen: dort prüfen und absenden.','GitHub is open: check and submit there.'));return}
     await rpList(root);rpMsg(how==='local'?t('Bleibt nur auf dem Spark.','Stays on the Spark only.'):t('Gesendet','Sent')+(x.issue&&x.issue.number?' (#'+x.issue.number+')':'')+'.')}
   catch(e){if(w)w.close();rpMsg(e.message,true)}finally{RP.busy=false;b.disabled=false}}
+// ---------------------------------------------------------------- „Melden“ under an answer (Dominik 2026-11-13)
+// The server sends a "melden" event with an id only while Probleme melden is on for this profile. The report is bound
+// to exactly that answer; with „Direkt an GitHub senden“ it goes out at once, else the preview opens.
+function rpAnswerBar(id){const d=document.createElement('div');d.className='ratebar rpabar';d.dataset.aid=id;
+  d.innerHTML=`<button type="button" class="b rb" data-rpa="open" aria-label="${esc(t('Antwort als Fehler melden','Report this answer as wrong'))}" title="${esc(t('Antwort als Fehler melden','Report this answer as wrong'))}">${ic('flag')} ${esc(t('Melden','Report'))}</button><span class="mut rmsg"></span>`;
+  return d}
+function rpaSheet(bar){if(bar.querySelector('.ratesheet'))return;const s=document.createElement('div');s.className='ratesheet';
+  s.innerHTML=`<input class="rtext" maxlength="2000" autocomplete="off" placeholder="${esc(t('Was war falsch?','What was wrong?'))}" aria-label="${esc(t('Was war falsch?','What was wrong?'))}">`+
+    `<div class="mut rq">${esc(t('Frage, Antwort, Quelle und Weg der Anfrage kommen mit. Auf dem Spark im Klartext, an GitHub nur anonymisiert.','Question, answer, source and the way of the request go along. On the Spark in plain words, to GitHub only anonymized.'))}</div>`+
+    `<div class="row"><button type="button" class="b p" data-rpa="send">${esc(t('Bericht anlegen','Make report'))}</button><button type="button" class="b" data-rpa="close">${esc(t('Abbrechen','Cancel'))}</button></div>`;
+  bar.appendChild(s);s.querySelector('.rtext').focus()}
+async function rpaSend(bar,b){const m=bar.querySelector('.rmsg'),txt=bar.querySelector('.rtext').value.trim().slice(0,2000);b.disabled=true;
+  try{const r=await (await api('/api/report/answer',xjson('POST',{id:bar.dataset.aid,text:txt}))).json();
+    const sh=bar.querySelector('.ratesheet');if(sh)sh.remove();bar.querySelector('[data-rpa=open]').classList.add('on');
+    if(r.status==='gesendet'){m.textContent=t('Gesendet','Sent')+(r.issue&&r.issue.number?' (#'+r.issue.number+')':'')+'.';return}
+    m.textContent=r.said||t('Entwurf angelegt.','Draft made.');
+    if(typeof closeSheet==='function')closeSheet();$('rpmodal').style.display='grid';RP.skip=new Set();rpShow($('rpbody'),r)}
+  catch(e){m.textContent=e.message;b.disabled=false}}
+document.addEventListener('click',e=>{const b=e.target.closest('.rpabar [data-rpa]');if(!b)return;const bar=b.closest('.rpabar'),a=b.dataset.rpa;
+  if(a==='open')rpaSheet(bar);else if(a==='close'){const sh=bar.querySelector('.ratesheet');if(sh)sh.remove()}else if(a==='send')rpaSend(bar,b)});
+window.rpAnswerBar=rpAnswerBar;
 // ---------------------------------------------------------------- GitHub's answers (text only)
 async function rpThread(root,id){RP.root=root;
   root.innerHTML=`<div class="row"><button class="b" type="button" data-rpback="1">‹ ${esc(t('Zurück','Back'))}</button></div><div class="fh rpmsg" role="status">${esc(t('Hole den Stand von GitHub …','Fetching the state from GitHub …'))}</div><ul class="facts rpans"></ul>`;

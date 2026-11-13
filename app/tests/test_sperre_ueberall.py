@@ -519,6 +519,7 @@ ADMIN_ON_OK = {
     "anrufe.py:turn_on": "Spark-wide: the Vermittler (coturn) runs for the whole Spark, no profile",
     "offline.py:_paused": "admin check Ohne Internet: which Spark-wide functions need the internet, no profile acts",
     "vorab.py:admin_on": "Spark switch; per profile vorab.on (features.allowed)",
+    "meldung.py:direct_on": "Spark switch: answer reports go out at once; the report was made only after features.allowed melden",
     "weather.py:admin_on": "Spark switch; per profile weather.usable, endpoints add features.blocked",
     "wiki.py:admin_on": "Spark switch; per profile features.allowed wiki",
     "wissen.py:admin_on": "Spark switch; per profile wissen.on (features.allowed)",

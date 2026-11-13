@@ -53,6 +53,7 @@ FENSTER = {
     ".tipsetup": "a tip in the face's bubble",
     ".rpcard": "the window „Problem melden“",
     "pre.rpbody": "the report in that window",
+    "pre.rprawq,pre.rprawa,pre.rprawsrc": "question, answer and source of an answer report in that window (long answers)",
     ".ld-detail": "the sticky detail column beside a list: scrolls only when taller than the window",
     ".ld-frame>.ld-split>.ld-list,.ld-frame>.ld-split>.ld-detail,.ld-frame>.ld-split>.postfold": "list, details and the mail folders of a frame, side by side",
     ".post .postfold": "the mail folders (narrow screens: a panel over the list)",

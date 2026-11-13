@@ -331,6 +331,7 @@
     "mcp_own_oauth": false,
     "report": false,
     "report_notify": false,
+    "report_direct": false,
     "report_repo": "db9979/spark-meldungen",
     "dev_updates": false,
     "svc_watch": false,

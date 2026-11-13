@@ -20,6 +20,7 @@ enum ChatEvent {
     case sparkCall(chat: String, name: String, video: Bool)   // Anrufe per Assistent (rufen.py): after the yes, start this call
     case face(String)       // what the answer is doing, for the face: search, calendar, mail, home, memory, happy, error
     case rate(String)       // 👍/👎 may go under this answer (only when the profile's switch is on): its id
+    case report(String)     // „Melden“ may go under this answer (meldung.py, Probleme melden frei): its id
     case picture(job: String, prompt: String)   // a picture is painted for this answer (bilder.py): its job
     case more(kind: String, items: [MoreItem])  // the Spark's fixed sentences under the answer (saetze.py)
     case step(StepItem)     // Ablauf zeigen (ablauf.py): one tool of this answer, its readable name, ok and time
@@ -1014,6 +1015,10 @@ struct SparkAPI {
                             // only a short id of letters and digits (faelle.py), never other text from the event
                             if let id = ev["id"] as? String, (4...40).contains(id.count),
                                id.allSatisfy({ $0.isASCII && ($0.isLetter || $0.isNumber) }) { cont.yield(.rate(id)) }
+                        case "melden":
+                            // only a short id of hex digits (meldung.keep_answer), never other text from the event
+                            if let id = ev["id"] as? String, id.count == 12,
+                               id.allSatisfy({ $0.isASCII && $0.isHexDigit }) { cont.yield(.report(id)) }
                         case "goto" where ev["to"] as? String == "fund":
                             // Finden: the search words as plain text (at most 120) and, for the Sofort-Karte, only an
                             // entry's number; opening it, the Spark checks again that it is the profile's own

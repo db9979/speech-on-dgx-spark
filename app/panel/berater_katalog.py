@@ -112,7 +112,7 @@ NEVER = (
     ("Mail senden, MCP nach außen, Probleme melden", "Sending mail, MCP to the outside, reporting problems"),
     ("Updates und Sicherungen", "Updates and backups"),
 )
-NEVER_KEYS = {("chat", k) for k in ("llm_url", "llm_key", "public", "mfa", "report", "report_repo", "mail_send",
+NEVER_KEYS = {("chat", k) for k in ("llm_url", "llm_key", "public", "mfa", "report", "report_repo", "report_direct", "mail_send",
                                     "mail_send_voice", "mcp_server_extern", "llm_api", "llm_api_extern", "llm_api_minute", "llm_api_tag_k", "llm_api_assistant", "openwebui", "openwebui_url", "openwebui_link_url", "dev_updates", "system_updates", "system_updates_night_panel", "system_updates_night_models", "telegram_api",
                                     "fernzugang", "fernzugang_hilfe", "spontanhilfe", "spontansteuern", "fernbild", "fernals", "fernzugang_sshtermy",
                                     "fernbild_zwischenablage", "fernzugang_notizen",

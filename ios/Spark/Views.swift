@@ -347,6 +347,7 @@ struct ChatView: View {
                                 AnswersCard(answers: a)
                             }
                             if m.role != "user", m.rateId != nil { RateBar(message: m) }
+                            if m.role != "user", m.reportId != nil { ReportAnswerBar(message: m) }
                             if m.role != "user", m.wbId != nil { WbFileButton(message: m) }
                             if m.role != "user", let q = m.fundQ, talk.allowed.areas.contains("fund") { FundKarte(q: q, id: m.fundId) }
                             if m.role != "user", m.herkunft != nil || m.webChip != nil {
@@ -1035,6 +1036,52 @@ struct RateBar: View {
         .font(.footnote)
         .padding(.leading, 6)
         .sheet(isPresented: $sheet) { RateSheet(message: message) }
+    }
+}
+
+/// „Melden“ under an answer (meldung.py): opens a short sheet „Was war falsch?“; question, answer, source and the
+/// way of the request go along on the Spark, to GitHub only anonymized.
+struct ReportAnswerBar: View {
+    let message: Conversation.Message
+    @State private var sheet = false
+    @State private var text = ""
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Button { sheet = true } label: { Label("Melden", systemImage: message.reported == nil ? "flag" : "flag.fill") }
+                .accessibilityLabel("Antwort als Fehler melden")
+                .disabled(message.reported != nil)
+            if let r = message.reported { Text(r).foregroundStyle(.secondary) }
+            Spacer()
+        }
+        .buttonStyle(.borderless)
+        .font(.footnote)
+        .padding(.leading, 6)
+        .sheet(isPresented: $sheet) {
+            NavigationStack {
+                Form {
+                    Section {
+                        TextField("Was war falsch?", text: $text, axis: .vertical)
+                            .onChange(of: text) { if text.count > 2000 { text = String(text.prefix(2000)) } }
+                    } footer: {
+                        Text("Frage, Antwort, Quelle und Weg der Anfrage kommen mit. Auf dem Spark im Klartext, an GitHub nur anonymisiert.")
+                    }
+                }
+                .navigationTitle("Antwort melden")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) { Button("Abbrechen") { sheet = false } }
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Bericht anlegen") {
+                            let t = text
+                            Task { await Conversation.shared.report(message.id, text: t) }
+                            sheet = false
+                        }
+                    }
+                }
+            }
+            .presentationDetents([.medium])
+        }
     }
 }
 
