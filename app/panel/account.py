@@ -27,6 +27,8 @@ import calendars  # noqa: E402
 import coadmin  # noqa: E402
 import echo  # noqa: E402
 import mail  # noqa: E402
+import fuerdich  # noqa: E402
+import hintergrund  # noqa: E402
 import vorwaermen  # noqa: E402
 import memtidy  # noqa: E402
 import gedaechtnis  # noqa: E402
@@ -1307,7 +1309,12 @@ async def profile_mail_inbox(request: Request, q: str = "", days: int = 14, unre
         print(f"mail: inbox not readable | {len(r['errors'])} of {len(r['boxes'])} mailboxes | {profiles.log_name(prof)}", flush=True)
     if r.get("loading"):
         print(f"mail: inbox loading | {len(r['boxes'])} mailboxes | {profiles.log_name(prof)}", flush=True)
-    return r
+    # Postfach-Zustand (pl_mail-Ideen 7): a mailbox that says no for a while is named with a fixed reason and the way
+    st = mail.zustand(prof["id"], hintergrund.service)
+    if st:
+        mail.shown("zustand")
+        print(f"mail: mailbox state shown | {len(st)} | {profiles.log_name(prof)}", flush=True)
+    return dict(r, zustand=st) if st else r
 
 
 async def _older(request, prof, vor, q, unread, folder):
@@ -1335,7 +1342,7 @@ async def profile_mail_message(request: Request, id: str = "", folder: str = "",
     if folder and folder.upper() != "INBOX" and not features.allowed("mailmanage", prof["id"]):
         raise HTTPException(403, "Ordner gehören zu „Mails ordnen“.")
     try:
-        r = await asyncio.wait_for(asyncio.to_thread(mail.show, prof["id"], id[:40], folder[:200] or "INBOX"), 45)
+        r = await asyncio.wait_for(asyncio.to_thread(mail.show, prof["id"], id[:40], folder[:200] or "INBOX", fuerdich.echtheit), 45)
     except ValueError:
         raise HTTPException(400, "Unbekannte Mail.")
     except asyncio.TimeoutError:
@@ -1351,6 +1358,15 @@ async def profile_mail_message(request: Request, id: str = "", folder: str = "",
         r.update(await asyncio.to_thread(mailansicht.facts, prof["id"], id[:40], folder[:200] or "INBOX"))
     except (OSError, ValueError, imaplib.IMAP4.error):
         r.update(html=False, remote=0)   # the text from mail.show is there, the frame waits for the next try
+    # „Warum liegt die Mail hier?“ (pl_mail-Ideen 4): only for who orders mail, from the lists that are there anyway
+    if features.allowed("mailmanage", prof["id"]):
+        try:
+            r["placed"] = mailregeln.placed(prof["id"], id[:40], r.get("mid", ""))
+        except (OSError, ValueError):
+            r["placed"] = None
+            print(f"mail: placed not readable | {profiles.log_name(prof)}", flush=True)
+        if r["placed"]:
+            mail.shown("warum")
     return r
 
 

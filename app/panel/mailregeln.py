@@ -422,6 +422,60 @@ def spark_moved(uid, aid, d=None, st=None):
     return out
 
 
+def placed(uid, ref, mid):
+    """„Warum liegt die Mail hier?“ (pl_mail-Ideen 4, Dominik 2026-11-13 „1-7“): who of the Spark put this mail where it
+    is, from the lists that are there anyway (spark_moved), nothing new is kept. None when the Spark did not move it.
+    Only fixed fields: by (rule or tidy), the folder, for a rule its own conditions, for the tidying its category and
+    the fixed reason it wrote then (tidy._log_item), and whether the person took it back since."""
+    aid, mid = str(ref).split(":", 1)[0], tidy.clean_mid(mid)
+    if not aid or not mid:
+        return None
+    d = load(uid)
+    x = spark_moved(uid, aid, d=d).get(mid)
+    if not x:
+        return None
+    out = {"by": x["by"], "folder": str(x.get("folder") or "")[:200], "t": int(x.get("t") or 0), "undone": bool(x.get("undone"))}
+    if x["by"] == "rule":
+        r = next((r for r in d["rules"] if r.get("id") == x.get("rid")), None)
+        w = (r or {}).get("when") or {}
+        out["rule"] = {k: str(w.get(k) or "")[:200] for k in ("from", "subject", "to")} | {"attach": bool(w.get("attach")), "gone": r is None}
+    else:
+        out.update(cat=str(x.get("cat") or "")[:40], why=str(x.get("why") or "")[:120], model=bool(x.get("model")))
+    out["satz"] = placed_sentence(out)
+    return out
+
+
+def placed_sentence(p):
+    """The one sentence of „Warum liegt die Mail hier?“ for every device, [German, English]: fixed words with the values
+    of placed() in it (the page, the apps and the Begleiter show it as text)."""
+    f = f" → „{p['folder']}“" if p.get("folder") else ""
+    if p["by"] == "rule":
+        r = p.get("rule") or {}
+        de, en = [], []
+        if r.get("from"):
+            de.append(("Absender endet auf " if r["from"].startswith("@") else "Absender ") + r["from"])
+            en.append(("sender ends with " if r["from"].startswith("@") else "sender ") + r["from"])
+        if r.get("subject"):
+            de.append("Betreff enthält " + r["subject"])
+            en.append("subject has " + r["subject"])
+        if r.get("to"):
+            de.append("an " + r["to"])
+            en.append("to " + r["to"])
+        if r.get("attach"):
+            de.append("mit Anhang")
+            en.append("with attachment")
+        out = ["Hierher gelegt von deiner Regel" + (f" ({', '.join(de)})" if de else "") + (", die es nicht mehr gibt" if r.get("gone") else "") + f,
+               "Put here by your rule" + (f" ({', '.join(en)})" if en else "") + (", which is gone now" if r.get("gone") else "") + f]
+    else:
+        cat = tidy.CATS.get(p.get("cat") or "", p.get("cat") or "")
+        why = f" ({p['why']})" if p.get("why") else ""
+        out = [f"Hierher gelegt vom Aufräumen{': ' + cat if cat else ''}{why}{', vom Modell eingeschätzt' if p.get('model') else ''}{f}",
+               f"Put here by tidying{': ' + cat if cat else ''}{why}{', guessed by the model' if p.get('model') else ''}{f}"]
+    if p.get("undone"):
+        out = [out[0] + ". Du hast sie danach zurückgeholt.", out[1] + ". You took it back after that."]
+    return out
+
+
 def user_moved(moved, mid, where):
     """Did the Spark move this mail, and did the person put it somewhere else since (`where`, the inbox above all)?
     Its entry of spark_moved, else None. Such a mail no sorter touches again (no ping-pong)."""

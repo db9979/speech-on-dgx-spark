@@ -5912,6 +5912,21 @@
 "text": "Auf tars sudo speech-spark modelle messen gemma4mtp ausführen. Unter Zustand → Modelle steht danach „Gemma 4 26B A4B NVFP4 mit Entwurfsmodell (MTP)“ mit seinen Tokens pro Sekunde; erwartet sind deutlich mehr als die 47,3 ohne. Werkzeug und Bild sollen ok bleiben.",
 "thread": "GPU-Taktgrenze auf tars einbauen",
 "test": "test_modelle.Katalog.test_messliste"
+},
+{
+"id": "P867",
+"v": 1425,
+"titel": "Suche mit an:, vor:, nach: und Vorschlägen",
+"text": "Pi updaten. E-Mail öffnen, ins Suchfeld „vor:“ tippen: darunter erscheint eine Vorschlagsliste, die Seite springt nicht. „nach:1.11.“ zeigt nur Mails ab dem 1. November, „an:“ mit einer deiner Adressen nur Mails an sie, „ordner:“ mit einem Ordnernamen öffnet den Ordner. Suchwörter sind in Betreff und Vorschau markiert. Am iPhone stehen an:, vor:, nach: als Vorschläge.",
+"thread": "Mail mit Ideen aus pl_mail verbessern",
+"test": "test_post_seite.Page.test_search_offers_marks_why_and_mailbox_state"
+},
+{
+"id": "P868",
+"v": 1425,
+"titel": "Warum liegt die Mail hier? und Absender bestätigt",
+"text": "Pi updaten. Eine Mail öffnen, die eine Regel oder das Aufräumen in einen Ordner gelegt hat: über ihr steht, welche Regel oder Aufräum-Art sie dorthin gelegt hat, mit „Falsch einsortiert? Zurück in den Posteingang“ (holt sie zurück, danach fasst der Spark sie nicht wieder an). Eine Mail von einem großen Anbieter (z. B. Bank, Shop) zeigt „Absender bestätigt“. Ändere in E-Mail → Einstellungen kurz das Passwort eines Postfachs falsch: nach gut 10 Minuten steht über der Liste ein Satz dazu mit Weg; danach wieder richtig stellen.",
+"thread": "Mail mit Ideen aus pl_mail verbessern"
 }
 ]
 }

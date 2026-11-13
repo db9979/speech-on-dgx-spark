@@ -373,17 +373,51 @@ def plain(msg):
 
 # Suche der Seite E-Mail (Mailclient Stufe C): von:anna, betreff:rechnung, hat:anhang, ist:markiert, ist:ungelesen (and
 # from:, subject:, has:attachment, is:flagged, is:unread); a word without one looks at sender and subject, then TEXT
-OPS = {"von": "from", "from": "from", "betreff": "subject", "subject": "subject"}
+OPS = {"von": "from", "from": "from", "betreff": "subject", "subject": "subject", "an": "to", "to": "to",
+       "vor": "before", "before": "before", "nach": "after", "after": "after", "seit": "after", "since": "after"}
+# Suche erweitern (pl_mail-Ideen 5, Dominik 2026-11-13 „1-7“): the folder words are the page's (post.js opens the folder),
+# never a word the server searches for
+FOLDER_OPS = ("ordner", "in", "folder")
+DATE_WORD = re.compile(r"(\d{1,2})\.(\d{1,2})\.(\d{4}|\d{2})?|(\d{4})-(\d{1,2})-(\d{1,2})")
+
+
+def day_of(text, today=None):
+    """A date word of the search („13.11.“, „13.11.2026“, „2026-11-13“, heute, gestern, today, yesterday) as an ISO day,
+    "" when it is none. Without a year the last such day up to today (a search looks back)."""
+    t, today = str(text or "").strip().lower(), today or datetime.date.today()
+    if t in ("heute", "today"):
+        return today.isoformat()
+    if t in ("gestern", "yesterday"):
+        return (today - datetime.timedelta(days=1)).isoformat()
+    m = DATE_WORD.fullmatch(t)
+    if not m:
+        return ""
+    try:
+        if m.group(4):
+            return datetime.date(int(m.group(4)), int(m.group(5)), int(m.group(6))).isoformat()
+        y = m.group(3)
+        if y:
+            return datetime.date(int(y) + (2000 if len(y) == 2 else 0), int(m.group(2)), int(m.group(1))).isoformat()
+        d = datetime.date(today.year, int(m.group(2)), int(m.group(1)))
+        return (d if d <= today else d.replace(year=today.year - 1)).isoformat()
+    except ValueError:
+        return ""
 MARKS = {"hat:anhang": "hat:anhang", "has:attachment": "hat:anhang", "ist:markiert": "ist:markiert", "is:flagged": "ist:markiert",
          "ist:ungelesen": "ist:ungelesen", "is:unread": "ist:ungelesen"}
 
 
-def _words(text):
+def _words(text, today=None):
     out = []
     for w in re.findall(r"(?:[a-z]{2,7}:)?[\w@.\-]{2,}", (text or "").lower()):
         op, _, rest = w.partition(":")
         if rest and w in MARKS:
             out.append(MARKS[w])
+        elif rest and op in FOLDER_OPS:
+            continue                  # the page's: it opens that folder
+        elif rest and OPS.get(op) in ("before", "after"):
+            day = day_of(rest, today)
+            if day:                   # a date that is none is no word either
+                out.append(f"{OPS[op]}:{day}")
         elif rest and op in OPS:
             out.append(f"{OPS[op]}:{rest}")
         elif rest:
@@ -393,13 +427,29 @@ def _words(text):
     return out
 
 
+def _day_of_head(h):
+    d = h.get("date")
+    try:
+        return local(d).date().isoformat() if isinstance(d, datetime.datetime) else ""
+    except (ValueError, OverflowError, OSError):
+        return ""
+
+
+def _imap_day(iso):
+    d = datetime.date.fromisoformat(iso)
+    return f"{d.day:02d}-{MONTHS[d.month - 1]}-{d.year}"
+
+
 def fits(words, h):
     """Does a listed message (head_rows) have all the search words? Compared as text, never run."""
     for w in words:
         op, _, rest = w.partition(":")
         if w in ("hat:anhang", "ist:markiert", "ist:ungelesen"):
             ok = h.get({"hat:anhang": "attach", "ist:markiert": "flagged", "ist:ungelesen": "unread"}[w])
-        elif rest and op in ("from", "subject"):
+        elif rest and op in ("before", "after"):
+            day = _day_of_head(h)
+            ok = bool(day) and (day < rest if op == "before" else day >= rest)
+        elif rest and op in ("from", "subject", "to"):
             ok = rest in str(h.get(op) or "").lower()
         else:
             ok = w in (h["from"] + " " + h["subject"]).lower()
@@ -419,7 +469,7 @@ def head_rows(c, uids):
     out = {}
     if not uids:
         return out
-    typ, data = c.uid("FETCH", ",".join(map(str, uids)), "(UID FLAGS BODY.PEEK[HEADER.FIELDS (FROM SUBJECT DATE CONTENT-TYPE)])")
+    typ, data = c.uid("FETCH", ",".join(map(str, uids)), "(UID FLAGS BODY.PEEK[HEADER.FIELDS (FROM TO SUBJECT DATE CONTENT-TYPE)])")
     if typ != "OK":
         return out
     last = None
@@ -430,7 +480,7 @@ def head_rows(c, uids):
         if m and raw is not None:
             msg = email.message_from_bytes(raw, policy=email.policy.default)
             last = out[int(m.group(1))] = {
-                "from": _addr(msg.get("From", "")), "subject": _hdr(msg.get("Subject", "")),
+                "from": _addr(msg.get("From", "")), "to": _hdr(msg.get("To", ""))[:300], "subject": _hdr(msg.get("Subject", "")),
                 "date": _date(msg.get("Date")), "unread": True, "flagged": False,
                 "attach": has_attach(msg)}
         f = re.search(rb"FLAGS \(([^)]*)\)", meta)
@@ -905,8 +955,11 @@ def _criteria(words, unread):
             crit.append("FLAGGED")
         elif w == "hat:anhang":
             after.append(w)          # multipart/mixed in the header; the server has no key for it
+        elif rest and op in ("before", "after"):
+            crit += ["BEFORE" if op == "before" else "SINCE", _imap_day(rest)]
+            after.append(w)          # the server counts in its own zone: the header's day decides
         else:
-            key, text = ({"from": "FROM", "subject": "SUBJECT"}[op], rest) if rest and op in ("from", "subject") else ("TEXT", w)
+            key, text = ({"from": "FROM", "subject": "SUBJECT", "to": "TO"}[op], rest) if rest and op in ("from", "subject", "to") else ("TEXT", w)
             if text.isascii():
                 crit += [key, f'"{text}"']
             elif lit is None:
@@ -1028,9 +1081,10 @@ def older_today():
     return _older_today.counts()["seiten"]
 
 
-def show(uid, ref, folder="INBOX"):
+def show(uid, ref, folder="INBOX", echt=None):
     """One message for the page E-Mail as plain text (no HTML, no pictures from outside, long links cut by plain()),
-    fetched with PEEK so it stays unread; None when it is gone, ValueError for an id of no own mailbox."""
+    fetched with PEEK so it stays unread; None when it is gone, ValueError for an id of no own mailbox. echt: the
+    page's check of the sender (fuerdich.echtheit, passed in: fuerdich.py imports mail)."""
     import einladung   # here: einladung.py imports mail
     msg = message(uid, ref, folder)
     if msg is None:
@@ -1040,7 +1094,8 @@ def show(uid, ref, folder="INBOX"):
             "date": int(_date(msg.get("Date")).timestamp()), "subject": _hdr(msg.get("Subject", "")),
             "text": text, "files": names[:20], "mid": re.sub(r"[\s\x00-\x1f]", "", str(msg.get("Message-ID", "")))[:300],
             "parts": [{"n": i, "name": name, "kb": max(1, size // 1024)} for i, (_, name, size) in enumerate(files(msg)[:20])],
-            "invite": einladung.has(uid, msg)}   # Einladungen aus Mails (einladung.py, Apple-Stil thread)
+            "invite": einladung.has(uid, msg),   # Einladungen aus Mails (einladung.py, Apple-Stil thread)
+            "echt": echt(msg, _addr(msg.get("From", ""))) if echt else ""}   # „Absender bestätigt“ (pl_mail-Ideen 4)
 
 
 THREAD_MAX = 10      # other mails of a conversation shown under a message
@@ -1167,6 +1222,44 @@ def attachment(uid, query="", days=30, most=30 * 1024 * 1024):
             if kind and whole and 0 < len(data) <= most:
                 return re.sub(r"[\x00-\x1f\x7f/\\<>\"]", "", name)[:120] or "Anhang", data, kind
     return None
+
+
+_shown = DayCounter(zustand=0, warum=0)   # Live (node E-Mail): mailbox states and „Warum hier“ lines shown today, numbers
+
+
+def shown(kind):
+    _shown.bump(kind)
+
+
+def shown_today():
+    return _shown.counts()
+
+
+ZUSTAND_AFTER = 10 * 60   # a mailbox that answered no for this long is named on the page E-Mail (not a single blink)
+# the reason words of hintergrund.seen for a mailbox, each with its one sentence [German, English] for every device; the
+# way in it is a jump link on the page (way.js) and in the apps (SparkAPI.way)
+ZUSTAND_WHY = {"anmeldung": ("Anmeldung abgelehnt. Passwort prüfen unter E-Mail → Einstellungen.",
+                             "Sign-in refused. Check the password under E-mail → Settings."),
+               "nicht_erreichbar": ("Server nicht erreichbar. Adresse prüfen unter E-Mail → Einstellungen.",
+                                    "Server not reachable. Check the address under E-mail → Settings."),
+               "dienst": ("Der Server meldet einen Fehler.", "The server reports an error."),
+               "voll": ("Das Postfach ist voll.", "The mailbox is full."),
+               "fehler": ("Fehler beim Lesen.", "Error while reading.")}
+
+
+def zustand(uid, service, now=None):
+    """Postfach-Zustand (pl_mail-Ideen 7, Dominik 2026-11-13 „1-7“): the own mailboxes whose last real request ended
+    with a no (hintergrund.seen, kept anyway for Ich → Mein Zustand) and that have not answered for ZUSTAND_AFTER:
+    [{name, why, ok}] with a fixed reason word and the time of the last answer (0: never). Never a server's text.
+    service: hintergrund.service, passed in by the page (hintergrund is a page of its own)."""
+    now = int(now or time.time())
+    out = []
+    for a in get(uid)["accounts"]:
+        st = service("mail", a.get("id"))
+        why = st.get("why") or ""
+        if why and why in ZUSTAND_WHY and now - int(st.get("ok") or 0) >= ZUSTAND_AFTER:
+            out.append({"name": str(a.get("name") or "")[:60], "why": why, "ok": int(st.get("ok") or 0), "satz": list(ZUSTAND_WHY[why])})
+    return out
 
 
 def briefing(uid):

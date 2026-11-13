@@ -10156,6 +10156,22 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Suche, „Warum liegt die Mail hier?“ und Postfach-Zustand (Ideen aus pl_mail, kein eigener Schalter): Die Suche kennt zusätzlich an: (Empfänger), vor: und nach: (Datum: 13.11., 13.11.2026, 2026-11-13, heute, gestern; ohne Jahr der letzte solche Tag bis heute; englisch to:, before:, after:, since:) und ordner:Name, das den Ordner öffnet statt zu suchen. Der Mailserver sucht dafür mit TO, BEFORE und SINCE, nur lesend; ein ungültiges Datum ist kein Suchwort. Beim Tippen schlägt eine Liste unter dem Feld die Wörter und den Absender der offenen Mail vor (Pfeiltasten, Enter, Esc), ohne dass die Seite springt; Suchwörter sind in Betreff und Vorschau markiert. Über einer Mail, die eine Regel oder das Aufräumen verschoben hat, steht ein fester Satz, warum sie hier liegt (Regel mit Bedingung oder Aufräum-Art, Ziel-Ordner, ob du sie zurückgeholt hast; mailregeln.placed, nur mit „Mails ordnen“), mit „Falsch einsortiert? Zurück in den Posteingang“. Bestätigt dein Mailserver den Absender (oberste Kopfzeile Authentication-Results), steht „Absender bestätigt“; meldet er dmarc=fail oder spf=fail für die Absender-Domain, „Absender passt nicht“ (fuerdich.echtheit), sonst nichts. Sagt ein Postfach seit"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": " mehr als 10 Minuten nein, nennt die Liste es mit einem festen Satz und Weg (z. B. Anmeldung abgelehnt, E-Mail → Einstellungen; mail.zustand aus dem Dienst-Zustand). Live (Knoten E-Mail): heute N× „Warum hier“ und N× Postfach-Fehler gezeigt, nur Zahlen. Log mail: mailbox state shown | <Anzahl> | <Profil>, mail: placed not readable. iPhone: dieselben Wörter als Vorschläge, der Satz und „Absender bestätigt“ in der Mail, der Postfach-Zustand unter der Liste."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Knopfleiste einer Mail",
 "text": "Knopfleiste einer Mail: Die Knöpfe einer geöffneten Mail stehen in einer Leiste, die beim Rollen oben bleibt: „Antworten“ groß mit Wort, daneben Symbole in drei Gruppen: Schreiben (Weiterleiten, Als Termin), Ordnen (gelesen/ungelesen, ★ Markieren, Archivieren, Verschieben nach … als Ordner-Menü) und Regel daraus. Über einem Symbol stehen Name und Taste: R antworten, F weiterleiten, T als Termin, U gelesen, S markieren, E archivieren, V verschieben, G Regel, J und K blättern, Esc schließt (erst Menü, dann Mail). Auf dem Handy stehen die fünf häufigsten unten am Daumen (Antworten, Weiter, Archiv, Ordner, Termin), oben Zurück, ✎ Neue Mail, ★ und ⋯ (gelesen, Regel daraus); die iPhone-App ebenso in unterer Leiste und oben rechts. „✎ Neue Mail“ steht immer über der Liste. Eine ausgeschaltete Funktion zeigt keinen Knopf."
 },
@@ -15437,7 +15453,7 @@
 "file": "iPhone-App „Spark“",
 "head": "Meine Sachen",
 "title": "Suchen, Anhänge und Weiterleiten in der E-Mail",
-"text": "Suchen, Anhänge und Weiterleiten in der E-Mail (Mailclient Stufe C): Das Suchfeld über der Liste kennt auch von:, betreff:, hat:anhang, ist:markiert (als Vorschläge zum Antippen). Anhänge einer Mail öffnen sich per Tipp in der Vorschau, von dort teilen oder sichern (mit „Mails ordnen“). „Weiterleiten“ setzt die Mail unter deine Zeilen, die Anhänge auf Wunsch; gesendet wird nur aus der Vorschau."
+"text": "Suchen, Anhänge und Weiterleiten in der E-Mail (Mailclient Stufe C): Das Suchfeld über der Liste kennt auch von:, an:, betreff:, vor:, nach:, hat:anhang, ist:markiert (als Vorschläge zum Antippen). In einer Mail steht, warum sie in ihrem Ordner liegt und ob dein Mailserver den Absender bestätigt; sagt ein Postfach länger nein, steht es unter der Liste. Anhänge einer Mail öffnen sich per Tipp in der Vorschau, von dort teilen oder sichern (mit „Mails ordnen“). „Weiterleiten“ setzt die Mail unter deine Zeilen, die Anhänge auf Wunsch; gesendet wird nur aus der Vorschau."
 },
 {
 "lang": "de",
@@ -27508,6 +27524,22 @@
 "src": "assistant",
 "file": "Assistant and panel",
 "head": "Voice chat",
+"title": "Voice chat",
+"text": "Search, \"Why is this mail here?\" and mailbox state (ideas from pl_mail, no own switch): the search also knows an: (recipient), vor: and nach: (date: 13.11., 13.11.2026, 2026-11-13, heute, gestern; without a year the last such day up to today; English to:, before:, after:, since:) and ordner:name, which opens the folder instead of searching. The mail server searches with TO, BEFORE and SINCE, read only; an invalid date is no search word. While typing, a list below the field suggests the words and the sender of the open mail (arrow keys, Enter, Esc) without the page jumping; search words are marked in subject and preview. Above a mail a rule or the tidying moved stands a fixed sentence on why it is here (rule with its condition or tidy kind, target folder, whether you brought it back; mailregeln.placed, only with \"Mails ordnen\"), with \"Sorted wrongly? Back to the inbox\". If your mail server confirms the sender (top header Authentication-Results), it shows \"Sender confirmed\"; if it reports dmarc=fail or spf=fail for the sender's domain, \"Sender does not match\" (fuerdich.echtheit), otherwise nothing. If a mailbox has said no for more than 10 minutes, the list names it with a fixed sent"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "ence and path (e.g. login refused, E-Mail → Einstellungen; mail.zustand from the service state). Live (node e-mail): today N× \"Why here\" and N× mailbox errors shown, numbers only. Log mail: mailbox state shown | <count> | <profile>, mail: placed not readable. iPhone: the same words as suggestions, the sentence and \"Sender confirmed\" in the mail, the mailbox state below the list."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
 "title": "The bar of a mail",
 "text": "The bar of a mail: the buttons of an open mail sit in one bar that stays on top while scrolling: \"Reply\" large with its word, beside it symbols in three groups: writing (forward, as appointment), ordering (read/unread, ★ flag, archive, move to … as a folder menu) and rule from this. Hovering a symbol shows its name and key: R reply, F forward, T as appointment, U read, S flag, E archive, V move, G rule, J and K browse, Esc closes (menu first, then the mail). On a phone the five most used sit at the thumb below (reply, forward, archive, folder, appointment), on top back, ✎ new mail, ★ and ⋯ (read, rule from this); the iPhone app the same in its bottom bar and top right. \"✎ New mail\" always stands above the list. A function that is off shows no button."
 },
@@ -32677,7 +32709,7 @@
 "file": "iPhone app \"Spark\"",
 "head": "My things",
 "title": "Search, attachments and forwarding in e-mail",
-"text": "Search, attachments and forwarding in e-mail (mail client stage C): the search field above the list also knows von:, betreff:, hat:anhang, ist:markiert (as suggestions to tap). A mail's attachments open by a tap in the preview, from there share or save them (with \"Mails ordnen\"). \"Forward\" puts the mail below your lines, the attachments if wanted; it is sent only from the preview."
+"text": "Search, attachments and forwarding in e-mail (mail client stage C): the search field above the list also knows von:, an:, betreff:, vor:, nach:, hat:anhang, ist:markiert (as suggestions to tap). A mail shows why it is in its folder and whether your mail server confirms the sender; if a mailbox says no for longer, it stands below the list. A mail's attachments open by a tap in the preview, from there share or save them (with \"Mails ordnen\"). \"Forward\" puts the mail below your lines, the attachments if wanted; it is sent only from the preview."
 },
 {
 "lang": "en",

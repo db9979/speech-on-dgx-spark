@@ -244,6 +244,27 @@ def links(raw, text):
         {m.group(1).lower().strip(".") for m in URL.finditer(f"{raw or ''}\n{text or ''}")}
 
 
+def echtheit(msg, sender):
+    """The sender line of the page E-Mail (pl_mail-Ideen 4): "ok" when the own mail server confirms the sender's domain
+    (signed), "falsch" when it says the domain's own check failed (DMARC fail, or SPF fail without a DKIM pass for that
+    domain), "" when nothing can be told (no Authentication-Results of the own server). Only the top header counts:
+    the own server adds it last; lower ones may come from anyone."""
+    if signed(msg, sender):
+        return "ok"
+    dom = domain(sender)
+    try:
+        ar = str((msg.get_all("Authentication-Results") or [""])[0]).lower()
+    except Exception:
+        return ""
+    if not dom or not ar:
+        return ""
+    if re.search(r"\bdmarc=fail\b", ar):
+        return "falsch"
+    if re.search(r"\bspf=fail\b[^;]*smtp\.mailfrom=(?:[^@\s;]*@)?" + re.escape(dom) + r"\b", ar):
+        return "falsch"
+    return ""
+
+
 def signed(msg, sender):
     """True when the own mail server says the sender's own domain sent this mail: DMARC pass, or DKIM pass signed by
     that domain, or SPF pass for it (the top Authentication-Results header). Without one nothing can be told."""

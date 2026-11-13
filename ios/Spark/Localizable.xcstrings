@@ -12591,16 +12591,6 @@
         }
       }
     },
-    "Suchen, auch von: betreff: hat:anhang": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Search, also von: betreff: hat:anhang"
-          }
-        }
-      }
-    },
     "Weiterleiten": {
       "localizations": {
         "en": {
@@ -21237,6 +21227,76 @@
           "stringUnit": {
             "state": "translated",
             "value": "Draft made. You find it under \"Report a problem\" in the settings."
+          }
+        }
+      }
+    },
+    "Suchen, auch von: an: betreff: vor: nach:": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search, also from: to: subject: before: after:"
+          }
+        }
+      }
+    },
+    "an: Empfänger": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "an: recipient"
+          }
+        }
+      }
+    },
+    "vor: Datum": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "vor: date"
+          }
+        }
+      }
+    },
+    "nach: Datum": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "nach: date"
+          }
+        }
+      }
+    },
+    "Absender bestätigt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sender confirmed"
+          }
+        }
+      }
+    },
+    "Absender passt nicht: der Mailserver konnte die Domain nicht bestätigen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sender does not match: the mail server could not confirm the domain"
+          }
+        }
+      }
+    },
+    "Postfach ": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mailbox "
           }
         }
       }

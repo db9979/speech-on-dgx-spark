@@ -117,6 +117,10 @@ struct MailText {
     var remote = 0
     /// Einladungen aus Mails: the mail carries an invitation (.ics) this profile may take (EinladungSection)
     var invite = false
+    /// „Warum liegt die Mail hier?“ (pl_mail-Ideen 4): the Spark's sentence [de, en] (mailregeln.placed) and whether the
+    /// own mail server confirms the sender ("ok", "falsch", "")
+    var why: [String] = []
+    var echt = ""
 }
 
 extension SparkAPI {
@@ -245,7 +249,15 @@ extension SparkAPI {
                             guard let n = p["n"] as? Int, (0..<20).contains(n) else { return nil }
                             return (n, String((p["name"] as? String ?? "").prefix(120)), p["kb"] as? Int ?? 0)
                         }, mid: String((m["mid"] as? String ?? "").prefix(300)),
-                        html: m["html"] as? Bool ?? false, remote: min(60, max(0, m["remote"] as? Int ?? 0)), invite: m["invite"] as? Bool ?? false)
+                        html: m["html"] as? Bool ?? false, remote: min(60, max(0, m["remote"] as? Int ?? 0)), invite: m["invite"] as? Bool ?? false,
+                        why: ((m["placed"] as? [String: Any])?["satz"] as? [String] ?? []).prefix(2).map { String($0.prefix(400)) },
+                        echt: ["ok", "falsch"].contains(m["echt"] as? String ?? "") ? (m["echt"] as? String ?? "") : "")
+    }
+
+    /// one of the Spark's sentences [de, en] in the language of the phone
+    static func satz(_ pair: [String]) -> String {
+        guard pair.count == 2 else { return pair.first ?? "" }
+        return Locale.current.language.languageCode?.identifier == "de" ? pair[0] : pair[1]
     }
 
     /// One own mail formatted (mailansicht.py, app=true): the Spark's cleaned HTML with its attached pictures inside
@@ -923,6 +935,8 @@ final class PostModel: ObservableObject {
     @Published var boxes: [String] = []
     @Published var connected = true
     @Published var errors: [String] = []
+    /// Postfach-Zustand (pl_mail-Ideen 7): the Spark's sentences for mailboxes that said no for a while
+    @Published var zustand: [String] = []
     @Published var loading = true
     @Published var error: String?
     @Published var keptAt: Date?
@@ -1125,6 +1139,9 @@ final class PostModel: ObservableObject {
     private func show(_ d: [String: Any]) {
         let r = SparkAPI.inbox(d)
         items = r.items; boxes = r.boxes; connected = r.connected; errors = r.errors
+        zustand = (d["zustand"] as? [[String: Any]] ?? []).prefix(10).map { z in
+            String(localized: "Postfach ") + String((z["name"] as? String ?? "").prefix(60)) + ": " + SparkAPI.satz((z["satz"] as? [String] ?? []).map { String($0.prefix(300)) })
+        }
         vor = String((d["vor"] as? String ?? "").prefix(200)); moreFail = nil; moreErr = []
     }
 
@@ -1165,7 +1182,8 @@ struct PostView: View {
     private var del: Bool { manage && talk.allowed.areas.contains("maildelete") && (m.folder?.deletable ?? true) }
     /// the search words the Spark knows besides plain words (mail._words)
     private static let chips: [(String, LocalizedStringKey)] = [("ist:markiert", "★ Markiert"), ("hat:anhang", "📎 Mit Anhang"),
-                                                                ("ist:ungelesen", "Ungelesen"), ("von:", "von: Absender"), ("betreff:", "betreff: Wort")]
+                                                                ("ist:ungelesen", "Ungelesen"), ("von:", "von: Absender"), ("betreff:", "betreff: Wort"),
+                                                                ("an:", "an: Empfänger"), ("vor:", "vor: Datum"), ("nach:", "nach: Datum")]
 
     var body: some View {
         List(selection: $m.picked) {
@@ -1256,6 +1274,7 @@ struct PostView: View {
             }
             if !m.moreErr.isEmpty { Text("Ältere Mails nicht erreicht: \(m.moreErr.joined(separator: ", "))").foregroundStyle(Theme.badText) }
             if !m.errors.isEmpty { Text("Nicht erreicht: \(m.errors.joined(separator: ", "))").foregroundStyle(Theme.badText) }
+            ForEach(m.zustand, id: \.self) { z in Text(SparkAPI.way(z)).foregroundStyle(Theme.badText) }
             if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
         }
         .navigationTitle(m.folder.map { Text(verbatim: $0.title) } ?? Text("E-Mail"))
@@ -1297,7 +1316,7 @@ struct PostView: View {
                 }
             }
         }
-        .searchable(text: $m.query, prompt: Text("Suchen, auch von: betreff: hat:anhang"))
+        .searchable(text: $m.query, prompt: Text("Suchen, auch von: an: betreff: vor: nach:"))
         .searchSuggestions {
             if m.query.isEmpty || !m.query.hasSuffix(" ") {
                 ForEach(Self.chips, id: \.0) { c in Text(c.1).searchCompletion((m.query.isEmpty ? "" : m.query + " ") + c.0 + (c.0.hasSuffix(":") ? "" : " ")) }
@@ -2339,6 +2358,9 @@ struct MailView: View {
                         }
                     }
                     Text(verbatim: m.subject.isEmpty ? String(localized: "(ohne Betreff)") : m.subject).font(.title3.weight(.bold))
+                    if m.echt == "ok" { Label("Absender bestätigt", systemImage: "checkmark.seal").font(.caption).foregroundStyle(Theme.okText) }
+                    if m.echt == "falsch" { Label("Absender passt nicht: der Mailserver konnte die Domain nicht bestätigen", systemImage: "exclamationmark.triangle").font(.caption).foregroundStyle(Theme.badText) }
+                    if !m.why.isEmpty { Text(verbatim: SparkAPI.satz(m.why)).font(.caption).foregroundStyle(.secondary) }
                     if !box.isEmpty { LabeledContent("Postfach") { Text(verbatim: box) } }
                     if !m.files.isEmpty && (m.parts.isEmpty || !talk.allowed.areas.contains("mailmanage")) {
                         LabeledContent("Anhänge") { Text(verbatim: m.files.joined(separator: ", ")) }

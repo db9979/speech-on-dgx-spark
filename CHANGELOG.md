@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older versions (V01.0.000 to V01.0.999 and the lines before version numbers): [CHANGELOG-V01.0.md](CHANGELOG-V01.0.md).
 
+- **V01.1.425** · 2026-11-13 · E-Mail (Ideen aus pl_mail 4, 5, 7): Suche kennt an:, vor:, nach:, ordner: mit Vorschlagsliste und markierten Treffern; über einer verschobenen Mail steht, warum sie dort liegt, mit „Zurück in den Posteingang“, dazu „Absender bestätigt“ aus der Kopfzeile des Mailservers; ein Postfach, das länger nein sagt, steht mit Satz und Weg über der Liste; auch am iPhone (P867, P868)
 - **V01.1.424** · 2026-11-13 · Gemma 4 mit Entwurfsmodell (MTP) zum Messen: sudo speech-spark modelle messen gemma4mtp, Googles Entwurfsmodell wird neben den Gewichten geholt und geprüft; ohne waren es 47,3 Tokens pro Sekunde (P866)
 - **V01.1.423** · 2026-11-13 · Fix Startanzeige: während einer Messung (oder wenn das Sprachmodell angehalten ist) zeigt Zustand → Modelle nicht mehr „Neues Modell startet · Gewichte laden … 840:36 min“; ein altes „loading“ zählt nur, solange die Einheit wirklich startet
 - **V01.1.422** · 2026-11-13 · Prüfbitte: opentelemetry-api 1.45.1 → 1.45.2 in der Lock-Datei des Panels (GHSA-mf5v-w3w3-f6cg, mittel, CVSS 5.3); sonst bewegt sich kein Paket

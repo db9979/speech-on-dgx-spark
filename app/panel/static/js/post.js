@@ -112,6 +112,53 @@ function postOpen(){if(!PROFILE)return;const root=$('postroot');for(const b of P
       proIn('promail').catch(()=>{});if(PAR_ON)lzb($('parbox'),showPar,{auth:true}).catch(()=>{});return b}}]));
   postLoad(false,!!POST.data)}
 // the tab „Posteingang“: search, the list, the message tapped
+// Suche erweitern (pl_mail-Ideen 5, Dominik 2026-11-13 „1-7“): the search words the server knows (mail.OPS) offered while
+// typing, the senders of the list after von:/an:, the folders after ordner:, days after vor:/nach:; the list sits over
+// the page (nothing moves). Only words are offered, nothing is searched before the person stops typing.
+const POST_OPS=[['von:','from:'],['an:','to:'],['betreff:','subject:'],['vor:','before:'],['nach:','after:'],['ordner:','in:'],['hat:anhang','has:attachment'],['ist:ungelesen','is:unread'],['ist:markiert','is:flagged']];
+function postQList(word){const w=word.toLowerCase(),op=w.includes(':')?w.slice(0,w.indexOf(':')+1):'',rest=op?w.slice(op.length):w,out=[];
+  const of=k=>POST_OPS.find(o=>o.includes(k));
+  if(!op){if(w.length)for(const o of POST_OPS){const k=t(o[0],o[1]);if(k.startsWith(w)&&k!==w)out.push([k,k.endsWith(':')?t('Suchwort','Search word'):t('Filter','Filter')])}return out.slice(0,6)}
+  const kind=of(op);if(!kind)return out;
+  if(kind[0]==='von:'||kind[0]==='an:'){const n={};for(const x of postItems()){const a=postAddr(x.from).toLowerCase();if(a&&a.includes(rest))n[a]=(n[a]||0)+1}
+    return Object.entries(n).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([a])=>[op+a,t('Absender','Sender')])}
+  if(kind[0]==='vor:'||kind[0]==='nach:'){const d=new Date();return [[op+t('heute','today'),t('Datum','Date')],[op+t('gestern','yesterday'),t('Datum','Date')],[op+d.getDate()+'.'+(d.getMonth()+1)+'.',t('Datum','Date')]].filter(x=>x[0].startsWith(w))}
+  if(kind[0]==='ordner:'){const tr=POST.tree;if(!tr||!tr.accounts)return out;
+    for(const a of tr.accounts)for(const f of a.folders||[]){if(f.role==='group')continue;const name=f.name.split(a.delim).pop();if(name.toLowerCase().includes(rest)&&!out.some(x=>x[0]===op+name))out.push([op+name,a.name])}return out.slice(0,6)}
+  return out}
+function postQShow(q){const box=q.parentNode.querySelector('.postqsug');if(!box)return;const at=q.selectionStart??q.value.length,before=q.value.slice(0,at),word=(/\S*$/.exec(before)||[''])[0];
+  const list=word.length?postQList(word):[];POST.qsug={list,word,i:0};
+  box.hidden=!list.length;q.setAttribute('aria-expanded',String(!!list.length));
+  box.innerHTML=list.map((x,i)=>`<div role="option" id="postqsug${i}" class="${i===0?'on':''}" aria-selected="${i===0}" data-sg="${i}"><b>${esc(x[0])}</b><small>${esc(x[1])}</small></div>`).join('');
+  box.querySelectorAll('[data-sg]').forEach(o=>o.onmousedown=e=>{e.preventDefault();postQTake(q,+o.dataset.sg)})}
+function postQTake(q,i){const s=POST.qsug;if(!s||!s.list[i])return;const at=q.selectionStart??q.value.length,before=q.value.slice(0,at).replace(/\S*$/,''),after=q.value.slice(at);
+  const v=s.list[i][0],gap=v.endsWith(':')?'':' ';q.value=before+v+gap+after.replace(/^\s+/,'');const c=(before+v+gap).length;q.setSelectionRange(c,c);q.dispatchEvent(new Event('input'))}
+function postQBind(q){q.addEventListener('keydown',e=>{const box=q.parentNode.querySelector('.postqsug'),s=POST.qsug;if(!box||box.hidden||!s||!s.list.length)return;
+    if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();s.i=(s.i+(e.key==='ArrowDown'?1:s.list.length-1))%s.list.length;
+      box.querySelectorAll('[data-sg]').forEach((o,i)=>{o.classList.toggle('on',i===s.i);o.setAttribute('aria-selected',String(i===s.i))});q.setAttribute('aria-activedescendant','postqsug'+s.i)}
+    else if(e.key==='Enter'||e.key==='Tab'){e.preventDefault();postQTake(q,s.i)}
+    else if(e.key==='Escape'){e.preventDefault();e.stopPropagation();box.hidden=true;q.setAttribute('aria-expanded','false')}});
+  q.addEventListener('blur',()=>{const box=q.parentNode.querySelector('.postqsug');if(box)box.hidden=true;q.setAttribute('aria-expanded','false')})}
+// „ordner:Rechnungen“ opens that folder of the mailboxes (with Mails ordnen), the other words search in it
+function postFolderWord(q){const m=/(?:^|\s)(?:ordner|in|folder):(\S+)/i.exec(POST.q);if(!m||!ORD_ON||!POST.tree||!POST.tree.accounts)return;
+  const want=m[1].toLowerCase();let hit=null;
+  for(const a of POST.tree.accounts){for(const f of a.folders||[]){const name=f.name.split(a.delim).pop();if(f.role!=='group'&&(name.toLowerCase()===want||f.name.toLowerCase()===want)){hit={account:a.id,folder:f.name,role:f.role,name};break}}if(hit)break}
+  if(!hit)return;POST.q=POST.q.replace(m[0],' ').trim();q.value=POST.q;POST.box=hit;POST.chips={};POST.unread=false;POST.data=null}
+// the search words of a row marked (only plain words, never an operator), the text escaped first
+function postMark(text){const ws=(POST.q||'').toLowerCase().split(/\s+/).filter(w=>w.length>1&&!w.includes(':')).slice(0,5);let h=esc(text);
+  if(!ws.length)return h;const re=new RegExp('('+ws.map(w=>esc(w).replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+')','gi');
+  return h.split(/(<[^>]*>|&[a-z#0-9]+;)/i).map(p=>/^(<|&)/.test(p)?p:p.replace(re,'<mark>$1</mark>')).join('')}
+// Postfach-Zustand (pl_mail-Ideen 7, Dominik 2026-11-13 „1-7“): a mailbox that says no for a while, with the Spark's fixed
+// sentence (mail.ZUSTAND_WHY, its way a link by way.js) and when it last answered
+function postZustand(d){const z=(d&&d.zustand)||[];return z.map(x=>{const s=x.satz||['',''],ok=x.ok?new Date(x.ok*1000).toLocaleString(kalLoc(),{day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'}):'';
+  return `<div class="note warn postzst">${esc(t('Postfach ','Mailbox ')+x.name+': '+t(s[0],s[1])+(ok?t(' Zuletzt erreicht '+ok+'.',' Last reached '+ok+'.'):''))}</div>`}).join('')}
+// „Warum liegt die Mail hier?“ (pl_mail-Ideen 4): the Spark's sentence of who put the mail here (mailregeln.placed) and
+// whether the own mail server confirms the sender (fuerdich.echtheit); as text only
+function postWhy(m){const p=m.placed,e=m.echt,s=p&&p.satz;
+  const echt=e==='ok'?`<span class="postok">${postIc('check')}${esc(t('Absender bestätigt','Sender confirmed'))}</span>`:e==='falsch'?`<span class="postbad">${esc(t('Absender passt nicht: der Mailserver konnte die Domain nicht bestätigen','Sender does not match: the mail server could not confirm the domain'))}</span>`:'';
+  if(!s&&!echt)return '';
+  const back=p&&!p.undone&&ORD_ON&&POST.box?`<button type="button" class="lnk" data-o2="wrong">${esc(t('Falsch einsortiert? Zurück in den Posteingang','Sorted wrongly? Back to the inbox'))}</button>`:'';
+  return `<div class="postwhy">${s?`<span>${esc(t(s[0],s[1]))}</span>`:''}${echt}${back}</div>`}
 function postBody(){const w=document.createElement('div');w.className='ld-box ld-frame post';w.id='postview';postPaint(w);return w}
 function postDraw(){const w=$('postview');if(w)postPaint(w)}
 function postPaint(w){const d=POST.data;w.classList.toggle('ld-sel',!!POST.sel);
@@ -121,14 +168,15 @@ function postPaint(w){const d=POST.data;w.classList.toggle('ld-sel',!!POST.sel);
     // Apple-Stil „1a“: one quiet bar: the mailboxes (O), search, „Auswählen“, reload, „Neue Mail“; with Mails ordnen the
     // filters Markiert, Mit Anhang and Ungelesen are mailboxes of the left column, else chips here
     w.innerHTML=`<div class="ld-tools posttools">${ORD_ON?`<button type="button" class="pib postfbtn" data-k="tree" aria-pressed="false" aria-label="${esc(t('Postfächer','Mailboxes'))}" data-tip="${esc(t('Postfächer ein- und ausblenden · O','Show or hide the mailboxes · O'))}">${postIc('side')}</button>`:''}`+
-      `<input type="search" data-k="q" placeholder="${esc(t('Suchen, auch von: betreff: hat:anhang','Search, also from: subject: has:attachment'))}" aria-label="${esc(t('Suchen','Search'))}">`+
+      `<span class="postq"><input type="search" data-k="q" placeholder="${esc(t('Suchen, auch von: an: betreff: vor: nach: ordner:','Search, also from: to: subject: before: after: in:'))}" aria-label="${esc(t('Suchen','Search'))}" autocomplete="off" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="postqsug"><div class="postqsug" id="postqsug" role="listbox" hidden></div></span>`+
       (ORD_ON?'':POST_CHIPS.map(c=>`<button type="button" class="ld-chip" data-chip="${c[0]}" aria-pressed="false">${ic(c[4])} ${esc(t(c[2],c[3]))}</button>`).join('')+`<button type="button" class="ld-chip" data-k="unread" aria-pressed="false">${esc(t('Nur ungelesen','Unread only'))}</button>`)+
       (ORD_ON?`<button type="button" class="b postpickbtn" data-k="pickmode" aria-pressed="false">${esc(t('Auswählen','Select'))}</button>`:'')+
       `<button type="button" class="pib" data-k="again" aria-label="${esc(t('Neu laden','Reload'))}" data-tip="${esc(t('Neu laden','Reload'))}">${postIc('again')}</button>`+
       (SEND_ON?`<button type="button" class="b p postnew" data-k="new" data-tip="${esc(t('Neue Mail · N','New mail · N'))}">${postIc('pen')}<span>${esc(t('Neue Mail','New mail'))}</span></button>`:'')+`</div>`+
       `<div class="postwarn"></div><div class="postundo"></div><div class="ld-split"><aside class="postfold" hidden></aside><div class="ld-list"></div><div class="ld-detail postdet" hidden></div></div><div class="postcmp" role="dialog" aria-label="${esc(t('Mail schreiben','Write a mail'))}" hidden></div>`;
     const q=w.querySelector('[data-k=q]');q.value=POST.q;let tm=0;
-    q.oninput=()=>{clearTimeout(tm);tm=setTimeout(()=>{POST.q=q.value.trim();POST.sel=null;postLoad()},400)};
+    q.oninput=()=>{postQShow(q);clearTimeout(tm);tm=setTimeout(()=>{POST.q=q.value.trim();POST.sel=null;postFolderWord(q);postLoad()},400)};
+    postQBind(q);
     w.querySelectorAll('[data-chip]').forEach(b=>b.onclick=()=>postSmart(b.dataset.chip));
     const un=w.querySelector('[data-k=unread]');if(un)un.onclick=()=>postSmart('unread');
     const pm=w.querySelector('[data-k=pickmode]');if(pm)pm.onclick=()=>{POST.picking=!POST.picking;if(!POST.picking)POST.pick=[];postDraw()};
@@ -142,7 +190,8 @@ function postPaint(w){const d=POST.data;w.classList.toggle('ld-sel',!!POST.sel);
   w.querySelector('.postwarn').innerHTML=(POST.err?`<div class="note warn">${esc(t('Die Mails kamen nicht an: ','The mail did not arrive: ')+POST.err)}</div>`:'')+
     (d&&d.errors&&d.errors.length?`<div class="note warn">${esc(t('Nicht erreicht: ','Not reached: ')+d.errors.join(', '))}</div>`:'')+
     (d&&d.moreErr?`<div class="note warn">${esc(t('Ältere Mails nicht erreicht: ','Older mail not reached: ')+d.moreErr.join(', '))}</div>`:'')+
-    (d&&d.loading?`<div class="note">${esc(t('Die Postfächer laden noch …','The mailboxes are still loading …'))}</div>`:'');
+    (d&&d.loading?`<div class="note">${esc(t('Die Postfächer laden noch …','The mailboxes are still loading …'))}</div>`:'')+
+    postZustand(d);
   const many=d&&d.boxes&&d.boxes.length>1,items=postItems(),list=w.querySelector('.ld-list');
   list.classList.toggle('busy',POST.busy);
   let day='';
@@ -155,7 +204,7 @@ function postPaint(w){const d=POST.data;w.classList.toggle('ld-sel',!!POST.sel);
       (ticks?`<input type="checkbox" class="ld-pick" data-pick="${esc(x.id)}" aria-label="${esc(t('Auswählen','Select'))}"${POST.pick.includes(x.id)?' checked':''}>`:'')+
       `<span class="postdot" aria-label="${esc(x.unread?t('ungelesen','unread'):'')}"></span><span class="postav ${postKc(x.from)}" aria-hidden="true">${esc(postInit(x.from))}</span>`+
       `<span class="ld-mid"><span class="postl1"><b>${esc(postName(x.from))}</b><span class="ld-right">${x.attach?`<span class="postmk" aria-label="${esc(t('mit Anhang','with attachment'))}">${ic('clip')}</span>`:''}${x.flagged?`<span class="postmk star" aria-label="${esc(t('markiert','flagged'))}">${ic('star')}</span>`:''}<span class="ld-when">${esc(postWhen(x.date))}</span></span></span>`+
-      `<small class="postsubj">${esc(x.subject||t('(ohne Betreff)','(no subject)'))}</small>${x.prev?`<small class="postprv">${esc(x.prev)}</small>`:''}`+
+      `<small class="postsubj">${x.subject?postMark(x.subject):esc(t('(ohne Betreff)','(no subject)'))}</small>${x.prev?`<small class="postprv">${postMark(x.prev)}</small>`:''}`+
       `${fd||many?`<span class="postchips">${fd?`<span class="postfd${fd.urgent?' hot':''}">${esc(FUER_KIND[fd.kind]||fd.kind)}</span>`:''}${many?`<span class="ld-badge off">${esc(d.boxes[x.box]||'')}</span>`:''}</span>`:''}</span></div>`])});
   if(!items.length&&!POST.busy)parts.push(['empty',`<div class="ld-empty mut">${esc(POST.box?(postQ()?t('Keine passende Mail in diesem Ordner.','No matching mail in this folder.'):t('Dieser Ordner ist leer.','This folder is empty.'))
       :postQ()||POST.unread?t('Keine passende Mail in den letzten 14 Tagen.','No matching mail in the last 14 days.'):t('Keine Mail in den letzten 14 Tagen.','No mail in the last 14 days.'))}</div>`]);
@@ -232,7 +281,7 @@ function postDetail(w){const box=w.querySelector('.postdet'),m=POST.msg;if(!box)
     main=true;parts.push(['main:'+sel,`<div class="postmain"><div class="posthdr"><span class="postav big ${postKc(m.from)}" aria-hidden="true">${esc(postInit(m.from))}</span>`+
       `<div class="ld-mid"><span class="postl1"><b>${esc(postName(m.from))}</b><span class="ld-when">${esc(when)}</span></span>`+
       `<small>${esc(postAddr(m.from))}</small>${m.to?`<small>${esc(t('An: ','To: ')+m.to)}</small>`:''}</div></div>`+
-      `<h3 class="postsubjbig">${esc(m.subject||t('(ohne Betreff)','(no subject)'))}</h3>`+
+      `<h3 class="postsubjbig">${esc(m.subject||t('(ohne Betreff)','(no subject)'))}</h3>`+postWhy(m)+
       (m.files&&m.files.length?`<div class="postfiles">${ORD_ON&&m.parts&&m.parts.length?m.parts.map(f=>`<a class="postfile" download href="/api/profile/mail/file?${esc(new URLSearchParams({id:POST.sel,folder:postSrc(),n:f.n}).toString())}">${postIc('clip')}<span><b>${esc(f.name)}</b><small>${f.kb} KB</small></span></a>`).join('')
         :m.files.map(n=>`<span class="postfile">${postIc('clip')}<span><b>${esc(n)}</b></span></span>`).join('')}</div>`:'')+
       (m.html?(m.remote?`<div class="postpics">${postIc('lock')}<span>${esc(POST.pics===POST.sel?t('Bilder von außen geladen, über den Spark.','Pictures from outside loaded, through the Spark.')
@@ -260,6 +309,8 @@ function postDetail(w){const box=w.querySelector('.postdet'),m=POST.msg;if(!box)
   // a mail dragged from the list onto the archive or the trash symbol of the open one
   box.querySelectorAll('[data-o=archive],[data-o=delete]').forEach(b=>{if([...fresh].some(n=>n.contains(b)))postDropOn(b,()=>b.dataset.o,()=>'')});
   on('[data-mv]',e=>{postAct('move',e.currentTarget.dataset.mv,msg)});
+  // a mail the Spark sorted, put back by the person: a move like any other, which the rules learn from (mailregeln.page_moved)
+  on('[data-o2=wrong]',()=>postAct('move','INBOX',msg));
   // the folders of its mailbox are asked once; only when they came new is the bar drawn again (the mail stays as it is)
   if(ORD_ON&&m&&!m.err&&!POST.folders[sel.split(':')[0]])postFoldersFor(sel.split(':')[0]).then(n=>{if(n&&$('postview')&&POST.sel===sel)postDetail($('postview'))})}
 // the conversation under the mail, oldest first, each folded to one line (who, when, its first words); own ones as „Du“

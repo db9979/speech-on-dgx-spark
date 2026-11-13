@@ -156,7 +156,7 @@ class Page(Fake):
         super().setUpClass()
         from tests.test_ui_browser import Browser
         Browser.setUpClass.__func__(cls)
-        for name in ("Post Lisa", "Post Kim", "Post Vera", "Post Ruth"):
+        for name in ("Post Lisa", "Post Kim", "Post Vera", "Post Ruth", "Post Ines"):
             profile(name)
 
     def test_list_read_and_the_settings_sit_here(self):
@@ -323,6 +323,60 @@ class Page(Fake):
                         self.assertEqual(errors, [])
                     finally:
                         await br.close()
+        asyncio.run(go())
+
+    def test_search_offers_marks_why_and_mailbox_state(self):
+        """pl_mail-Ideen (Dominik 2026-11-13 „1-7“): the search offers its words and the list's senders while typing,
+        over the page (nothing moves), Enter takes one; found words are marked in the rows, as text; an open mail says
+        who of the Spark put it there and whether the own server confirms the sender; a mailbox that says no for a while
+        is named with its reason and the way (a link)."""
+        from tests.test_ui_browser import Browser, async_playwright
+        b = Browser("run")
+        b.port = self.port
+
+        async def go():
+            async with async_playwright() as p:
+                br, pg, errors = await b.page(p, 1280, 900, who=("Post Ines", "1234"))
+                try:
+                    OWNERS[await pg.evaluate("PROFILE.id")] = [ACCT]
+                    await pg.evaluate("MAIL_ON=true;ORD_ON=true;postStart({profile:PROFILE,mail:true});icTabSet('post','show');goSec('post')")
+                    await b.until(pg, "!POST.busy&&!!POST.data&&document.querySelectorAll('#postview .ld-row').length===2")
+                    split = await pg.evaluate("document.querySelector('#postview .ld-split').getBoundingClientRect().top")
+                    await pg.click("#postview [data-k=q]")
+                    await pg.keyboard.type("betr")
+                    await b.until(pg, "!document.querySelector('#postview .postqsug').hidden")
+                    self.assertIn("betreff:", await pg.inner_text("#postview .postqsug"))
+                    self.assertEqual(await pg.evaluate("document.querySelector('#postview .ld-split').getBoundingClientRect().top"), split)
+                    await pg.keyboard.press("Enter")
+                    self.assertEqual(await pg.evaluate("document.querySelector('#postview [data-k=q]').value"), "betreff:")
+                    await pg.fill("#postview [data-k=q]", "")
+                    await pg.keyboard.type("von:sh")
+                    await b.until(pg, "document.querySelector('#postview .postqsug').textContent.includes('von:shop@example.de')")
+                    await pg.keyboard.press("Escape")
+                    await b.until(pg, "document.querySelector('#postview .postqsug').hidden")
+                    # found words marked, a subject's markup stays text
+                    await pg.evaluate("POST.q='auto';postDraw()")
+                    self.assertEqual(await pg.evaluate("[...document.querySelectorAll('#postview .ld-row mark')].map(m=>m.textContent)"), ["Auto"])
+                    self.assertEqual(await pg.evaluate("document.querySelectorAll('#postview .ld-row b b').length"), 0)
+                    await pg.evaluate("POST.q='';postDraw()")
+                    # why the mail is here, and the sender
+                    await pg.evaluate("POST.sel=POST.data.items[0].id;POST.msg={id:POST.sel,from:'Shop <shop@example.de>',subject:'Rechnung',date:1773000000,text:'Danke',files:[],"
+                                      "echt:'ok',placed:{by:'rule',folder:'Shop',undone:false,satz:['Hierher gelegt von deiner Regel (Absender endet auf @example.de) → „Shop“','x']}};POST.box={account:'m0a1b2c3d',folder:'Shop',role:'folder',name:'Shop'};postDraw()")
+                    why = await pg.inner_text("#postview .postwhy")
+                    self.assertIn("Regel", why)
+                    self.assertIn("@example.de", why)
+                    self.assertIn("Absender bestätigt", why)
+                    self.assertTrue(await pg.evaluate("!!document.querySelector('#postview .postwhy [data-o2=wrong]')"))
+                    await pg.evaluate("POST.msg=Object.assign({},POST.msg,{echt:'falsch',placed:null});postDraw()")
+                    self.assertIn("Absender passt nicht", await pg.inner_text("#postview .postwhy"))
+                    await pg.evaluate("POST.box=null;POST.sel=null;POST.msg=null;POST.data.zustand=[{name:'GMX',why:'anmeldung',ok:0,satz:['Anmeldung abgelehnt. Passwort prüfen unter E-Mail → Einstellungen.','x']}];postDraw()")
+                    note = await pg.inner_text("#postview .postzst")
+                    self.assertIn("GMX", note)
+                    self.assertIn("Anmeldung abgelehnt", note)
+                    await b.until(pg, "!!document.querySelector('#postview .postzst a')")   # the way is a link (way.js)
+                    self.assertEqual(errors, [])
+                finally:
+                    await br.close()
         asyncio.run(go())
 
     def test_proactive_rows_sit_on_the_pages(self):

@@ -1597,6 +1597,7 @@ def snapshot(view="admin", now=None):
         post_supply = mailvorrat.for_live()
         post_older = mail.older_today()
         post_threads = mail.threads_today()
+        post_shown = mail.shown_today()
         import mailansicht
         post_view = mailansicht.counts()
         import fuerdich
@@ -1611,6 +1612,7 @@ def snapshot(view="admin", now=None):
         post_supply = {}
         post_older = 0
         post_threads = 0
+        post_shown = {}
         post_later = 0
         post_code = {}
         post_sort = {}
@@ -1866,6 +1868,10 @@ def snapshot(view="admin", now=None):
             x["sub"] += f" · heute {post_older} ältere Seiten geladen"
         if x["id"] == "mail" and post_threads:   # Unterhaltung: conversations shown today (a number, never which)
             x["sub"] += f" · heute {post_threads} Unterhaltungen gezeigt"
+        if x["id"] == "mail" and post_shown.get("warum"):    # Warum liegt die Mail hier: lines shown today (a number)
+            x["sub"] += f" · heute {post_shown['warum']}× „Warum hier“"
+        if x["id"] == "mail" and post_shown.get("zustand"):  # Postfach-Zustand: times a mailbox's no was named today
+            x["sub"] += f" · heute {post_shown['zustand']}× Postfach-Fehler gezeigt"
         if x["id"] == "mail" and post_fd.get("answers"):   # Für dich: mailboxes answered from its kept reading today (a number)
             x["sub"] += f" · Für dich heute {post_fd['answers']}× aus der letzten Lesung"
         if x["id"] == "mail" and (post_imp["cards"] or post_imp["out"]):   # Wichtige Mail: cards, sorted out (numbers)
