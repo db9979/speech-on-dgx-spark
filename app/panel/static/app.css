@@ -2143,6 +2143,9 @@ main:has(>#post.on){max-width:none}
 .post .ld-row{transition:transform .12s ease}
 .post .ld-row.swl{box-shadow:inset -4px 0 0 var(--acc)}.post .ld-row.swr{box-shadow:inset 4px 0 0 var(--acc)}
 .post .ld-list.busy{opacity:.55}
+/* Ruhige Ansicht (Dominik 2026-11-13): on a phone the mail page is at least as tall as the window, so the footer under
+   it never moves while the list fills or comes back (it starts below the fold) */
+@media (max-width:760px){.post.ld-frame{min-height:calc(100svh - 96px)}}
 .post .postdot{flex:none;width:8px;height:8px;border-radius:50%}
 .post .ld-row.unread .postdot{background:var(--acc)}
 .post .ld-row.unread .ld-mid b{font-weight:700}

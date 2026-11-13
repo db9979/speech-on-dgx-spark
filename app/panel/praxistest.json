@@ -5880,6 +5880,14 @@
 "text": "Unter Funktionen → Schwachstellen einschalten. Dann Zustand → Schwachstellen öffnen und „Jetzt prüfen“ tippen: nach etwa einer Minute stehen oben die Zahlen, darunter Kacheln für Pi, tars, Docker-Abbilder und Betriebssystem und die Funde nach dem, was zu tun ist. Einen Fund antippen: rechts (am Handy darunter) stehen Wo, Behoben in, Kennungen mit Link zu osv.dev und ein fester Satz, was zu tun ist. Im Überblick zeigt die Karte „Schwachstellen“ dieselben Zahlen, in Live steht nur die Anzahl.",
 "thread": "Schwachstellen gegen OSV prüfen",
 "test": "test_schwachstellen.Pruefen.test_only_names_out_only_ids_back_and_a_fixed_action"
+},
+{
+"id": "P863",
+"v": 1419,
+"titel": "E-Mail-Seite bleibt ruhig",
+"text": "Pi updaten. E-Mail öffnen, eine Mail mit Bildern oder Formatierung anklicken: sie erscheint einmal und flackert nicht nach. Zu Kalender und zurück zu E-Mail: die Liste steht sofort da, wird nicht grau und springt nicht. Am Handy beim Öffnen der Seite wandert unten nichts.",
+"thread": "Mail mit Ideen aus pl_mail verbessern",
+"test": "test_post_seite.Page.test_calm_page_keeps_rows_and_loads_the_mail_once"
 }
 ]
 }

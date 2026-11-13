@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.419** Ruhige E-Mail-Seite: Liste und offene Mail zeichnen nur, was sich ändert, eine Mail lädt einmal, beim Zurückkommen steht die Liste sofort da
 - **V01.1.418** Schwachstellen-Seite: Zustand → Schwachstellen zeigt bekannte Lücken in Panel-Paketen, Engines auf tars, alten Docker-Abbildern und Betriebssystem, geprüft gegen OSV alle 6 Stunden, je Fund Schweregrad, Version mit Fix und ein fester Satz, was zu tun ist (aus, nur Admins)
 - **V01.1.417** Gemma 4 lässt sich auf tars messen und mit Qwen3.6 vergleichen
 - **V01.1.416** GPU-Taktgrenze für den Modell-Rechner: weniger Strom und Wärme bei fast gleichem Tempo, unter Einstellungen → Spark → Betrieb
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.412** Fix Pakete: Versandmails zählen in jedem eigenen Ordner, nicht nur im Posteingang und den Spark-Ordnern
 - **V01.1.411** Fix Pakete: Versandmails zählen auch, wenn der Spark sie in einen seiner Ordner sortiert hat; vorher meldete „Von selbst“ ein Paket, das die Frage danach nicht mehr fand
 - **V01.1.410** Antwort-Meldungen zeigen auch, was die Werkzeuge zurückgaben: so ist klar, ob Werkzeug oder Modell falsch lag
-- **V01.1.409** Quellenangabe: unter jeder Wissensantwort steht, woher sie stammt, „Woher weißt du das?“ geht ohne Modell, am Lautsprecher ein kurzer Satz
 
 
 

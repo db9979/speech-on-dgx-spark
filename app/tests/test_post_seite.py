@@ -156,7 +156,7 @@ class Page(Fake):
         super().setUpClass()
         from tests.test_ui_browser import Browser
         Browser.setUpClass.__func__(cls)
-        for name in ("Post Lisa", "Post Kim", "Post Vera"):
+        for name in ("Post Lisa", "Post Kim", "Post Vera", "Post Ruth"):
             profile(name)
 
     def test_list_read_and_the_settings_sit_here(self):
@@ -274,6 +274,55 @@ class Page(Fake):
                     self.assertEqual(errors, [])
                 finally:
                     await br.close()
+        asyncio.run(go())
+
+    def test_calm_page_keeps_rows_and_loads_the_mail_once(self):
+        """Ruhige Ansicht (Dominik 2026-11-13 „Stabilisiere auch die Ansichten, dass nicht so viel geladen und verschoben
+        werden muss“): drawing again keeps every row that did not change as the same node (keyFill), a quiet compare
+        on the way back never dims or empties the list, the open mail's frame loads once however often the page draws,
+        its mailbox's folders are asked once, and the page does not move on a phone while it fills (layout shift, a
+        tap's own shift left out, like the browser counts it)."""
+        from tests.test_ui_browser import Browser, async_playwright
+        b = Browser("run")
+        b.port = self.port
+        watch = ("window.CLS=0;new PerformanceObserver(l=>{for(const e of l.getEntries())if(!e.hadRecentInput)CLS+=e.value})"
+                 ".observe({type:'layout-shift'});window.FR=0;document.addEventListener('load',e=>{if(e.target.classList&&"
+                 "e.target.classList.contains('postframe'))FR++},true);window.FOLD=0;const of=window.fetch;window.fetch=(u,...a)=>"
+                 "{if(String(u).includes('/mail/folders'))FOLD++;return of(u,...a)};0")
+
+        async def go():
+            async with async_playwright() as p:
+                for width in (390, 1280):
+                    br, pg, errors = await b.page(p, width, 900, who=("Post Ruth", "1234"))
+                    try:
+                        OWNERS[await pg.evaluate("PROFILE.id")] = [ACCT]
+                        await pg.evaluate("MAIL_ON=true;ORD_ON=true;postStart({profile:PROFILE,mail:true})")
+                        await pg.evaluate(watch)
+                        await pg.evaluate("icTabSet('post','show');goSec('post')")
+                        await b.until(pg, "!POST.busy&&!!POST.data&&document.querySelectorAll('#postview .ld-row').length===2")
+                        await pg.wait_for_timeout(800)
+                        # GitHub's machines are slower than a desk: room above the 0 measured here (0.064 before)
+                        self.assertLess(await pg.evaluate("CLS"), 0.03, f"{width} px: the page moved while it filled")
+                        # drawn again and compared quietly: the very same rows, never dimmed
+                        await pg.evaluate("window.ROWS=[...document.querySelectorAll('#postview .ld-row')];postDraw();postDraw();0")
+                        self.assertTrue(await pg.evaluate("[...document.querySelectorAll('#postview .ld-row')].every((r,i)=>r===ROWS[i])"))
+                        await pg.evaluate("window.DIM=0;new MutationObserver(()=>{if(document.querySelector('#postview .ld-list.busy'))DIM++})"
+                                          ".observe($('postview'),{attributes:true,subtree:true,attributeFilter:['class']});postLoad(false,true);0")
+                        await b.until(pg, "!POST.busy&&!!POST.data")
+                        await pg.wait_for_timeout(600)
+                        self.assertEqual(await pg.evaluate("DIM"), 0)
+                        self.assertTrue(await pg.evaluate("[...document.querySelectorAll('#postview .ld-row')].every((r,i)=>r===ROWS[i])"))
+                        # the HTML mail: its frame loads once, however often the page draws while it is open
+                        await pg.click("#postview .ld-row[data-id$=':7']")
+                        await b.until(pg, "!!POST.msg&&!!document.querySelector('#postview .postframe')&&FR===1")
+                        await pg.evaluate("window.FRAME=document.querySelector('#postview .postframe');postDraw();postDraw();postDraw();0")
+                        await pg.wait_for_timeout(800)
+                        self.assertEqual(await pg.evaluate("FR"), 1)
+                        self.assertTrue(await pg.evaluate("document.querySelector('#postview .postframe')===FRAME"))
+                        self.assertLessEqual(await pg.evaluate("FOLD"), 1)   # the folders of its mailbox: one call at a time
+                        self.assertEqual(errors, [])
+                    finally:
+                        await br.close()
         asyncio.run(go())
 
     def test_proactive_rows_sit_on_the_pages(self):

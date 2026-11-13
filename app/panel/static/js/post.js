@@ -37,10 +37,12 @@ const postFuer=x=>typeof FUER!=='undefined'&&FUER&&FUER.items?FUER.items.find(i=
 async function postFuerLoad(){if(typeof FUER_ON==='undefined'||!FUER_ON||FUER)return;
   try{const d=await (await api('/api/profile/fuerdich')).json();if(!d.loading&&!FUER){FUER=d;postDraw()}}catch(e){}}
 // again: mailboxes still loading in the background (mail.inbox) are asked for once more after 3 s, at most 5 times
-async function postLoad(again){if(!PROFILE||!MAIL_ON)return;const seq=++POST.seq;POST.moreFail='';POST.more=false;POST.busy=!again;POST.tries=again?(POST.tries||0)+1:0;postDraw();
+// quiet (Ruhige Ansicht, Dominik 2026-11-13): back on the page the list from before stands at once and is only compared
+// with the mailbox behind it, never dimmed or emptied
+async function postLoad(again,quiet){if(!PROFILE||!MAIL_ON)return;const seq=++POST.seq;POST.moreFail='';POST.more=false;POST.busy=!again&&!quiet;POST.tries=again?(POST.tries||0)+1:0;postDraw();
   try{const d=await (await api(POST.box?'/api/profile/mail/folder?'+new URLSearchParams({account:POST.box.account,folder:POST.box.folder,q:postQ()})
       :'/api/profile/mail/inbox?'+new URLSearchParams({q:postQ(),unread:POST.unread?'true':'false'}))).json();
-    if(seq!==POST.seq)return;if(!(d.loading&&POST.data&&again))POST.data=d;POST.err='';
+    if(seq!==POST.seq)return;if(!(d.loading&&POST.data&&(again||quiet)))POST.data=d;POST.err='';
     if(d.loading&&POST.tries<5)setTimeout(()=>{if(seq===POST.seq&&$('postview'))postLoad(true)},3000)}
   catch(e){if(seq!==POST.seq)return;POST.err=e.message||t('Nicht erreicht','Not reached')}
   POST.busy=false;postDraw();postFuerLoad();postLaterLoad();postSortLoad()}
@@ -69,7 +71,7 @@ async function postRead(id){POST.sel=id;POST.msg=null;if(POST.sug[id]&&POST.sug[
   postDraw();
   // Unterhaltung (Dominik 2026-10-21 „1“): the other mails of the conversation come after the mail, into their own place
   if(POST.msg&&!POST.msg.err&&seq===POST.mseq){POST.thr=null;apiTry('/api/profile/mail/thread?'+new URLSearchParams(POST.box?{id,folder:POST.box.folder}:{id})).then(({r,d})=>{
-    if(seq!==POST.mseq||!r.ok)return;POST.thr={id,items:d.items||[]};const el=document.querySelector('#postview .postthr');if(el)el.innerHTML=postThrInner()})}
+    if(seq!==POST.mseq||!r.ok)return;POST.thr={id,items:d.items||[]};const el=document.querySelector('#postview .postthr');if(el){el.innerHTML=postThrInner();el._kh=`<div class="postthr">${postThrInner()}</div>`}})}
   // Antwortvorschläge „1a“: a mail that stays open a moment gets its answers prepared, „Antworten“ finds them ready
   if(SEND_ON&&POST.msg&&!POST.msg.err)setTimeout(()=>{if(POST.sel===id&&seq===POST.mseq)postSuggest(id)},POST_SUG_MS);
   // Tagesaktuell (Dominik 2026-10-21): an opened mail counts as read, like Apple Mail; only with Mails ordnen (the server's mark)
@@ -108,7 +110,7 @@ function postOpen(){if(!PROFILE)return;const root=$('postroot');for(const b of P
     {k:'set',label:t('Einstellungen','Settings'),body:()=>{const b=$('mailbox');b.hidden=false;$('parwrap').hidden=!PAR_ON;
       lzb(b,async()=>{await showMail();await Promise.all([showMailTidy().catch(()=>{}),showMailStil().catch(()=>{})])},{auth:true}).catch(()=>{});
       proIn('promail').catch(()=>{});if(PAR_ON)lzb($('parbox'),showPar,{auth:true}).catch(()=>{});return b}}]));
-  postLoad()}
+  postLoad(false,!!POST.data)}
 // the tab „Posteingang“: search, the list, the message tapped
 function postBody(){const w=document.createElement('div');w.className='ld-box ld-frame post';w.id='postview';postPaint(w);return w}
 function postDraw(){const w=$('postview');if(w)postPaint(w)}
@@ -146,19 +148,22 @@ function postPaint(w){const d=POST.data;w.classList.toggle('ld-sel',!!POST.sel);
   let day='';
   const ticks=ORD_ON&&(POST.picking||POST.pick.length>0);
   // a row like Apple Mail: sender and time on top, the subject, two lines of the text when the list has them (prev)
-  list.innerHTML=postHead(d,items)+items.map(x=>{const g=postDay(x.date),head=g!==day?`<div class="ld-grp"><span>${esc(g)}</span></div>`:'';day=g;const fd=postFuer(x);
-    return head+`<div class="ld-row${POST.sel===x.id?' on':''}${x.unread?' unread':''}${POST.pick.includes(x.id)?' picked':''}" role="button" tabindex="0" data-id="${esc(x.id)}"${ORD_ON&&postMovable()?' draggable="true"':''}>`+
+  // Ruhige Ansicht (Dominik 2026-11-13): the list is parts by key (keyFill); a row that did not change stays the same node
+  const parts=[['head',postHead(d,items)]];
+  items.forEach(x=>{const g=postDay(x.date);if(g!==day)parts.push(['g:'+g,`<div class="ld-grp"><span>${esc(g)}</span></div>`]);day=g;const fd=postFuer(x);
+    parts.push(['r:'+x.id,`<div class="ld-row${POST.sel===x.id?' on':''}${x.unread?' unread':''}${POST.pick.includes(x.id)?' picked':''}" role="button" tabindex="0" data-id="${esc(x.id)}"${ORD_ON&&postMovable()?' draggable="true"':''}>`+
       (ticks?`<input type="checkbox" class="ld-pick" data-pick="${esc(x.id)}" aria-label="${esc(t('Auswählen','Select'))}"${POST.pick.includes(x.id)?' checked':''}>`:'')+
       `<span class="postdot" aria-label="${esc(x.unread?t('ungelesen','unread'):'')}"></span><span class="postav ${postKc(x.from)}" aria-hidden="true">${esc(postInit(x.from))}</span>`+
       `<span class="ld-mid"><span class="postl1"><b>${esc(postName(x.from))}</b><span class="ld-right">${x.attach?`<span class="postmk" aria-label="${esc(t('mit Anhang','with attachment'))}">${ic('clip')}</span>`:''}${x.flagged?`<span class="postmk star" aria-label="${esc(t('markiert','flagged'))}">${ic('star')}</span>`:''}<span class="ld-when">${esc(postWhen(x.date))}</span></span></span>`+
       `<small class="postsubj">${esc(x.subject||t('(ohne Betreff)','(no subject)'))}</small>${x.prev?`<small class="postprv">${esc(x.prev)}</small>`:''}`+
-      `${fd||many?`<span class="postchips">${fd?`<span class="postfd${fd.urgent?' hot':''}">${esc(FUER_KIND[fd.kind]||fd.kind)}</span>`:''}${many?`<span class="ld-badge off">${esc(d.boxes[x.box]||'')}</span>`:''}</span>`:''}</span></div>`}).join('')
-    ||(POST.busy?'':`<div class="ld-empty mut">${esc(POST.box?(postQ()?t('Keine passende Mail in diesem Ordner.','No matching mail in this folder.'):t('Dieser Ordner ist leer.','This folder is empty.'))
-      :postQ()||POST.unread?t('Keine passende Mail in den letzten 14 Tagen.','No matching mail in the last 14 days.'):t('Keine Mail in den letzten 14 Tagen.','No mail in the last 14 days.'))}</div>`);
-  if(!POST.busy)list.insertAdjacentHTML('beforeend',postMoreRow(d));postMoreWatch(list);
-  list.querySelectorAll('[data-pick]').forEach(c=>{c.onclick=e=>e.stopPropagation();c.onchange=()=>{const id=c.dataset.pick;
+      `${fd||many?`<span class="postchips">${fd?`<span class="postfd${fd.urgent?' hot':''}">${esc(FUER_KIND[fd.kind]||fd.kind)}</span>`:''}${many?`<span class="ld-badge off">${esc(d.boxes[x.box]||'')}</span>`:''}</span>`:''}</span></div>`])});
+  if(!items.length&&!POST.busy)parts.push(['empty',`<div class="ld-empty mut">${esc(POST.box?(postQ()?t('Keine passende Mail in diesem Ordner.','No matching mail in this folder.'):t('Dieser Ordner ist leer.','This folder is empty.'))
+      :postQ()||POST.unread?t('Keine passende Mail in den letzten 14 Tagen.','No matching mail in the last 14 days.'):t('Keine Mail in den letzten 14 Tagen.','No mail in the last 14 days.'))}</div>`]);
+  if(!POST.busy)parts.push(['more:'+(d&&d.vor||'')+(POST.more?':1':''),postMoreRow(d)]);
+  const fresh=keyFill(list,parts);postMoreWatch(list);
+  list.querySelectorAll('[data-pick]').forEach(c=>{if(!fresh.has(c.closest('.ld-row')))return;c.onclick=e=>e.stopPropagation();c.onchange=()=>{const id=c.dataset.pick;
     POST.pick=c.checked?[...POST.pick,id].slice(-50):POST.pick.filter(x=>x!==id);postUndo(w)}});
-  list.querySelectorAll('[data-id]').forEach(r=>{r.onclick=e=>{if(POST.swiped){POST.swiped=false;return}
+  list.querySelectorAll('[data-id]').forEach(r=>{if(!fresh.has(r))return;r.onclick=e=>{if(POST.swiped){POST.swiped=false;return}
       // ⌘ or Strg with a click ticks the row like in a mail program (only with Mails ordnen)
       if(ORD_ON&&(e.metaKey||e.ctrlKey)){const id=r.dataset.id;POST.pick=POST.pick.includes(id)?POST.pick.filter(x=>x!==id):[...POST.pick,id].slice(-50);postDraw();return}
       postRead(r.dataset.id)};r.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();postRead(r.dataset.id)}};postSwipe(r);if(r.draggable)postDrag(r,w)});
@@ -216,13 +221,15 @@ function postMoveMenu(f,src){const into=(f&&f.folders||[]).filter(n=>n!==src);if
   return `<div class="postmenu postmv">${into.length?into.map(n=>`<button type="button" data-mv="${esc(n)}">${postIc('move')}${esc(n==='INBOX'?t('Posteingang','Inbox'):n)}</button>`).join('')
     :`<span class="mut">${esc(t('Ordner werden geladen …','Loading folders …'))}</span>`}</div>`}
 function postDetail(w){const box=w.querySelector('.postdet'),m=POST.msg;if(!box)return;box.hidden=!POST.sel;if(!POST.sel){box.textContent='';return}
-  const [bar,foot]=postBar(m);
-  if(!m)box.innerHTML=bar+`<div class="mut">${esc(t('Lade die Mail …','Loading the mail …'))}</div>`;
-  else if(m.err)box.innerHTML=bar+`<div class="note warn">${esc(m.err)}</div>`;
+  // Ruhige Ansicht (Dominik 2026-11-13): the open mail is parts by key (keyFill); the mail itself is built once, a new
+  // bar, menu, conversation or folder list never loads its frame again or moves what was read
+  const [bar,foot]=postBar(m),sel=POST.sel,parts=[['bar',bar]];let main=false;
+  if(!m)parts.push(['wait:'+sel,`<div class="mut">${esc(t('Lade die Mail …','Loading the mail …'))}</div>`]);
+  else if(m.err)parts.push(['err:'+sel,`<div class="note warn">${esc(m.err)}</div>`]);
   else{const when=new Date(m.date*1000).toLocaleString(kalLoc(),{weekday:'short',day:'numeric',month:'long',hour:'2-digit',minute:'2-digit'});
     // the head like Apple Mail: the sender's circle, name, address and to whom on the left, the time on the right, then
     // the subject big; attachments as tiles; the text formatted in its frame (mailansicht.py) or as plain text
-    box.innerHTML=bar+`<div class="posthdr"><span class="postav big ${postKc(m.from)}" aria-hidden="true">${esc(postInit(m.from))}</span>`+
+    main=true;parts.push(['main:'+sel,`<div class="postmain"><div class="posthdr"><span class="postav big ${postKc(m.from)}" aria-hidden="true">${esc(postInit(m.from))}</span>`+
       `<div class="ld-mid"><span class="postl1"><b>${esc(postName(m.from))}</b><span class="ld-when">${esc(when)}</span></span>`+
       `<small>${esc(postAddr(m.from))}</small>${m.to?`<small>${esc(t('An: ','To: ')+m.to)}</small>`:''}</div></div>`+
       `<h3 class="postsubjbig">${esc(m.subject||t('(ohne Betreff)','(no subject)'))}</h3>`+
@@ -231,14 +238,18 @@ function postDetail(w){const box=w.querySelector('.postdet'),m=POST.msg;if(!box)
       (m.html?(m.remote?`<div class="postpics">${postIc('lock')}<span>${esc(POST.pics===POST.sel?t('Bilder von außen geladen, über den Spark.','Pictures from outside loaded, through the Spark.')
           :t('Bilder von außen sind aus, damit der Absender nicht sieht, dass du die Mail liest.','Pictures from outside stay off, so the sender does not learn that you read the mail.'))}</span>${POST.pics===POST.sel?'':`<button class="b" type="button" data-k="pics">${esc(t('Bilder laden','Load pictures'))}</button>`}</div>`:'')+
         `<iframe class="postframe" title="${esc(t('Inhalt der Mail','Content of the mail'))}" sandbox="allow-same-origin" referrerpolicy="no-referrer" src="/api/profile/mail/view?${esc(new URLSearchParams({id:POST.sel,...(POST.box?{folder:POST.box.folder}:{}),...(POST.pics===POST.sel?{bilder:'true'}:{})}).toString())}"></iframe>`
-        :`<div class="posttext">${esc(m.text||t('(kein Text)','(no text)'))}</div>`)+
-      `<div class="postlink" hidden></div><div class="postthr">${postThrInner()}</div>`+
-      (SEND_ON?'':`<div class="fh">${esc(t('Antworten geht mit dem Assistenten: „Antworte Anna …“.','Reply with the assistant: "Reply to Anna …".'))}</div>`)+`<div class="postordmsg fh"></div>`+foot;
+        :`<div class="posttext">${esc(m.text||t('(kein Text)','(no text)'))}</div>`)+`</div>`],
+      ['link:'+sel,`<div class="postlink" hidden></div>`],['thr:'+sel,`<div class="postthr">${postThrInner()}</div>`],
+      ['tail',(SEND_ON?'':`<div class="fh">${esc(t('Antworten geht mit dem Assistenten: „Antworte Anna …“.','Reply with the assistant: "Reply to Anna …".'))}</div>`)+`<div class="postordmsg fh"></div>`])}
+  parts.push(['foot',foot]);
+  const fresh=keyFill(box,parts),mn=box.querySelector('.postmain');
+  // the line of an action starts empty on each drawing, like a box drawn anew
+  const msg=box.querySelector('.postordmsg')||document.createElement('div');msg.className='postordmsg fh';msg.textContent='';
+  if(main&&mn&&fresh.has(mn)){
     const fr=box.querySelector('.postframe');if(fr)postFrame(fr,box.querySelector('.postlink'));
     const who=box.querySelector('.posthdr .postl1 b');if(who&&window.konShow&&CON_ON){who.className='postwho';who.tabIndex=0;who.setAttribute('role','button');who.onkeydown=e=>{if(e.key==='Enter')who.click()};who.title=t('Kontaktkarte','Contact card');who.onclick=()=>konShow(postAddr(m.from),postName(m.from))}   // Kontakte: the sender's card
     if(m.invite&&window.einShow)einShow(box.querySelector('.postsubjbig'),POST.sel,postSrc());   // Einladungen aus Mails (einladung.js)
     const pics=box.querySelector('[data-k=pics]');if(pics)pics.onclick=()=>{POST.pics=POST.sel;postDetail(w)}}
-  const msg=box.querySelector('.postordmsg')||document.createElement('div');
   box.querySelector('[data-close]').onclick=()=>{POST.sel=null;POST.msg=null;postDraw()};
   const on=(q,f)=>box.querySelectorAll(q).forEach(b=>b.onclick=f);
   on('[data-w=reply]',()=>postWrite(m));on('[data-w=fwd]',()=>postWrite(m,true));on('[data-w=new]',()=>postWrite(null));
@@ -247,9 +258,10 @@ function postDetail(w){const box=w.querySelector('.postdet'),m=POST.msg;if(!box)
   box.querySelectorAll('[data-o]:not([data-o=pick]):not([data-o=more]):not([data-o=erase])').forEach(b=>b.onclick=()=>{postAct(b.dataset.o,'',msg)});
   on('[data-o=erase]',()=>postErase(m,msg));
   // a mail dragged from the list onto the archive or the trash symbol of the open one
-  box.querySelectorAll('[data-o=archive],[data-o=delete]').forEach(b=>postDropOn(b,()=>b.dataset.o,()=>''));
+  box.querySelectorAll('[data-o=archive],[data-o=delete]').forEach(b=>{if([...fresh].some(n=>n.contains(b)))postDropOn(b,()=>b.dataset.o,()=>'')});
   on('[data-mv]',e=>{postAct('move',e.currentTarget.dataset.mv,msg)});
-  const sel=POST.sel;if(ORD_ON&&m&&!m.err)postFoldersFor(sel.split(':')[0]).then(n=>{if(n&&$('postview')&&POST.sel===sel)postDetail($('postview'))})}
+  // the folders of its mailbox are asked once; only when they came new is the bar drawn again (the mail stays as it is)
+  if(ORD_ON&&m&&!m.err&&!POST.folders[sel.split(':')[0]])postFoldersFor(sel.split(':')[0]).then(n=>{if(n&&$('postview')&&POST.sel===sel)postDetail($('postview'))})}
 // the conversation under the mail, oldest first, each folded to one line (who, when, its first words); own ones as „Du“
 function postThrInner(){const th=POST.thr;if(!th||th.id!==POST.sel||!th.items.length)return '';
   return `<div class="ld-grp"><span>${esc(t('Unterhaltung · '+th.items.length+(th.items.length>1?' weitere Mails':' weitere Mail'),'Conversation · '+th.items.length+(th.items.length>1?' more mails':' more mail')))}</span></div>`+
@@ -281,7 +293,12 @@ function postLinkAsk(url,text,lb){let u;try{u=new URL(url)}catch(e){return}
   lb.querySelector('[data-l=no]').onclick=()=>{lb.hidden=true};lb.scrollIntoView({block:'nearest'})}
 // the move menu (or ⋯ on a phone) opens and closes in place
 function postMenu(k){POST.menu=POST.menuAt===POST.sel&&POST.menu===k?'':k;POST.menuAt=POST.sel;if($('postview'))postDetail($('postview'))}
-async function postFoldersFor(acct){if(!POST.folders[acct]){const {r,d}=await apiTry('/api/profile/mail/folders?'+new URLSearchParams({account:acct}));if(r.ok)POST.folders[acct]=d;return r.ok}return false}
+// asked once at a time per mailbox: drawings while the answer is on its way wait for the same one (no second call); a
+// mailbox that said no is not asked again for POST_FNO_MS, however often the page draws
+const POST_FWAIT={},POST_FNO={},POST_FNO_MS=30000;
+async function postFoldersFor(acct){if(POST.folders[acct]||Date.now()-(POST_FNO[acct]||0)<POST_FNO_MS)return false;if(POST_FWAIT[acct])return POST_FWAIT[acct];
+  POST_FWAIT[acct]=apiTry('/api/profile/mail/folders?'+new URLSearchParams({account:acct})).then(({r,d})=>{if(r.ok)POST.folders[acct]=d;else POST_FNO[acct]=Date.now();return r.ok}).finally(()=>{delete POST_FWAIT[acct]});
+  return POST_FWAIT[acct]}
 async function postAct(action,folder,msg,mid,which,sure){const id=which||POST.sel,src=postSrc();if(msg){msg.className='postordmsg fh';msg.textContent=t('Einen Moment …','One moment …')}
   const back=postGone([id],action);
   const {r,d}=await apiTry('/api/profile/mail/act',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,action,folder,mid:mid||'',src,sure:!!sure})});

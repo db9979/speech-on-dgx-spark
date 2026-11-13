@@ -170,6 +170,18 @@ function sayToast(text,ms,o){const e=$('updtoast');if(!e)return;o=o||{};e.textCo
   e.style.display='block';clearTimeout(sayToast.t);sayToast.t=setTimeout(()=>e.style.display='none',ms||4000)}
 // writes HTML only when it differs from what this place shows (polled tables: marking, focus and hover stay)
 function setHtml(el,h){if(el&&el._h!==h){el.innerHTML=h;el._h=h}}
+// Ruhige Ansicht (Dominik 2026-11-13 „Stabilisiere auch die Ansichten“): a box drawn from parts [[key, html], …] keeps
+// every part whose html did not change as the very same nodes (scroll place, an open <details>, a loaded mail frame
+// stay); only changed parts are made anew, in their place. Returns the set of nodes made anew (their handlers are new).
+function keyFill(el,parts){const old=new Map();for(const n of [...el.children]){if(n._kf&&!old.has(n._kf))old.set(n._kf,[]);if(n._kf)old.get(n._kf).push(n);else n.remove()}
+  const fresh=new Set(),want=[];
+  for(const [k,h] of parts){const have=old.get(k);
+    if(have&&have[0]._kh===h){old.delete(k);want.push(...have);continue}
+    const tp=document.createElement('template');tp.innerHTML=h;const made=[...tp.content.children];
+    if(!made.length)continue;made.forEach(n=>{n._kf=k;fresh.add(n)});made[0]._kh=h;want.push(...made)}
+  for(const ns of old.values())ns.forEach(n=>n.remove());
+  let at=el.firstElementChild;for(const n of want){if(n!==at)el.insertBefore(n,at);else at=at.nextElementSibling}
+  return fresh}
 const lzb=(box,load,o)=>window.ladeBox?ladeBox(box,load,o):load();
 const LZ_CFG={skel:false,stale:false,top:true};
 function showSec(s){const sec=s==='feat'?'cfg':s;document.querySelectorAll('section').forEach(x=>x.classList.toggle('on',x.id===sec));
