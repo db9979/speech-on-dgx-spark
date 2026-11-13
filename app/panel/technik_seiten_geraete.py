@@ -229,7 +229,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Apps
     "apps": {
-        "stand": "6df65bad58",
+        "stand": "eda9098197",
         "bezug": {
             "android.TOKEN_SECONDS": ["s3"], "android.TOKEN_USES": ["s3"], "iphone.profile_pair": ["s1", "s2"],
             "kopplung.Codes.new": ["s3"], "kopplung.Codes.take": ["s4"], "iphone.app_pair": ["s4", "s5"],
@@ -345,7 +345,8 @@ SEITEN = {
                "zustellung.follow sie nach {zustellung.FOLLOW|min} Minuten einmal aufs Handy (gesehen zählt nur der Browser, "
                "an dessen Abo sie ging); ein angetippter Hinweis meldet "
                "„gesehen“, und mit der Antwort „zu“ räumen Seiten und iPhone Erledigtes weg. Jede Mitteilung bleibt "
-               "{mitteilungen.KEEP|h} Stunden mit einer zufälligen Nummer auf dem Spark (mitteilungen.keep, nur im Speicher); "
+               "{mitteilungen.KEEP|h} Stunden mit einer zufälligen Nummer auf dem Spark (mitteilungen.keep, nur im Speicher; "
+               "ein Bestätigungscode nur so lange, wie die Mail sagt, und ohne Nachfassen); "
                "nur die Nummer geht mit. Wer sie antippt, sieht sie als Karte über dem Gespräch, mit dem einen Knopf, den "
                "mitteilungen.ziel nach festen Regeln wählt (Offen, Chat, Mail, Code, Weg); nur das eigene Profil bekommt "
                "sie zurück.",
@@ -367,7 +368,7 @@ SEITEN = {
                "phone app at once. If nobody saw it, zustellung.follow sends it once to the phone after "
                "{zustellung.FOLLOW|min} minutes (only the browser whose subscription it went to counts as seen); a tapped note says „seen“, and with the answer „zu“ pages and the iPhone "
                "take done ones away. Every note stays on the Spark for {mitteilungen.KEEP|h} hours with a random number "
-               "(mitteilungen.keep, in memory only); only the number goes along. Tapped, it shows as a card above the "
+               "(mitteilungen.keep, in memory only; a confirmation code only as long as the mail says, and not followed up); only the number goes along. Tapped, it shows as a card above the "
                "conversation, with the one button mitteilungen.ziel picks by fixed rules (Open, chat, mail, code, way); only "
                "the own profile gets it back."),
               ("info", ("Terminal", "Terminal"),

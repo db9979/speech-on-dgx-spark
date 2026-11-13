@@ -29,6 +29,7 @@ import echo  # noqa: E402
 import mail  # noqa: E402
 import fuerdich  # noqa: E402
 import hintergrund  # noqa: E402
+import parcels  # noqa: E402
 import vorwaermen  # noqa: E402
 import memtidy  # noqa: E402
 import gedaechtnis  # noqa: E402
@@ -1314,7 +1315,14 @@ async def profile_mail_inbox(request: Request, q: str = "", days: int = 14, unre
     if st:
         mail.shown("zustand")
         print(f"mail: mailbox state shown | {len(st)} | {profiles.log_name(prof)}", flush=True)
-    return dict(r, zustand=st) if st else r
+        r = dict(r, zustand=st)
+    # Sendungen über der Liste (pl_mail-Ideen 1): from the last parcel reading only, never a mailbox while this waits
+    pk = parcels.strip(prof["id"]) if not q and not unread else []
+    if pk:
+        mail.shown("pakete")
+        print(f"mail: parcels strip shown | {len(pk)} | {profiles.log_name(prof)}", flush=True)
+        r = dict(r, pakete=pk)
+    return r
 
 
 async def _older(request, prof, vor, q, unread, folder):

@@ -223,10 +223,11 @@ def _reason(r):
         return ""
 
 
-async def send(uid, title, body, tag="", now=None, vg="", ref=""):
+async def send(uid, title, body, tag="", now=None, vg="", ref="", bis=0):
     """To every iPhone of the profile; returns how many Apple accepted. vg: the Vorgang the note is about (its number
     only, so the app takes the notification away when it is done elsewhere, zustellung.py). ref: a new mail's
-    reference, kept on the Spark for the card of the tapped note (mitteilungen.ziel), never sent to Apple."""
+    reference, kept on the Spark for the card of the tapped note (mitteilungen.ziel), never sent to Apple. bis: the time
+    the note is over (mitteilungen.keep); the app then finds it no more."""
     now = time.time() if now is None else now
     if not reachable(uid):
         return 0
@@ -235,7 +236,7 @@ async def send(uid, title, body, tag="", now=None, vg="", ref=""):
         return 0
     s = settings()
     import mitteilungen
-    nid = mitteilungen.keep(uid, title, body, tag, vg, ref, now)
+    nid = mitteilungen.keep(uid, title, body, tag, vg, ref, now, bis)
     n = 0
     # a call already rang the iPhones that take calls through CallKit (send_voip): no second "📞 … ruft an" there
     rung = {did for did, _ in voip_tokens(uid)} if tag == "call" else set()

@@ -480,17 +480,18 @@ def reachable(uid, now=None):
     return any(now - _seen.get(x["id"], -1e12) < ONLINE and part_on(uid, x["id"], "notes") for x in devices(uid))
 
 
-def keep(uid, title, body, tag="", now=None, ref="", vg="", m=""):
+def keep(uid, title, body, tag="", now=None, ref="", vg="", m="", bis=0):
     """A note for the programs of the profile; ref: what it is about (a Für-dich card), kept here, never sent out.
     vg: the Vorgang it is about; once that is no longer open the programs no longer fetch it (zustellung.closed).
-    m: its number in mitteilungen.py; a tap on the Mac opens it as a card in the panel (#meldung=)."""
+    m: its number in mitteilungen.py; a tap on the Mac opens it as a card in the panel (#meldung=). bis: the time the
+    note is over (a confirmation code's validity), then the programs no longer fetch it."""
     now = time.time() if now is None else now
     with _lock:
         n = _seq.get(uid, 0) + 1
         _seq[uid] = n
         box = [x for x in _notes.get(uid, []) if now - x["t"] < NOTE_SECONDS]
         box.append({"n": n, "t": now, "title": str(title)[:200], "body": str(body)[:1500], "tag": str(tag)[:20],
-                    "ref": str(ref or "")[:40], "vg": str(vg or "")[:12], "m": str(m or "")[:16]})
+                    "ref": str(ref or "")[:40], "vg": str(vg or "")[:12], "m": str(m or "")[:16], "bis": float(bis or 0)})
         _notes[uid] = box[-NOTE_MAX:]
     return n
 
@@ -500,7 +501,8 @@ def notes(uid, after, now=None):
     now = time.time() if now is None else now
     zu = set(zustellung.closed(uid, now))   # Meldung ans genutzte Gerät: done elsewhere, not fetched any more
     with _lock:
-        box = [x for x in _notes.get(uid, []) if now - x["t"] < NOTE_SECONDS and x.get("vg", "") not in zu]
+        box = [x for x in _notes.get(uid, []) if now - x["t"] < NOTE_SECONDS and x.get("vg", "") not in zu
+               and not (x.get("bis") and now >= x["bis"])]
         _notes[uid] = box
         return [dict({k: x[k] for k in ("n", "title", "body", "tag")}, weg=note_weg(x), m=x.get("m", ""))
                 for x in box if x["n"] > after], \

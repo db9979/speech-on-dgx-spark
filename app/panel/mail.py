@@ -1224,7 +1224,8 @@ def attachment(uid, query="", days=30, most=30 * 1024 * 1024):
     return None
 
 
-_shown = DayCounter(zustand=0, warum=0)   # Live (node E-Mail): mailbox states and „Warum hier“ lines shown today, numbers
+_shown = DayCounter(zustand=0, warum=0, pakete=0)   # Live (node E-Mail): mailbox states, „Warum hier“ lines and parcel
+# strips (parcels.strip) shown today, numbers
 
 
 def shown(kind):

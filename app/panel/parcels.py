@@ -5,17 +5,26 @@ recognised by their sender, the status is taken from the mail's words ("kommt he
 
 Shop names and item titles come from the mails: they count as mail text, so after a parcel lookup
 the answer cannot switch or change anything.
+
+Sendungen über der Mail-Liste (pl_mail-Ideen 1, Dominik 2026-11-13 „1-7“; part of this function, no switch of its
+own): strip() gives at most STRIP open parcels of the last reading (memory or the sealed Vorrat, never a mailbox while
+the page waits; an old reading is renewed in the background, at most every RENEW seconds), the ones coming today
+first. A link only to the carrier's own fixed tracking page (TRACK_URL) with the tracking number set in, never a link
+from a mail. ✕ (hide) keeps a parcel away until it has a new state; the hidden keys stay in the sealed Vorrat.
 """
 import datetime
+import hashlib
 import email
 import email.policy
 import imaplib
 import re
+import threading
 import time
 
 import mail
 import features
 import postfach
+import profiles
 import tidy
 import vorrat
 from vorrat import Vorrat
@@ -30,6 +39,18 @@ CARRIERS = [("DHL", ("dhl.de", "dhl.com", "deutschepost.de", "dhl-news.de")),
             ("Hermes", ("hermesworld.com", "myhermes.de", "hermes-europe.de")),
             ("DPD", ("dpd.de", "dpd.com")), ("GLS", ("gls-group.eu", "gls-pakete.de", "gls-group.com")),
             ("UPS", ("ups.com",)), ("Amazon", ("amazon.de", "amazon.com"))]
+# the carriers' own tracking pages; the number (TRACK, letters and digits only) is set in, nothing else from a mail
+TRACK_URL = {"DHL": "https://www.dhl.de/de/privatkunden/pakete-empfangen/verfolgen.html?piececode=",
+             "Hermes": "https://www.myhermes.de/empfangen/sendungsverfolgung/sendungsinformation#",
+             "DPD": "https://tracking.dpd.de/status/de_DE/parcel/",
+             "GLS": "https://gls-group.com/DE/de/paketverfolgung?match=",
+             "UPS": "https://www.ups.com/track?loc=de_DE&tracknum="}
+STRIP = 3          # parcels above the mail list
+RENEW = 600        # seconds between background readings for the strip
+HIDE_MAX = 50      # hidden parcels kept per profile
+ORDER = {"today": 0, "pickup": 1, "date": 2, "shipped": 3, "delivered": 4}
+_renew = {}        # uid -> time of the last background reading
+_renew_lock = threading.Lock()
 WEEKDAYS = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"]
 MONTHS = {m: i + 1 for i, m in enumerate(["januar", "februar", "märz", "april", "mai", "juni", "juli", "august",
                                            "september", "oktober", "november", "dezember"])}
@@ -298,6 +319,60 @@ def report(uid, today=None):
     return mail._wrap(out)
 
 
+def link(x):
+    """The carrier's own tracking page for the parcel, or "" (Amazon, no number, or a number not plain)."""
+    t = x.get("track") or ""
+    return TRACK_URL[x["carrier"]] + t if x.get("carrier") in TRACK_URL and re.fullmatch(r"[A-Z0-9]{8,30}", t) else ""
+
+
+def key(x):
+    """A parcel in one state: a new state is a new key, so a hidden parcel comes back when something happens."""
+    who = x.get("track") or f"{x.get('carrier')}|{x.get('shop')}|{x.get('item')}"
+    return hashlib.sha256(f"{who}|{x.get('status')}|{x.get('day')}".encode()).hexdigest()[:16]
+
+
+def _renew_soon(uid, now):
+    """Reads the mailboxes in the background when the last reading is older than RENEW (never while the page waits)."""
+    with _renew_lock:
+        if now - _renew.get(uid, 0) < RENEW:
+            return
+        _renew[uid] = now
+
+    def run():
+        try:
+            scan(uid)
+        except Exception as e:
+            print(f"mail: parcels strip not readable ({type(e).__name__}) | {profiles.log_name(profiles.by_id(uid))}", flush=True)
+    threading.Thread(target=run, daemon=True, name="pakete-streifen").start()
+
+
+def strip(uid, today=None, now=None):
+    """Sendungen über der Mail-Liste: [{key, satz, link}] of at most STRIP open parcels, today's first, from the last
+    reading only; [] when the function is off for the profile."""
+    if not usable(uid):
+        return []
+    today, now = today or datetime.date.today(), time.time() if now is None else now
+    hit = _cache.get(uid) or _kept(uid)
+    if not hit or now - hit[0] > RENEW:
+        _renew_soon(uid, now)
+    if not hit:
+        return []
+    hidden = set(SUPPLY.load(uid).get("weg") or [])
+    out = []
+    for x in sorted(hit[1][0], key=lambda x: ORDER.get(x.get("status"), 9)):
+        s, k = sentence(x, today), key(x)
+        if s and k not in hidden:
+            out.append({"key": k, "satz": s, "link": link(x)})
+    return out[:STRIP]
+
+
+def hide(uid, k):
+    """✕ on the strip: the parcel stays away until it has a new state (key)."""
+    d = SUPPLY.load(uid)
+    d["weg"] = ([x for x in d.get("weg") or [] if x != k] + [k])[-HIDE_MAX:]
+    SUPPLY.changed(uid)
+
+
 def today_lines(uid, today=None):
     """Fixed sentences of parcels that come today (for "Von selbst melden" and the briefing)."""
     today = today or datetime.date.today()
@@ -344,9 +419,10 @@ async def briefing(uid, zone=None):
 
 
 # ---------------------------------------------------------------- API ("Ich" → Pakete)
-from fastapi import APIRouter, Depends, HTTPException  # noqa: E402
+from fastapi import APIRouter, Depends, HTTPException, Request  # noqa: E402
 
-from core import assistant, own_profile  # noqa: E402
+import guard  # noqa: E402
+from core import assistant, json_body, own_profile  # noqa: E402
 
 router = APIRouter()
 
@@ -365,3 +441,20 @@ async def api_get(fresh: bool = False, prof=Depends(own_profile)):
     today = datetime.date.today()
     return {"on": on, "lines": [s for s in (sentence(x, today) for x in found) if s],
             "errors": [f"{n}: {e}" for n, e in errors]}
+
+
+@router.post("/api/profile/parcels/hide", dependencies=[Depends(assistant)])
+async def api_hide(request: Request, prof=Depends(own_profile)):
+    """✕ on the strip above the mail list: {"key": 16 hex}."""
+    guard.limit(request, "post", prof["id"])
+    if not features.allowed("parcels", prof["id"]):
+        print(f"mail: parcel hide refused, off | {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(403, "parcels are turned off")
+    b = await json_body(request, 1024)
+    k = b.get("key")
+    if not isinstance(k, str) or not re.fullmatch(r"[0-9a-f]{16}", k):
+        print(f"mail: parcel hide refused, input | {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(400, "key")
+    hide(prof["id"], k)
+    print(f"mail: parcel hidden | {profiles.log_name(prof)}", flush=True)
+    return {"ok": True}

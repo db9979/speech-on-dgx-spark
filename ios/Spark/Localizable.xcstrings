@@ -21300,6 +21300,26 @@
           }
         }
       }
+    },
+    "Verfolgen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Track"
+          }
+        }
+      }
+    },
+    "Ausblenden, bis sich etwas tut" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hide until something changes"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

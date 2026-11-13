@@ -2223,6 +2223,8 @@ body.adm .post .postfoot{bottom:calc(59px + env(safe-area-inset-bottom))}
 .post .postqsug{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:30;display:grid;gap:2px;padding:6px;border:1px solid var(--line);border-radius:12px;background:var(--card);box-shadow:0 18px 50px rgba(20,24,36,.16)}
 .post .postqsug>div{display:flex;justify-content:space-between;gap:10px;padding:7px 10px;border-radius:8px;cursor:pointer;font-size:14px}
 .post .postqsug>div small{color:var(--mut)}.post .postqsug>div.on,.post .postqsug>div:hover{background:color-mix(in srgb,var(--acc) 10%,var(--card))}
+.post .postpk{display:flex;flex-direction:column;gap:2px;margin:0 0 6px;padding:6px 10px;border-radius:10px;background:color-mix(in srgb,var(--fg) 4%,transparent);font-size:12.5px}
+.post .postpki{display:flex;align-items:center;gap:10px;min-height:28px}.post .postpki>span{flex:1;min-width:0}.post .postpki a{white-space:nowrap}
 .post .postwhy{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;margin:6px 0 10px;padding:7px 10px;border-radius:9px;background:color-mix(in srgb,var(--fg) 4%,transparent);font-size:12.5px;color:var(--mut)}
 .post .postwhy .postok{display:inline-flex;align-items:center;gap:4px;color:var(--ok);font-weight:600}.post .postwhy .postok svg{width:14px;height:14px}
 .post .postwhy .postbad{color:var(--bad);font-weight:600}.post .postwhy .lnk{font-size:12.5px}

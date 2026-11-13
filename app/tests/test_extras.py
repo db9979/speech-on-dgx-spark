@@ -319,6 +319,18 @@ class Parcels(unittest.TestCase):
             parcels._cache.clear()
             self.assertIn("DHL-Paket von Thalia: kommt heute.", ask(a, "TOOL parcels {}"))
             self.assertEqual(a.get("/api/profile/parcels").json()["lines"], ["DHL-Paket von Thalia: kommt heute."])
+            # Sendungen über der Mail-Liste (pl_mail-Ideen 1): the same parcel with the carrier's own tracking page; ✕
+            # keeps it away; a wrong key or a blocked profile: refused
+            pk = a.get("/api/profile/mail/inbox").json().get("pakete")
+            self.assertEqual([(x["satz"], x["link"]) for x in pk], [("DHL-Paket von Thalia: kommt heute.",
+                                                                    parcels.TRACK_URL["DHL"] + "JJD000390012345678")])
+            self.assertEqual(a.post("/api/profile/parcels/hide", json={"key": "../x"}).status_code, 400)
+            self.assertEqual(a.post("/api/profile/parcels/hide", json={"key": pk[0]["key"]}).status_code, 200)
+            self.assertNotIn("pakete", a.get("/api/profile/mail/inbox").json())
+            helpers.set_config(deny={"parcels": [uid]})
+            self.assertEqual(a.post("/api/profile/parcels/hide", json={"key": pk[0]["key"]}).status_code, 403)
+            self.assertNotIn("pakete", a.get("/api/profile/mail/inbox").json())
+            helpers.set_config(deny={})
             # read only, the inbox by its plain name like every reader (test_panel's check of every select, V01.1.414)
             self.assertTrue(all(c[1] == ("INBOX", True) for c in helpers.IMAP_CALLS if c[0] == "select"))
         finally:

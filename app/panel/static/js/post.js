@@ -198,7 +198,7 @@ function postPaint(w){const d=POST.data;w.classList.toggle('ld-sel',!!POST.sel);
   const ticks=ORD_ON&&(POST.picking||POST.pick.length>0);
   // a row like Apple Mail: sender and time on top, the subject, two lines of the text when the list has them (prev)
   // Ruhige Ansicht (Dominik 2026-11-13): the list is parts by key (keyFill); a row that did not change stays the same node
-  const parts=[['head',postHead(d,items)]];
+  const parts=[['head',postHead(d,items)]],pk=postPakete(d);if(pk)parts.push(pk);
   items.forEach(x=>{const g=postDay(x.date);if(g!==day)parts.push(['g:'+g,`<div class="ld-grp"><span>${esc(g)}</span></div>`]);day=g;const fd=postFuer(x);
     parts.push(['r:'+x.id,`<div class="ld-row${POST.sel===x.id?' on':''}${x.unread?' unread':''}${POST.pick.includes(x.id)?' picked':''}" role="button" tabindex="0" data-id="${esc(x.id)}"${ORD_ON&&postMovable()?' draggable="true"':''}>`+
       (ticks?`<input type="checkbox" class="ld-pick" data-pick="${esc(x.id)}" aria-label="${esc(t('Auswählen','Select'))}"${POST.pick.includes(x.id)?' checked':''}>`:'')+
@@ -216,9 +216,18 @@ function postPaint(w){const d=POST.data;w.classList.toggle('ld-sel',!!POST.sel);
       // ⌘ or Strg with a click ticks the row like in a mail program (only with Mails ordnen)
       if(ORD_ON&&(e.metaKey||e.ctrlKey)){const id=r.dataset.id;POST.pick=POST.pick.includes(id)?POST.pick.filter(x=>x!==id):[...POST.pick,id].slice(-50);postDraw();return}
       postRead(r.dataset.id)};r.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();postRead(r.dataset.id)}};postSwipe(r);if(r.draggable)postDrag(r,w)});
+  list.querySelectorAll('[data-pkx]').forEach(b=>{if(!fresh.has(b.closest('.postpk')))return;b.onclick=()=>postPkHide(b.dataset.pkx)});
   postUndo(w);if(POST.sent)w.querySelector('.postundo').insertAdjacentHTML('beforeend',`<div class="note">${esc(POST.sent)}</div>`);
   postFoldPaint(w);
   postDetail(w);postWriteBox(w)}
+// Sendungen über der Liste (pl_mail-Ideen 1, Dominik 2026-11-13 „1-7“): at most 3 parcels of the last reading (parcels.strip),
+// the Spark's fixed sentence, a link only to the carrier's own tracking page, ✕ until the parcel has a new state
+function postPakete(d){const p=!POST.box&&!postQ()&&d&&d.pakete||[];if(!p.length)return null;
+  return ['pk:'+p.map(x=>x.key).join(','),`<div class="postpk" role="list" aria-label="${esc(t('Sendungen','Parcels'))}">`+p.map(x=>`<div class="postpki" role="listitem"><span>${esc(x.satz)}</span>`+
+    (/^https:\/\//.test(x.link||'')?`<a href="${esc(x.link)}" target="_blank" rel="noopener noreferrer">${esc(t('Verfolgen','Track'))}</a>`:'')+
+    `<button type="button" class="lnk" data-pkx="${esc(x.key)}" aria-label="${esc(t('Ausblenden, bis sich etwas tut','Hide until something changes'))}">${ic('x')}</button></div>`).join('')+'</div>']}
+async function postPkHide(k){const d=POST.data;if(d&&d.pakete)d.pakete=d.pakete.filter(x=>x.key!==k);postDraw();
+  await apiTry('/api/profile/parcels/hide',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:k})})}
 // the head of the list box (Dominik 2026-10-20 „gleiche Boxen“): where the list is from, how many, how many unread
 function postHead(d,items){const many=d&&d.boxes&&d.boxes.length>1,u=items.filter(x=>x.unread).length;
   const name=POST.box?POST.box.name:POST.unread?t('Ungelesen','Unread'):POST.chips.flag?t('Markiert','Flagged'):POST.chips.attach?t('Mit Anhang','With attachment')

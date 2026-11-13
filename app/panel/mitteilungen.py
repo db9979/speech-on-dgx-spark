@@ -47,11 +47,12 @@ _lock = threading.Lock()
 _box = {}                      # uid -> [{"id", "t", "title", "body", "tag", "vg", "ref"}]
 
 
-def keep(uid, title, body, tag="", vg="", ref="", now=None):
-    """Keeps a note for the profile; returns its number (16 hex), the only thing that leaves the Spark with it."""
+def keep(uid, title, body, tag="", vg="", ref="", now=None, bis=0):
+    """Keeps a note for the profile; returns its number (16 hex), the only thing that leaves the Spark with it. bis: the
+    time the note is over (a confirmation code with its validity, mailcode.valid_until); 0 = KEEP."""
     now = time.time() if now is None else now
     item = {"id": secrets.token_hex(8), "t": now, "title": str(title)[:200], "body": str(body)[:1500],
-            "tag": str(tag or "")[:40], "vg": str(vg or "")[:12], "ref": str(ref or "")[:40]}
+            "tag": str(tag or "")[:40], "vg": str(vg or "")[:12], "ref": str(ref or "")[:40], "bis": float(bis or 0)}
     with _lock:
         box = [x for x in _box.get(uid, []) if now - x["t"] < KEEP]
         box.append(item)
@@ -65,7 +66,8 @@ def get(uid, mid, now=None):
     if not isinstance(mid, str) or not ID.fullmatch(mid):
         return None
     with _lock:
-        return next((dict(x) for x in _box.get(uid, []) if x["id"] == mid and now - x["t"] < KEEP), None)
+        return next((dict(x) for x in _box.get(uid, []) if x["id"] == mid and now - x["t"] < KEEP
+                     and not (x.get("bis") and now >= x["bis"])), None)
 
 
 def ziel(x):

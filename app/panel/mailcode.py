@@ -11,10 +11,15 @@
 - Never Telegram: the note goes to the device in use (push.pick); if that is Telegram, to the first other way of the
   profile (iPhone app, Android app, Spark-Begleiter, browser); with none there is no note. Apple carries only a fixed
   sentence (apns.py), the code waits on the Spark in memory for the note's own time; nothing is written to disk.
+- Ablauf (pl_mail-Ideen 1, Dominik 2026-11-13 „1-7“): when the mail says how long the code is valid („gültig 10
+  Minuten“, „bis 09:30 Uhr“, „expires in 15 minutes“; valid_until, fixed rules, counted from the mail's own time),
+  the note is over then on every device (push.send bis) and is not followed up; a mail already past it makes no note.
+  Without such words a note lives as before.
 - The code is never logged and never on Live: lines carry fixed words and numbers, the profile only as
   profiles.log_name; Live (node E-Mail) shows notes today, a number.
 """
 import asyncio
+import datetime
 import email.utils
 import re
 import threading
@@ -43,12 +48,17 @@ NOT = re.compile(r"(?i)gutschein|rabatt|promo|coupon|voucher|discount|sendungs|t
 CODE = re.compile(r"(?<![\w.,/:+€$#-])(\d{3}[ -]\d{3}|\d{4,8}|(?=[A-Z0-9]*\d)(?=[A-Z0-9]*[A-Z])[A-Z0-9]{6,8})"
                   r"(?![\w/:€$%-]|[.,]\d)")
 YEAR = re.compile(r"(19|20)\d\d")
+# how long the mail says the code is valid: minutes, or a clock time (VALID_AT); at most VALID_MAX minutes
+VALID_MIN = re.compile(r"(?i)(?:gültig|gilt|läuft|verfällt|valid|expires?|expiring)[^.\n]{0,30}?(\d{1,4})\s*(?:min\b|minuten|minutes?)|"
+                       r"(\d{1,4})\s*(?:min\b|minuten|minutes?)\s*(?:lang\s+)?(?:gültig|valid)")
+VALID_AT = re.compile(r"(?i)(?:gültig bis|gilt bis|läuft um|verfällt um|valid until|expires at)\s*(?:um\s*)?([01]?\d|2[0-3])[:.]([0-5]\d)")
+VALID_MAX = 24 * 60
 COPY = re.compile(r"[A-Z0-9]{4,8}")    # what a note's first word may be for „Code kopieren“ (apps, Begleiter)
 
 _said = {}           # uid -> {mail ids a note was made for} (memory only)
 _hour = {}           # uid -> [times of notes]
 _lock = threading.Lock()
-_count = DayCounter(hinweise=0)
+_count = DayCounter(hinweise=0, abgelaufen=0)
 
 
 def find(subject, text):
@@ -65,6 +75,23 @@ def find(subject, text):
                     continue
                 return plain
     return ""
+
+
+def valid_until(text, sent):
+    """The time (epoch seconds) the code of a mail is over, by the mail's own words, counted from its time sent (an
+    aware datetime); 0 when it says nothing usable. A clock time is the next such time after sent, in sent's zone."""
+    text = str(text or "")[:TEXT_MAX]
+    m = VALID_MIN.search(text)
+    k = int(m.group(1) or m.group(2)) if m else 0
+    if 1 <= k <= VALID_MAX:
+        return sent.timestamp() + k * 60
+    m = VALID_AT.search(text)
+    if m:
+        at = sent.replace(hour=int(m.group(1)), minute=int(m.group(2)), second=0, microsecond=0)
+        if at <= sent:
+            at += datetime.timedelta(days=1)
+        return at.timestamp()
+    return 0
 
 
 def _way(uid):
@@ -110,7 +137,7 @@ def arrived(uid, now=None):
             _said[uid] = {ref for ref, _ in fresh}
     notes = 0
     for ref, h in fresh:
-        code = find(h.get("subject", ""), "")
+        code, text = find(h.get("subject", ""), ""), ""
         if not code:
             try:
                 msg = mail.message(uid, ref)
@@ -119,8 +146,14 @@ def arrived(uid, now=None):
                 continue
             if msg is None:
                 continue
-            code = find(h.get("subject", ""), mail.plain(msg)[0])
+            text = mail.plain(msg)[0]
+            code = find(h.get("subject", ""), text)
         if not code:
+            continue
+        bis = valid_until(h.get("subject", "") + "\n" + text, h["date"])
+        if bis and now >= bis:
+            _count.bump("abgelaufen")
+            print(f"mail: code expired | {name}", flush=True)
             continue
         way = _way(uid)
         if not way:
@@ -131,7 +164,7 @@ def arrived(uid, now=None):
             continue
         who = mail.known(uid, h.get("from", "")) or email.utils.parseaddr(h.get("from", ""))[1]
         who = re.sub(r"[^\w .&@-]", "", who.split(" <")[0])[:40].strip() or "?"
-        asyncio.run(push.send(uid, "Bestätigungscode", f"{code} · {who}", tag=TAG, to=way, why="Bestätigungscode"))
+        asyncio.run(push.send(uid, "Bestätigungscode", f"{code} · {who}", tag=TAG, to=way, why="Bestätigungscode", bis=bis))
         _count.bump("hinweise")
         notes += 1
     print(f"mail: code looked | {len(fresh)} new, {notes} notes | {name}", flush=True)
@@ -148,7 +181,8 @@ def wants_idle(uid, now=None):
 
 def for_live():
     """Zustand → Live, node E-Mail: on or off and notes today (a number, never a code or a sender)."""
-    return {"on": bool(features.chat_cfg().get("mail_code")), "today": _count.counts()["hinweise"]}
+    c = _count.counts()
+    return {"on": bool(features.chat_cfg().get("mail_code")), "today": c["hinweise"], "over": c["abgelaufen"]}
 
 
 def _hook():

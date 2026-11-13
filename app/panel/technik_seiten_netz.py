@@ -771,7 +771,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Post, Kalender, Kontakte
     "post": {
-        "stand": "29c3dd7358",
+        "stand": "569777a982",
         "bezug": {
             "kalenderserver.login": ["s2", "s10"], "kontaktserver._write": ["s10"], "kontaktserver.MAX_CARDS": ["s10"],
             "mail.MAX_ACCOUNTS": ["s3"], "mail.lookup": ["s1", "s5", "s7"], "calendars.view": ["s1"],
@@ -847,9 +847,11 @@ SEITEN = {
             S("s8", "frage", ("Etwas ändern?", "Change something?"),
               ("senden, ordnen, Kontakt ändern", "send, order, change a contact"),
               ("Lesen ist alles, was ohne weitere Schalter geht. Ein Bestätigungscode aus einer neuen Mail wird mit eigenem "
-               "Schalter nur eine Mitteilung aufs genutzte Gerät (mailcode.arrived), nie über Telegram, nie im Log.",
+               "Schalter nur eine Mitteilung aufs genutzte Gerät (mailcode.arrived), nie über Telegram, nie im Log; sagt die Mail, "
+               "wie lange er gilt (mailcode.valid_until), ist die Mitteilung danach überall weg.",
                "Reading is all that works without further switches. A confirmation code from a new mail becomes, with a "
-               "switch of its own, only a note on the device in use (mailcode.arrived), never by Telegram, never in a log."),
+               "switch of its own, only a note on the device in use (mailcode.arrived), never by Telegram, never in a log; if the "
+               "mail says how long it is valid (mailcode.valid_until), the note is gone everywhere after it."),
               ("ok", "nein", "s11")),
             S("s9", "schritt", ("Ändern mit Prüfung", "Change with a check"),
               ("eigener Schalter, Tipp des Menschen", "switch of its own, the person's tap"),

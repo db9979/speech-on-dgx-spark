@@ -5927,6 +5927,21 @@
 "titel": "Warum liegt die Mail hier? und Absender bestätigt",
 "text": "Pi updaten. Eine Mail öffnen, die eine Regel oder das Aufräumen in einen Ordner gelegt hat: über ihr steht, welche Regel oder Aufräum-Art sie dorthin gelegt hat, mit „Falsch einsortiert? Zurück in den Posteingang“ (holt sie zurück, danach fasst der Spark sie nicht wieder an). Eine Mail von einem großen Anbieter (z. B. Bank, Shop) zeigt „Absender bestätigt“. Ändere in E-Mail → Einstellungen kurz das Passwort eines Postfachs falsch: nach gut 10 Minuten steht über der Liste ein Satz dazu mit Weg; danach wieder richtig stellen.",
 "thread": "Mail mit Ideen aus pl_mail verbessern"
+},
+{
+"id": "P869",
+"v": 1426,
+"titel": "Sendungen über dem Posteingang",
+"text": "Pi updaten. Mit eingeschalteten Paketen und einer Versandmail der letzten Tage E-Mail öffnen: über dem Posteingang stehen bis zu 3 Sendungen, was heute kommt zuerst. „Verfolgen“ öffnet die Seite von DHL, Hermes, DPD, GLS oder UPS mit der Sendungsnummer. ✕ blendet eine Sendung aus, bis sie einen neuen Stand hat. Am iPhone dasselbe über der Liste.",
+"thread": "Mail mit Ideen aus pl_mail verbessern"
+},
+{
+"id": "P870",
+"v": 1426,
+"titel": "Bestätigungscode läuft ab",
+"text": "Pi updaten. Mit Bestätigungscodes an: einen Code anfordern, dessen Mail „gültig für 10 Minuten“ o. Ä. sagt. Die Mitteilung kommt wie bisher; nach Ablauf zeigt ein Tippen darauf „nicht mehr da“, der Begleiter und Android holen sie nicht mehr, und es kommt kein Nachfassen aufs Handy.",
+"thread": "Mail mit Ideen aus pl_mail verbessern",
+"test": "test_mailcode.Ablauf.test_notes_end_on_every_device"
 }
 ]
 }

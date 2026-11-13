@@ -298,17 +298,17 @@ def reachable(uid, now=None):
     return features.allowed("android", uid) and now - _polled.get(uid, -1e12) < POLLED_KEEP
 
 
-def keep(uid, title, body, tag="", now=None, vg="", m=""):
+def keep(uid, title, body, tag="", now=None, vg="", m="", bis=0):
     """A note for the profile's Android app; it fetches it with its next question. vg: the Vorgang it is about; once
     that is no longer open the app no longer fetches it (zustellung.closed). m: its number in mitteilungen.py, a tap
-    opens it as a card (#meldung=)."""
+    opens it as a card (#meldung=). bis: the time the note is over (a confirmation code's validity)."""
     now = time.time() if now is None else now
     with _lock:
         n = _seq.get(uid, 0) + 1
         _seq[uid] = n
         box = [x for x in _notes.get(uid, []) if now - x["t"] < NOTE_SECONDS]
         box.append({"n": n, "t": now, "title": str(title)[:200], "body": str(body)[:1500], "tag": str(tag)[:20],
-                    "vg": str(vg or "")[:12], "m": str(m or "")[:16]})
+                    "vg": str(vg or "")[:12], "m": str(m or "")[:16], "bis": float(bis or 0)})
         _notes[uid] = box[-NOTE_MAX:]
         waits = list(_waiters.get(uid, []))
     for loop, ev in waits:   # a waiting app hears it at once (keep may run in any thread)
@@ -325,9 +325,10 @@ def notes(uid, after, now=None):
     zu = set(zustellung.closed(uid, now))   # Meldung ans genutzte Gerät: done elsewhere, not fetched any more
     with _lock:
         _polled[uid] = now
-        box = [x for x in _notes.get(uid, []) if now - x["t"] < NOTE_SECONDS and x.get("vg", "") not in zu]
+        box = [x for x in _notes.get(uid, []) if now - x["t"] < NOTE_SECONDS and x.get("vg", "") not in zu
+               and not (x.get("bis") and now >= x["bis"])]
         _notes[uid] = box
-        return [{k: v for k, v in x.items() if k != "vg"} for x in box if x["n"] > after], _seq.get(uid, 0)
+        return [{k: v for k, v in x.items() if k not in ("vg", "bis")} for x in box if x["n"] > after], _seq.get(uid, 0)
 
 
 # ---------------------------------------------------------------- endpoints

@@ -1872,6 +1872,8 @@ def snapshot(view="admin", now=None):
             x["sub"] += f" · heute {post_shown['warum']}× „Warum hier“"
         if x["id"] == "mail" and post_shown.get("zustand"):  # Postfach-Zustand: times a mailbox's no was named today
             x["sub"] += f" · heute {post_shown['zustand']}× Postfach-Fehler gezeigt"
+        if x["id"] == "mail" and post_shown.get("pakete"):   # Sendungen über der Liste: strips shown today (a number)
+            x["sub"] += f" · heute {post_shown['pakete']}× Sendungen gezeigt"
         if x["id"] == "mail" and post_fd.get("answers"):   # Für dich: mailboxes answered from its kept reading today (a number)
             x["sub"] += f" · Für dich heute {post_fd['answers']}× aus der letzten Lesung"
         if x["id"] == "mail" and (post_imp["cards"] or post_imp["out"]):   # Wichtige Mail: cards, sorted out (numbers)
@@ -1879,7 +1881,8 @@ def snapshot(view="admin", now=None):
         if x["id"] == "mail" and post_sent:      # Mails senden: mails sent from the page today (a number, never to whom)
             x["sub"] += f" · heute {post_sent} gesendet"
         if x["id"] == "mail" and post_code.get("on"):   # Bestätigungscodes: notes today (a number, never a code)
-            x["sub"] += f" · Codes: heute {post_code['today']} Mitteilungen"
+            x["sub"] += f" · Codes: heute {post_code['today']} Mitteilungen" + \
+                (f", {post_code['over']} schon abgelaufen" if post_code.get("over") else "")
         if x["id"] == "mail" and post_later:     # Später senden: planned mails waiting (a number, never to whom)
             x["sub"] += f" · {post_later} Mails geplant"
         if x["id"] == "mail" and (post_sort.get("going") or post_sort.get("runs")):   # Alle Mails hier einordnen: numbers only

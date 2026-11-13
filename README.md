@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.426** Mail: up to 3 parcels above the inbox with a tracking link, a confirmation code goes away when the mail says it expires
 - **V01.1.425** Mail: search with to:, before:, after: and suggestions, "why is this mail here", sender confirmed, mailbox state
 - **V01.1.424** Measure Gemma 4 with its draft model (MTP), for more speed
 - **V01.1.423** Fix: no more wrong start display with hundreds of minutes while a model is measured
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.419** Calm mail page: the list and the open mail draw only what changed, a mail loads once, coming back shows the list at once
 - **V01.1.418** Vulnerabilities page: Status → Vulnerabilities shows known holes in panel packages, engines on tars, old Docker images and the operating system, checked against OSV every 6 hours, with weight, the version with the fix and a fixed sentence on what to do for each finding (off, admins only)
 - **V01.1.417** Gemma 4 can be measured on tars and compared with Qwen3.6
-- **V01.1.416** GPU clock cap for the model computer: less power and heat at almost the same speed, under Settings → Spark → Operation
 
 
 

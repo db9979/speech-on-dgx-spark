@@ -20,6 +20,7 @@ import mail  # noqa: E402
 import fuerdich  # noqa: E402
 import mailregeln  # noqa: E402
 import tidy  # noqa: E402
+import parcels  # noqa: E402
 
 TODAY = datetime.date(2026, 11, 13)
 UTC = datetime.timezone.utc
@@ -114,6 +115,44 @@ class Zustand(unittest.TestCase):
             z = mail.zustand("u", lambda kind, key: svc.get(key, {}), now)
         self.assertEqual([(x["name"], x["why"], x["ok"]) for x in z], [("GMX", "anmeldung", now - 3600), ("Neu", "fehler", 0)])
         self.assertIn("E-Mail → Einstellungen", z[0]["satz"][0])   # the way, a jump link on every device
+
+
+class Sendungen(unittest.TestCase):
+    """pl_mail-Ideen 1: the strip above the mail list from the last parcel reading, never a link from a mail."""
+    TODAY = datetime.date(2026, 11, 13)
+
+    def p(self, status, track="", carrier="DHL", day="", shop="Shop"):
+        return {"carrier": carrier, "shop": shop, "item": "", "status": status, "day": day,
+                "sent": "2026-11-12", "track": track, "at": 0}
+
+    def test_strip_today_first_three_fixed_links_and_hide(self):
+        found = [self.p("shipped", "00340434161094042557"), self.p("delivered", "1Z999AA10123456784", "UPS", "2026-11-01"),
+                 self.p("today", "JJD000390007123456", day="2026-11-13"), self.p("pickup", "", "Amazon", shop="Amazon"),
+                 self.p("date", "evil\"><x", "DPD", "2026-11-14"), self.p("shipped", "H1000000000001", "Hermes")]
+        kept = {}
+        with mock.patch.object(parcels, "usable", return_value=True), \
+                mock.patch.dict(parcels._cache, {"u-pk": (1000.0, (found, []))}), \
+                mock.patch.object(parcels.SUPPLY, "load", side_effect=lambda uid: kept), \
+                mock.patch.object(parcels.SUPPLY, "changed"), \
+                mock.patch.object(parcels, "_renew_soon") as renew:
+            s = parcels.strip("u-pk", self.TODAY, now=1000.0 + 60)
+            renew.assert_not_called()                                # fresh enough: no mailbox
+            self.assertEqual(len(s), parcels.STRIP)
+            self.assertIn("kommt heute", s[0]["satz"])               # today first, then pick-up, then a date
+            self.assertEqual(s[0]["link"], parcels.TRACK_URL["DHL"] + "JJD000390007123456")
+            self.assertEqual(s[1]["link"], "")                        # Amazon: no tracking page
+            self.assertEqual(s[2]["link"], "")                        # a number that is not plain: no link
+            for x in s:
+                self.assertTrue(x["link"] == "" or any(x["link"].startswith(u) for u in parcels.TRACK_URL.values()))
+            parcels.hide("u-pk", s[0]["key"])
+            s2 = parcels.strip("u-pk", self.TODAY, now=1000.0 + 60)
+            self.assertNotIn(s[0]["key"], [x["key"] for x in s2])
+            found[2]["status"] = "pickup"                        # a new state comes back
+            self.assertIn(parcels.key(found[2]), [x["key"] for x in parcels.strip("u-pk", self.TODAY, now=1060.0)])
+            parcels.strip("u-pk", self.TODAY, now=1000.0 + parcels.RENEW + 1)
+            renew.assert_called_once()                               # old: read again, in the background
+        with mock.patch.object(parcels, "usable", return_value=False):
+            self.assertEqual(parcels.strip("u-pk", self.TODAY), [])
 
 
 if __name__ == "__main__":

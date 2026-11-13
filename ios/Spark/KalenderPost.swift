@@ -100,6 +100,13 @@ struct MailUndo {
     let text: String
 }
 
+/// one parcel above the mail list: the Spark's sentence and the carrier's own tracking page (never a link from a mail)
+struct Paket: Hashable {
+    let key: String
+    let satz: String
+    let link: URL?
+}
+
 struct MailText {
     let id: String
     let from: String
@@ -937,6 +944,8 @@ final class PostModel: ObservableObject {
     @Published var errors: [String] = []
     /// Postfach-Zustand (pl_mail-Ideen 7): the Spark's sentences for mailboxes that said no for a while
     @Published var zustand: [String] = []
+    /// Sendungen über der Liste (pl_mail-Ideen 1): at most 3 parcels of the Spark's last reading (parcels.strip)
+    @Published var pakete: [Paket] = []
     @Published var loading = true
     @Published var error: String?
     @Published var keptAt: Date?
@@ -1142,7 +1151,20 @@ final class PostModel: ObservableObject {
         zustand = (d["zustand"] as? [[String: Any]] ?? []).prefix(10).map { z in
             String(localized: "Postfach ") + String((z["name"] as? String ?? "").prefix(60)) + ": " + SparkAPI.satz((z["satz"] as? [String] ?? []).map { String($0.prefix(300)) })
         }
+        pakete = (d["pakete"] as? [[String: Any]] ?? []).prefix(3).compactMap { p in
+            guard let k = p["key"] as? String, k.count == 16, k.allSatisfy(\.isHexDigit) else { return nil }
+            let link = String((p["link"] as? String ?? "").prefix(300))
+            return Paket(key: k, satz: String((p["satz"] as? String ?? "").prefix(300)),
+                         link: link.hasPrefix("https://") ? URL(string: link) : nil)
+        }
         vor = String((d["vor"] as? String ?? "").prefix(200)); moreFail = nil; moreErr = []
+    }
+
+    /// ✕ on a parcel: away until it has a new state (the Spark keeps which)
+    func hidePaket(_ p: Paket) async {
+        pakete.removeAll { $0.key == p.key }
+        guard let api = SparkAPI.current else { return }
+        _ = try? await api.object("POST", "api/profile/parcels/hide", body: ["key": p.key])
     }
 
     /// at the end of the list: the next older page, in the inbox or the folder, with the search; never kept on the iPhone
@@ -1275,6 +1297,17 @@ struct PostView: View {
             if !m.moreErr.isEmpty { Text("Ältere Mails nicht erreicht: \(m.moreErr.joined(separator: ", "))").foregroundStyle(Theme.badText) }
             if !m.errors.isEmpty { Text("Nicht erreicht: \(m.errors.joined(separator: ", "))").foregroundStyle(Theme.badText) }
             ForEach(m.zustand, id: \.self) { z in Text(SparkAPI.way(z)).foregroundStyle(Theme.badText) }
+            if m.folder == nil && m.query.isEmpty {
+                ForEach(m.pakete, id: \.key) { p in
+                    HStack {
+                        Label { Text(verbatim: p.satz).font(.subheadline) } icon: { Image(systemName: "shippingbox") }
+                        Spacer()
+                        if let u = p.link { Link("Verfolgen", destination: u).font(.subheadline) }
+                        Button { Task { await m.hidePaket(p) } } label: { Image(systemName: "xmark") }
+                            .buttonStyle(.borderless).accessibilityLabel(Text("Ausblenden, bis sich etwas tut"))
+                    }
+                }
+            }
             if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
         }
         .navigationTitle(m.folder.map { Text(verbatim: $0.title) } ?? Text("E-Mail"))

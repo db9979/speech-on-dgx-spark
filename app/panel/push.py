@@ -283,7 +283,7 @@ def _why(tag):
     return next((v for k, v in WHY.items() if tag == k or (k.endswith("-") and tag.startswith(k))), "")
 
 
-async def send(uid, title, body, tag="", private=True, why="", to="", ref="", vg=""):
+async def send(uid, title, body, tag="", private=True, why="", to="", ref="", vg="", bis=0):
     """Sends a note once: to one device of the profile (pick), the iPhone app, Telegram (private notes,
     i.e. appointments, mails, the briefing, only when it allowed personal data there) or a browser.
     "hello" goes to the browsers only. to: the way the profile chose for this kind of note ("all": every way it
@@ -291,6 +291,8 @@ async def send(uid, title, body, tag="", private=True, why="", to="", ref="", vg
     (a Für-dich card), only for the Begleiter's buttons (begleiter.NOTE_ACTS), never sent anywhere. vg: the Vorgang
     of Offen the note is about (vorgaenge.py; a tag "vg-<id>" says it too): with Meldung ans genutzte Gerät a note
     nobody saw comes once more to the phone app, and leaves every device when the Vorgang is done (zustellung.py).
+    bis: the time the note is over (a confirmation code's validity, mailcode.py): no device shows or fetches it after,
+    a browser push lives at most until then (TTL), and it is not followed up.
     Drops subscriptions the push service no longer knows. Returns the number of devices reached."""
     import zustellung
     vg = vg or (tag[3:] if tag.startswith("vg-") else "")
@@ -316,10 +318,10 @@ async def send(uid, title, body, tag="", private=True, why="", to="", ref="", vg
         ways = [pick(uid, private, to)]
     n = 0
     for kind, targets in ways:
-        n += await _send_one(uid, kind, targets, title, body, tag, private, why, ref, **({"vg": vg} if vg else {}))
+        n += await _send_one(uid, kind, targets, title, body, tag, private, why, ref, **({"vg": vg} if vg else {}), **({"bis": bis} if bis else {}))
     if tag != "hello" and n:   # Meldung ans genutzte Gerät, stage 2: follow-up and „gelesen überall“
         zustellung.sent(uid, [k for k, _ in ways if k], {"title": title, "body": body, "tag": tag, "private": private,
-                                                          "why": why, "ref": ref}, vg, follow=not to,
+                                                          "why": why, "ref": ref, "bis": bis}, vg, follow=not to,
                         keys=[sub_id(x["endpoint"]) for _, targets in ways[:1] for x in targets[:5]])
     # one line per note, sent or not: the kind of note, the ways and how many devices it reached, never its text
     print(f"push: {_word(tag, why)} {'sent' if n else 'reached no device'} | {n} device(s) | "
@@ -332,23 +334,29 @@ def _word(tag, why):
     return why if why in set(WHY.values()) | {"Erinnerung"} else _why(tag) or "Hinweis"
 
 
-async def _send_one(uid, kind, targets, title, body, tag, private, why, ref="", vg=""):
+def ttl(bis, now=None):
+    """Seconds a browser push may wait at the push service: an hour, less when the note is over sooner (bis)."""
+    now = time.time() if now is None else now
+    return max(0, min(3600, int(bis - now))) if bis else 3600
+
+
+async def _send_one(uid, kind, targets, title, body, tag, private, why, ref="", vg="", bis=0):
     import apns
     import telegram
     t0 = time.time()
     # the iPhone app: Apple only carries "new message", the text waits on the Spark (apns.py)
-    n = await apns.send(uid, title, body, tag=tag, **({"vg": vg} if vg else {}), **({"ref": ref} if ref else {})) \
+    n = await apns.send(uid, title, body, tag=tag, **({"vg": vg} if vg else {}), **({"ref": ref} if ref else {}), bis=bis) \
         if kind == "app" else 0
     # a tapped note opens as a card in the conversation (mitteilungen.py): the devices get only its number "m"
     import mitteilungen
-    mid = mitteilungen.keep(uid, title, body, tag, vg, ref) if kind in ("and", "desk", "web") else ""
+    mid = mitteilungen.keep(uid, title, body, tag, vg, ref, bis=bis) if kind in ("and", "desk", "web") else ""
     if kind == "and":   # the Android app fetches it with its next question (android.py)
         import android
-        android.keep(uid, title, body, tag, **({"vg": vg} if vg else {}), m=mid)
+        android.keep(uid, title, body, tag, **({"vg": vg} if vg else {}), m=mid, bis=bis)
         n += 1
     if kind == "desk":  # the Spark-Begleiter on PC or Mac fetches it with its next poll (begleiter.py)
         import begleiter
-        begleiter.keep(uid, title, body, tag, ref=ref, **({"vg": vg} if vg else {}), m=mid)
+        begleiter.keep(uid, title, body, tag, ref=ref, **({"vg": vg} if vg else {}), m=mid, bis=bis)
         n += 1
     # a note naming a place in the panel opens it there when tapped (sw.js, way.js); with "m" as its card
     import wege
@@ -360,7 +368,7 @@ async def _send_one(uid, kind, targets, title, body, tag, private, why, ref="", 
             try:
                 r = await c.post(sub["endpoint"], content=encrypt(sub, payload), headers={
                     "Authorization": vapid(sub["endpoint"]), "Content-Encoding": "aes128gcm",
-                    "Content-Type": "application/octet-stream", "TTL": "3600", "Urgency": "high"})
+                    "Content-Type": "application/octet-stream", "TTL": str(ttl(bis)), "Urgency": "high"})
             except httpx.HTTPError as e:
                 print(f"push: browser push failed ({type(e).__name__})", flush=True)
                 continue

@@ -178,13 +178,16 @@ async def follow(now=None):
         if _was_seen(uid, x):
             print(f"push: nachfassen nicht noetig, gesehen {x['way']} | {who}", flush=True)
             continue
+        if x.get("bis") and now >= x["bis"]:    # a confirmation code past its validity (mailcode.py)
+            print(f"push: nachfassen nicht noetig, abgelaufen {x['way']} | {who}", flush=True)
+            continue
         have = push._have(uid, x["private"])
         phone = next((w for w in PHONES if have.get(w)), "")
         if not phone:
             print(f"push: nachfassen ohne handy {x['way']} | {who}", flush=True)
             continue
         got = await push.send(uid, x["title"], x["body"], tag=x["tag"], private=x["private"], why=x["why"], to=phone,
-                              ref=x["ref"], **({"vg": x["vg"]} if x["vg"] else {}))
+                              ref=x["ref"], **({"vg": x["vg"]} if x["vg"] else {}), **({"bis": x["bis"]} if x.get("bis") else {}))
         _count("nachgefasst")
         n += 1
         if x["vg"]:
