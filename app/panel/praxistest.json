@@ -5824,7 +5824,15 @@
 "titel": "Pakete auch aus Spark-Ordnern",
 "text": "Liegt eine Versandmail (DHL, Hermes, DPD, GLS, UPS, Amazon) nicht mehr im Posteingang, sondern in einem Ordner, in den der Spark sortiert (z. B. Spark/Benachrichtigungen oder ein eigener Ordner aus Mail-Regeln): Frag „Welches Paket kommt heute?“. Die Antwort nennt das Paket wie die Meldung unter „Von selbst“ (GitHub-Issue 1).",
 "thread": "Fehler per Assistent als Issue melden",
-"test": "test_extras.Parcels.test_mail_moved_into_a_spark_folder_still_counts"
+"test": "test_extras.Parcels.test_mail_in_another_folder_still_counts"
+},
+{
+"id": "P856",
+"v": 1412,
+"titel": "Pakete aus eigenen Ordnern",
+"text": "Eine Versandmail (DHL, Hermes, DPD, GLS, UPS, Amazon) liegt in einem eigenen Ordner, etwa „Lieferungen“ (von einer Regel in Apple Mail). Frag „Was bekomme ich heute per Post?“: die Antwort nennt das Paket. Eine Versandmail im Papierkorb oder Spam zählt nicht (GitHub-Issue 2).",
+"thread": "Fehler per Assistent als Issue melden",
+"test": "test_extras.Parcels.test_mail_in_another_folder_still_counts"
 }
 ]
 }

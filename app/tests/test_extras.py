@@ -324,24 +324,29 @@ class Parcels(unittest.TestCase):
             helpers.set_config(mail=False, parcels=False, deny={})
 
 
-    def test_mail_moved_into_a_spark_folder_still_counts(self):
-        """Issue 1: von selbst „DHL-Paket: kommt heute.“, minutes later the tool found nothing; the shipping mail had
-        left the inbox. The inbox and the folders the Spark sorts into are read, other folders never."""
+    def test_mail_in_another_folder_still_counts(self):
+        """Issue 1: von selbst „DHL-Paket: kommt heute.“, minutes later the tool found nothing, the mail had moved into a
+        folder the Spark sorts into. Issue 2: an own folder „Lieferungen“ (a rule of the mail program). Every folder
+        is read except sent, drafts, trash and spam; the server picks the carriers' mails; nothing is changed."""
         import mail
         import parcels
-        import tidy
         old = mail.IMAP
         mail.IMAP = helpers.FakeMailbox
         try:
-            helpers.FakeMailbox.reset()
-            d = tidy.state("parcels-moved")
-            helpers.FakeMailbox.put(tidy.folder_of(d, "benachrichtigungen"), helpers.box_mail(
-                "DHL <noreply@dhl.de>", "Ihr Paket von Thalia kommt heute", "Sendungsnummer: JJD000390012345678"))
-            helpers.FakeMailbox.put("Privat", helpers.box_mail("DHL <noreply@dhl.de>", "Ihr Paket von Otto kommt heute"))
+            helpers.FakeMailbox.reset(inbox=[helpers.box_mail("Anna <anna@example.org>", "Kommt dein Paket heute?")])
+            put = helpers.FakeMailbox.put
+            put("Spark/Benachrichtigungen", helpers.box_mail("DHL <noreply@dhl.de>", "Ihr Paket von Thalia kommt heute",
+                                                             "Sendungsnummer: JJD000390012345678"))
+            put("Lieferungen", helpers.box_mail("Hermes <info@myhermes.de>", "Deine Sendung von Otto kommt heute"))
+            for box in ("Sent Messages", "Junk", "Deleted Messages", "Drafts"):
+                put(box, helpers.box_mail("DPD <noreply@dpd.de>", f"Paket von {box.split()[0]} kommt heute"))
             acct = {"host": "imap.example", "user": helpers.MAIL_USER, "password": helpers.MAIL_PW}
-            found = parcels._scan_account(acct, 14, "parcels-moved")
-            self.assertEqual([(x["shop"], x["status"]) for x in found], [("Thalia", "today")])
+            found = parcels._scan_account(acct, 14)
+            self.assertEqual(sorted((x["carrier"], x["shop"], x["status"]) for x in found),
+                             [("DHL", "Thalia", "today"), ("Hermes", "Otto", "today")])
             self.assertFalse([c for c in helpers.FakeMailbox.calls if c[0] in ("MOVE", "COPY", "STORE", "APPEND", "CREATE")])
+            searches = [c[1] for c in helpers.FakeMailbox.calls if c[0] == "SEARCH"]
+            self.assertTrue(searches and all('"dhl.de"' in s and '"myhermes.de"' in s for s in searches))
         finally:
             mail.IMAP = old
 

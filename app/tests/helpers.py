@@ -782,6 +782,18 @@ class FakeMailbox:
                 elif k == "FROM":
                     w = a.pop(0).strip('"').lower()
                     hit = [m for m in hit if w in m["raw"].split(b"\r\n")[0].decode().lower()]
+                elif k == "OR":             # only a chain of FROM: OR FROM a OR FROM b FROM c
+                    ws = []
+                    while True:
+                        a.pop(0)
+                        ws.append(a.pop(0).strip('"').lower())
+                        if a and a[0] == "OR":
+                            a.pop(0)
+                            continue
+                        a.pop(0)
+                        ws.append(a.pop(0).strip('"').lower())
+                        break
+                    hit = [m for m in hit if any(w in m["raw"].split(b"\r\n")[0].decode().lower() for w in ws)]
                 elif k == "HEADER":         # the named header holds the text (Message-ID, In-Reply-To, References)
                     field = a.pop(0).lower() + ":"
                     w = a.pop(0).strip('"')

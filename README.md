@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.412** Fix parcels: shipping mails count in every own folder, not only the inbox and the Spark's folders
 - **V01.1.411** Fix parcels: shipping mails count also when the Spark sorted them into one of its folders; before, a proactive note named a parcel the question about it no longer found
 - **V01.1.410** Answer reports also show what the tools gave back: so it is clear whether the tool or the model was wrong
 - **V01.1.409** Source note: every knowledge answer says where it came from, "Where did you get that?" works without the model, a short sentence at the speaker
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.405** Steckbriefe for every feature without a tool of its own: 233 of 298 features now stand in one place each
 - **V01.1.404** State of the art: newer model engine with three holes closed, MCP in the new revision 2026-07-28, nightly check for holes also on the model computer
 - **V01.1.403** Test fix: a chat test cleans up its invitations, so a page-height test no longer wobbles
-- **V01.1.402** Audio overview voices: "▶ Sample" waits until VoiceDesign has loaded, and a discussion speaks with the described role voices; if VoiceDesign does not come, the script says why
 
 
 

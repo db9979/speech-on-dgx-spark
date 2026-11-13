@@ -15,6 +15,7 @@ import time
 
 import mail
 import features
+import postfach
 import tidy
 import vorrat
 from vorrat import Vorrat
@@ -144,32 +145,37 @@ def classify(sender, subject, text, sent):
             "track": (t.group(1) or t.group(2)).upper() if t else ""}
 
 
-def _boxes(b, uid):
-    """The inbox and the folders the Spark sorts mail into (tidy.py, mailregeln.py): a shipping mail moved out of the
-    inbox still counts (issue 1: „kommt heute“ von selbst, minutes later the tool found nothing)."""
-    out = ["INBOX"]
-    try:
-        d = tidy.state(uid)
-        for cat in tidy.cats(d):
-            f = b.name(tidy.folder_of(d, cat))
-            if f in b.boxes and f not in out:
-                out.append(f)
-    except Exception:
-        pass
+NOT_READ = ("sent", "drafts", "trash", "junk", "all", "group")   # postfach.role: never read for parcels
+MAX_BOXES = 60
+
+
+def _boxes(b):
+    """The inbox and every other folder except sent, drafts, trash, spam and Gmail's views (issue 1: a folder the Spark
+    sorts into; issue 2: an own folder „Lieferungen“ filled by a rule of the mail program)."""
+    rest = sorted((n for n in b.boxes if n.upper() != "INBOX" and postfach.role(b, n) not in NOT_READ), key=str.lower)
+    return ["INBOX"] + rest[:MAX_BOXES - 1]
+
+
+def _from_carrier():
+    """IMAP search words: sent by one of the carriers (the server picks them, so many folders stay quick)."""
+    doms = [d for _, ds in CARRIERS for d in ds]
+    out = []
+    for i, d in enumerate(doms):
+        out += (["OR"] if i < len(doms) - 1 else []) + ["FROM", f'"{d}"']
     return out
 
 
-def _scan_account(acct, days, uid):
+def _scan_account(acct, days):
     out, hit = [], []
     with tidy.Box(acct) as b:           # no tidying state: nothing can be moved; select = EXAMINE
-        for box in _boxes(b, uid):
+        for box in _boxes(b):
             try:
                 b.select(box)
             except ValueError:
                 if box == "INBOX":
                     raise ValueError("the inbox could not be opened")
                 continue
-            heads = mail.head_rows(b.c, sorted(b.search("SINCE", mail._since(days)))[-SCAN:])
+            heads = mail.head_rows(b.c, sorted(b.search("SINCE", mail._since(days), *_from_carrier()))[-SCAN:])
             hit += [(heads[u]["date"], box, u, heads[u]) for u in heads if carrier(heads[u]["from"])]
         hit.sort(key=lambda x: x[0], reverse=True)
         for box in dict.fromkeys(x[1] for x in hit[:40]):
@@ -214,7 +220,7 @@ def _read(uid, days):
     found, errors = [], []
     for a in mail.get(uid)["accounts"]:
         try:
-            found += _scan_account(a, days, uid)
+            found += _scan_account(a, days)
         except (ValueError, OSError, imaplib.IMAP4.error) as e:
             errors.append((a.get("name", ""), str(e) if isinstance(e, ValueError) else type(e).__name__))
     found.sort(key=lambda x: x["at"], reverse=True)

@@ -4709,7 +4709,15 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Wetter, Kontakte, Pakete",
-"text": "Wetter, Kontakte, Pakete: drei kleine Dienste, standardmäßig aus; vom Admin unter Funktionen freigegeben gelten sie für jedes Profil (Ort und Adressbuch richtet jedes Profil unter „Ich“ ein), nie für Gäste. *Wetter* kommt direkt von Open-Meteo (ohne Schlüssel, nur die Koordinaten gehen raus, eigene Adresse einstellbar); der Spark baut feste Sätze aus den Zahlen, auch fürs Briefing und den Wetterhinweis unter „Von selbst“. *Kontakte* liest ein Adressbuch über CardDAV (iCloud: https://contacts.icloud.com mit app-spezifischem Passwort, Nextcloud, andere) einmal am Tag, verschlüsselt gespeichert: Telefonnummern, Mailadressen, Geburtstage (Briefing und Meldung), Namen statt Adressen bei Mails; Kontakttext zählt als Text von draußen. *Pakete* erkennt Versandmails von DHL, Hermes, DPD, GLS, UPS und Amazon im eigenen Postfach (14 Tage; Posteingang und die Ordner, in die der Spark beim Aufräumen oder nach Mail-Regeln sortiert, ab V01.1.411, andere Ordner nie) und sagt, was heute kommt, unterwegs ist, zur Abholung liegt oder zugestellt wurde; keine Paketfirma wird gefragt, Paketzeilen zählen als Mailtext."
+"text": "Wetter, Kontakte, Pakete: drei kleine Dienste, standardmäßig aus; vom Admin unter Funktionen freigegeben gelten sie für jedes Profil (Ort und Adressbuch richtet jedes Profil unter „Ich“ ein), nie für Gäste. *Wetter* kommt direkt von Open-Meteo (ohne Schlüssel, nur die Koordinaten gehen raus, eigene Adresse einstellbar); der Spark baut feste Sätze aus den Zahlen, auch fürs Briefing und den Wetterhinweis unter „Von selbst“. *Kontakte* liest ein Adressbuch über CardDAV (iCloud: https://contacts.icloud.com mit app-spezifischem Passwort, Nextcloud, andere) einmal am Tag, verschlüsselt gespeichert: Telefonnummern, Mailadressen, Geburtstage (Briefing und Meldung), Namen statt Adressen bei Mails; Kontakttext zählt als Text von draußen. *Pakete* erkennt Versandmails von DHL, Hermes, DPD, GLS, UPS und Amazon im eigenen Postfach (14 Tage; Posteingang und jeder andere Ordner außer Gesendet, Entwürfe, Papierkorb, Spam und den Sammelansichten, ab V01.1.412, auch eigene Ordner wie „Lieferungen“; der Mailserver sucht dabei nur nach den Absendern der Paketdienste, gelesen wird ohne etwas zu ändern) und sagt, was heute kommt, unterwegs ist, zur Abholung liegt oder zugestellt wurde; keine Paketfirma "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Wetter, Kontakte, Pakete",
+"text": "wird gefragt, Paketzeilen zählen als Mailtext."
 },
 {
 "lang": "de",
@@ -22125,7 +22133,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Weather, contacts, parcels",
-"text": "Weather, contacts, parcels: three small services, off by default; once the admin releases them under Features they work for every profile (each profile sets up place and address book under \"Me\"), never for guests. *Weather* comes straight from Open-Meteo (no key, only the coordinates leave, own address configurable); the Spark builds fixed sentences from the numbers, also for the briefing and the proactive weather note. *Contacts* reads an address book over CardDAV (iCloud: https://contacts.icloud.com with an app-specific password, Nextcloud, others) once a day, kept encrypted: phone numbers, e-mail addresses, birthdays (briefing and notice), names instead of addresses in mail; contact text counts as outside text. *Parcels* recognises shipping mails of DHL, Hermes, DPD, GLS, UPS and Amazon in the own mailbox (14 days; the inbox and the folders the Spark sorts into when tidying or by mail rules, since V01.1.411, never other folders) and says what comes today, is on its way, waits for pick-up or was delivered; no carrier is asked, parcel lines count as mail text."
+"text": "Weather, contacts, parcels: three small services, off by default; once the admin releases them under Features they work for every profile (each profile sets up place and address book under \"Me\"), never for guests. *Weather* comes straight from Open-Meteo (no key, only the coordinates leave, own address configurable); the Spark builds fixed sentences from the numbers, also for the briefing and the proactive weather note. *Contacts* reads an address book over CardDAV (iCloud: https://contacts.icloud.com with an app-specific password, Nextcloud, others) once a day, kept encrypted: phone numbers, e-mail addresses, birthdays (briefing and notice), names instead of addresses in mail; contact text counts as outside text. *Parcels* recognises shipping mails of DHL, Hermes, DPD, GLS, UPS and Amazon in the own mailbox (14 days; the inbox and every other folder except sent, drafts, trash, spam and the collected views, since V01.1.412, also own folders like \"Deliveries\"; the mail server searches only for the carriers' senders, nothing is changed) and says what comes today, is on its way, waits for pick-up or was delivered; no carrier is asked, parcel lines count as mail text."
 },
 {
 "lang": "en",
