@@ -68,6 +68,12 @@ MAX_BODY = 48 * 1024
 MAX_OPEN_UID, MAX_OPEN_ALL = 20, 200
 DAY_DRAFTS_UID, DAY_SENT_UID, DAY_SENT_ALL, GAP_S = 10, 3, 10, 60
 MINUTES = (10, 30, 60)
+# Käfer-Symbol (Dominik 2026-11-13, 3a): a report is a fault or a wish for something better; label „verbesserung“
+KINDS = {"fehler": ("Fehler", "Fault"), "verbesserung": ("Verbesserung", "Improvement")}
+# labels other modules may add to a report they send through send() (d["labels"]): thread „Schwachstellen gegen OSV
+# prüfen“ (Beheben lassen); anything else is dropped
+EXTRA_LABELS = ("schwachstelle",)
+MAX_PAGE, MAX_PAGEERR = 80, 20      # the page's name; at most this many lines of the page's own errors
 LINE_MAX = 300
 # the areas a report can be about: key -> (German, English, Diagnose areas of logfilter.AREAS)
 AREAS = {"sprache": ("Sprache und Hören", "Speech and listening", ("chat", "room", "esp32", "watch")),
@@ -471,8 +477,10 @@ def clean_text(s, n=MAX_TEXT):
 
 
 def create(uid, name, channel, text, area="sonstiges", minutes=30, logs=False, reqs=True, sysinfo=True, applog="",
-           staff=False, may_logs=False, tid=None, now=None):
-    """A new draft, already anonymized. Returns it (as `view` shows it). Raises HTTPException on limits."""
+           staff=False, may_logs=False, tid=None, now=None, kind="fehler", page="", pageerr=""):
+    """A new draft, already anonymized. Returns it (as `view` shows it). Raises HTTPException on limits.
+    kind: KINDS; page and pageerr (the Käfer on every page): the page's name and its own errors in the browser
+    (JavaScript errors, failed requests), outside data like the app log, anonymized like every line."""
     now = time.time() if now is None else now
     text = clean_text(text)
     if len(text) < 3:
@@ -483,6 +491,8 @@ def create(uid, name, channel, text, area="sonstiges", minutes=30, logs=False, r
         minutes = 30
     if channel not in CHANNELS:
         channel = "panel"
+    if kind not in KINDS:
+        kind = "fehler"
     with _lock:
         mine = [d for d in _all(now) if d.get("uid") == uid]
         if len([d for d in mine if d.get("status") == "entwurf"]) >= MAX_OPEN_UID or len(_all(now)) >= MAX_OPEN_ALL:
@@ -497,23 +507,27 @@ def create(uid, name, channel, text, area="sonstiges", minutes=30, logs=False, r
     parts["lines"] = _clip([a.text(x, log=True) for x in diagnose(area, minutes, now)]) if logs and may_logs else []
     app = [x for x in str(applog or "")[:MAX_APPLOG].splitlines() if x.strip()]
     parts["applog"] = _clip([a.text(x, log=True) for x in app]) if app else []
-    d = {"id": secrets.token_hex(5), "t": round(now, 1), "uid": uid or "", "channel": channel, "area": area,
+    where = clean_text(page, MAX_PAGE).replace("\n", " ").strip() if isinstance(page, str) else ""
+    errs = [x for x in str(pageerr or "")[:MAX_APPLOG].splitlines() if x.strip()][-MAX_PAGEERR:]
+    parts["page"] = ([a.text("Seite: " + where)] if where else []) + _clip([a.text(x, log=True) for x in errs])
+    d = {"id": secrets.token_hex(5), "t": round(now, 1), "uid": uid or "", "channel": channel, "area": area, "kind": kind,
          "minutes": minutes, "status": "entwurf", "parts": parts, "counts": dict(a.n), "issue": None}
     with _lock:
         _write(d)
     _live_mark("Entwurf angelegt", channel)
-    print(f"meldung: Entwurf {d['id']} | {channel} | {area} | {len(parts['lines'])} Logzeilen | "
-          f"{len(parts['requests'])} Anfragen | {sum(a.n.values())} ersetzt", flush=True)
+    print(f"meldung: Entwurf {d['id']} | {channel} | {area} | {kind} | {len(parts['lines'])} Logzeilen | "
+          f"{len(parts['requests'])} Anfragen | {len(errs)} Seitenfehler | {sum(a.n.values())} ersetzt", flush=True)
     return d
 
 
 def title(d):
     first = re.sub(r"\s+", " ", d["parts"]["text"]).strip()
     first = first[:70] + ("…" if len(first) > 70 else "")
-    return f"[{AREAS[d['area']][0]}] {first}"[:110]
+    kind = "Verbesserung · " if d.get("kind") == "verbesserung" else ""
+    return f"[{kind}{AREAS[d['area']][0]}] {first}"[:110]
 
 
-SECTIONS = (("qa", "Frage und Antwort"), ("results", "Ergebnisse der Werkzeuge"), ("source", "Quelle der Antwort"), ("way", "Weg der Anfrage"),
+SECTIONS = (("page", "Seite und ihre Fehler im Browser"), ("qa", "Frage und Antwort"), ("results", "Ergebnisse der Werkzeuge"), ("source", "Quelle der Antwort"), ("way", "Weg der Anfrage"),
             ("requests", "Anfragen (Logs → Anfragen)"), ("lines", "Logzeilen (Diagnose)"), ("applog", "App-Protokoll"),
             ("system", "System"))
 
@@ -532,7 +546,7 @@ def body(d, skip=()):
     import core
     skip = set(skip)
     p = d["parts"]
-    head = (f"**Bereich:** {AREAS[d['area']][0]} · **Version:** {core.app_version() or '?'} · **Weg:** {d['channel']} · "
+    head = (f"**Art:** {KINDS.get(d.get('kind'), KINDS['fehler'])[0]} · **Bereich:** {AREAS[d['area']][0]} · **Version:** {core.app_version() or '?'} · **Weg:** {d['channel']} · "
             f"**Zeitraum:** {d['minutes']} min · **Entwurf:** {d['id']}")
     out = [head, "", "### Beschreibung", "", p["text"]]
     rows = numbered(d)
@@ -565,6 +579,7 @@ def preview(d, skip=None):
 
 def view(d, me=None, names=None):
     out = {k: d.get(k) for k in ("id", "t", "channel", "area", "minutes", "status", "counts", "issue")}
+    out["kind"] = d.get("kind") or "fehler"
     out["text"] = d["parts"]["text"]
     out["lines"] = [{"n": n, "part": k, "line": ln} for n, k, ln in numbered(d)]
     out["mine"] = me is not None and d.get("uid") == me
@@ -661,12 +676,20 @@ async def check_token():
     return token_info()
 
 
+def labels(d):
+    """The issue's labels by fixed rules: von-spark, the area, falsche-antwort for an answer, verbesserung for a wish,
+    and only the EXTRA_LABELS another module asked for."""
+    out = ["von-spark", "bereich:" + d["area"]] + (["falsche-antwort"] if d.get("answer") else [])
+    out += ["verbesserung"] if d.get("kind") == "verbesserung" else []
+    return out + [x for x in (d.get("labels") or []) if x in EXTRA_LABELS and x not in out]
+
+
 async def send(d, t, b):
     """POST /repos/{repo}/issues. Returns (number, url). Labels only as a wish: without them it goes out anyway."""
     token = _token()
     if not token:
         raise HTTPException(409, "Kein GitHub-Token eingetragen. Nimm „Im Browser öffnen“ oder frag den Admin.")
-    payload = {"title": t, "body": b, "labels": ["von-spark", "bereich:" + d["area"]] + (["falsche-antwort"] if d.get("answer") else [])}
+    payload = {"title": t, "body": b, "labels": labels(d)}
     try:
         async with await _client() as c:
             r = await c.post(f"{API}/repos/{repo()}/issues", headers=_headers(token), json=payload)
@@ -1122,8 +1145,8 @@ def direct_on(c=None):
 
 
 async def direct(d, uid, channel):
-    """„Direkt an GitHub senden“ (chat.report_direct, off): the answer report goes out right away with question and
-    answer anonymized, only when the final leak check finds nothing and the limits allow it; else it stays a draft.
+    """„Direkt an GitHub senden“ (chat.report_direct, off): the answer report (and a report from the Käfer) goes out
+    right away with question and answer anonymized, only when the final leak check finds nothing and the limits allow it; else it stays a draft.
     Returns a fixed sentence (German) or "" when it was not tried."""
     if not direct_on() or not _token() or d.get("status") != "entwurf":
         return ""
@@ -1278,6 +1301,7 @@ async def get_reports(request: Request, id: str = ""):
             row["gh"] = states[num]
         rows.append(row)
     return {"areas": [{"key": k, "name": [v[0], v[1]]} for k, v in AREAS.items()], "minutes": list(MINUTES),
+            "kinds": [{"key": k, "name": list(v)} for k, v in KINDS.items()],
             "logs": who["logs"], "token": bool(_token()), "repo": repo(), "max_text": MAX_TEXT,
             "staff": who["staff"], "items": rows,
             "notify": _may_notify(who["uid"])}
@@ -1290,12 +1314,18 @@ async def post_draft(request: Request):
     b = await core.json_body(request, MAX_APPLOG + 8192)
     tid = b.get("trace") if isinstance(b.get("trace"), str) and re.fullmatch(r"[0-9a-f]{6}", b.get("trace") or "") else None
     applog = b.get("applog") if isinstance(b.get("applog"), str) and who["channel"] == "app" else ""
+    page = b.get("page") if isinstance(b.get("page"), str) else ""
+    pageerr = b.get("pageerr") if isinstance(b.get("pageerr"), str) else ""
     d = await asyncio.to_thread(   # a draft reads the journal (journalctl): off the loop
         create, who["uid"], who["name"], who["channel"], b.get("text", ""), str(b.get("area") or "sonstiges"),
         b.get("minutes") if isinstance(b.get("minutes"), int) else 30, logs=b.get("logs") is True,
         reqs=b.get("requests", True) is True, sysinfo=b.get("system", True) is True, applog=applog,
-        staff=who["staff"] and who["logs"], may_logs=who["logs"], tid=tid)
-    return dict(view(d, who["uid"]), preview=preview(d), raw=d.get("raw"))
+        staff=who["staff"] and who["logs"], may_logs=who["logs"], tid=tid, kind=str(b.get("kind") or "fehler"),
+        page=page, pageerr=pageerr)
+    # the Käfer (a page named): with „Direkt an GitHub“ on it goes out right away, like an answer report (direct)
+    said = await direct(d, who["uid"], who["channel"]) if page.strip() else ""
+    d = _read(d["id"]) or d
+    return dict(view(d, who["uid"]), preview=preview(d), raw=d.get("raw"), said=said)
 
 
 @router.post("/api/report/answer", dependencies=[Depends(assistant)])

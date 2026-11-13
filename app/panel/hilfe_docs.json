@@ -14517,7 +14517,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Zugang",
 "title": "Zugang",
-"text": "- Probleme melden (Funktionen → Zugang → „Probleme melden“; Ich → Probleme melden): Etwas klappt nicht?"
+"text": "- Probleme melden (Funktionen → Zugang → „Probleme melden“; Ich → Probleme melden): Der Käfer oben rechts auf jeder Seite (am Handy in der Leiste oben, in der iPhone-App oben in Assistent, Heute, Verlauf, Meine Sachen und Einstellungen) öffnet „Fehler oder Wunsch melden“: wähle Fehler oder Verbesserung, die Seite, ihr B …"
 },
 {
 "lang": "de",
@@ -16238,6 +16238,22 @@
 "head": "Probleme melden",
 "title": "Antwort als Fehler melden",
 "text": "nsgesamt), nie für Gäste, nie über MCP. Ausnahme vom „nur anonymisiert gespeichert“: Im Entwurf auf dem Spark bleiben Frage, Antwort, Werkzeug-Ergebnisse und Quelle im Klartext, sichtbar nur für das meldende Profil und die Admins (14 Tage, wie jeder Entwurf). An GitHub gehen Frage, Antwort und Werkzeug-Ergebnisse nur anonymisiert und nur, wenn sie in der Vorschau angehakt sind (ab Werk abgehakt; ältere Apps ohne Haken-Liste senden ohne sie). Label falsche-antwort. Das Profil braucht dafür nur die Freigabe „Probleme melden“; mit „Bewerten“ zählt der Bericht zugleich als 👎-Fall für den Einstellungs-Assistenten."
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Probleme melden",
+"title": "Käfer-Symbol: Fehler oder Wunsch von jeder Seite",
+"text": "Käfer-Symbol: Fehler oder Wunsch von jeder Seite (ab V01.1.415, Dominik 2026-11-13, Teil von „Probleme melden“, kein eigener Schalter): Oben rechts auf jeder Seite des Panels sitzt ein kleiner Käfer, am Handy in der Leiste oben neben dem Mikrofon, in der iPhone-App oben in Assistent, Heute, Verlauf, Meine Sachen und Einstellungen. Er öffnet „Fehler oder Wunsch melden“: oben die Wahl Fehler oder Verbesserung (auf GitHub Label verbesserung, Titel „[Verbesserung · Bereich] …“), der Bereich ist nach der Seite vorgewählt (auf Kalender, E-Mail und Kontakte etwa der Bereich „Mail, Kalender, Kontakte“, unter Zustand „Update und Betrieb“), der Zeitraum steht auf 10 Minuten, Admins haben die Diagnose-Logzeilen schon angehakt. Neu ist der Teil Seite und ihre Fehler im Browser: der Name der Seite und ihre letzten 20 Fehler (JavaScript-Fehler und gescheiterte Anfragen mit Status und Pfad, ohne Abfrageteil, nie Inhalte einer Anfrage), gesammelt nur im Speicher dieses Browsers; jede Zeile wird wie eine Logzeile anonymisiert (Zitiertes wird [INHALT]) und lässt sich in der Vorschau abwählen. Mit „Antwort-Meldungen direkt an GitHub“ geht eine Meldung vom Käfer sofort raus, wenn die Leck-Prüfung nich"
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Probleme melden",
+"title": "Käfer-Symbol: Fehler oder Wunsch von jeder Seite",
+"text": "ts findet. Andere Teile des Spark dürfen beim Senden nur die Labels aus meldung.EXTRA_LABELS dazugeben (schwachstelle); meldung.labels(d) setzt sie nach festen Regeln. Log meldung: Entwurf <id> | <weg> | <bereich> | fehler/verbesserung | n Logzeilen | n Anfragen | n Seitenfehler | n ersetzt. API: POST /api/report/draft mit zusätzlich kind (fehler, verbesserung), page (höchstens 80 Zeichen) und pageerr (Zeilen)."
 },
 {
 "lang": "de",
@@ -31757,7 +31773,7 @@
 "file": "Assistant and panel",
 "head": "Access",
 "title": "Access",
-"text": "- Reporting problems (Features → Access → \"Reporting problems\"; Me → Reporting problems): Something does not work?"
+"text": "- Reporting problems (Features → Access → \"Reporting problems\"; Me → Reporting problems): The ladybug on top right of every page (on the phone in the bar on top, in the iPhone app on top of Assistant, Today, History, My things and Settings) opens \"Report a fault or a wish\": choose fault or improvement, the page, its area, the …"
 },
 {
 "lang": "en",
@@ -33398,6 +33414,22 @@
 "head": "Reporting problems",
 "title": "Report an answer as wrong",
 "text": "or guests, never over MCP. Exception to \"stored only anonymized\": in the draft on the Spark question, answer, tool results and source stay in plain words, visible only to the reporting profile and the admins (14 days, like every draft). To GitHub question, answer and tool results go only anonymized and only when ticked in the preview (unticked by default; older apps without a tick list send without them). Label falsche-antwort. The profile only needs the release of \"Reporting problems\"; with \"Rating\" the report also counts as a 👎 case for the settings assistant."
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Reporting problems",
+"title": "Ladybug: a fault or a wish from every page",
+"text": "Ladybug: a fault or a wish from every page (since V01.1.415, Dominik 2026-11-13, part of \"Reporting problems\", no switch of its own): on top right of every page of the panel sits a small ladybug, on the phone in the bar on top beside the microphone, in the iPhone app on top of Assistant, Today, History, My things and Settings. It opens \"Report a fault or a wish\": on top the choice Fault or Improvement (on GitHub label verbesserung, title \"[Verbesserung · area] …\"), the area is preselected after the page (on calendar, e-mail and contacts for instance the area \"Mail, calendar, contacts\", under Status \"Update and operation\"), the time window is 10 minutes, admins have the diagnose log lines ticked already. New is the part page and its errors in the browser: the page's name and its last 20 errors (JavaScript errors and failed requests with status and path, without the query part, never the contents of a request), collected only in this browser's memory; every line is anonymized like a log line (quoted text becomes [INHALT]) and can be unticked in the preview. With \"Answer reports straight to GitHub\" a report from the ladybug goes out at once when the leak check finds nothing. Other par"
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Reporting problems",
+"title": "Ladybug: a fault or a wish from every page",
+"text": "ts of the Spark may add only the labels in meldung.EXTRA_LABELS when sending (schwachstelle); meldung.labels(d) sets them by fixed rules. Log meldung: Entwurf <id> | <way> | <area> | fehler/verbesserung | n Logzeilen | n Anfragen | n Seitenfehler | n ersetzt. API: POST /api/report/draft with in addition kind (fehler, verbesserung), page (at most 80 characters) and pageerr (lines)."
 },
 {
 "lang": "en",

@@ -1656,6 +1656,61 @@ class Browser(unittest.TestCase):
             for i in ids:
                 documents.delete(me, i)
 
+    def test_report_bug_on_every_page(self):
+        """Käfer-Symbol (Dominik 2026-11-13): on top of every page while „Probleme melden“ is on, never without it; it
+        opens the report window with the page's name, the area that fits it, the choice Fehler/Verbesserung and the
+        page's own errors in the browser (a failed request here), and the draft carries them as lines that can be
+        ticked off; the window stays inside the screen."""
+        import os
+
+        async def go():
+            async with async_playwright() as p:
+                for name, w, h in VIEWS:
+                    helpers.set_config(report=False)
+                    br, pg, errors = await self.page(p, w, h, csp=True)
+                    await self.loaded(pg)
+                    bug = "#aptrail [data-ap=bug]" if w < 760 else "#rpbug"   # the phone: in the bar on top
+                    self.assertFalse(await pg.is_visible("#rpbug"), name)
+                    self.assertEqual(await pg.locator("#aptrail [data-ap=bug]").count(), 0, name)
+                    helpers.set_config(report=True)
+                    await pg.reload()
+                    await self.until(pg, "typeof PROFILE!=='undefined'&&!!PROFILE")
+                    await pg.evaluate("document.getElementById('wizmodal')&&(document.getElementById('wizmodal').style.display='none')")
+                    await pg.evaluate("goSec('cal')")
+                    await self.loaded(pg)
+                    await pg.wait_for_selector(bug, state="visible", timeout=20000)
+                    box = await pg.locator(bug).bounding_box()
+                    self.assertLessEqual(box["x"] + box["width"], w, name)
+                    self.assertLess(box["y"], 120, f"{name}: Käfer nicht oben")
+                    await pg.evaluate("api('/api/report?id=zz').catch(()=>{})")   # a failed request of this page
+                    if os.environ.get("RP_SHOT"):
+                        await pg.screenshot(path=f"{os.environ['RP_SHOT']}/kaefer-{name}.png")
+                    await pg.click(bug)
+                    await pg.wait_for_selector("#rpbody .rptext", state="visible", timeout=20000)
+                    self.assertEqual(await pg.input_value("#rpbody .rparea"), "post", name)
+                    self.assertEqual(await pg.input_value("#rpbody .rpmin"), "10", name)
+                    self.assertEqual(await pg.locator("#rpbody [data-rpkind]").count(), 2)
+                    self.assertIn("1", await pg.inner_text("#rpbody .rppagen"))
+                    if os.environ.get("RP_SHOT"):
+                        await pg.screenshot(path=f"{os.environ['RP_SHOT']}/kaefer-fenster-{name}.png")
+                    await pg.click("#rpbody [data-rpkind=verbesserung]")
+                    await pg.fill("#rpbody .rptext", "Der Kalender könnte die Woche zeigen")
+                    await pg.click("#rpbody [data-rpmake]")
+                    await pg.wait_for_selector("#rpbody .rpbody", timeout=20000)
+                    title, body = await pg.inner_text("#rpbody .rptitle"), await pg.text_content("#rpbody .rpbody")
+                    self.assertIn("Verbesserung", title)
+                    self.assertIn("Seite:", body)
+                    self.assertIn("api: 4", body)
+                    over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                    self.assertLessEqual(over, 1, name)
+                    self.assertEqual(errors, [], name)
+                    await br.close()
+
+        try:
+            self.run_async(go())
+        finally:
+            helpers.set_config(report=False)
+
     def test_link_button_beside_add(self):
         """Links als Dokument (doklink.js, Dominik 2026-11-05: „sonst sehr versteckt“): „Link hinzufügen“ stands at the
         top of Ich → Dokumente right beside „＋ Hinzufügen“, on one line with it also on the phone, only while the

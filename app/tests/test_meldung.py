@@ -237,6 +237,48 @@ class Sending(Base):
         self.assertNotIn("RpSven", json.dumps(body))
         self.assertEqual(c.post("/api/report/send", json={"id": d["id"], "sig": p["sig"]}).status_code, 409)   # once
 
+    def test_bug_wish_with_the_page_and_its_errors(self):
+        """Käfer-Symbol (Dominik 2026-11-13): „Verbesserung“ gets its own label and title, the page's name and its own
+        browser errors come along anonymized (a quoted text and a mail address go), only EXTRA_LABELS may be added."""
+        meldung.token_save(TOKEN)
+        c, uid = profile("RpKai")
+        d = c.post("/api/report/draft", json={"text": "Der Kalender könnte die Woche zeigen", "area": "post",
+                                              "kind": "verbesserung", "page": "Kalender → Termine",
+                                              "pageerr": "14:00:01 js: Cannot read 'Termin mit Rpkai' of null\n"
+                                                         "14:00:02 api: 404 /api/profile/cal/x kai@example.org\n" * 15}).json()
+        self.assertEqual(d["kind"], "verbesserung")
+        page = [x["line"] for x in d["lines"] if x["part"] == "page"]
+        self.assertEqual(page[0], "Seite: Kalender → Termine")
+        self.assertEqual(len(page), 1 + meldung.MAX_PAGEERR)                      # the last 20 errors only
+        self.assertNotIn("kai@example.org", json.dumps(page))
+        self.assertNotIn("Termin mit Rpkai", json.dumps(page))
+        p = d["preview"]
+        self.assertTrue(p["title"].startswith("[Verbesserung · Mail, Kalender, Kontakte]"), p["title"])
+        self.assertIn("**Art:** Verbesserung", p["body"])
+        self.assertEqual(c.post("/api/report/send", json={"id": d["id"], "sig": p["sig"]}).status_code, 200)
+        body = [x for x in SENT if x[0] == "POST"][-1][2]
+        self.assertEqual(body["labels"], ["von-spark", "bereich:post", "verbesserung"])
+        e = c.post("/api/report/draft", json={"text": "Absturz", "kind": "<b>", "page": 7}).json()
+        self.assertEqual(e["kind"], "fehler")
+        self.assertFalse([x for x in e["lines"] if x["part"] == "page"])
+        self.assertEqual(meldung.labels({"area": "update", "labels": ["schwachstelle", "admin", "von-spark"]}),
+                         ["von-spark", "bereich:update", "schwachstelle"])
+
+    def test_bug_goes_out_at_once_with_direct(self):
+        """With „Antwort-Meldungen direkt an GitHub“ a report from the Käfer goes out at once; without a page (the
+        old window) it stays a draft for the preview."""
+        meldung.token_save(TOKEN)
+        helpers.set_config(report_direct=True)
+        try:
+            c, _ = profile("RpLea")
+            d = c.post("/api/report/draft", json={"text": "Knopf reagiert nicht", "page": "Listen"}).json()
+            self.assertEqual(d["status"], "gesendet")
+            self.assertIn("Nummer 7", d["said"])
+            d = c.post("/api/report/draft", json={"text": "Knopf reagiert nicht"}).json()
+            self.assertEqual(d["status"], "entwurf")
+        finally:
+            helpers.set_config(report_direct=False)
+
     def test_dropped_lines_need_a_new_preview(self):
         meldung.token_save(TOKEN)
         c, _ = profile("RpLars")

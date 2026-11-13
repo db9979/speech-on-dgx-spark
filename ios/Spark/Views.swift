@@ -256,6 +256,7 @@ struct ChatView: View {
                         .accessibilityLabel("Einstellungen")
                 }
             }
+            .kaefer("Assistent")
             .sheet(isPresented: $today) { TodayView() }
             .sheet(isPresented: $settings, onDismiss: { talk.settingsChanged() }) { SettingsView() }
             .sheet(isPresented: $history) { HistoryView() }
@@ -669,6 +670,7 @@ struct HistoryView: View {
             .navigationTitle("Verlauf")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Fertig") { dismiss() } } }
+            .kaefer("Verlauf")
             .task {
                 if let demo = Demo.convos { list = demo; loading = false; return }
                 if let k = Merken.convoList(), !k.list.isEmpty { list = k.list; keptAt = k.at }
@@ -1350,6 +1352,7 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("Einstellungen")
+            .kaefer("Einstellungen")
             .onAppear { openPages.removeAll() }   // back on this page: nothing below is open any more
             .task { await loadTalk() }
             .task {

@@ -15,11 +15,42 @@ struct ReportSection: View {
     }
 }
 
+/// Käfer-Symbol (Dominik 2026-11-13): a ladybug on top of the main views opens „Fehler oder Wunsch melden“ with the
+/// view's name; only while „Probleme melden“ is on for this profile (allowed.report).
+struct Kaefer: ViewModifier {
+    let page: String
+    @ObservedObject private var talk = Conversation.shared
+    @State private var open = false
+
+    func body(content: Content) -> some View {
+        content
+            .toolbar {
+                if talk.allowed.report {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button { open = true } label: { Image(systemName: "ladybug") }
+                            .accessibilityLabel("Fehler oder Wunsch melden")
+                    }
+                }
+            }
+            .sheet(isPresented: $open) { NavigationStack { ReportView(page: page) } }
+    }
+}
+
+extension View {
+    func kaefer(_ page: String) -> some View { modifier(Kaefer(page: page)) }
+}
+
 struct ReportView: View {
     struct Line: Identifiable { let id: Int; let part: String; let text: String }
     struct Area: Identifiable { let id: String; let name: String }
 
+    /// the view the ladybug was tapped on (nil: Einstellungen → Problem melden)
+    let page: String?
+    init(page: String? = nil) { self.page = page }
+
     @Environment(\.openURL) private var openURL
+    @Environment(\.dismiss) private var dismiss
+    @State private var kind = "fehler"
     @State private var text = ""
     @State private var area = "app"
     @State private var areas: [Area] = []
@@ -68,7 +99,16 @@ struct ReportView: View {
                 }
             } else {
                 Section {
-                    TextField("Was ist passiert?", text: $text, axis: .vertical).lineLimit(3...8)
+                    Picker("Art", selection: $kind) {
+                        Text("Fehler").tag("fehler")
+                        Text("Verbesserung").tag("verbesserung")
+                    }
+                    .pickerStyle(.segmented)
+                    if kind == "fehler" {
+                        TextField("Was ist passiert?", text: $text, axis: .vertical).lineLimit(3...8)
+                    } else {
+                        TextField("Was soll besser werden?", text: $text, axis: .vertical).lineLimit(3...8)
+                    }
                     if !areas.isEmpty {
                         Picker("Bereich", selection: $area) {
                             ForEach(areas) { a in Text(verbatim: a.name).tag(a.id) }
@@ -85,7 +125,10 @@ struct ReportView: View {
             }
             if let note { Section { Text(SparkAPI.way(note)) } }
         }
-        .navigationTitle("Problem melden")
+        .navigationTitle(page == nil ? Text("Problem melden") : Text("Fehler oder Wunsch melden"))
+        .toolbar {
+            if page != nil { ToolbarItem(placement: .cancellationAction) { Button("Schließen") { dismiss() } } }
+        }
         .task { await load() }
     }
 
@@ -117,11 +160,17 @@ struct ReportView: View {
         note = String(localized: "Lege an und anonymisiere …")
         Task {
             do {
-                var body: [String: Any] = ["text": text, "area": area, "minutes": 30]
+                var body: [String: Any] = ["text": text, "area": area, "minutes": page == nil ? 30 : 10, "kind": kind]
+                if let page { body["page"] = "iPhone → " + page }
                 if withLog { body["applog"] = AudioEngine.diary.suffix(150).joined(separator: "\n") }
                 let d = try await api.post("api/report/draft", body)
-                show(d)
-                note = nil
+                if d["status"] as? String == "gesendet" {   // „Direkt an GitHub“ on: sent at once from the ladybug
+                    note = d["said"] as? String ?? String(localized: "Auf dem Spark abgelegt.")
+                    reset()
+                } else {
+                    show(d)
+                    note = nil
+                }
             } catch {
                 note = error.localizedDescription
             }

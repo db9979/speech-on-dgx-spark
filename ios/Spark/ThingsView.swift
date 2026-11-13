@@ -297,6 +297,7 @@ struct ThingsSheet: View {
         NavigationStack {
             ThingsView()
                 .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Fertig") { dismiss() } } }
+                .kaefer("Meine Sachen")
         }
     }
 }

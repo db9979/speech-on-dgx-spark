@@ -69,6 +69,7 @@ struct TodayView: View {
             .navigationTitle("Heute")
             .navigationBarTitleDisplayMode(.large)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Fertig") { dismiss() } } }
+            .kaefer("Heute")
             .refreshable { await load() }
             .task { await load() }
         }

@@ -3640,3 +3640,8 @@ body.appview .ffilt button{flex:0 0 auto;overflow:visible}
 #pane-feat.fsplit>.savebar{width:var(--fbar-w,100%);box-sizing:border-box}
 #pane-feat.fsplit>.fdet{bottom:calc(var(--h-bar) + var(--s6))}
 #pane-feat.fsplit .fdin{max-height:calc(100vh - 2 * var(--s4) - var(--h-bar))}
+/* Käfer-Symbol (melden.js rpBug): Fehler oder Wunsch von jeder Seite melden; nur mit „Probleme melden“ */
+#rpbug[hidden],body.appview.apbaron #rpbug{display:none!important}
+main{position:relative}#rpbug{position:absolute;top:14px;right:14px;z-index:4;padding:8px;min-width:40px;min-height:40px;color:var(--mut);background:none;border:0}#rpbug svg{width:18px;height:18px}#rpbug:hover{color:var(--fg)}
+.rpkind{display:flex;gap:6px;margin-bottom:8px}.rpkind .b.on{background:var(--acc);color:var(--on-acc);border-color:var(--acc)}
+body.appview:not(.prof):not(.guest):not(.inchat) #aptrail [data-ap=bug]{margin-right:42px}   /* neben dem Mikrofon (#fab) */

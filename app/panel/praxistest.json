@@ -5841,6 +5841,21 @@
 "text": "Auf GitHub unter Settings → Secrets and variables → Actions → Variables die Variable LUECKEN_SCHLIESSEN mit dem Wert an anlegen. Dann Actions → „Lücke schließen“ → Run workflow: der Lauf wird grün; gibt es kein Panel-Paket mit Lücke und Fix, steht im Schritt Raise „luecke: nichts“. Das Issue „Pakete mit bekannter Lücke“ nennt bei jedem Paket jetzt Schweregrad und „behoben in“.",
 "thread": "Schwachstellen gegen OSV prüfen",
 "test": "test_pakete_pruefen.Weg1.test_the_workflow"
+},
+{
+"id": "P858",
+"v": 1415,
+"titel": "Käfer: Fehler oder Wunsch von jeder Seite",
+"text": "Am Rechner oben rechts auf einer Seite (z. B. Kalender) auf den Käfer tippen, am Handy auf den Käfer in der Leiste oben. Das Fenster „Fehler oder Wunsch melden“ hat den Bereich passend zur Seite vorgewählt und 10 Minuten. „Verbesserung“ wählen, kurz beschreiben, Entwurf anlegen: die Vorschau zeigt „Seite: …“ und die Fehler der Seite im Browser; gesendet hat das Issue das Label verbesserung.",
+"thread": "Fehler und Wünsche als Issue melden",
+"test": "test_ui_browser.Browser.test_report_bug_on_every_page"
+},
+{
+"id": "P859",
+"v": 1415,
+"titel": "Käfer in der iPhone-App",
+"text": "In der iPhone-App (TestFlight nach diesem Stand) oben im Assistenten, unter Heute, im Verlauf, unter Meine Sachen und in den Einstellungen den Marienkäfer antippen. „Fehler oder Wunsch melden“ öffnet sich mit Fehler/Verbesserung; Entwurf anlegen zeigt „Seite: iPhone → …“ in der Vorschau.",
+"thread": "Fehler und Wünsche als Issue melden"
 }
 ]
 }

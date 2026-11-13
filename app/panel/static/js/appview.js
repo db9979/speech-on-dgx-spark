@@ -112,7 +112,10 @@ function render(){if(!ON)return;if(manage.classList.contains('on')&&manageSig()!
   // an own page gets the same head as every other page: its name, and back to where one came from
   else if(ownOpen()){show=true;title=label(document.querySelector('nav button[data-s].on'));bl=TAB==='manage'?t('Spark verwalten','Manage the Spark'):t('Heute','Today')}
   else if(TAB==='manage'&&!page&&!pm&&!ownSec()){show=true;const n=manageNav();title=n.title;bl=n.back}
-  if(bl&&bl.trim()===title.trim())bl=t('Zurück','Back');   // „Funktionen ‹ Funktionen“
+  if(bl&&bl.trim()===title.trim())bl=t('Zurück','Back');
+  // Käfer-Symbol (melden.js rpBug): in the bar on top of every page that has the bar, else it stays in the page
+  if(show&&window.rpMay)th+=`<button type="button" class="apib" data-ap="bug" aria-label="${esc(t('Fehler oder Wunsch melden','Report a fault or a wish'))}">${SV('bug')}</button>`;
+  B.classList.toggle('apbaron',show);   // „Funktionen ‹ Funktionen“
   bar.hidden=!show;$('aptitle').textContent=title;back.hidden=!bl;back.querySelector('span').textContent=bl;
   // the back label takes the room up to the title, so „Verwalten“ stands whole beside a short title and shortens
   // beside a long one (Webanwendung 7, V01.0.750); one measurement per change of page
@@ -122,7 +125,7 @@ function render(){if(!ON)return;if(manage.classList.contains('on')&&manageSig()!
   sync()}
 bar.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
   if(b.id==='apback'){back();return}
-  const a=b.dataset.ap;if(a==='new')$('chatnew').click();else if(a==='hist')openHist();else if(a==='set')openSet();else if(a==='voice'){const c=$('chatvoice');if(c&&!c.disabled){c.checked=!c.checked;c.onchange()}}else if(a==='menu')$('mmenu').click();else if(a==='find')palOpen()});
+  const a=b.dataset.ap;if(a==='new')$('chatnew').click();else if(a==='hist')openHist();else if(a==='set')openSet();else if(a==='voice'){const c=$('chatvoice');if(c&&!c.disabled){c.checked=!c.checked;c.onchange()}}else if(a==='menu')$('mmenu').click();else if(a==='bug'&&window.rpBug)rpBug();else if(a==='find')palOpen()});
 // ---------------------------------------------------------------- one level back (top left, edge swipe, back gesture)
 function depth(){if(!ON)return 0;let d=sheet.hidden&&$('msheet').style.display!=='grid'?0:1;const pm=$('profmodal');
   if(pm.style.display==='grid'&&TAB==='me'&&pm.classList.contains('sub')&&!pm.classList.contains('one'))d++;

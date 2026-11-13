@@ -1811,7 +1811,7 @@ Jede Funktion des Spark mit ihrem Schalter, worauf sie aufbaut, wo man sie einri
 
 - **Zweiter Anmeldeschritt** (Funktionen → Zugang → „Zweiter Anmeldeschritt“; Ich → Sicherheit): Zur Anmeldung mit Name und PIN kommt ein Code aus einer Authenticator-App.
 
-- **Probleme melden** (Funktionen → Zugang → „Probleme melden“; Ich → Probleme melden): Etwas klappt nicht?
+- **Probleme melden** (Funktionen → Zugang → „Probleme melden“; Ich → Probleme melden): Der Käfer oben rechts auf jeder Seite (am Handy in der Leiste oben, in der iPhone-App oben in Assistent, Heute, Verlauf, Meine Sachen und Einstellungen) öffnet „Fehler oder Wunsch melden“: wähle Fehler oder Verbesserung, die Seite, ihr B …
 
 - **Admin über Meldungen informieren** (Funktionen → Zugang → „Admin über Meldungen informieren“; baut auf „Probleme melden“; Ich → Probleme melden): Sendet ein Profil eine Meldung an GitHub oder legt sie nur auf dem Spark ab, sagt der Assistent es den Admin-Profilen (Rolle Admin, der Haupt-Admin zuerst): bei offener Seite im Assistenten, sonst als Mitteilung aufs Gerät.
 

@@ -1811,7 +1811,7 @@ Every function of the Spark with its switch, what it builds on, where you set it
 
 - **Second sign-in step** (Features → Access → "Second sign-in step"; Me → Security): Signing in with name and PIN also needs a code from an authenticator app.
 
-- **Reporting problems** (Features → Access → "Reporting problems"; Me → Reporting problems): Something does not work?
+- **Reporting problems** (Features → Access → "Reporting problems"; Me → Reporting problems): The ladybug on top right of every page (on the phone in the bar on top, in the iPhone app on top of Assistant, Today, History, My things and Settings) opens "Report a fault or a wish": choose fault or improvement, the page, its area, the …
 
 - **Tell admins about reports** (Features → Access → "Tell admins about reports"; builds on "Reporting problems"; Me → Reporting problems): When a profile sends a report to GitHub or keeps it on the Spark only, the assistant tells the admin profiles (role Admin, the main admin first): in the assistant when the page is open, else as a note on the device.
 

@@ -21181,6 +21181,36 @@
         }
       }
     },
+    "Fehler oder Wunsch melden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Report a fault or a wish"
+          }
+        }
+      }
+    },
+    "Verbesserung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Improvement"
+          }
+        }
+      }
+    },
+    "Was soll besser werden?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What should get better?"
+          }
+        }
+      }
+    },
     "Antwort melden": {
       "localizations": {
         "en": {

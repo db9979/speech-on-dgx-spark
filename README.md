@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.415** Ladybug on top right of every page: report a fault or an improvement, with the page, its errors in the browser and the logs
 - **V01.1.414** Test fix: parcels opens the inbox exactly like every other reader again, a mail test flickered because of it
 - **V01.1.413** Vulnerabilities: the nightly run names weight and the version with the fix for every hole, a panel package is raised without Claude if wanted (tested first), and every new package version is checked at OSV before each push
 - **V01.1.412** Fix parcels: shipping mails count in every own folder, not only the inbox and the Spark's folders
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.408** Report a wrong answer as an issue: "Make an issue of it" or "Report" under the answer, with question, answer, source and the way of the request; straight to GitHub if wanted
 - **V01.1.407** Fix: the logs of a service no longer show weeks-old errors as if they were new
 - **V01.1.406** Steckbriefe for the last 65 features, the ones with tools: all 298 features now stand in one place each
-- **V01.1.405** Steckbriefe for every feature without a tool of its own: 233 of 298 features now stand in one place each
 
 
 

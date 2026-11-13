@@ -7,14 +7,31 @@ const RP={d:null,cur:null,skip:new Set(),root:null,busy:false,thread:null};
 const RP_ST={entwurf:['Entwurf','Draft'],gesendet:['gesendet','sent'],lokal:['nur lokal','local only'],sendet:['wird gesendet','sending']};
 const RP_CH={panel:['Panel','panel'],app:['iPhone-App','iPhone app'],android:['Android-App','Android app'],telegram:['Telegram','Telegram'],
   sprache:['Sprache','voice'],esp32:['Lautsprecher','speaker'],pebble:['Pebble-Uhr','Pebble watch'],begleiter:['Begleiter','companion']};
-const RP_PART={qa:['Frage/Antwort','question/answer'],results:['Werkzeug-Ergebnis','tool result'],source:['Quelle','source'],way:['Weg','way'],requests:['Anfrage','request'],lines:['Logzeile','log line'],applog:['App','app'],system:['System','system']};
+const RP_PART={page:['Seite','page'],qa:['Frage/Antwort','question/answer'],results:['Werkzeug-Ergebnis','tool result'],source:['Quelle','source'],way:['Weg','way'],requests:['Anfrage','request'],lines:['Logzeile','log line'],applog:['App','app'],system:['System','system']};
 const rpWhen=x=>x?new Date(x*1000).toLocaleString([], {dateStyle:'short',timeStyle:'short'}):'';
 const rpArea=k=>{const a=((RP.d||{}).areas||[]).find(x=>x.key===k);return a?t(a.name[0],a.name[1]):k};
 function rpMsg(x,err){const m=RP.root&&RP.root.querySelector('.rpmsg');if(m){m.textContent=x||'';m.className='fh rpmsg'+(err?' err':'')}}
+// Käfer-Symbol (Dominik 2026-11-13): the page's own errors (JavaScript errors and failed requests), only in this
+// browser's memory, the last RP_ERR_MAX; they go along only when the report is made from the Käfer and stay ticked off
+// in the preview like every line. Words and paths only, never a request's body or answer.
+const RP_ERR=[],RP_ERR_MAX=20;
+function rpNote(kind,what){const x=String(what||'').replace(/\s+/g,' ').replace(/[?#].*$/,'').slice(0,200);if(!x)return;
+  RP_ERR.push(new Date().toTimeString().slice(0,8)+' '+kind+': '+x);if(RP_ERR.length>RP_ERR_MAX)RP_ERR.shift()}
+window.rpNote=rpNote;
+window.addEventListener('error',e=>rpNote('js',(e.message||'')+(e.filename?' @ '+String(e.filename).split('/').pop()+':'+(e.lineno||0):'')));
+window.addEventListener('unhandledrejection',e=>rpNote('js',(e.reason&&e.reason.message)||String(e.reason||'')));
+// the page one is on and the area that fits it (preselected, the person may change it)
+const RP_AREA={chat:'antwort',chats:'antwort',cal:'post',post:'post',kontakte:'post',route:'antwort',finden:'antwort',
+  wbuch:'antwort',mappen:'antwort',live:'update',logs:'update',mon:'update',tech:'update',usage:'update',models:'update',prof:'geraete',apps:'app'};
+function rpHere(){if($('profmodal').style.display==='grid')return{page:t('Ich','Me')+(($('mepage')||{}).textContent?' → '+$('mepage').textContent:''),area:'sonstiges'};
+  const sec=document.querySelector('section.on'),id=sec?sec.id:'',nb=document.querySelector('nav button.on'),
+    nav=nb?[...nb.childNodes].filter(n=>n.nodeType===3).map(n=>n.textContent).join('').trim():'',
+    head=$('phead')&&!$('phead').hidden?$('pheadt').textContent:'';
+  return{page:[nav,head].filter((x,i,a)=>x&&a.indexOf(x)===i).join(' → ')||id,area:RP_AREA[id]||'sonstiges'}}
 async function rpLoad(){const r=await api('/api/report',{cache:'no-store'});RP.d=await r.json();return RP.d}
 // ---------------------------------------------------------------- the list and the form
-async function rpList(root){RP.root=root;RP.cur=null;RP.thread=null;
-  const intro=`<div class="intro">${t('Beschreib kurz, was nicht geklappt hat. Der Spark legt einen Entwurf an, ersetzt Namen, Mail-Adressen, Adressen und Inhalte durch Platzhalter und zeigt dir genau, was rausgehen würde. Erst nach deinem Blick geht es als Meldung (Issue) an GitHub.','Describe briefly what went wrong. The Spark makes a draft, replaces names, mail addresses, addresses and contents with placeholders and shows you exactly what would go out. Only after your look does it go to GitHub as a report (issue).')}</div>`;
+async function rpList(root,here){RP.root=root;RP.cur=null;RP.thread=null;here=here||RP.here||null;RP.here=here;
+  const intro=`<div class="intro">${here?esc(t('Beschreib kurz den Fehler oder was besser werden soll. Der Spark legt einen Entwurf an, ersetzt Namen, Mail-Adressen, Adressen und Inhalte durch Platzhalter und zeigt dir genau, was rausgehen würde. Erst nach deinem Blick geht es als Meldung (Issue) an GitHub.','Describe the fault or what should get better. The Spark makes a draft, replaces names, mail addresses, addresses and contents with placeholders and shows you exactly what would go out. Only after your look does it go to GitHub as a report (issue).')):t('Beschreib kurz, was nicht geklappt hat. Der Spark legt einen Entwurf an, ersetzt Namen, Mail-Adressen, Adressen und Inhalte durch Platzhalter und zeigt dir genau, was rausgehen würde. Erst nach deinem Blick geht es als Meldung (Issue) an GitHub.','Describe briefly what went wrong. The Spark makes a draft, replaces names, mail addresses, addresses and contents with placeholders and shows you exactly what would go out. Only after your look does it go to GitHub as a report (issue).')}</div>`;
   let d;try{d=await rpLoad()}catch(e){root.innerHTML=intro+`<div class="fh err">${esc(e.message)}</div>`;return}
   const opts=(xs,f)=>xs.map(f).join('');
   const item=x=>{const st=RP_ST[x.status]||[x.status,x.status],gh=x.gh?` · ${esc(x.gh.state==='erledigt'?t('erledigt','done'):t('offen','open'))}${x.gh.comments?' · '+x.gh.comments+' '+esc(t(x.gh.comments===1?'Antwort':'Antworten',x.gh.comments===1?'answer':'answers')):''}`:'';
@@ -26,24 +43,32 @@ async function rpList(root){RP.root=root;RP.cur=null;RP.thread=null;
       ${x.issue&&x.issue.url?`<a class="b" href="${esc(x.issue.url)}" target="_blank" rel="noopener noreferrer">GitHub</a>`:''}
       <button class="b" type="button" data-rpdel="${esc(x.id)}">${esc(t('Löschen','Delete'))}</button></span></li>`};
   const nsw=PROFILE&&root.id==='rpbox'&&d.notify?xsw('report_notify',t('Mich über neue Meldungen informieren','Tell me about new reports'),t('Als Admin sagt dir der Assistent, wenn ein Profil eine Meldung sendet oder ablegt: wer, Bereich und Weg, nie der Text. Aus: keine Nachricht an dich.','As an admin the assistant tells you when a profile sends or keeps a report: who, area and way, never the text. Off: no note to you.')):'';
+  const kinds=d.kinds||[{key:'fehler',name:['Fehler','Fault']}];
   root.innerHTML=intro+nsw+`
+    <div class="seg rpkind" role="group" aria-label="${esc(t('Art','Kind'))}">${kinds.map((k,i)=>`<button type="button" class="b${i?'':' on'}" data-rpkind="${esc(k.key)}" aria-pressed="${i?'false':'true'}">${esc(t(k.name[0],k.name[1]))}</button>`).join('')}</div>
     <label for="rp_text_${root.id}">${esc(t('Was ist passiert?','What happened?'))}</label>
     <textarea id="rp_text_${root.id}" class="rptext" rows="4" maxlength="${d.max_text||2000}" placeholder="${esc(t('z. B. „Der Lautsprecher in der Küche hat um 7 Uhr nicht geantwortet.“','e.g. "The kitchen speaker did not answer at 7."'))}"></textarea>
-    <div class="rowin rpsel"><select class="rparea" aria-label="${esc(t('Bereich','Area'))}">${opts(d.areas,a=>`<option value="${esc(a.key)}"${a.key==='sonstiges'?' selected':''}>${esc(t(a.name[0],a.name[1]))}</option>`)}</select>
-      <select class="rpmin" aria-label="${esc(t('Zeitraum','Time window'))}">${opts(d.minutes,m=>`<option value="${m}"${m===30?' selected':''}>${esc(t('letzte '+m+' Minuten','last '+m+' minutes'))}</option>`)}</select></div>
+    <div class="rowin rpsel"><select class="rparea" aria-label="${esc(t('Bereich','Area'))}">${opts(d.areas,a=>`<option value="${esc(a.key)}"${a.key===((here&&here.area)||'sonstiges')?' selected':''}>${esc(t(a.name[0],a.name[1]))}</option>`)}</select>
+      <select class="rpmin" aria-label="${esc(t('Zeitraum','Time window'))}">${opts(d.minutes,m=>`<option value="${m}"${m===(here?10:30)?' selected':''}>${esc(t('letzte '+m+' Minuten','last '+m+' minutes'))}</option>`)}</select></div>
     <label class="chk"><input type="checkbox" class="rpreq" checked> ${esc(t('Meine letzten Anfragen (nur Wege, Werkzeuge, Zeiten)','My last requests (only ways, tools, times)'))}</label>
     <label class="chk"><input type="checkbox" class="rpsys" checked> ${esc(t('Systemzustand (Version, Dienste, Speicher)','System state (version, services, memory)'))}</label>
-    ${d.logs?`<label class="chk"><input type="checkbox" class="rplogs"> ${esc(t('Diagnose-Logzeilen des ganzen Spark (anonymisiert)','Diagnose log lines of the whole Spark (anonymized)'))}</label>`:''}
+    ${here?`<label class="chk"><input type="checkbox" class="rppage" checked> ${esc(t('Diese Seite und ihre Fehler im Browser','This page and its errors in the browser'))} <small class="mut rppagen"></small></label>`:''}
+    ${d.logs?`<label class="chk"><input type="checkbox" class="rplogs"${here?' checked':''}> ${esc(t('Diagnose-Logzeilen des ganzen Spark (anonymisiert)','Diagnose log lines of the whole Spark (anonymized)'))}</label>`:''}
     <div class="row" style="margin-top:8px"><button class="b p" type="button" data-rpmake="1">${esc(t('Entwurf anlegen und ansehen','Make draft and view'))}</button></div>
     <div class="fh">${esc(t('Ziel: GitHub-Repo ','Target: GitHub repository '))}<b>${esc(d.repo)}</b>${d.token?'':esc(t(' · noch kein Token: Senden geht dann über „Im Browser öffnen“.',' · no token yet: sending then goes through "Open in the browser".'))}</div>
     <div class="fh rpmsg" role="status"></div>
     <h3 style="margin:14px 0 4px">${esc(d.staff?t('Alle Meldungen','All reports'):t('Meine Meldungen','My reports'))}</h3>
     <ul class="facts rplist">${d.items.map(item).join('')||`<li class="mut"><span>${esc(t('Noch keine.','None yet.'))}</span></li>`}</ul>`;
   if(nsw)xbind(root,()=>rpList(root));
+  const pn=root.querySelector('.rppagen');if(pn)pn.textContent='('+here.page+' · '+(RP_ERR.length?RP_ERR.length+' '+t('Fehler',RP_ERR.length===1?'error':'errors'):t('keine Fehler','no errors'))+')';
+  root.querySelectorAll('[data-rpkind]').forEach(b=>b.onclick=()=>root.querySelectorAll('[data-rpkind]').forEach(x=>{const on=x===b;x.classList.toggle('on',on);x.setAttribute('aria-pressed',on?'true':'false')}));
   root.querySelector('[data-rpmake]').onclick=async e=>{const b=e.currentTarget;if(RP.busy)return;RP.busy=true;b.disabled=true;rpMsg(t('Lege an und anonymisiere …','Making and anonymizing …'));
     const q=s=>root.querySelector(s);
+    const pg=here&&q('.rppage')&&q('.rppage').checked,kd=q('[data-rpkind].on');
     try{const r=await (await api('/api/report/draft',xjson('POST',{text:q('.rptext').value,area:q('.rparea').value,minutes:+q('.rpmin').value,
-        requests:q('.rpreq').checked,system:q('.rpsys').checked,logs:!!(q('.rplogs')&&q('.rplogs').checked)}))).json();
+        requests:q('.rpreq').checked,system:q('.rpsys').checked,logs:!!(q('.rplogs')&&q('.rplogs').checked),kind:kd?kd.dataset.rpkind:'fehler',
+        page:pg?here.page:'',pageerr:pg?RP_ERR.join('\n'):''}))).json();
+      if(r.status==='gesendet'){await rpList(root);rpMsg(r.said||t('Gesendet.','Sent.'));return}   // „Direkt an GitHub“
       RP.skip=new Set();rpShow(root,r)}
     catch(x){rpMsg(x.message,true)}finally{RP.busy=false;b.disabled=false}};
   root.querySelectorAll('[data-rpopen]').forEach(b=>b.onclick=async()=>{try{const r=await (await api('/api/report?id='+encodeURIComponent(b.dataset.rpopen))).json();RP.skip=new Set();rpShow(root,r)}catch(x){rpMsg(x.message,true)}});
@@ -123,10 +148,12 @@ async function rpThread(root,id){RP.root=root;
   catch(e){rpMsg(e.message,true)}}
 // ---------------------------------------------------------------- Ich page, window, admin settings
 async function showReport(){const box=$('rpbox');if(!box)return;if(!PROFILE||!RP_ON){box.innerHTML='';return}
-  if(RP.root===box&&(RP.cur||RP.thread))return;await rpList(box)}
-function rpOpen(){if(typeof closeSheet==='function')closeSheet();$('rpmodal').style.display='grid';rpList($('rpbody'))}
+  if(RP.root===box&&(RP.cur||RP.thread))return;RP.here=null;await rpList(box)}
+function rpOpen(here){if(typeof closeSheet==='function')closeSheet();$('rpmodal').style.display='grid';$('rphead').textContent=here?t('Fehler oder Wunsch melden','Report a fault or a wish'):t('Problem melden','Report a problem');RP.here=null;rpList($('rpbody'),here||null)}
+// the Käfer on top of every page: the window with this page, its area, its errors and the last 10 minutes
+function rpBug(){const h=rpHere();rpOpen(h)}
 function rpClose(){$('rpmodal').style.display='none';if(RP.root===$('rpbody'))RP.root=null}
-ON.rpOpen=()=>rpOpen();ON.rpClose=()=>rpClose();
+ON.rpOpen=()=>rpOpen();ON.rpBug=()=>rpBug();ON.rpClose=()=>rpClose();
 $('rpmodal').addEventListener('click',e=>{if(e.target===$('rpmodal'))rpClose()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('rpmodal').style.display==='grid')rpClose()});
 // the admin: the GitHub token (Funktionen → Probleme melden), shown as set / until when, never itself
@@ -143,6 +170,6 @@ async function rpAdmin(){const box=$('rpadmin');if(!box||!ADMIN)return;let d;try
   $('rptokdel').onclick=async()=>{if(!confirm(t('Token vom Spark entfernen? Widerrufen kannst du ihn auf GitHub.','Remove the token from the Spark? You revoke it on GitHub.')))return;try{await api('/api/admin/report/token',{method:'DELETE'});rpAdmin()}catch(e){msg(e.message)}}}
 // after /api/whoami (start.js): the footer link, the Logs button, "#melden" from the apps and the companion
 function rpStart(who){RP_ON=!!(who&&who.report);const may=RP_ON&&(!!who.admin||!!who.profile);
-  $('rpfoot').hidden=!may;const lb=$('logrp');if(lb)lb.hidden=!(RP_ON&&who.admin);
+  $('rpfoot').hidden=!may;const bug=$('rpbug');if(bug)bug.hidden=!may;window.rpMay=may;window.rpBug=rpBug;const lb=$('logrp');if(lb)lb.hidden=!(RP_ON&&who.admin);
   if(who&&who.admin)rpAdmin();
   if(may&&location.hash==='#melden'){try{history.replaceState(null,'',location.pathname+location.search)}catch{}rpOpen()}}

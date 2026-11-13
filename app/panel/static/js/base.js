@@ -140,7 +140,7 @@ const api=async(p,o={},code)=>{const hd=!code?null:typeof code==='string'?{'X-Sp
     const a=window.confirmAsk?await confirmAsk(wrong,opt,info):null;
     if(a){const r2=await api(p,o,a.code||{pk:a.pk});if(window.confirmRefresh)confirmRefresh();return r2}throw new Error(t('Abgebrochen: ohne Code keine Änderung.','Cancelled: no change without a code.'))}
   if(r.status===503&&window.notausLoad)notausLoad();   // the Notaus holds this off: band and page show it (notaus.js)
-  if(r.status===401&&!/^\/api\/(login|password|profile)/.test(p)&&window.showLogin){if(typeof elevated==='function'&&elevated()){location.reload();return r}showLogin()}if(!r.ok){const raw=await r.text();let d=raw;try{d=JSON.parse(raw).detail??raw}catch{}
+  if(r.status===401&&!/^\/api\/(login|password|profile)/.test(p)&&window.showLogin){if(typeof elevated==='function'&&elevated()){location.reload();return r}showLogin()}if(!r.ok){if(window.rpNote)rpNote('api',r.status+' '+p);const raw=await r.text();let d=raw;try{d=JSON.parse(raw).detail??raw}catch{}
     const e=new Error(errSay(r.status,d,raw));e.detail=typeof d==='string'?d:JSON.stringify(d);e.status=r.status;throw e}
   if(o.method&&o.method!=='GET'&&/^\/api\/(config|admin\/|profile\/)/.test(p)&&!/^\/api\/profile\/(setup|handoff)/.test(p))whoSoon();   // a switch may have changed
   return r};

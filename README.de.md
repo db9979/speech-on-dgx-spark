@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.415** Käfer-Symbol oben rechts auf jeder Seite: Fehler oder Verbesserung melden, mit Seite, ihren Fehlern im Browser und den Logs
 - **V01.1.414** Testfix: Pakete öffnet den Posteingang wieder genau wie jeder andere Leser, ein Mail-Test wackelte deshalb
 - **V01.1.413** Schwachstellen: der Nachtlauf nennt bei jeder Lücke Schweregrad und die Version mit dem Fix, ein Panel-Paket wird auf Wunsch ohne Claude angehoben (erst getestet), und vor jedem Push wird jede neue Paketversion bei OSV geprüft
 - **V01.1.412** Fix Pakete: Versandmails zählen in jedem eigenen Ordner, nicht nur im Posteingang und den Spark-Ordnern
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.408** Falsche Antwort als Issue melden: „Mach ein Issue draus“ oder „Melden“ unter der Antwort, mit Frage, Antwort, Quelle und Weg der Anfrage; auf Wunsch direkt an GitHub
 - **V01.1.407** Fix: Logs eines Dienstes zeigen keine Wochen alten Fehler mehr, als wären sie neu
 - **V01.1.406** Steckbriefe für die letzten 65 Funktionen, die mit Werkzeugen: alle 298 Funktionen stehen jetzt je an einer Stelle
-- **V01.1.405** Steckbriefe für jede Funktion ohne eigenes Werkzeug: 233 von 298 Funktionen stehen jetzt je an einer Stelle
 
 
 
