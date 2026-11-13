@@ -9,8 +9,13 @@ const SW_ORT={pi:['Pi · Python','Pi · Python'],tars:['tars · Python','tars ·
 // the fixed groups, in the order of the page: what to do
 // the apps' parts (osv.APP_TEILE)
 const SW_TEIL={ios:['iPhone-App','iPhone app'],android:['Android-App','Android app'],pebble:['Pebble-App','Pebble app'],begleiter:['Begleiter','Companion'],'panel-js':['Panel (JavaScript)','Panel (JavaScript)']};
-const SW_AKT={anheben:['Neue Version nötig','New version needed'],neu:['Neue Version nötig','New version needed'],
-  abbild:['Abbild erneuern','Renew the image'],alt:['Abbild erneuern','Renew the image'],os:['Betriebssystem: einspielen','Operating system: install'],kein_fix:['Noch kein Fix: beobachten','No fix yet: watch']};
+// how far the place is reachable (Paket 4, fixed sentences): helps to weigh a hole
+const SW_ERREICH={pi:['Läuft im Panel, das Heimnetz und eingetragene Geräte erreichen; von außen nur über den Proxy.','Runs in the panel, reached from the home network and paired devices; from outside only through the proxy.'],
+  tars:['Läuft auf tars hinter dem TLS-Tor: nur der Panel-Rechner erreicht es.','Runs on tars behind the TLS-Tor: only the panel computer reaches it.'],
+  docker:['Läuft im Abbild auf tars hinter dem TLS-Tor: nur der Panel-Rechner erreicht es.','Runs inside the image on tars behind the TLS-Tor: only the panel computer reaches it.'],
+  apps:['Läuft auf den Geräten der Profile (App, Begleiter) oder im Browser.','Runs on the devices of the profiles (app, companion) or in the browser.'],
+  os:['Das Betriebssystem des Rechners selbst.','The operating system of the computer itself.']};
+const swAkt=f=>f.hin?[t('Bewusst hingenommen','Accepted knowingly'),'']:((SW&&SW.aktionen)||{})[f.aktion]||[f.aktion,f.aktion];
 const swPill=s=>{const x=SW_STUFE[s]||SW_STUFE.unbekannt;return `<span class="pill ${x[2]} swpill">${esc(t(x[0],x[1]))}</span>`};
 function swLvl(d){const z=d.zahl||{};return z.kritisch?'bad':z.hoch||d.funde.some(f=>['anheben','neu','abbild','os'].includes(f.aktion))?'warn':'ok'}
 function swSatz(d){const z=d.zahl||{},neu=d.funde.filter(f=>['anheben','neu','abbild'].includes(f.aktion)).length;
@@ -56,8 +61,16 @@ function swDetail(f){if(!f)return `<div class="mut">${esc(t('Einen Fund antippen
     +`<dl class="swdl">${row(t('Wo','Where'),esc(t(...(SW_ORT[f.ort]||[f.ort,f.ort]))+(f.wo&&f.ort!=='os'?' · '+swWo(f):'')))}${row(t('Behoben in','Fixed in'),esc(f.behoben||t('noch keine Version','no version yet')))}`
     +row(t('Ohne Fix','Without fix'),f.ohne_fix?esc(String(f.ohne_fix)):'')
     +row(t('Kennungen','Ids'),(f.ids||[]).map(i=>`<a class="swid" href="https://osv.dev/vulnerability/${encodeURIComponent(i)}" target="_blank" rel="noopener noreferrer">${esc(i)}</a>`).join(' · '))
-    +row(t('Gefunden','Found'),esc(f.neu?t('heute, neu','today, new'):t('früher','earlier')))+`</dl>`
+    +row(t('Gefunden','Found'),esc(f.neu?t('heute, neu','today, new'):t('früher','earlier')))
+    +row(t('Erreichbar','Reachable'),esc(t(...(SW_ERREICH[f.ort]||['','']))))
+    +row('Issue',f.issue?`<a href="${esc(f.issue.url)}" target="_blank" rel="noopener noreferrer">#${esc(String(f.issue.nr))}</a>`:'')
+    +row(t('Hingenommen','Accepted'),f.hin?esc(t(`bis ${swAgo(f.hin.bis)}: ${f.hin.grund}`,`until ${swAgo(f.hin.bis)}: ${f.hin.grund}`)):'')+`</dl>`
     +`<div class="wkerkl swtun"><b>${esc(t('Was zu tun ist','What to do'))}</b> ${esc(swTun(f))}</div>`
+    +`<div class="row swact">${f.ids&&f.ids.length&&!f.issue&&SW.melden?`<button class="b" type="button" data-swa="melden">${esc(t('Als Issue melden','Report as issue'))}</button>`:''}`
+    +(f.hin?`<button class="b" type="button" data-swa="zurueck">${esc(t('Nicht mehr hinnehmen','Stop accepting'))}</button>`:`<button class="b" type="button" data-swa="hin">${esc(t('Bewusst hinnehmen','Accept knowingly'))}</button>`)
+    +`<span class="mut" id="zswmsg3"></span></div>`
+    +(f.ids&&f.ids.length&&!f.issue&&!SW.melden?`<div class="fh">${esc(t('Als Issue melden braucht Probleme melden mit GitHub-Token: ','Reporting as an issue needs Problem reports with a GitHub token: '))}<a href="#" data-way="${esc(t('Funktionen → Zugang → Probleme melden','Features → Access → Reporting problems'))}">${esc(t('Funktionen → Zugang → Probleme melden','Features → Access → Reporting problems'))}</a></div>`:'')
+    +`<div class="swhin" hidden><label class="mut" for="zswgrund">${esc(t(`Warum? Gilt ${SW.hin_tage} Tage und nur für diese Version.`,`Why? Holds ${SW.hin_tage} days and only for this version.`))}</label><input id="zswgrund" maxlength="200" autocomplete="off"><button class="b" type="button" data-swa="hin-ok">${esc(t('Hinnehmen','Accept'))}</button></div>`
     +(f.aktion==='os'?`<div class="zrow" data-way="${esc(t('Zustand → System-Updates','Status → System updates'))}"><span class="pill">${esc(t('System-Updates','System updates'))}</span><span><b>${esc(t('Öffnen','Open'))}</b></span></div>`:'')}
 function swDraw(){const d=SW,p=$('zswdet');if(!d||!p||!d.on)return;
   const top=p.querySelector('.swtop');top.dataset.lvl=swLvl(d);
@@ -71,18 +84,25 @@ function swDraw(){const d=SW,p=$('zswdet');if(!d||!p||!d.on)return;
   setHtml(p.querySelector('.swseg'),F.map(([k,l])=>`<button type="button" class="${SW_F===k?'on':''}" data-swf="${k}" aria-pressed="${SW_F===k}">${esc(l)}</button>`).join(''));
   const pass=f=>SW_F==='alle'||SW_F===f.stufe||SW_F==='mittel'&&['mittel','niedrig','unbekannt'].includes(f.stufe);
   const list=d.funde.filter(pass);let h='',last='';
-  for(const f of list){const g=t(...SW_AKT[f.aktion]);if(g!==last){h+=`${last?'</div>':''}<h3 class="swgrp">${esc(g)}</h3><div class="swlist">`;last=g}
+  for(const f of list){const g=t(...swAkt(f));if(g!==last){h+=`${last?'</div>':''}<h3 class="swgrp">${esc(g)}</h3><div class="swlist">`;last=g}
     h+=`<button type="button" class="swrow${f.key===SW_SEL?' sel':''}" data-swk="${esc(f.key)}">${swPill(f.stufe)}<span><b>${esc(swName(f))} ${esc(f.v||'')}</b><small>${esc(swUnter(f))}</small></span></button>`}
   if(last)h+='</div>';
   if(!list.length)h=`<div class="mut swleer">${esc(d.t?t('Nichts in dieser Auswahl.','Nothing in this selection.'):t('Noch nicht geprüft. „Jetzt prüfen“ fragt OSV.','Not checked yet. "Jetzt prüfen" asks OSV.'))}</div>`;
   setHtml(p.querySelector('.swfunde'),h);
   setHtml(p.querySelector('.swdet'),swDetail(d.funde.find(f=>f.key===SW_SEL)))}
+async function swTat(a){const f=SW&&SW.funde.find(x=>x.key===SW_SEL),m=$('zswmsg3');if(!f)return;
+  if(a==='hin'){const b=$('zswdet').querySelector('.swhin');b.hidden=false;$('zswgrund').focus();return}
+  const post=async(url,body)=>{m.textContent='…';try{const r=await api(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});zSchwach(await r.json());return true}catch(e){m.textContent=e.message||t('Ging nicht.','Did not work.');return false}};
+  if(a==='melden'){if(await post('/api/admin/schwach/melden',{key:f.key})){const x=$('zswmsg3');if(x)x.textContent=t('Gemeldet.','Reported.')}}
+  else if(a==='hin-ok')await post('/api/admin/schwach/hinnehmen',{key:f.key,grund:$('zswgrund').value});
+  else if(a==='zurueck')await post('/api/admin/schwach/hinnehmen',{key:f.key,weg:true})}
 async function swCheck(){const m=$('zswmsg2');m.textContent=t('Prüfe …','Checking …');
   try{const r=await api('/api/admin/schwach/pruefen',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});const d=await r.json();
     m.textContent=t('Geprüft.','Checked.');zSchwach(d)}catch(e){m.textContent=e.message||t('Ging nicht.','Did not work.')}}
 {const p=$('zswdet');
  if(p){p.addEventListener('click',e=>{const r=e.target.closest('button[data-swk]');if(r){SW_SEL=r.dataset.swk;swDraw();
       if(matchMedia('(max-width:760px)').matches)p.querySelector('.swdet').scrollIntoView({block:'start'});return}
+    const a=e.target.closest('button[data-swa]');if(a){swTat(a.dataset.swa);return}
     const f=e.target.closest('button[data-swf]');if(f){SW_F=f.dataset.swf;swDraw()}});
   $('zswback').onclick=swClose;$('zswcheck2').onclick=swCheck;
   // a way into the page (Zustand → Schwachstellen) shows it; a way to anything else under Zustand leaves it

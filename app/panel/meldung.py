@@ -97,6 +97,15 @@ def admin_on():
     return features.admin_on("melden")
 
 
+def bereit():
+    """An issue can go out straight away: Probleme melden is on and has its GitHub token (others ask here, e.g.
+    Schwachstellen „Als Issue melden“)."""
+    try:
+        return bool(admin_on() and _token())
+    except Exception:   # noqa: BLE001
+        return False
+
+
 def repo():
     r = str(features.chat_cfg().get("report_repo") or DEFAULT_REPO)
     return r if REPO.fullmatch(r) else DEFAULT_REPO

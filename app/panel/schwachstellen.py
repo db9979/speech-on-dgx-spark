@@ -42,8 +42,10 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import features  # noqa: E402
+import core  # noqa: E402
 import guard  # noqa: E402
 import installiert  # noqa: E402
+import meldung  # noqa: E402
 import modelle  # noqa: E402
 import netguard  # noqa: E402
 import notaus  # noqa: E402
@@ -72,8 +74,20 @@ ORT_NAME = {"pi": ("Pi · Python", "Pi · Python"), "tars": ("tars · Python", "
             "docker": ("Docker-Abbilder", "Docker images"), "apps": ("Apps und Begleiter", "Apps and companion"),
             "os": ("Betriebssystem", "Operating system")}
 AKTIONEN = ("anheben", "neu", "abbild", "alt", "os", "kein_fix")
+# the group of each action on the page and in an issue (schwachstellen.js takes them from the overview)
+AKTION_NAME = {"anheben": ("Neue Version nötig", "New version needed"), "neu": ("Neue Version nötig", "New version needed"),
+               "abbild": ("Abbild erneuern", "Renew the image"), "alt": ("Abbild erneuern", "Renew the image"),
+               "os": ("Betriebssystem: einspielen", "Operating system: install"),
+               "kein_fix": ("Noch kein Fix: beobachten", "No fix yet: watch")}
+HIN_TAGE = 30              # „Bewusst hinnehmen“ holds this long, for the same version only
+MAX_GRUND = 200
+MAX_GEMELDET = 500
 WARUM = {"aus": "Schwachstellen sind aus (Funktionen → Schwachstellen).",
-         "eben": "Eben erst geprüft, bitte gleich noch einmal."}
+         "eben": "Eben erst geprüft, bitte gleich noch einmal.",
+         "fund": "Diesen Fund gibt es nicht (mehr). Bitte neu laden.",
+         "schon": "Schon gemeldet als Issue #{nr}.",
+         "melden": "Melden ist aus oder ohne GitHub-Token (Funktionen → Zugang → Probleme melden).",
+         "grund": "Bitte kurz den Grund nennen (3 bis 200 Zeichen)."}
 
 
 def admin_on(c=None):
@@ -324,12 +338,18 @@ def overview(now=None):
     funde = sorted(d["funde"], key=_rang)
     for f in funde:
         f["neu"] = 0 <= now - float(d["seit"].get(f["key"]) or 0) < 86400
-    zahl = {s: sum(1 for f in funde if f["stufe"] == s) for s in osv.STUFEN}
-    orte = {o: sum(1 for f in funde if f["ort"] == o) for o in ORTE}
+        f["issue"] = stand.issue(f.get("ids"), d)
+        h = d["hingenommen"].get(f["key"]) if stand.hingenommen(d, f, now) else None
+        f["hin"] = {"bis": int(h["bis"]), "grund": str(h.get("grund") or "")} if h else None
+    zaehlen = [f for f in funde if not f["hin"]]
+    funde = zaehlen + [f for f in funde if f["hin"]]
+    zahl = {s: sum(1 for f in zaehlen if f["stufe"] == s) for s in osv.STUFEN}
+    orte = {o: sum(1 for f in zaehlen if f["ort"] == o) for o in ORTE}
     return {"on": True, "t": int(d.get("t") or 0), "fehler": d.get("fehler") is True, "t_fehler": int(d.get("t_fehler") or 0),
             "next": int(max(d.get("t") or 0, d.get("t_fehler") or 0) + CHECK_EVERY), "funde": funde, "zahl": zahl,
             "orte": orte, "n": d["n"], "internet": not notaus.blocks("internet"), "docker_tage": DOCKER_TAGE,
-            "system_updates": bool(_sysup_on())}
+            "system_updates": bool(_sysup_on()), "aktionen": AKTION_NAME, "hin_tage": HIN_TAGE,
+            "melden": meldung.bereit()}
 
 
 def _sysup_on():
@@ -391,4 +411,112 @@ async def admin_pruefen(request: Request):
         err = await pruefen()
     if err == "notaus":
         raise HTTPException(409, "Der Notaus sperrt gerade das Internet.")
+    return await asyncio.to_thread(overview)
+
+
+# ---------------------------------------------------------------- Als Issue melden, Bewusst hinnehmen (Paket 4)
+def _satz(f):
+    """The issue's body for one finding: names, versions, ids, numbers and fixed words only, never a text from OSV."""
+    wo = f"{ORT_NAME.get(f['ort'], (f['ort'],))[0]}" + (f" · {f['wo']}" if f.get("wo") else "")
+    zeilen = [f"**Art:** Schwachstelle · **Version:** {core.app_version() or '?'} · **Weg:** Zustand → Schwachstellen", "",
+              "### Fund", "", f"- Paket: `{f['n']}` {f['v']}", f"- Wo: {wo}",
+              f"- Schweregrad: {f['stufe']}" + (f" (CVSS {f['score']})" if f.get("score") is not None else ""),
+              f"- Behoben in: {f.get('behoben') or 'noch keine Version'}"]
+    zeilen += [f"- [{i}](https://osv.dev/vulnerability/{i})" for i in f.get("ids") or []]
+    zeilen += ["", "### Was zu tun ist", "", AKTION_NAME[f["aktion"]][0] + ".",
+               "Ablauf: Version und Prüfsumme neu pinnen, Selbsttests, CHANGELOG, Push über die Warteschlange "
+               "(Richtlinie Teil 10). Der Spark spielt nichts davon selbst ein.", "",
+               "_Vom Spark aus festen Wörtern gebaut; nur Paketnamen, Versionen und Kennungen._"]
+    titel = f"[Schwachstelle] {f['n']} {f['v']}: " + ", ".join((f.get("ids") or [])[:2])
+    return titel[:110], "\n".join(zeilen)
+
+
+def _merken(ids, nr, url, now):
+    def fn(d):
+        g = d["gemeldet"]
+        for i in ids:
+            g[i] = {"nr": nr, "url": url, "t": int(now)}
+        while len(g) > MAX_GEMELDET:
+            g.pop(min(g, key=lambda k: g[k].get("t", 0)))
+    _change(fn)
+
+
+async def _offen(nr):
+    """True unless GitHub says this issue is closed (without an answer it counts as open: no second issue)."""
+    try:
+        st = (await meldung.issue_states()).get(nr) or {}
+        return st.get("state") != "erledigt"
+    except Exception:   # noqa: BLE001
+        return True
+
+
+async def issue_senden(ids, titel, text, wo, now=None):
+    """One issue through meldung.send (label schwachstelle); refused while one of the ids has an open issue."""
+    now = time.time() if now is None else now
+    if not meldung.bereit():
+        print(f"schwachstellen: melden abgelehnt aus {wo}", flush=True)
+        raise HTTPException(409, WARUM["melden"])
+    nr = (stand.issue(ids) or {}).get("nr")
+    if nr is not None and await _offen(nr):
+        print(f"schwachstellen: melden abgelehnt schon {wo}", flush=True)
+        raise HTTPException(409, WARUM["schon"].format(nr=nr))
+    try:
+        nr, url = await meldung.send({"area": "update", "kind": "fehler", "labels": ["schwachstelle"]}, titel, text)
+    except HTTPException:
+        print(f"schwachstellen: melden fehler {wo}", flush=True)
+        raise
+    _merken(ids, nr, url, now)
+    print(f"schwachstellen: melden ok {wo} {len(ids)} kennungen", flush=True)
+    guard.log("schwach_melden", detail=f"#{nr}")
+    return {"nr": nr, "url": url}
+
+
+@router.post("/api/admin/schwach/melden", dependencies=[Depends(auth)])
+async def admin_melden(request: Request):
+    """{"key": finding} or {"pruefbitte": true} (System-Updates' check request, also when Schwachstellen is off)."""
+    guard.limit(request, "sysup_tun", admin=True)
+    body = await json_body(request, MAX_BODY, lenient=True)
+    if body.get("pruefbitte") is True:
+        pb = systemupdates.pruefbitte_daten()
+        if not systemupdates.admin_on() or not isinstance(pb, dict):
+            print("schwachstellen: melden abgelehnt keine pruefbitte", flush=True)
+            raise HTTPException(409, "Es gibt keine Prüfbitte.")
+        ids = sorted({i for w in (pb.get("python") or {}).values() for i in w.get("ids") or []})
+        titel = "[Schwachstelle] Prüfbitte System-Updates: " + ", ".join(sorted(pb.get("python") or {})[:3])
+        return await issue_senden(ids or ["pruefbitte"], titel[:110], systemupdates.pruefbitte_text(), "pruefbitte")
+    if not admin_on():
+        print("schwachstellen: abgelehnt aus", flush=True)
+        raise HTTPException(409, WARUM["aus"])
+    f = next((x for x in _read()["funde"] if x.get("key") == body.get("key")), None)
+    if not f or not f.get("ids"):
+        print("schwachstellen: melden abgelehnt fund", flush=True)
+        raise HTTPException(404, WARUM["fund"])
+    titel, text = _satz(f)
+    out = await issue_senden(list(f["ids"]), titel, text, "fund")
+    return dict(await asyncio.to_thread(overview), gesendet=out)
+
+
+@router.post("/api/admin/schwach/hinnehmen", dependencies=[Depends(auth)])
+async def admin_hinnehmen(request: Request):
+    """{"key", "grund"}: accepted knowingly for HIN_TAGE days and this version; {"key", "weg": true} takes it back."""
+    body = await _body(request)
+    key = body.get("key")
+    f = next((x for x in _read()["funde"] if x.get("key") == key), None)
+    if not f:
+        print("schwachstellen: hinnehmen abgelehnt fund", flush=True)
+        raise HTTPException(404, WARUM["fund"])
+    if body.get("weg") is True:
+        _change(lambda d: d["hingenommen"].pop(key, None))
+        print("schwachstellen: hinnehmen weg", flush=True)
+        guard.log("schwach_hinnehmen", detail="zurück")
+    else:
+        grund = meldung.clean_text(str(body.get("grund") or ""), MAX_GRUND).replace("\n", " ").strip()
+        if len(grund) < 3:
+            print("schwachstellen: hinnehmen abgelehnt grund", flush=True)
+            raise HTTPException(400, WARUM["grund"])
+        bis = int(time.time() + HIN_TAGE * 86400)
+        _change(lambda d: d["hingenommen"].update({key: {"v": f["v"], "bis": bis, "grund": grund}}))
+        print(f"schwachstellen: hinnehmen ok {HIN_TAGE} tage", flush=True)
+        guard.log("schwach_hinnehmen", detail=f"{HIN_TAGE} Tage")
+    stand._live_cache[:] = [0.0, None]
     return await asyncio.to_thread(overview)

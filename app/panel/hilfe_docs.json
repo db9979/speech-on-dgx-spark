@@ -16133,7 +16133,15 @@
 "file": "Sicherheit und Betrieb",
 "head": "Schwachstellen (seit V01.1.418)",
 "title": "Schwachstellen (seit V01.1.418)",
-"text": "dazu. - Docker-Inhalte: Die Python-Pakete in den Abbildern der Modelle liest tars je Digest einmal im Hintergrund (docker run mit festem Befehl, ohne Netz, nur lesend, ohne GPU) und hebt sie auf. Ein Paket mit Lücke und Fix im Abbild heißt „Abbild erneuern“: ein neueres Abbild (Digest) bringt den Fix. - Apps und Begleiter: Was die Apps mitbringen, liest der Spark aus dem Quellcode: die Swift-Pakete der iPhone-App, die Build-Plugins der Android-App, NuGet-Pakete der Begleiter, npm-Pakete der Pebble-App und das JavaScript, das das Panel selbst mitliefert (guacamole-common-js), je in seinem Ökosystem bei OSV. Der Nachtlauf „Pakete prüfen“ auf GitHub fragt sie mit; „Lücke schließen“ hebt sie nie an."
+"text": "dazu. - Docker-Inhalte: Die Python-Pakete in den Abbildern der Modelle liest tars je Digest einmal im Hintergrund (docker run mit festem Befehl, ohne Netz, nur lesend, ohne GPU) und hebt sie auf. Ein Paket mit Lücke und Fix im Abbild heißt „Abbild erneuern“: ein neueres Abbild (Digest) bringt den Fix. - Apps und Begleiter: Was die Apps mitbringen, liest der Spark aus dem Quellcode: die Swift-Pakete der iPhone-App, die Build-Plugins der Android-App, NuGet-Pakete der Begleiter, npm-Pakete der Pebble-App und das JavaScript, das das Panel selbst mitliefert (guacamole-common-js), je in seinem Ökosystem bei OSV. Der Nachtlauf „Pakete prüfen“ auf GitHub fragt sie mit; „Lücke schließen“ hebt sie nie an. - Als Issue melden (seit V01.1.427): je Fund und auf der Prüfbitte-Karte unter *Zustand → System-Updates* ein Knopf, der über den Weg von *Funktionen → Zugang → Probleme melden* (mit GitHub-Token) ein Issue in spark-meldungen eröffnet, Label schwachstelle. Das Issue enthält nur Paketname, Version, Ort, Schweregrad, Version mit Fix, Kennungen mit Link zu osv.dev und den festen Satz, was zu tun ist. Je Kennung höchstens ein offenes Issue: danach zeigt der Fund „Issue #N“; erst wenn es geschlo"
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Schwachstellen (seit V01.1.418)",
+"title": "Schwachstellen (seit V01.1.418)",
+"text": "ssen ist, geht ein neues. - Erreichbar sagt je Fund mit festem Satz, wer den Teil erreicht (Panel, hinter dem TLS-Tor auf tars, auf den Geräten, Betriebssystem). - Bewusst hinnehmen (nur Admins, mit kurzem Grund): der Fund zählt 30 Tage nicht mehr mit, nur für diese Version; er steht unten unter „Bewusst hingenommen“ und lässt sich zurücknehmen. Eine neue Version oder das Ende der 30 Tage zählt ihn wieder."
 },
 {
 "lang": "de",
@@ -33389,7 +33397,15 @@
 "file": "Security and operation",
 "head": "Vulnerabilities (since V01.1.418)",
 "title": "Vulnerabilities (since V01.1.418)",
-"text": "packages inside the models' images are read by tars once per digest in the background (docker run with a fixed command, no network, read-only, no GPU) and kept. A package with a hole and a fix inside an image means \"renew the image\": a newer image (digest) brings the fix. - Apps and companions: what the apps bring along the Spark reads from the source: the iPhone app's Swift packages, the Android app's build plugins, the companions' NuGet packages, the Pebble app's npm packages and the JavaScript the panel ships itself (guacamole-common-js), each in its ecosystem at OSV. The nightly run \"Pakete prüfen\" on GitHub asks for them too; \"Lücke schließen\" never raises them."
+"text": "packages inside the models' images are read by tars once per digest in the background (docker run with a fixed command, no network, read-only, no GPU) and kept. A package with a hole and a fix inside an image means \"renew the image\": a newer image (digest) brings the fix. - Apps and companions: what the apps bring along the Spark reads from the source: the iPhone app's Swift packages, the Android app's build plugins, the companions' NuGet packages, the Pebble app's npm packages and the JavaScript the panel ships itself (guacamole-common-js), each in its ecosystem at OSV. The nightly run \"Pakete prüfen\" on GitHub asks for them too; \"Lücke schließen\" never raises them. - Report as issue (since V01.1.427): per finding and on the check request card under *Status → System updates* a button that opens an issue in spark-meldungen through the way of *Features → Access → Reporting problems* (with a GitHub token), label schwachstelle. The issue holds only package name, version, place, weight, version with the fix, ids with a link to osv.dev and the fixed sentence of what to do. At most one open issue per id: then the finding shows \"Issue #N\"; only once it is closed can a new one go out. - Re"
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Vulnerabilities (since V01.1.418)",
+"title": "Vulnerabilities (since V01.1.418)",
+"text": "achable tells per finding in a fixed sentence who reaches the part (panel, behind the TLS-Tor on tars, on the devices, operating system). - Accept knowingly (admins only, with a short reason): the finding no longer counts for 30 days, for this version only; it stands at the bottom under \"Accepted knowingly\" and can be taken back. A new version or the end of the 30 days counts it again."
 },
 {
 "lang": "en",

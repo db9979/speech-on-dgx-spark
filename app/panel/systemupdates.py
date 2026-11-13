@@ -45,8 +45,10 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import features  # noqa: E402
 import guard  # noqa: E402
+import meldung  # noqa: E402
 import notaus  # noqa: E402
 import osv  # noqa: E402
+import schwachstellen_stand  # noqa: E402
 import sysupdate  # noqa: E402
 from common import STATE, load_config, model_local, read_json, run, write_json  # noqa: E402
 from core import admin_code, admin_code_fresh, auth, json_body  # noqa: E402
@@ -289,6 +291,12 @@ def pruefbitte_text(d=None):
     return "\n".join(zeilen)
 
 
+def pruefbitte_daten():
+    """The open check request ({"python": {name: {"v", "ids"}}, "opencode", "t"}) or None."""
+    pb = _read().get("pruefbitte")
+    return pb if isinstance(pb, dict) else None
+
+
 def _pruefbitte_punkte(d):
     warn = (d.get("osv") or {}).get("warn") or {}
     oc = (d.get("opencode") or {}).get("neu") or ""
@@ -335,7 +343,10 @@ def overview(lang="de", now=None):
             "opencode": {"alt": alt, "neu": oc.get("neu") or "", "t": int(oc.get("t") or 0), "fehler": oc.get("fehler") is True,
                          "neuer": bool(oc.get("neu")) and _vt(oc.get("neu")) > _vt(alt)},
             "internet": not notaus.blocks("internet"),
-            "pruefbitte": {"t": int(d["pruefbitte"]["t"]), "text": pruefbitte_text(d)} if isinstance(d.get("pruefbitte"), dict) else None,
+            "pruefbitte": {"t": int(d["pruefbitte"]["t"]), "text": pruefbitte_text(d), "melden": meldung.bereit(),
+                           "issue": schwachstellen_stand.issue(sorted({i for w in (d["pruefbitte"].get("python") or {}).values()
+                                                                           for i in w.get("ids") or []}) or ["pruefbitte"])}
+            if isinstance(d.get("pruefbitte"), dict) else None,
             "talking": not quiet(now), "pause_s": PAUSE_S, "spark": _spark_nebenan()}
 
 

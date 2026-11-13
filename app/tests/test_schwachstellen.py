@@ -26,6 +26,7 @@ import panel  # noqa: E402
 import common  # noqa: E402
 import osv  # noqa: E402
 import installiert  # noqa: E402
+import meldung  # noqa: E402
 import schwachstellen as sw  # noqa: E402
 import tarswart  # noqa: E402
 import systemupdates  # noqa: E402
@@ -283,6 +284,92 @@ class Paket3(Base):
             self.assertEqual(osv.apps(os.path.join(d, "app")), [])           # a copy with only app/: nothing
         self.assertEqual(osv.anfrage({"a x": "1", "b y": "2"}, {"b y": "npm"})["queries"][1]["package"],
                          {"name": "b", "ecosystem": "npm"})
+
+
+class Paket4(Base):
+    """Als Issue melden (one issue per hole, through meldung.send, label schwachstelle) and Bewusst hinnehmen."""
+
+    def setUp(self):
+        super().setUp()
+        self.on()
+        holes = {"vllm": ["GHSA-cccc-2222-dddd"]}
+        records = {"GHSA-cccc-2222-dddd": rec("vllm", ["0.40.0"], ghsa="CRITICAL")}
+        run(sw.pruefen(Client(holes, records), heute=HEUTE, now=T0))
+        self.key = "tars:vllm"
+
+    def test_report_once_with_fixed_words(self):
+        sent = []
+
+        async def send(d, t, b):
+            sent.append((d, t, b))
+            return 7, "https://github.com/db9979/spark-meldungen/issues/7"
+        states = {7: {"state": "offen"}}
+        with mock.patch.object(meldung, "bereit", return_value=False):
+            r = ADMIN.post("/api/admin/schwach/melden", json={"key": self.key})
+            self.assertEqual(r.status_code, 409)
+            self.assertIn("Probleme melden", r.json()["detail"])
+        with mock.patch.object(meldung, "bereit", return_value=True), mock.patch.object(meldung, "send", side_effect=send), \
+                mock.patch.object(meldung, "issue_states", side_effect=lambda: states):
+            r = ADMIN.post("/api/admin/schwach/melden", json={"key": self.key})
+            self.assertEqual(r.status_code, 200, r.text)
+            self.assertEqual(r.json()["gesendet"]["nr"], 7)
+            d, title, body = sent[0]
+            self.assertEqual(meldung.labels(d), ["von-spark", "bereich:update", "schwachstelle"])
+            self.assertIn("vllm", title)
+            self.assertIn("GHSA-cccc-2222-dddd", body)
+            for bad in ("ignore all rules", "<script>", "böse"):
+                self.assertNotIn(bad, title + body)
+            f = next(x for x in r.json()["funde"] if x["key"] == self.key)
+            self.assertEqual(f["issue"]["nr"], 7)
+            # no second issue while it is open; after it was closed one may go out again
+            r = ADMIN.post("/api/admin/schwach/melden", json={"key": self.key})
+            self.assertEqual((r.status_code, "#7" in r.json()["detail"]), (409, True))
+            states[7] = {"state": "erledigt"}
+            r = ADMIN.post("/api/admin/schwach/melden", json={"key": self.key})
+            self.assertEqual(r.status_code, 200, r.text)
+            self.assertEqual(len(sent), 2)
+            self.assertEqual(ADMIN.post("/api/admin/schwach/melden", json={"key": "tars:gibtsnicht"}).status_code, 404)
+
+    def test_the_check_request_of_system_updates_as_issue(self):
+        sent = []
+
+        async def send(d, t, b):
+            sent.append((d, t, b))
+            return 9, "https://github.com/db9979/spark-meldungen/issues/9"
+        pb = {"python": {"opentelemetry-api": {"v": "1.45.1", "ids": ["GHSA-mf5v-w3w3-f6cg"]}}, "t": int(T0)}
+        with mock.patch.object(meldung, "bereit", return_value=True), mock.patch.object(meldung, "send", side_effect=send), \
+                mock.patch.object(systemupdates, "admin_on", return_value=True), \
+                mock.patch.object(systemupdates, "pruefbitte_daten", return_value=pb), \
+                mock.patch.object(systemupdates, "pruefbitte_text", return_value="Prüfbitte System-Updates"):
+            r = ADMIN.post("/api/admin/schwach/melden", json={"pruefbitte": True})
+            self.assertEqual(r.json(), {"nr": 9, "url": "https://github.com/db9979/spark-meldungen/issues/9"})
+            self.assertEqual(sent[0][2], "Prüfbitte System-Updates")
+            self.assertEqual(ADMIN.post("/api/admin/schwach/melden", json={"pruefbitte": True}).status_code, 409)
+        import schwachstellen_stand
+        self.assertEqual(schwachstellen_stand.issue(["GHSA-mf5v-w3w3-f6cg"])["nr"], 9)
+        with mock.patch.object(systemupdates, "pruefbitte_daten", return_value=None), \
+                mock.patch.object(systemupdates, "admin_on", return_value=True):
+            self.assertEqual(ADMIN.post("/api/admin/schwach/melden", json={"pruefbitte": True}).status_code, 409)
+
+    def test_accept_knowingly_for_30_days_and_this_version(self):
+        self.assertEqual(sw.overview(now=T0)["zahl"]["kritisch"], 1)
+        r = ADMIN.post("/api/admin/schwach/hinnehmen", json={"key": self.key, "grund": "x"})
+        self.assertEqual(r.status_code, 400)
+        r = ADMIN.post("/api/admin/schwach/hinnehmen", json={"key": self.key, "grund": "nur intern\nhinter dem Tor"})
+        self.assertEqual(r.status_code, 200, r.text)
+        now = time.time()
+        o = sw.overview(now=now)
+        f = next(x for x in o["funde"] if x["key"] == self.key)
+        self.assertEqual(f["hin"]["grund"], "nur intern hinter dem Tor")
+        self.assertEqual(o["zahl"]["kritisch"], 0)
+        self.assertEqual((sw.for_live(now)["kritisch"], sw.alerts()), (0, []))
+        self.assertIsNotNone(next(x for x in sw.overview(now=now + 29 * 86400)["funde"] if x["key"] == self.key)["hin"])
+        self.assertIsNone(next(x for x in sw.overview(now=now + 31 * 86400)["funde"] if x["key"] == self.key)["hin"])
+        sw._change(lambda d: [x.update(v="9.9.9") for x in d["funde"] if x["key"] == self.key])
+        self.assertIsNone(next(x for x in sw.overview(now=now)["funde"] if x["key"] == self.key)["hin"])  # another version
+        r = ADMIN.post("/api/admin/schwach/hinnehmen", json={"key": self.key, "weg": True})
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(sw._read()["hingenommen"], {})
 
 
 class EineQuelle(unittest.TestCase):

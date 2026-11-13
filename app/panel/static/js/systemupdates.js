@@ -86,7 +86,7 @@ function suCode(r,d){const oc=d.opencode,o=d.osv;let h=suSec(2,'OpenCode und Pyt
   if(r.rolle!=='panel')return h;
   const can=o.warn.length||oc.neuer;
   if(d.pruefbitte)h+=`<div class="wkerkl"><b>${esc(t('Prüfbitte offen','Check request open'))}</b> ${esc(t(`seit ${suAgo(d.pruefbitte.t)}. In einen Claude-Thread kopieren:`,`since ${suAgo(d.pruefbitte.t)}. Copy into a Claude thread:`))}</div><pre class="supb">${esc(d.pruefbitte.text)}</pre>`
-    +`<div class="row su-act">${suBtn('kopieren','panel','Kopieren','Copy')}${suBtn('pb-weg','panel','Löschen','Delete')}</div>`;
+    +`<div class="row su-act">${suBtn('kopieren','panel','Kopieren','Copy')}${d.pruefbitte.issue?`<a class="b" href="${esc(d.pruefbitte.issue.url)}" target="_blank" rel="noopener noreferrer">${esc(t(`Issue #${d.pruefbitte.issue.nr}`,`Issue #${d.pruefbitte.issue.nr}`))}</a>`:d.pruefbitte.melden?suBtn('pb-issue','panel','Als Issue melden','Report as issue'):''}${suBtn('pb-weg','panel','Löschen','Delete')}</div>`;
   else h+=`<div class="row su-act"><button class="b" type="button" data-su="pruefbitte" data-r="panel"${can?'':' disabled'}>${esc(t('Von Claude prüfen lassen','Have Claude check it'))}</button>${can?'':`<span class="mut">${esc(t('nichts zu prüfen','nothing to check'))}</span>`}</div>`;
   return h+`<div class="fh">${esc(t('Legt eine Prüfbitte für einen Claude-Thread an: er pinnt neu und lässt die Tests laufen. Kommt mit dem nächsten Spark-Update, nie ungeprüft.','Makes a check request for a Claude thread: it pins anew and runs the tests. Comes with the next Spark update, never unchecked.'))}</div>`}
 function suFw(r){const fw=suFirmware(r);let h=suSec(3,'Firmware und Treiber','Firmware and drivers',t('nur Anzeige','display only'));
@@ -137,6 +137,7 @@ async function suAct(b){const a=b.dataset.su,r=b.dataset.r;let d=null;
   else if(a==='neustart-jetzt'){d=await suPost('/api/admin/sysup/neustart',{rechner:r,wann:'jetzt'},r);if(d){suMsg(r,t('Startet neu.','Restarting.'));d=null}}
   else if(a==='neustart-nacht')d=await suPost('/api/admin/sysup/neustart',{rechner:r,wann:'nacht'},r);
   else if(a==='pruefbitte'){d=await suPost('/api/admin/sysup/pruefbitte',{},r);if(d)suMsg(r,t('Prüfbitte angelegt.','Check request made.'))}
+  else if(a==='pb-issue'){const x=await suPost('/api/admin/schwach/melden',{pruefbitte:true},r);if(x){suMsg(r,t(`Gemeldet als Issue #${x.nr}.`,`Reported as issue #${x.nr}.`));zSysup()}}
   else if(a==='pb-weg')d=await suPost('/api/admin/sysup/pruefbitte',{},r,'DELETE');
   b.disabled=false;if(d)zSysup(d)}
 {const p=$('zsudet');

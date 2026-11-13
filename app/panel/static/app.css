@@ -3592,6 +3592,7 @@ body.swdet #phead,body.swdet #mon>:not(#zswdet){display:none!important}
 .swdhd{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.swdhd b{font:var(--t-head)}
 .swdl{display:grid;grid-template-columns:130px minmax(0,1fr);gap:8px 12px;margin:12px 0}.swdl dt{color:var(--mut)}.swdl dd{margin:0;overflow-wrap:anywhere}
 .swid{font:var(--t-mono)}.swtun{margin:10px 0}.swfoot{margin-top:12px;font:var(--t-sub)}.swleer{padding:12px 4px}
+.swact{gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0 0}.swhin:not([hidden]){display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:8px 0 0}.swhin input{flex:1;min-width:180px}.swhin label{flex-basis:100%}
 .swsum{cursor:default}.swsum small{display:block;font:var(--t-sub);color:var(--mut)}
 @media (max-width:760px){.swtiles{grid-template-columns:repeat(2,minmax(0,1fr))}.swsplit{grid-template-columns:minmax(0,1fr)}.swdet{position:static}.swdl{grid-template-columns:100px minmax(0,1fr)}}
 .sudetail .suback{display:inline-flex;align-items:center;gap:4px;margin:0 0 6px;padding:6px 10px 6px 4px;border:0;background:none;color:var(--acc);font-weight:600}
