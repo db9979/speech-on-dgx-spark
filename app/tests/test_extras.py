@@ -324,6 +324,28 @@ class Parcels(unittest.TestCase):
             helpers.set_config(mail=False, parcels=False, deny={})
 
 
+    def test_mail_moved_into_a_spark_folder_still_counts(self):
+        """Issue 1: von selbst „DHL-Paket: kommt heute.“, minutes later the tool found nothing; the shipping mail had
+        left the inbox. The inbox and the folders the Spark sorts into are read, other folders never."""
+        import mail
+        import parcels
+        import tidy
+        old = mail.IMAP
+        mail.IMAP = helpers.FakeMailbox
+        try:
+            helpers.FakeMailbox.reset()
+            d = tidy.state("parcels-moved")
+            helpers.FakeMailbox.put(tidy.folder_of(d, "benachrichtigungen"), helpers.box_mail(
+                "DHL <noreply@dhl.de>", "Ihr Paket von Thalia kommt heute", "Sendungsnummer: JJD000390012345678"))
+            helpers.FakeMailbox.put("Privat", helpers.box_mail("DHL <noreply@dhl.de>", "Ihr Paket von Otto kommt heute"))
+            acct = {"host": "imap.example", "user": helpers.MAIL_USER, "password": helpers.MAIL_PW}
+            found = parcels._scan_account(acct, 14, "parcels-moved")
+            self.assertEqual([(x["shop"], x["status"]) for x in found], [("Thalia", "today")])
+            self.assertFalse([c for c in helpers.FakeMailbox.calls if c[0] in ("MOVE", "COPY", "STORE", "APPEND", "CREATE")])
+        finally:
+            mail.IMAP = old
+
+
 class Guides(unittest.TestCase):
     def test_new_switches_off_by_default(self):
         import json

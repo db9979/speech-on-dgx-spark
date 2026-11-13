@@ -579,6 +579,9 @@ class FakeIMAP:
     def logout(self):
         return "BYE", [b""]
 
+    def list(self):
+        return "OK", [b'(\\HasNoChildren) "/" "INBOX"']
+
     def uid(self, cmd, *args):
         IMAP_CALLS.append((cmd, args))
         if cmd == "SEARCH":

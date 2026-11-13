@@ -306,7 +306,7 @@ class Supply(unittest.TestCase):
         mail.get = lambda uid: {"accounts": list(self.accts)}
         self.item = {"carrier": "DHL", "shop": "Geheimladen", "item": "Teekanne", "track": "JJD0001", "status": "transit",
                      "day": "", "sent": "2026-10-19", "at": 1000.0}
-        parcels._scan_account = lambda a, days: [dict(self.item)]
+        parcels._scan_account = lambda a, days, uid: [dict(self.item)]
         self.tok = vorrat._turn.set(None)
         self.clear()
 
@@ -333,7 +333,7 @@ class Supply(unittest.TestCase):
         self.assertNotIn("Geheimladen", text)
         self.assertNotIn("JJD0001", text)
         self.clear()   # a restart: memory empty
-        parcels._scan_account = lambda a, days: (_ for _ in ()).throw(OSError("timed out"))
+        parcels._scan_account = lambda a, days, uid: (_ for _ in ()).throw(OSError("timed out"))
         st = in_turn()
         found, errors = parcels.scan(self.UID)
         self.assertEqual((found[0]["shop"], errors, st["seen"]), ("Geheimladen", [], {"parcels": "warm"}))
@@ -347,7 +347,7 @@ class Supply(unittest.TestCase):
         self.assertFalse(os.path.exists(parcels.SUPPLY.file(self.UID)))
 
     def test_a_failed_mailbox_is_not_kept(self):
-        parcels._scan_account = lambda a, days: (_ for _ in ()).throw(OSError("timed out"))
+        parcels._scan_account = lambda a, days, uid: (_ for _ in ()).throw(OSError("timed out"))
         parcels.scan(self.UID)
         parcels.SUPPLY.flush()
         self.assertFalse(os.path.exists(parcels.SUPPLY.file(self.UID)))

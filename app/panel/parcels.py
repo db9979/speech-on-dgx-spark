@@ -7,12 +7,15 @@ Shop names and item titles come from the mails: they count as mail text, so afte
 the answer cannot switch or change anything.
 """
 import datetime
+import email
+import email.policy
 import imaplib
 import re
 import time
 
 import mail
 import features
+import tidy
 import vorrat
 from vorrat import Vorrat
 
@@ -141,22 +144,52 @@ def classify(sender, subject, text, sent):
             "track": (t.group(1) or t.group(2)).upper() if t else ""}
 
 
-def _scan_account(acct, days):
-    out = []
-    with mail._Session(acct) as s:
-        uids = sorted(s.search("SINCE", mail._since(days)))[-SCAN:]
-        heads = s.headers(uids)
-        hit = [u for u, h in heads.items() if carrier(h["from"])]
-        for u in sorted(hit, key=lambda u: heads[u]["date"], reverse=True)[:40]:
-            msg = s.body(u)
-            if msg is None or forged(msg):
-                continue
-            text, _ = mail.plain(msg)
-            x = classify(heads[u]["from"], heads[u]["subject"], text[:3000], mail.local(heads[u]["date"]).date())
-            if x:
-                x["at"] = heads[u]["date"].timestamp()
-                out.append(x)
+def _boxes(b, uid):
+    """The inbox and the folders the Spark sorts mail into (tidy.py, mailregeln.py): a shipping mail moved out of the
+    inbox still counts (issue 1: „kommt heute“ von selbst, minutes later the tool found nothing)."""
+    out = ["INBOX"]
+    try:
+        d = tidy.state(uid)
+        for cat in tidy.cats(d):
+            f = b.name(tidy.folder_of(d, cat))
+            if f in b.boxes and f not in out:
+                out.append(f)
+    except Exception:
+        pass
     return out
+
+
+def _scan_account(acct, days, uid):
+    out, hit = [], []
+    with tidy.Box(acct) as b:           # no tidying state: nothing can be moved; select = EXAMINE
+        for box in _boxes(b, uid):
+            try:
+                b.select(box)
+            except ValueError:
+                if box == "INBOX":
+                    raise ValueError("the inbox could not be opened")
+                continue
+            heads = mail.head_rows(b.c, sorted(b.search("SINCE", mail._since(days)))[-SCAN:])
+            hit += [(heads[u]["date"], box, u, heads[u]) for u in heads if carrier(heads[u]["from"])]
+        hit.sort(key=lambda x: x[0], reverse=True)
+        for box in dict.fromkeys(x[1] for x in hit[:40]):
+            b.select(box)
+            for _, _, u, h in (x for x in hit[:40] if x[1] == box):
+                msg = _body(b, u)
+                if msg is None or forged(msg):
+                    continue
+                text, _ = mail.plain(msg)
+                x = classify(h["from"], h["subject"], text[:3000], mail.local(h["date"]).date())
+                if x:
+                    x["at"] = h["date"].timestamp()
+                    out.append(x)
+    return out
+
+
+def _body(b, uid):
+    typ, data = b.c.uid("FETCH", str(uid), f"(BODY.PEEK[]<0.{int(mail.MAX_FETCH)}>)")
+    raw = next((p[1] for p in data if isinstance(p, tuple) and p[1]), None) if typ == "OK" else None
+    return email.message_from_bytes(raw, policy=email.policy.default) if raw else None
 
 
 def scan(uid, days=DAYS):
@@ -181,7 +214,7 @@ def _read(uid, days):
     found, errors = [], []
     for a in mail.get(uid)["accounts"]:
         try:
-            found += _scan_account(a, days)
+            found += _scan_account(a, days, uid)
         except (ValueError, OSError, imaplib.IMAP4.error) as e:
             errors.append((a.get("name", ""), str(e) if isinstance(e, ValueError) else type(e).__name__))
     found.sort(key=lambda x: x["at"], reverse=True)

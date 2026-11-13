@@ -5817,6 +5817,14 @@
 "text": "Am Lautsprecher oder im Auto eine Wissensfrage stellen („Wie hoch ist die Zugspitze?“): am Ende sagt der Assistent kurz „Quelle: …“. Ausschalten unter Ich → Gespräch → „Quelle ansagen“; danach kein Satz mehr, „Woher weißt du das?“ geht weiter.",
 "thread": "Quellenangabe bei Antworten einbauen",
 "test": "test_quellenangabe.Gesagt.test_spoken_channels_only"
+},
+{
+"id": "P855",
+"v": 1411,
+"titel": "Pakete auch aus Spark-Ordnern",
+"text": "Liegt eine Versandmail (DHL, Hermes, DPD, GLS, UPS, Amazon) nicht mehr im Posteingang, sondern in einem Ordner, in den der Spark sortiert (z. B. Spark/Benachrichtigungen oder ein eigener Ordner aus Mail-Regeln): Frag „Welches Paket kommt heute?“. Die Antwort nennt das Paket wie die Meldung unter „Von selbst“ (GitHub-Issue 1).",
+"thread": "Fehler per Assistent als Issue melden",
+"test": "test_extras.Parcels.test_mail_moved_into_a_spark_folder_still_counts"
 }
 ]
 }
