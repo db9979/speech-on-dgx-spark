@@ -170,7 +170,7 @@ def _scan_account(acct, days):
     with tidy.Box(acct) as b:           # no tidying state: nothing can be moved; select = EXAMINE
         for box in _boxes(b):
             try:
-                b.select(box)
+                _open(b, box)
             except ValueError:
                 if box == "INBOX":
                     raise ValueError("the inbox could not be opened")
@@ -179,7 +179,7 @@ def _scan_account(acct, days):
             hit += [(heads[u]["date"], box, u, heads[u]) for u in heads if carrier(heads[u]["from"])]
         hit.sort(key=lambda x: x[0], reverse=True)
         for box in dict.fromkeys(x[1] for x in hit[:40]):
-            b.select(box)
+            _open(b, box)
             for _, _, u, h in (x for x in hit[:40] if x[1] == box):
                 msg = _body(b, u)
                 if msg is None or forged(msg):
@@ -190,6 +190,17 @@ def _scan_account(acct, days):
                     x["at"] = h["date"].timestamp()
                     out.append(x)
     return out
+
+
+def _open(b, box):
+    """EXAMINE (read only). The inbox by its plain name like every other reader of it (mail._Session), the other
+    folders by tidy.Box (quoted, modified UTF-7)."""
+    if box != "INBOX":
+        b.select(box)
+        return
+    typ, _ = b.c.select("INBOX", readonly=True)
+    if typ != "OK":
+        raise ValueError("the inbox could not be opened")
 
 
 def _body(b, uid):

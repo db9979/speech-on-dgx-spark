@@ -319,6 +319,8 @@ class Parcels(unittest.TestCase):
             parcels._cache.clear()
             self.assertIn("DHL-Paket von Thalia: kommt heute.", ask(a, "TOOL parcels {}"))
             self.assertEqual(a.get("/api/profile/parcels").json()["lines"], ["DHL-Paket von Thalia: kommt heute."])
+            # read only, the inbox by its plain name like every reader (test_panel's check of every select, V01.1.414)
+            self.assertTrue(all(c[1] == ("INBOX", True) for c in helpers.IMAP_CALLS if c[0] == "select"))
         finally:
             helpers.MAILS[:] = keep
             helpers.set_config(mail=False, parcels=False, deny={})
