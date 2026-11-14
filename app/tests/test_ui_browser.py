@@ -1691,7 +1691,16 @@ class Browser(unittest.TestCase):
                     self.assertEqual(await pg.input_value("#rpbody .rparea"), "post", name)
                     self.assertEqual(await pg.input_value("#rpbody .rpmin"), "10", name)
                     self.assertEqual(await pg.locator("#rpbody [data-rpkind]").count(), 2)
-                    self.assertIn("1", await pg.inner_text("#rpbody .rppagen"))
+                    # the count is the page's own errors at this moment: ours is among them, and on a busy runner a
+                    # request of the page itself may have failed too (main 2026-11-14: „3 Fehler“), so the line has to
+                    # say exactly as many as the page noted, never a fixed number
+                    # (the line is written when the window opens, so it is read first and later ones only add)
+                    said = await pg.inner_text("#rpbody .rppagen")
+                    noted = await pg.evaluate("RP_ERR.slice()")
+                    self.assertTrue(any(x.endswith("api: 404 /api/report") for x in noted), f"{name}: {noted}")
+                    m = re.search(r"· (\d+) Fehler\)$", said)
+                    self.assertTrue(m, f"{name}: {said}")
+                    self.assertTrue(1 <= int(m.group(1)) <= len(noted), f"{name}: {said} {noted}")
                     if os.environ.get("RP_SHOT"):
                         await pg.screenshot(path=f"{os.environ['RP_SHOT']}/kaefer-fenster-{name}.png")
                     await pg.click("#rpbody [data-rpkind=verbesserung]")
