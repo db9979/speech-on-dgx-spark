@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.443** RED-FIX: iPhone conversation rows without a new import inside a function
 - **V01.1.442** iPhone app: the whole conversation page and own voices right in the app
 - **V01.1.441** Spark clients, priority on the Spark (E3): a client of class "Hintergrund" never moves up at the gates and waits while somebody speaks on the Spark, at most 60 seconds
 - **V01.1.440** ROT-FIX: a browser test now switches Telegram off itself before it checks the switch
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.436** Fix: no empty white bar under the mail search any more
 - **V01.1.435** iPhone app: own speakers right in the app, settings and checks
 - **V01.1.434** Natural conversation, package A: when chatting in voice mode a natural tone and now and then a fixed hint from your own data that fits the conversation (appointments, weather, parcels, shopping list); a "Yes" tells more (off, can be switched off per profile)
-- **V01.1.433** Snooze mail: put a mail away until this evening, tomorrow, the weekend or next week, it comes back unread on top
 
 
 

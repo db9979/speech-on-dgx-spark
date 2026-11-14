@@ -25,7 +25,7 @@ import kopplung
 import images
 import profiles
 import features
-from account import browser_profile
+from account import _allow, browser_profile
 from common import load_config
 from core import app_version, assistant, confirm_code, json_body, own_profile
 
@@ -610,9 +610,8 @@ async def app_settings_save(request: Request, prof=Depends(own_profile)):
 
 def _talk(uid):
     """The rows of TALK whose switch the admin released for this profile, in TALK's order."""
-    import account
     prof = profiles.by_id(uid)
-    allow = account._allow(prof, load_config().get("chat", {})) if prof else {}
+    allow = _allow(prof, load_config().get("chat", {})) if prof else {}
     return tuple(k for k, need in TALK.items() if not need or allow.get(need))
 
 
