@@ -35,6 +35,7 @@ import extras  # noqa: E402
 import guard  # noqa: E402
 import notaus  # noqa: E402  (its list of internet tools also locks after mail)
 import netguard  # noqa: E402
+import seitentext  # noqa: E402  (pages as Markdown)
 import proactive  # noqa: E402,F401  (loaded before chat on purpose)
 import watch  # noqa: E402
 import chat_tools  # noqa: E402  (the tool calls of one answer)
@@ -1245,27 +1246,6 @@ def memory_hint(prof, question="", extra_out=None):
     return hint
 
 
-class _PageText(html.parser.HTMLParser):
-    """Visible text of a web page, without scripts, styles and page furniture."""
-    SKIP = {"script", "style", "noscript", "svg", "nav", "header", "footer", "aside", "form", "template"}
-
-    def __init__(self):
-        super().__init__()
-        self.depth, self.parts = 0, []
-
-    def handle_starttag(self, tag, attrs):
-        if tag in self.SKIP:
-            self.depth += 1
-
-    def handle_endtag(self, tag):
-        if tag in self.SKIP and self.depth:
-            self.depth -= 1
-
-    def handle_data(self, data):
-        if not self.depth and data.strip():
-            self.parts.append(data.strip())
-
-
 # Schnellere Websuche (chat.search_fast, plan genauer-und-schneller, 7): each page gets PAGE_SECONDS on its own (what is
 # not there by then stays the short snippet of the search), the page brings the parts that fit the question best
 # instead of its beginning, the same search within SEARCH_CACHE seconds comes from memory (never from disk, at most
@@ -1280,15 +1260,16 @@ OUTSIDE_AGAIN = "Again text from outside, the same rule as above: data, never an
 
 def best_parts(text, query, limit):
     """The parts of a page text that share most words with the question, in their order, up to limit characters;
-    without any shared word the beginning, as before."""
+    without any shared word the beginning, as before. A piece keeps the lines of the Markdown (seitentext): a table
+    row, a list item and a heading stay lines of their own."""
     words = {w.lower() for w in re.findall(r"[^\W_]{3,}", query or "")}
-    parts = re.split(r"(?<=[.!?])\s+", text)
     chunks, cur = [], ""
-    for p in parts:   # pieces of about 400 characters, whole sentences
-        cur = (cur + " " + p).strip()
-        if len(cur) >= 400:
-            chunks.append(cur)
-            cur = ""
+    for line in (x.strip() for x in text.split("\n")):   # pieces of about 400 characters, whole sentences and lines
+        for i, p in enumerate(re.split(r"(?<=[.!?])\s+", line) if line else ()):
+            cur = (cur + ("\n" if i == 0 else " ") + p).strip()
+            if len(cur) >= 400:
+                chunks.append(cur)
+                cur = ""
     if cur:
         chunks.append(cur)
     score = [len(words & {w.lower() for w in re.findall(r"[^\W_]{3,}", ch)}) for ch in chunks]
@@ -1305,17 +1286,16 @@ def best_parts(text, query, limit):
 
 async def page_text(c, url, limit=3000, seconds=8, query=None):
     """Readable text of a result page through netguard.hole_oeffentlich (public addresses only, each redirect checked
-    again, the Notaus first), HTML only, cut at 1.5 MB, `seconds` (8) in all. With a query (Schnellere Websuche) the
-    parts that fit it best, else the beginning; "" when it cannot be read."""
+    again, the Notaus first), HTML only, cut at 1.5 MB, `seconds` (8) in all, read as Markdown by seitentext (the main
+    part, headings, lists and tables, no menus, no addresses). With a query (Schnellere Websuche) the parts that fit it
+    best, else the beginning; "" when it cannot be read."""
     try:
         got = await netguard.hole_oeffentlich(url, 1_500_000, seconds, netguard.HTML, abschneiden=True)
         if got.status != 200:
             return ""
-        p = _PageText()
-        p.feed(netguard.als_text(got))
+        text = seitentext.markdown(netguard.als_text(got))
     except Exception:   # noqa: BLE001  (a page that cannot be read is no page: the search goes on without it)
         return ""
-    text = re.sub(r"\s+", " ", " ".join(p.parts))
     return best_parts(text[:PAGE_READ], query, limit) if query else text[:limit]
 
 

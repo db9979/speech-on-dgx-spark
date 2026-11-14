@@ -2893,7 +2893,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ein Abruf für Seiten und Dateien",
 "title": "Ein Abruf für Seiten und Dateien",
-"text": "- Eine Seite oder Datei von einer Adresse holt nur netguard.hole_oeffentlich: die Seiten aus Suchergebnissen (chat.page_text), die Webseite aufs reMarkable (über page_text) und Links als Dokument. Zuerst der Notaus, dann vor jeder Anfrage netguard.oeffentlich (http oder https, keine Zugangsdaten, jede Adresse des Namens öffentlich) und an der Verbindung noch einmal die Stufe nur Internet; höchstens 4 Weiterleitungen, jede neu geprüft, ein fester Browser-Name, Inhaltstyp aus einer festen Liste, Größe und Zeit für alles zusammen. Eine Ablehnung ist ein festes Wort (netguard.WORTE)."
+"text": "- Eine Seite oder Datei von einer Adresse holt nur netguard.hole_oeffentlich: die Seiten aus Suchergebnissen (chat.page_text), die Webseite aufs reMarkable (über page_text) und Links als Dokument. Zuerst der Notaus, dann vor jeder Anfrage netguard.oeffentlich (http oder https, keine Zugangsdaten, jede Adresse des Namens öffentlich) und an der Verbindung noch einmal die Stufe nur Internet; höchstens 4 Weiterleitungen, jede neu geprüft, ein fester Browser-Name, Inhaltstyp aus einer festen Liste, Größe und Zeit für alles zusammen. Eine Ablehnung ist ein festes Wort (netguard.WORTE). Eine geholte HTML-Seite liest seitentext.markdown als Markdown: nur der Hauptteil (main, article), ohne Menüs, Cookie-Hinweise und versteckte Teile, Überschriften, Listen und Tabellen bleiben, Links und Bilder nur mit ihrem Text, nie mit Adresse."
 },
 {
 "lang": "de",
@@ -6302,6 +6302,22 @@
 "head": "Sprach-Chat",
 "title": "Links als Dokument",
 "text": "e; 304 oder dieselbe SHA-256 heißt „unverändert“, sonst liest documents.renew die neuen Bytes in dasselbe Dokument (Wissensbuch und Auswertungen sehen den neuen Text von selbst). Wartende oder gescheiterte Adressen nimmt ✕ heraus (DELETE /api/profile/docs/link/{id}). Werkzeug link_als_dokument: nur angeboten, wenn eine Adresse in der eigenen Nachricht steht (Weiche-Gruppe „Links als Dokument“: Adresse und ein Wort wie „speicher“, „übernimm“, „als Dokument“; „aufs reMarkable“ bleibt beim reMarkable), nimmt nur Adressen, die wörtlich in der Nachricht der Person stehen, höchstens 10, ist nach Text von außen gesperrt und gehört zu den Internet-Werkzeugen des Notaus. Der Seiteninhalt ist Text von außen: was eine Seite sagt, ist nie eine Anweisung. Zustand → Live: Kasten *Links* (wartend, Link-Dokumente, heute geholt, neu gelesen, unverändert, kB und Sekunden, nie eine Adresse); Logs Bereich Wissen: doklink: geholt | html 182 kb, doklink: unveraendert, doklink: abgelehnt | privat, doklink: grenze | 50. iPhone: Meine Sachen → Dokumente in der Panel-Ansicht (iphone.THINGS[\"documents\"]); Android über die Panel-Ansicht. Selbsttests tests/test_doklink.py."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Seiten als Markdown lesen",
+"text": "Seiten als Markdown lesen (Idee aus get-md des Nano Collective, MIT, in Python nachgebaut, keine neue Bibliothek): Jede HTML-Seite, die der Spark als Text liest, geht durch seitentext.markdown: Seiten aus Suchergebnissen und Seiten eines Auftrags (chat.page_text), die Webseite aufs reMarkable und HTML-Dateien sowie HTML-Mails in den eigenen Dokumenten (documents._html_text). Feste Regeln, kein Modell: nur der Hauptteil (<main>, <article>, role=\"main\", wenn er mindestens MAIN_MIN = 200 Zeichen hat, sonst die ganze Seite); weg sind Skripte, Formulare, Menüs, versteckte Teile und Teile, deren Klasse oder Kennung Cookie-Hinweis, Teilen, Newsletter, Kommentare, Werbung oder Seitenleiste nennt (JUNK; bleibt danach zu wenig übrig, liest es die Seite ohne diese Regel noch einmal). Überschriften werden #-Zeilen, Listen - oder 1. , Tabellen Markdown-Zeilen mit Kopf (eine Tabelle mit nur einer Spalte oder sehr langen Zellen ist Layout und wird zu Absätzen). Links und Bilder geben nur ihren Text, nie eine Adresse. So findet die Dokumentsuche Überschriften und Tabellen einer HTML-Datei, die passendsten Stellen einer Suchseite (chat.best_parts) behalten ihre Zeilen, und das reMarkable zeigt Über"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Seiten als Markdown lesen",
+"text": "schriften, Listen und Tabellen. Der Text bleibt Text von außen. Höchstens 2 MB HTML werden gelesen, eine Seite von 1,5 MB braucht etwa 0,2 Sekunden. Selbsttests tests/test_seitentext.py."
 },
 {
 "lang": "de",
@@ -20485,7 +20501,7 @@
 "file": "Architecture and data flow",
 "head": "One fetch for pages and files",
 "title": "One fetch for pages and files",
-"text": "- A page or file from an address is fetched only by netguard.hole_oeffentlich: the pages of search results (chat.page_text), the web page to the reMarkable (through page_text) and links as documents. First the kill switch, then before every request netguard.oeffentlich (http or https, no login data, every address of the name public) and at the connection once more the level internet only; at most 4 redirects, each checked again, a fixed browser name, content type from a fixed list, size and time for all of it. A refusal is a fixed word (netguard.WORTE)."
+"text": "- A page or file from an address is fetched only by netguard.hole_oeffentlich: the pages of search results (chat.page_text), the web page to the reMarkable (through page_text) and links as documents. First the kill switch, then before every request netguard.oeffentlich (http or https, no login data, every address of the name public) and at the connection once more the level internet only; at most 4 redirects, each checked again, a fixed browser name, content type from a fixed list, size and time for all of it. A refusal is a fixed word (netguard.WORTE). A fetched HTML page is read as Markdown by seitentext.markdown: only the main part (main, article), without menus, cookie notes and hidden parts, headings, lists and tables stay, links and images only with their text, never with an address."
 },
 {
 "lang": "en",
@@ -23782,6 +23798,22 @@
 "head": "Voice chat",
 "title": "Links as documents",
 "text": ".renew reads the new bytes into the same document (knowledge book and analyses see the new text by themselves). ✕ takes waiting or failed addresses out (DELETE /api/profile/docs/link/{id}). Tool link_als_dokument: only offered when an address stands in the own message (Weiche group \"Links as documents\": an address and a word like \"save\", \"store\", \"as a document\"; \"to the reMarkable\" stays with the reMarkable), takes only addresses that stand word for word in the person's message, at most 10, is locked after outside text and belongs to the kill switch's internet tools. The page content is outside text: what a page says is never an instruction. Status → Live: box *Links* (waiting, link documents, fetched today, read again, unchanged, kB and seconds, never an address); logs area knowledge: doklink: geholt | html 182 kb, doklink: unveraendert, doklink: abgelehnt | privat, doklink: grenze | 50. iPhone: My things → Documents in the panel view (iphone.THINGS[\"documents\"]); Android through the panel view. Self-tests tests/test_doklink.py."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Reading pages as Markdown",
+"text": "Reading pages as Markdown (idea from get-md of the Nano Collective, MIT, rebuilt in Python, no new library): every HTML page the Spark reads as text goes through seitentext.markdown: pages of search results and pages a job reads (chat.page_text), the web page to the reMarkable and HTML files and HTML mails in the own documents (documents._html_text). Fixed rules, no model: only the main part (<main>, <article>, role=\"main\", when it holds at least MAIN_MIN = 200 characters, else the whole page); gone are scripts, forms, menus, hidden parts and parts whose class or id names a cookie note, sharing, newsletter, comments, ads or a sidebar (JUNK; when too little is left after that, the page is read once more without this rule). Headings become # lines, lists - or 1. , tables Markdown rows with their head (a table of one column or with very long cells is layout and becomes paragraphs). Links and images give their text only, never an address. So the document search finds the headings and tables of an HTML file, the best-fitting parts of a search page (chat.best_parts) keep their lines, and the reMarkable shows headings, lists and tables. The text stays outside text. At most 2 MB of HTML ar"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Reading pages as Markdown",
+"text": "e read, a page of 1.5 MB takes about 0.2 seconds. Self-tests tests/test_seitentext.py."
 },
 {
 "lang": "en",

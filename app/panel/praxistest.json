@@ -5958,6 +5958,14 @@
 "text": "Pi updaten. Am Handy im Browser (Hochformat) unten „Heute“ antippen. Unter den Karten steht „Meine Seiten“ mit Kalender, E-Mail, Listen, Offen, Kontakte, Wissensbuch, Finden, Mappen und Dungeon-Master (soweit freigegeben). Jede Zeile öffnet ihre Seite, „‹ Heute“ oben führt zurück. Dann Verwalten → Darstellung → „Am Rechner-Layout zeigen“: das Menü (unten „Verwalten“) listet dieselben Seiten; mit einem Profil ohne Admin ebenso.",
 "thread": "Alle Funktionen im Hochformat zeigen",
 "test": "test_hochformat.Browser.test_every_page_of_the_menu_is_reachable_in_portrait"
+},
+{
+"id": "P873",
+"v": 1429,
+"titel": "Seiten als Markdown lesen",
+"text": "Pi updaten. 1) Den Assistenten etwas fragen, das er im Web nachschlagen muss und das auf der Seite als Tabelle steht (z. B. „Wie sind die Öffnungszeiten vom Hornbach in Mannheim?“): die Antwort stimmt mit der Seite überein, ohne Menü- oder Cookie-Text. 2) Unter Ich → Dokumente eine gespeicherte HTML-Seite mit Überschriften und einer Tabelle hochladen und danach fragen: unter der Antwort steht der passende Abschnitt. 3) Optional: „Leg die Seite https://… aufs reMarkable“: dort stehen Überschriften, Listen und Tabellen statt eines langen Textblocks.",
+"thread": "Webseiten als Markdown besser lesen",
+"test": "test_seitentext.Markdown.test_main_part_with_its_shape"
 }
 ]
 }

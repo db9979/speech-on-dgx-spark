@@ -164,13 +164,18 @@ SEITEN = {
                  "Zugangsdaten, jede Adresse des Namens öffentlich) und an der Verbindung noch einmal die Stufe nur "
                  "Internet; höchstens {netguard.WEITER} Weiterleitungen, jede neu geprüft, ein fester Browser-Name, "
                  "Inhaltstyp aus einer festen Liste, Größe und Zeit für alles zusammen. Eine Ablehnung ist ein festes "
-                 "Wort (netguard.WORTE).",
+                 "Wort (netguard.WORTE). Eine geholte HTML-Seite liest seitentext.markdown als Markdown: nur der "
+                 "Hauptteil (main, article), ohne Menüs, Cookie-Hinweise und versteckte Teile, Überschriften, Listen "
+                 "und Tabellen bleiben, Links und Bilder nur mit ihrem Text, nie mit Adresse.",
                  "A page or file from an address is fetched only by netguard.hole_oeffentlich: the pages of search "
                  "results (chat.page_text), the web page to the reMarkable (through page_text) and links as "
                  "documents. First the kill switch, then before every request netguard.oeffentlich (http or https, no "
                  "login data, every address of the name public) and at the connection once more the level internet "
                  "only; at most {netguard.WEITER} redirects, each checked again, a fixed browser name, content type "
-                 "from a fixed list, size and time for all of it. A refusal is a fixed word (netguard.WORTE)."),
+                 "from a fixed list, size and time for all of it. A refusal is a fixed word (netguard.WORTE). A "
+                 "fetched HTML page is read as Markdown by seitentext.markdown: only the main part (main, article), "
+                 "without menus, cookie notes and hidden parts, headings, lists and tables stay, links and images "
+                 "only with their text, never with an address."),
             ]),
             (("Ein Proxy für ein Programm mit eigenem Netz", "A proxy for a program with its own network code"), [
                 ("Ein Hilfsprogramm mit eigenem Netz-Code (yt-dlp für YouTube-Links abschreiben) kommt nie direkt "

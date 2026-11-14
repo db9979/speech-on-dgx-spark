@@ -282,6 +282,7 @@ Own documents, memory, earlier conversations, Kiwix and Wikipedia, created docum
 | `app/panel/quellen.py` | Quellen-Weiche: the second stage of the Weiche. |
 | `app/panel/recall.py` | What a profile talked about before: search in its saved conversations, and facts learned from them automatically (profiles only; guests keep their conversati … |
 | `app/panel/schwer.py` | Schwere Aufträge: one queue and one place on the model computer for the models that load on demand. |
+| `app/panel/seitentext.py` | Seitentext: the readable part of an HTML page as Markdown. |
 | `app/panel/suchpruefung.py` | Suchprüfung: how often does the document search find the right passage? |
 | `app/panel/symbole.py` | Symbols for slides and documents. |
 | `app/panel/tagebuch.py` | Spark-Tagebuch: what the Spark itself did for a profile. |
@@ -2967,7 +2968,7 @@ Applies at: [step 6](#kn-waechter-s6), [step 8](#kn-waechter-s8)
 
 #### One fetch for pages and files
 
-- A page or file from an address is fetched only by netguard.hole_oeffentlich: the pages of search results (chat.page_text), the web page to the reMarkable (through page_text) and links as documents. First the kill switch, then before every request netguard.oeffentlich (http or https, no login data, every address of the name public) and at the connection once more the level internet only; at most 4 redirects, each checked again, a fixed browser name, content type from a fixed list, size and time for all of it. A refusal is a fixed word (netguard.WORTE).
+- A page or file from an address is fetched only by netguard.hole_oeffentlich: the pages of search results (chat.page_text), the web page to the reMarkable (through page_text) and links as documents. First the kill switch, then before every request netguard.oeffentlich (http or https, no login data, every address of the name public) and at the connection once more the level internet only; at most 4 redirects, each checked again, a fixed browser name, content type from a fixed list, size and time for all of it. A refusal is a fixed word (netguard.WORTE). A fetched HTML page is read as Markdown by seitentext.markdown: only the main part (main, article), without menus, cookie notes and hidden parts, headings, lists and tables stay, links and images only with their text, never with an address.
 
 #### A proxy for a program with its own network code
 

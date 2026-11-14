@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older versions (V01.0.000 to V01.0.999 and the lines before version numbers): [CHANGELOG-V01.0.md](CHANGELOG-V01.0.md).
 
+- **V01.1.429** · 2026-11-14 · Webseiten und HTML-Dateien als Markdown lesen: nur der Hauptteil ohne Menüs und Cookie-Hinweise, Überschriften, Listen und Tabellen bleiben (Idee aus get-md, Nano Collective)
 - **V01.1.428** · 2026-11-14 · Alles auch im Hochformat: am Handy unter Heute → Meine Seiten stehen Kalender, E-Mail, Listen, Offen, Kontakte, Wissensbuch, Finden, Mappen, Dungeon-Master und Open WebUI (vorher nur im Querformat erreichbar); das Menü der Rechner-Ansicht am Handy zeigt auch Profilen ihre Seiten (P872)
 - **V01.1.427** · 2026-11-13 · Schwachstellen, Paket 4: „Als Issue melden“ je Fund und auf der Prüfbitte-Karte (spark-meldungen, Label schwachstelle, je Kennung nur ein offenes Issue), „Erreichbar“ als fester Satz und „Bewusst hinnehmen“ für 30 Tage mit Grund
 - **V01.1.426** · 2026-11-13 · E-Mail (Ideen aus pl_mail 1): über dem Posteingang bis zu 3 Sendungen aus „Pakete“, heute kommende zuerst, „Verfolgen“ nur auf die feste Seite des Paketdienstes, ✕ bis sich etwas tut, auch am iPhone; ein Bestätigungscode, dessen Mail eine Gültigkeit nennt, verschwindet danach von jedem Gerät und wird nicht nachgefasst (P869, P870)

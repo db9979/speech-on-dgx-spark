@@ -21,7 +21,6 @@ kept as a cleaned JPEG in the table "pages" until the language model has read it
 import email
 import email.policy
 import html
-import html.parser
 import io
 import json
 import os
@@ -34,6 +33,7 @@ import zipfile
 from typing import NamedTuple
 
 import profiles
+import seitentext
 
 MAX_FILE = 100 * 1024 * 1024    # PDFs by default (scanned books are big; V01.0.242, was 20 MB for all)
 MAX_PDF = 300 * 1024 * 1024     # the most the admin may allow (chat.doc_max_mb)
@@ -252,30 +252,10 @@ def _drop_chunks(con, doc_id):
 
 
 # ---------------------------------------------------------------- extraction
-class _HtmlText(html.parser.HTMLParser):
-    def __init__(self):
-        super().__init__()
-        self.parts, self.skip = [], 0
-
-    def handle_starttag(self, tag, attrs):
-        if tag in ("script", "style"):
-            self.skip += 1
-        elif tag in ("p", "br", "div", "li", "tr", "h1", "h2", "h3", "h4"):
-            self.parts.append("\n")
-
-    def handle_endtag(self, tag):
-        if tag in ("script", "style") and self.skip:
-            self.skip -= 1
-
-    def handle_data(self, data):
-        if not self.skip:
-            self.parts.append(data)
-
-
 def _html_text(s):
-    p = _HtmlText()
-    p.feed(s)
-    return "".join(p.parts)
+    """An HTML file or HTML mail as Markdown (seitentext: the main part, headings, lists and tables), so pieces sees
+    its headings and tables."""
+    return seitentext.markdown(s)
 
 
 def _decode(data):

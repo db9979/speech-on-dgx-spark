@@ -282,6 +282,7 @@ Eigene Dokumente, Gedächtnis, frühere Gespräche, Kiwix und Wikipedia, erstell
 | `app/panel/quellen.py` | Quellen-Weiche: intern, extern oder beides nach festen Regeln, Treffer-Probe im eigenen Index |
 | `app/panel/recall.py` | Suche in früheren Gesprächen, gelernte Fakten |
 | `app/panel/schwer.py` | Schwere Aufträge: eine Warteschlange für Bild und Musik, immer nur ein Modell, Platz und Wartezeit |
+| `app/panel/seitentext.py` | Seiten als Markdown: Hauptteil, Überschriften, Listen und Tabellen einer HTML-Seite, ohne Menüs und Adressen |
 | `app/panel/suchpruefung.py` | Suchprüfung: Prüffragen messen, wie gut die Dokumentensuche trifft |
 | `app/panel/symbole.py` | Feste Symbole für Folien und Dokumente |
 | `app/panel/tagebuch.py` | Spark-Tagebuch: was der Spark selbst getan hat |
@@ -2967,7 +2968,7 @@ Gilt bei: [Schritt 6](#kn-waechter-s6), [Schritt 8](#kn-waechter-s8)
 
 #### Ein Abruf für Seiten und Dateien
 
-- Eine Seite oder Datei von einer Adresse holt nur netguard.hole_oeffentlich: die Seiten aus Suchergebnissen (chat.page_text), die Webseite aufs reMarkable (über page_text) und Links als Dokument. Zuerst der Notaus, dann vor jeder Anfrage netguard.oeffentlich (http oder https, keine Zugangsdaten, jede Adresse des Namens öffentlich) und an der Verbindung noch einmal die Stufe nur Internet; höchstens 4 Weiterleitungen, jede neu geprüft, ein fester Browser-Name, Inhaltstyp aus einer festen Liste, Größe und Zeit für alles zusammen. Eine Ablehnung ist ein festes Wort (netguard.WORTE).
+- Eine Seite oder Datei von einer Adresse holt nur netguard.hole_oeffentlich: die Seiten aus Suchergebnissen (chat.page_text), die Webseite aufs reMarkable (über page_text) und Links als Dokument. Zuerst der Notaus, dann vor jeder Anfrage netguard.oeffentlich (http oder https, keine Zugangsdaten, jede Adresse des Namens öffentlich) und an der Verbindung noch einmal die Stufe nur Internet; höchstens 4 Weiterleitungen, jede neu geprüft, ein fester Browser-Name, Inhaltstyp aus einer festen Liste, Größe und Zeit für alles zusammen. Eine Ablehnung ist ein festes Wort (netguard.WORTE). Eine geholte HTML-Seite liest seitentext.markdown als Markdown: nur der Hauptteil (main, article), ohne Menüs, Cookie-Hinweise und versteckte Teile, Überschriften, Listen und Tabellen bleiben, Links und Bilder nur mit ihrem Text, nie mit Adresse.
 
 #### Ein Proxy für ein Programm mit eigenem Netz
 

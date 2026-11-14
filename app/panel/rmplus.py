@@ -394,8 +394,8 @@ async def web_page(uid, url, title=""):
     if len(text) < 200:
         return "Die Seite ließ sich nicht lesen (nicht öffentlich, kein HTML oder zu wenig Text)."
     title = remarkable._clean(title, 80) or re.sub(r"^https?://(www\.)?", "", url)[:60]
-    paras = re.sub(r"(?<=[.!?])\s+(?=[A-ZÄÖÜ])", "\n\n", text)      # page_text is one line: sentences as paragraphs
-    r = await remarkable.place(uid, title, remarkable.epub(title, paras + "\n\nQuelle: " + url), src="web", art="web")
+    # page_text is Markdown (seitentext): epub reads its headings, lists and tables like a sheet
+    r = await remarkable.place(uid, title, remarkable.epub(title, text + "\n\nQuelle: " + url), src="web", art="web")
     return "Liegt jetzt auf dem reMarkable " + remarkable._told(r)
 
 
