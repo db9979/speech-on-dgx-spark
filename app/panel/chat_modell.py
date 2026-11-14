@@ -12,6 +12,7 @@ import datetime
 import frisch
 import gedaechtnis
 import gespraech
+import gleichzeitig
 import homeassistant
 import httpx
 import images
@@ -233,6 +234,15 @@ async def gespraech_ueberblick(turn, text, en=False, now=None):
     return said
 
 
+def tool_args(call):
+    """The arguments the model wrote for one tool call as a dict ({} when they are no JSON object)."""
+    try:
+        args = json.loads(call["arguments"] or "{}")
+    except ValueError:
+        return {}
+    return args if isinstance(args, dict) else {}
+
+
 async def model_turn(*, acked, body, c, came_from, carry, ccfg, cfg, check_on, ex, fix_fix, fix_prev, fixed=None, ha, ha_direct, ha_read, known,
                      lheaders, llm_round, locked, messages, need, out, own_browser, run_tool, said_before, search, sentences,
                      settle, small, speak, src, t0, think_tools, tm, tool_temp, tools, tr, trace, turn, vip, who):
@@ -433,6 +443,7 @@ async def model_turn(*, acked, body, c, came_from, carry, ccfg, cfg, check_on, e
             st["check"] = check_on   # an answer from a tool result: its figures are checked
         looked, last_noted = {}, False
         loop_stop = bool(ccfg.get("loop_stop", True))
+        parallel = bool(who) and features.allowed(gleichzeitig.KEY, who["id"], ccfg)
         for rnd in range(5):  # a few tool rounds (at most max_searches searches), then the answer
             payload = dict(base, messages=msgs)
             offer = [t for t in tools if (t is not chat.SEARCH_TOOL or searches < max_searches)
@@ -518,60 +529,76 @@ async def model_turn(*, acked, body, c, came_from, carry, ccfg, cfg, check_on, e
                 st["first"] = False
                 en = chat.guess_language(messages[-1]["content"]) == "English"
                 await sentences.put(filler[1] if en else filler[0])
-            for k, x in enumerate(calls):
-                if k >= chat.MAX_CALLS:
+            # Lesende Werkzeuge gleichzeitig (gleichzeitig.py): only reading tools by fixed rules start together; their
+            # results go on below in the model's order, every step after them as before
+            started = {}
+            if parallel:
+                at_once = gleichzeitig.auswahl(calls, st["stopped"], notaus.INTERNET_TOOLS, chat.MAX_CALLS)
+                if at_once:
+                    t_par = time.time()
+                    for k in at_once:
+                        name = calls[k]["name"]
+                        if tr:
+                            tr.now("tool", name if name in known else "unbekannt", t_par)
+                        started[k] = (asyncio.ensure_future(run_tool(name, tool_args(calls[k]), st)), t_par)
+                    print(f"chat: gleichzeitig: {len(at_once)} Werkzeuge", flush=True)
+            done_at_once = set(started)
+            try:
+                for k, x in enumerate(calls):
+                    if k >= chat.MAX_CALLS:
+                        if tr:
+                            tr.step("tool", x["name"] if x["name"] in known else "unbekannt", time.time(), ok=False, many=True)
+                        msgs.append({"role": "tool", "tool_call_id": x["id"],
+                                     "content": f"Not done: at most {chat.MAX_CALLS} tool calls per step."})
+                        continue
+                    args = tool_args(x)
+                    if x["name"] in st["stopped"]:   # "Fehlerschleife stoppen": failed twice, not run a third time
+                        msgs.append({"role": "tool", "tool_call_id": x["id"], "content": chat.LOOP_NOTE})
+                        continue
+                    t_tool = time.time()
+                    if k in started:   # started together with the others (gleichzeitig.py): its own start time
+                        task, t_tool = started.pop(k)
+                    elif tr:
+                        tr.now("tool", x["name"] if x["name"] in known else "unbekannt", t_tool)
+                    offered = x["name"] in st["offered"]
+                    result = await (task if k in done_at_once else run_tool(x["name"], args, st))
+                    if getattr(turn, "steps_on", False) and offered:   # Ablauf zeigen (ablauf.py): name, ok, time
+                        await out.put(ablauf.step(x["name"], result, time.time() - t_tool))
+                    if not st["ran"] and getattr(turn, "route", None) is not None and not turn.route.names:
+                        import weiche   # Lernen: the group of the first tool of an unclear question, never its words
+                        weiche.learn(turn.route, x["name"])
+                    st["ran"] += 1
+                    a = taten.act(x["name"], args, result)
+                    if a:
+                        st["acts"].append(a)
+                        if a["ok"] and who and own_browser:   # „Mach das rückgängig“ (aendern.py)
+                            aendern.note_tool(who["id"], x["name"], args, result)
+                    elif not taten.failed(result):
+                        st["looked"] = True
+                    if tm["rounds"]:
+                        tm["rounds"][-1]["tools"].append((x["name"], time.time() - t_tool))
                     if tr:
-                        tr.step("tool", x["name"] if x["name"] in known else "unbekannt", time.time(), ok=False, many=True)
-                    msgs.append({"role": "tool", "tool_call_id": x["id"],
-                                 "content": f"Not done: at most {chat.MAX_CALLS} tool calls per step."})
-                    continue
-                try:
-                    args = json.loads(x["arguments"] or "{}")
-                    args = args if isinstance(args, dict) else {}
-                except ValueError:
-                    args = {}
-                if x["name"] in st["stopped"]:   # "Fehlerschleife stoppen": failed twice, not run a third time
-                    msgs.append({"role": "tool", "tool_call_id": x["id"], "content": chat.LOOP_NOTE})
-                    continue
-                t_tool = time.time()
-                if tr:
-                    tr.now("tool", x["name"] if x["name"] in known else "unbekannt", t_tool)
-                offered = x["name"] in st["offered"]
-                result = await run_tool(x["name"], args, st)
-                if getattr(turn, "steps_on", False) and offered:   # Ablauf zeigen (ablauf.py): name, ok, time
-                    await out.put(ablauf.step(x["name"], result, time.time() - t_tool))
-                if not st["ran"] and getattr(turn, "route", None) is not None and not turn.route.names:
-                    import weiche   # Lernen: the group of the first tool of an unclear question, never its words
-                    weiche.learn(turn.route, x["name"])
-                st["ran"] += 1
-                a = taten.act(x["name"], args, result)
-                if a:
-                    st["acts"].append(a)
-                    if a["ok"] and who and own_browser:   # „Mach das rückgängig“ (aendern.py)
-                        aendern.note_tool(who["id"], x["name"], args, result)
-                elif not taten.failed(result):
-                    st["looked"] = True
-                if tm["rounds"]:
-                    tm["rounds"][-1]["tools"].append((x["name"], time.time() - t_tool))
-                if tr:
-                    tr.step("tool", x["name"] if x["name"] in known else "unbekannt", t_tool, time.time(),
-                            **chat.tool_info(x["name"], result, st, ex))
-                trace["calls"].append({"name": x["name"], "args": json.dumps(args, ensure_ascii=False), "result": result})
-                msgs.append({"role": "tool", "tool_call_id": x["id"], "content": result})
-                if loop_stop and isinstance(result, str) and taten.failed(result) and chat.loop_count(st, x["name"], args):
-                    st["stopped"].add(x["name"])
-                    msgs[-1]["content"] += "\n\n" + chat.LOOP_NOTE
-                    print(f"chat: loop stop: tool={x['name'] if x['name'] in known else 'unbekannt'} "
-                          f"fails={st['fails'].get(x['name'], 0)}", flush=True)
-                    trace["calls"].append({"name": "Schleife gestoppt", "args": x["name"],
-                                           "result": "zweimal derselbe Fehler, nicht noch einmal aufgerufen"})
-                    if tr:
-                        tr.step("check", "Schleife gestoppt", time.time(), tool=x["name"] if x["name"] in known else "unbekannt")
-                    taten.note_live("loop")
-                if x["name"] == "web_search":
-                    searches += 1
-                if x["name"] in chat.LOOKUPS:
-                    looked[x["name"]] = looked.get(x["name"], 0) + 1
+                        tr.step("tool", x["name"] if x["name"] in known else "unbekannt", t_tool, time.time(),
+                                **chat.tool_info(x["name"], result, st, ex))
+                    trace["calls"].append({"name": x["name"], "args": json.dumps(args, ensure_ascii=False), "result": result})
+                    msgs.append({"role": "tool", "tool_call_id": x["id"], "content": result})
+                    if loop_stop and isinstance(result, str) and taten.failed(result) and chat.loop_count(st, x["name"], args):
+                        st["stopped"].add(x["name"])
+                        msgs[-1]["content"] += "\n\n" + chat.LOOP_NOTE
+                        print(f"chat: loop stop: tool={x['name'] if x['name'] in known else 'unbekannt'} "
+                              f"fails={st['fails'].get(x['name'], 0)}", flush=True)
+                        trace["calls"].append({"name": "Schleife gestoppt", "args": x["name"],
+                                               "result": "zweimal derselbe Fehler, nicht noch einmal aufgerufen"})
+                        if tr:
+                            tr.step("check", "Schleife gestoppt", time.time(), tool=x["name"] if x["name"] in known else "unbekannt")
+                        taten.note_live("loop")
+                    if x["name"] == "web_search":
+                        searches += 1
+                    if x["name"] in chat.LOOKUPS:
+                        looked[x["name"]] = looked.get(x["name"], 0) + 1
+            finally:
+                for task, _ in started.values():
+                    task.cancel()   # an answer stopped half way: no tool goes on running alone
             if search and st["mail"] and not st.get("search_said"):
                 # the search just went away (mail was read): the model hears why, so it can say so
                 st["search_said"] = True

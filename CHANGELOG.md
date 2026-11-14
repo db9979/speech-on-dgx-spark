@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older versions (V01.0.000 to V01.0.999 and the lines before version numbers): [CHANGELOG-V01.0.md](CHANGELOG-V01.0.md).
 
+- **V01.1.444** · 2026-11-14 · Ideen aus OmniBot: Lesende Werkzeuge gleichzeitig (ruft das Sprachmodell in einem Schritt mehrere Werkzeuge auf, die nur lesen, starten sie zusammen; feste Regeln) und Lange Gespräche zusammenfassen (was die Kürzung weglässt, kommt als kurze Zusammenfassung wieder, im Hintergrund geschrieben); beide Admin-Schalter aus (P888, P889)
 - **V01.1.443** · 2026-11-14 · ROT-FIX zu V01.1.442: iphone._talk holt account._allow oben im Modul statt mit einem neuen Import in der Funktion (test_schichten: höchstens 2917 Importe in Funktionen)
 - **V01.1.442** · 2026-11-14 · iPhone-App: Mein Profil → Gespräch mit allen freigegebenen Zeilen aus Ich → Gespräch (Zuhören, Antwort, Chats, Weiteres) und Eigene Stimme (fertige und eigene Stimmen hören und wählen, neue gestalten, löschen); Im Panel öffnen → Gespräch springt zu Mein Profil (P887)
 - **V01.1.441** · 2026-11-14 · Spark-Clients, Vorrang auf dem Spark (E3): ein Client der Klasse „Hintergrund“ rückt an den Toren nie auf und wartet, solange auf dem Spark jemand spricht, höchstens 60 Sekunden (P887)

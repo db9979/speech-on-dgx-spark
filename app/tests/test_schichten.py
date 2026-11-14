@@ -23,11 +23,11 @@ import unittest
 PANEL = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "panel")
 GRUND = ("aktiv", "arbeiter", "ausleiten", "beobachten", "dateien", "docrender", "dungeon_ablage", "dungeon_balance",
          "dungeon_bestiarium", "dungeon_einordnung", "dungeon_legenden", "dungeon_tabellen", "dungeon_vorlesen",
-         "embed_worker", "folien", "gespraech", "kalenderspiegel", "kalserie", "kontaktkarte", "kopplung", "latency", "pdftabellen",
+         "embed_worker", "folien", "gespraech", "gleichzeitig", "kalenderspiegel", "kalserie", "kontaktkarte", "kopplung", "latency", "pdftabellen",
          "quellenangabe", "rechenteile", "schwachstellen_stand", "schwer", "seitentext", "signatur", "sse", "steckbrief", "steuer", "stoppwort", "stufen", "symbole", "taten",
          "technik_seiten", "technik_seiten_anfrage", "technik_seiten_daten", "technik_seiten_geraete",
          "technik_seiten_kern", "technik_seiten_modelle", "technik_seiten_netz", "technik_seiten_zugang", "telefon_ton",
-         "undo", "vault", "wege", "werkzeug_abdeckung", "werkzeuge")
+         "undo", "vault", "verlaufkurz", "wege", "werkzeug_abdeckung", "werkzeuge")
 CHAT_KREIS = {"chat", "chat_modell", "chat_ton", "chat_tools", "chat_turn"}
 DUNGEON_KREIS = {"dungeon", "dungeon_auto", "dungeon_geschichten", "dungeon_gesicht"}
 MODUL_KREISE = (CHAT_KREIS, DUNGEON_KREIS)   # the cycles at module level on V01.1.395: they may only shrink

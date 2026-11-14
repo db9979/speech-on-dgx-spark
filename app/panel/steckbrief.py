@@ -85,6 +85,19 @@ STECKBRIEFE = {
     "gedkurz": Steckbrief(de="Großes Gedächtnis kürzen", en="Trim a large memory", gruppe="speed",
         schalter=("memory_trim",), anleitung="gedkurz",
         ohne_werkzeug=("ohne", "Einstellung, wie Antworten entstehen"), begleiter="spark"),
+    # gleichzeitig.py (idea from OmniBot, Dominik 2026-11-14): reading tools of one round start at the same time
+    "gleichzeitig": Steckbrief(de="Lesende Werkzeuge gleichzeitig", en="Reading tools at the same time", gruppe="speed",
+        schalter=("tools_parallel",), anleitung="gleichzeitig",
+        ohne_werkzeug=("ohne", "Einstellung, wie Antworten entstehen"), log=("chat", "gleichzeitig"), begleiter="spark",
+        modul=("gleichzeitig", "gespraech", "Lesende Werkzeuge gleichzeitig: feste Regeln, welche Werkzeuge einer Runde "
+                                            "zusammen starten")),
+    # verlaufkurz.py (idea from OmniBot, Dominik 2026-11-14): what the trimming of a long conversation drops comes back
+    # as a short summary written in the background
+    "verlaufkurz": Steckbrief(de="Lange Gespräche zusammenfassen", en="Summarize long conversations", gruppe="speed",
+        schalter=("history_summary",), anleitung="verlaufkurz",
+        ohne_werkzeug=("ohne", "Einstellung, wie Antworten entstehen"), log=("chat", "zusammenfassung"), begleiter="spark",
+        modul=("verlaufkurz", "gespraech", "Lange Gespräche zusammenfassen: was die Kürzung weglässt, kommt als kurze "
+                                           "Zusammenfassung wieder")),
     "ack": Steckbrief(de="Sofortige Rückmeldung", en="Instant acknowledgement", gruppe="speed",
         schalter=("instant_ack",), anleitung="ack", parent="routing", me="setbox",
         ohne_werkzeug=("ohne", "Einstellung, wie Antworten entstehen"),

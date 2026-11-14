@@ -271,6 +271,14 @@ def fake_llm():
                 yield _sse({"choices": [{"delta": {}, "finish_reason": "tool_calls"}]})
                 yield "data: [DONE]\n\n"
                 return
+            if role == "user" and c.startswith("BOTH "):  # one round with several different tools ("a {} || b {}")
+                parts = [p.strip().partition(" ") for p in c[5:].split(" || ")]
+                yield _sse({"choices": [{"delta": {"tool_calls": [
+                    {"index": i, "id": f"b{i}", "type": "function", "function": {"name": n, "arguments": a or "{}"}}
+                    for i, (n, _, a) in enumerate(parts)]}, "finish_reason": None}]})
+                yield _sse({"choices": [{"delta": {}, "finish_reason": "tool_calls"}]})
+                yield "data: [DONE]\n\n"
+                return
             loop = next((m.get("content") or "" for m in b["messages"] if m["role"] == "user"
                          and str(m.get("content") or "").startswith("LOOP ")), "")
             if loop:  # a model that calls the same tool again every round while it is offered

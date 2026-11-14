@@ -37,6 +37,8 @@ import chat  # noqa: E402  (constants and helpers; imported fully before any cal
 import features  # noqa: E402
 import gespraech  # noqa: E402  (Natürliches Gespräch, bottom layer)
 import saetze  # noqa: E402
+import llm  # noqa: E402
+import verlaufkurz  # noqa: E402  (Lange Gespräche zusammenfassen, bottom layer)
 import wartung  # noqa: E402  (Wartungspause)
 
 
@@ -154,7 +156,9 @@ async def _eingang(z):
     # by their text further down (proactive.basis_note), also when the trimming drops them
     z.said_all = [str(m["content"]) for m in z.messages if m["role"] == "assistant"][-20:]
     # with chat.prompt_cache the kept part starts at a fixed question for several turns (chat.trim_history)
+    full = z.messages
     z.messages = chat.trim_history(z.messages, chat.history_chars(z.ccfg), anchor=z.ccfg.get("prompt_cache") is True)
+    z.dropped = full[:len(full) - len(z.messages)]   # Lange Gespräche zusammenfassen (verlaufkurz.py, further down)
     # Outside text from earlier turns: the latest such answer still counts as read in this turn (it
     # could ask for something "in the next message"), so this turn starts locked; older ones are not
     # sent again at all.
@@ -443,6 +447,12 @@ async def _wer(z):
     z.style = chat.own_style(z.ccfg, z.who, z.pset, z.own_browser)
     if z.style:
         z.system = (z.system + "\n\n" + chat.STYLE_INTRO + z.style).strip()
+    # Lange Gespräche zusammenfassen (verlaufkurz.py): what the trimming dropped comes back as a short summary, only for
+    # the profile itself (never guests or a voice the speaker did not know)
+    if z.dropped and z.who and not z.guest and not z.stranger and features.allowed(verlaufkurz.KEY, z.who["id"], z.ccfg):
+        z.summary = verlaufkurz.fuer_zug(z.who["id"], z.dropped, z.ccfg, llm.complete)
+        if z.summary:
+            z.system = (z.system + "\n\n" + verlaufkurz.NOTE + z.summary).strip()
     # roles (roles.py): "Sei jetzt der Butler" is carried out by the panel with fixed rules, only for a
     # name the profile saved, only from its own words and voice; the model just says the result
     import roles

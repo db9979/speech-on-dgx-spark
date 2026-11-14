@@ -58,11 +58,15 @@ SEITEN = {
               ("Der Verlauf wird auf sein Budget gekürzt. Steht eine Antwort aus fremdem Text unter den letzten drei "
                "Nachrichten, beginnt dieser Zug gesperrt; ältere werden gar nicht mehr mitgeschickt. Wünscht sich die "
                "Person in eigenen Worten ein Lied, bleibt so eine Antwort bis {musik.BACK} Nachrichten zurück als Daten "
-               "dabei (Akkorde, Stil). Eine Bildschirm-Beschreibung kommt nur als fester Hinweis mit und sperrt nichts.",
+               "dabei (Akkorde, Stil). Eine Bildschirm-Beschreibung kommt nur als fester Hinweis mit und sperrt nichts. "
+               "Mit „Lange Gespräche zusammenfassen“ kommt für ein Profil, was hier wegfiel, als kurze Zusammenfassung "
+               "in den Systemprompt (verlaufkurz.fuer_zug, im Hintergrund geschrieben, ohne Mail- und Webtext).",
                "The history is trimmed to its budget. If an answer from outside text is among the last three messages, "
                "this turn starts locked; older ones are not sent at all. When the person asks for a song in their own "
                "words, such an answer up to {musik.BACK} messages back stays along as data (chords, style). A screen "
-               "description only comes along as a fixed note and locks nothing.")),
+               "description only comes along as a fixed note and locks nothing. With „Summarize long conversations“ "
+               "what dropped here comes back for a profile as a short summary in the system prompt "
+               "(verlaufkurz.fuer_zug, written in the background, without mail and web text).")),
             S("s3", "frage", ("Gast oder fremde Stimme?", "Guest or unknown voice?"),
               ("kein Profil oder Lautsprecher/Telefon erkennt die Stimme nicht",
                "no profile or the speaker/phone does not know the voice"),
@@ -786,7 +790,7 @@ SEITEN = {
         "heute": [],
     },
     "antwort": {
-        "stand": "5aa8d04ac1",
+        "stand": "b72a98aa11",
         "bezug": {
             "chat.MAX_SAVES": ["s11"], "chat.LOOP_SAME": ["s11"], "chat._answer": ["s4", "s5", "s11"], "chat_modell.model_turn": ["s4", "s11"], "chat_modell.herkunft_und_chip": ["s3"], "chat_modell.quellenangabe_zeile": ["s3"], "chat_ton.speech_out": ["s8"],
             "chat.split_sentences": ["s5"], "chat.said_key": ["s8"], "chat.no_code": ["s8"],
@@ -873,14 +877,19 @@ SEITEN = {
                "Bildschirm (Lautsprecher, Telefon, Uhr, Siri, Android-Assistent, CarPlay) bekommen höchstens "
                "{chat.SPOKEN_MAX_TOKENS} Tokens; eine längere Antwort endet am letzten ganzen Satz. Gibt ein Werkzeug "
                "den festen Satz des Panels zurück (Sofort-Karte von Finden: ein Treffer klar vorn), endet die Antwort "
-               "dort: gezeigt wird der ganze Satz, gesprochen seine kurze Form, das Modell wird nicht mehr gefragt.",
+               "dort: gezeigt wird der ganze Satz, gesprochen seine kurze Form, das Modell wird nicht mehr gefragt. "
+               "Mit „Lesende Werkzeuge gleichzeitig“ starten die Aufrufe einer Runde zusammen, wenn feste Regeln es "
+               "erlauben (gleichzeitig.auswahl: nur lesende Werkzeuge, keines doppelt, höchstens eines ins Internet); "
+               "die Ergebnisse gehen in der Reihenfolge des Modells weiter.",
                "Offered is the list without locked tools, tools stopped after errors or used too often. When the "
                "question needs a tool, the model must choose one (tool_choice), with its own temperature. The fifth "
                "round has no list: the model is told to answer now. Devices without a screen (speaker, phone, watch, "
                "Siri, Android assistant, CarPlay) get at most {chat.SPOKEN_MAX_TOKENS} tokens; a longer answer ends at "
                "its last full sentence. When a tool hands back the panel's fixed sentence (Find's Sofort-Karte: one hit "
                "clearly ahead), the answer ends there: the whole sentence is shown, its short form spoken, the model "
-               "is not asked again.")),
+               "is not asked again. With „Reading tools at the same time“ the calls of one round start together when "
+               "fixed rules allow it (gleichzeitig.auswahl: reading tools only, none twice, at most one to the "
+               "internet); the results go on in the model's order.")),
             S("s5", "schritt", ("Streamen und in Sätze schneiden", "Stream and cut into sentences"),
               ("erster Satz ab {chat.FIRST_CUT} Zeichen am Komma", "first sentence cut at a comma after {chat.FIRST_CUT} characters"),
               ("Die Antwort kommt Stück für Stück. Denktext und als Text geschriebene Werkzeugaufrufe werden nie "
@@ -1099,7 +1108,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Werkzeuge (chat_tools.run)
     "werkzeuge": {
-        "stand": "02d286ed48",
+        "stand": "b4e2cb5fb3",
         "bezug": {
             "chat.LOCKED_OUTSIDE": ["s4"], "notaus.INTERNET_TOOLS": ["s3"], "werkzeuge.NAMES": ["s11"],
             "chat_tools.run": ["s2", "s7"], "chat.wrap_outside": ["s9"], "chat.LOCKED_AFTER_MAIL": ["s4"],
@@ -1124,11 +1133,15 @@ SEITEN = {
               ("Höchstens {chat.MAX_CALLS} Aufrufe pro Runde laufen, und ein wegen Fehlern gestopptes Werkzeug läuft "
                "nicht mehr. Gedächtnis-Notizen sind auf {chat.MAX_SAVES} pro Antwort begrenzt; ist das Gedächtnis voll "
                "(nur Gesagtes oder Bestätigtes, profiles._cap), antwortet memory_save „Not done“ mit dem Weg zum Aufräumen. "
-               "Was memory_save behält, steht als „Gemerkt: …“ mit „Rückgängig“ unter der Antwort (Gemerkt-Hinweis).",
+               "Was memory_save behält, steht als „Gemerkt: …“ mit „Rückgängig“ unter der Antwort (Gemerkt-Hinweis). "
+               "Mit „Lesende Werkzeuge gleichzeitig“ starten nur lesende Aufrufe einer Runde zusammen (gleichzeitig.auswahl); "
+               "jeder geht trotzdem einzeln durch alle Prüfungen hier, in der Reihenfolge des Modells.",
                "At most {chat.MAX_CALLS} calls per round run, and a tool stopped after errors does not run again. Memory "
                "notes are limited to {chat.MAX_SAVES} per answer; when the memory is full (only things said or confirmed, "
                "profiles._cap), memory_save answers „Not done“ with the way to tidy up. "
-               "What memory_save keeps stands as „Remembered: …“ with „Undo“ under the answer (Remembered note).")),
+               "What memory_save keeps stands as „Remembered: …“ with „Undo“ under the answer (Remembered note). "
+               "With „Reading tools at the same time“ only reading calls of a round start together (gleichzeitig.auswahl); "
+               "each still goes through every check here on its own, in the model's order.")),
             S("s2", "frage", ("In dieser Runde angeboten?", "Offered in this round?"),
               ("nur die Liste der Runde", "only the round's list"),
               ("Nur Werkzeuge aus der Liste dieser Runde laufen. Die Liste ist schon um Sperren gekürzt; alles andere "

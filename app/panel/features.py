@@ -151,6 +151,8 @@ FEATURES = (
     F(**steckbrief.feature("sofort")),
     F(**steckbrief.feature("rechnen")),   # rechnen.py: name, group, switch and guide in its Steckbrief
     F(**steckbrief.feature("gedkurz")),
+    F(**steckbrief.feature("gleichzeitig")),
+    F(**steckbrief.feature("verlaufkurz")),
     F(**steckbrief.feature("ack")),
     F(**steckbrief.feature("weicheabstimmen")),
     F(**steckbrief.feature("weicheunklar")),

@@ -99,7 +99,7 @@ AUFGABEN = {
     # the switch
     "Weiche": "weiche", "Werkzeugwahl": "weiche",
     # background work (vorrang)
-    "Lernen aus Gesprächen": "hintergrund", "Lernen": "hintergrund", "Korrekturen lernen": "hintergrund",
+    "Lernen aus Gesprächen": "hintergrund", "Gespräch zusammenfassen": "hintergrund", "Lernen": "hintergrund", "Korrekturen lernen": "hintergrund",
     "Proaktiver Hinweis": "hintergrund", "Gedächtnis-Themen": "hintergrund", "Gedächtnis aufräumen": "hintergrund",
     "Kamerabild": "hintergrund", "Steckbrief": "hintergrund", "Dokument lesen": "hintergrund",
     "Tagesüberblick": "hintergrund", "Postfach aufräumen": "hintergrund", "Mail sortieren": "hintergrund", "Für dich": "hintergrund", "Netz-Tipp": "hintergrund", "Wichtige Mail": "hintergrund",

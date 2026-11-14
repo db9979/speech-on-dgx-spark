@@ -6079,6 +6079,22 @@
 "text": "In der iPhone-App Einstellungen → Mein Profil → Gespräch. Dort stehen Zuhören (z. B. Natürlicher Sprecherwechsel, Live-Transkript), Antwort, Chats und Weiteres; was der Admin nicht freigegeben hat, fehlt. Einen Schalter umlegen und im Panel unter Ich → Gespräch nachsehen: dort steht derselbe Wert. Mit „Eigene Stimmen gestalten“: Gespräch → Eigene Stimme, eine fertige Stimme mit ▶ anhören und antippen (Haken), dann unter „Neue Stimme gestalten“ Felder wählen, „Probe anhören“, Namen eingeben, „Übernehmen“: sie steht unter Meine Stimmen mit Haken. Wischen löscht sie.",
 "thread": "Fehlende Seiten nativ in die iOS-App bringen",
 "test": "test_iphone_panel.Things.test_conversation_rows_follow_the_release"
+},
+{
+"id": "P888",
+"v": 1444,
+"titel": "Lesende Werkzeuge gleichzeitig",
+"text": "Funktionen → Lesende Werkzeuge gleichzeitig an. Fragen: „Wie wird das Wetter morgen und welche Termine habe ich?“ Die Antwort nennt beides. Unter Zustand → Logs (Bereich Gespräch) steht „chat: gleichzeitig: 2 Werkzeuge“, unter Zustand → Logs → Anfragen beginnen beide Werkzeuge zur selben Zeit. Schalter aus: dieselbe Frage, die Werkzeuge laufen nacheinander.",
+"thread": "Ideen aus OmniBot prüfen",
+"test": "test_gleichzeitig.Chat.test_on_together_and_in_the_models_order"
+},
+{
+"id": "P889",
+"v": 1444,
+"titel": "Lange Gespräche zusammenfassen",
+"text": "Funktionen → Lange Gespräche zusammenfassen an. Im Chat ein langes Gespräch führen (viele Fragen mit langen Antworten) und am Anfang etwas Besonderes nennen, z. B. „Mein Nachbar heißt Herr Kranich.“ Viel später fragen: „Wie hieß mein Nachbar noch?“ Der Assistent weiß es. Unter Zustand → Logs (Bereich Gespräch) stehen Zeilen „chat: zusammenfassung: …“ mit Zahlen, nie ein Text.",
+"thread": "Ideen aus OmniBot prüfen",
+"test": "test_verlaufkurz.Chat.test_on_the_summary_comes_along_and_the_rest_is_started"
 }
 ]
 }

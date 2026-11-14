@@ -142,6 +142,8 @@
     "direct_read": true,
     "hoer_namen": false,
     "memory_trim": false,
+    "tools_parallel": false,
+    "history_summary": false,
     "sofort": false,
     "search_fast": false,
     "answer_check_more": false,
