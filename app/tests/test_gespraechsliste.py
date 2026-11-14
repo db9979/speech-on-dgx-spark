@@ -34,7 +34,8 @@ class Static(unittest.TestCase):
         # rows from the list building blocks, drawn in parts with a fixed key, texts only escaped
         self.assertIn("keyFill($('cvlrows'),parts)", js)
         self.assertIn('class="ld-row', js[js.index("function fillConvos"):])
-        self.assertIn("esc(c.title||'…')", js)
+        self.assertIn("esc(convoName(c))", js)
+        self.assertIn("const convoName=c=>(window.TOPICS_ON&&c.name)||c.title||'…'", js)
         # one source for the groups: the app view's sheet takes the same helpers
         av = read("js", "appview.js")
         self.assertIn("ldDayGroup(c.updated)", av)

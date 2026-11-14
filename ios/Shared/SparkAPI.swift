@@ -97,6 +97,8 @@ struct SavedConvo: Identifiable {
     let title: String
     let updated: Date
     let msgs: [[String: Any]]
+    var name = ""      // Gespräche nach Thema: the short name the Spark gave it (or one given by hand)
+    var pin = false    // pinned on the Spark: stays on top
 }
 
 struct Note {
@@ -552,8 +554,7 @@ struct SparkAPI {
         let list = (try? JSONSerialization.jsonObject(with: data) as? [[String: Any]]) ?? []
         return list.compactMap { d in
             guard let id = d["id"] as? String, let msgs = d["msgs"] as? [[String: Any]], !msgs.isEmpty else { return nil }
-            let ms = (d["updated"] as? NSNumber)?.doubleValue ?? 0
-            return SavedConvo(id: id, title: d["title"] as? String ?? "", updated: Date(timeIntervalSince1970: ms / 1000), msgs: msgs)
+            return convo(id, d, msgs)
         }
     }
 
@@ -571,10 +572,16 @@ struct SparkAPI {
         let list = d["items"] as? [[String: Any]] ?? []
         let items: [SavedConvo] = list.compactMap { x in
             guard let id = x["id"] as? String, let msgs = x["msgs"] as? [[String: Any]] else { return nil }
-            let ms = (x["updated"] as? NSNumber)?.doubleValue ?? 0
-            return SavedConvo(id: id, title: x["title"] as? String ?? "", updated: Date(timeIntervalSince1970: ms / 1000), msgs: msgs)
+            return Self.convo(id, x, msgs)
         }
         return (items, ids)
+    }
+
+    /// One conversation as the Spark sends it (name and pin only while Gespräche nach Thema is on).
+    static func convo(_ id: String, _ d: [String: Any], _ msgs: [[String: Any]]) -> SavedConvo {
+        let ms = (d["updated"] as? NSNumber)?.doubleValue ?? 0
+        return SavedConvo(id: id, title: d["title"] as? String ?? "", updated: Date(timeIntervalSince1970: ms / 1000),
+                          msgs: msgs, name: d["name"] as? String ?? "", pin: d["pin"] as? Bool ?? false)
     }
 
     /// Adds new messages to one conversation in the profile's list (made if new; what another device added stays).

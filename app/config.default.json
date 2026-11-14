@@ -149,6 +149,7 @@
     "memory_trim": false,
     "tools_parallel": false,
     "history_summary": false,
+    "convo_topics": false,
     "sofort": false,
     "search_fast": false,
     "answer_check_more": false,

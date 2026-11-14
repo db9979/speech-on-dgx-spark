@@ -32,6 +32,7 @@ _N = itertools.count(1)
 
 # functions with a page under Ich (account.WHO) that keep no „Daten löschen“ card, each with its reason
 OHNE = {
+    "gespraechsthema": "ordnet nur die eigenen Gespräche (Name, Nadel, Archiv); gelöscht wird jedes, auch ein archiviertes, im Verlauf wie bisher",
     "kartensuche": "liest nur die Punkte der Wissenskarte für die Suche, speichert nichts; die Punkte löscht Personen, Firmen und Fristen",
     "mailmanage": "ordnet nur Mails im eigenen Postfach, speichert nichts im Spark; die Mails löscht das Postfach selbst",
     "maildelete": "legt nur Mails im eigenen Postfach in dessen Papierkorb (endgültig nur dort), speichert nichts im Spark",

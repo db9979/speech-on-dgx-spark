@@ -48,6 +48,9 @@ import stufen  # noqa: E402
 import profiles  # noqa: E402
 import homeassistant  # noqa: E402
 import features  # noqa: E402
+import functools  # noqa: E402
+import gespraechsthema  # noqa: E402  (Gespräche nach Thema)
+import llm  # noqa: E402  (the name of a conversation, in the background)
 from common import beside, load_config, model_url  # noqa: E402
 from core import (  # noqa: E402
     json_body,
@@ -91,6 +94,9 @@ from core import (  # noqa: E402
 from chat import user_zone  # noqa: E402
 from admin import tts_voices  # noqa: E402
 
+# Gespräche nach Thema: the archive of older conversations exists only while the function is on for the profile
+profiles.ARCHIVE_ON.append(functools.partial(features.allowed, gespraechsthema.KEY))
+
 router = APIRouter()
 
 
@@ -106,7 +112,7 @@ WHO = {"documents": "documents", "reminders": "reminders", "speaker_id": "speake
        "systemone_mail": "mailwichtig", "report": "melden", "doc_make": "erstellen", "bilder": "bilder", "bilder_aendern": "bildaendern", "musik": "musik", "musik_bearbeiten": "musikbearbeiten", "dungeon": "dungeon", "storage": "speicher", "nas": "nas", "nasquelle": "nasquelle", "nas_drop": "nasablage", "nas_status": "naszustand", "nas_shared": "nashaushalt",
        "chats": "chats", "chats_groups": "chatgroups", "chats_media": "chatmedia", "chats_invite": "chatinvite", "chats_private": "chatprivate", "chats_verbund": "verbund", "verbund_media": "verbundmedia", "verbund_groups": "verbundgruppen", "stimmdesign": "stimmdesign",
        "chats_calls": "anrufe", "calls_turn": "anrufeturn", "telefon": "telefon", "saetze": "tippssaetze", "collections": "mappen",
-       "hoerstueck": "hoerstueck"}
+       "hoerstueck": "hoerstueck", "convo_topics": "gespraechsthema"}
 
 
 def _fern_admin(request):
@@ -965,16 +971,55 @@ async def profile_save_convo(request: Request, prof=Depends(own_profile)):
         # whole conversation lost it); the answer is the whole conversation as it is now
         msgs = body.get("add")
         # beside the event loop: the profile's conversations are read and written whole (code check 19.10. B6)
-        item = await beside(profiles.append_convo, prof["id"], str(body.get("id", "")), str(body.get("title", "")), msgs) \
+        topics = features.allowed(gespraechsthema.KEY, prof["id"])   # Gespräche nach Thema: the area the turn said, a name after the first answer
+        area = body.get("area") if topics and body.get("area") in gespraechsthema.AREAS else None
+        item = await beside(profiles.append_convo, prof["id"], str(body.get("id", "")), str(body.get("title", "")), msgs, area) \
             if isinstance(msgs, list) and any(isinstance(x, dict) and x.get("role") in ("user", "assistant") and x.get("content")
                                               for x in msgs) else None
         if not item:
             raise HTTPException(400, "invalid conversation")
+        if topics and any(m.get("role") == "assistant" for m in item["msgs"][:2]):
+            gespraechsthema.benennen(prof["id"], item, llm.complete, profiles.convo_meta)
         return {"ok": True, "item": item}
     item = await beside(profiles.save_convo, prof["id"], body)
     if not item:
         raise HTTPException(400, "invalid conversation")
     return {"ok": True}
+
+
+CONVO_META_BODY = 2048
+
+
+@router.post("/api/profile/convos/meta", dependencies=[Depends(assistant)])
+async def profile_convo_meta(request: Request, prof=Depends(own_profile)):
+    """Gespräche nach Thema: pin a conversation or give it a name of one's own ("" gives the automatic one back)."""
+    body = await json_body(request, CONVO_META_BODY)
+    guard.limit(request, "convos", prof["id"])
+    if not features.allowed(gespraechsthema.KEY, prof["id"]):
+        raise HTTPException(403, "Gespräche nach Thema is off")
+    cid, pin, name = str(body.get("id", "")), body.get("pin"), body.get("name")
+    if not re.fullmatch(r"[\w\-]{1,40}", cid) or (pin is not None and not isinstance(pin, bool)) \
+            or (name is not None and not isinstance(name, str)) or (pin is None and name is None):
+        raise HTTPException(400, "invalid")
+    item = await beside(profiles.convo_meta, prof["id"], cid, None, name, pin, None if name is None else bool(name.strip()))
+    print(f"chat: meta {'ok' if item else 'abgelehnt'} | {'pin' if pin is not None else 'name'} | {profiles.log_name(prof)}",
+          flush=True)
+    if not item:
+        raise HTTPException(409, "not possible")
+    return {"ok": True, "item": item}
+
+
+ARCHIVE_PAGE = 30
+
+
+@router.get("/api/profile/convos/archiv", dependencies=[Depends(assistant)])
+def profile_convo_archive(request: Request, vor: int = 0, prof=Depends(own_profile)):
+    """Gespräche nach Thema: the older conversations, newest first, ARCHIVE_PAGE at a time (vor: before this time)."""
+    guard.limit(request, "convos", prof["id"])
+    if not features.allowed(gespraechsthema.KEY, prof["id"]):
+        raise HTTPException(403, "Gespräche nach Thema is off")
+    items = [x for x in profiles.archive(prof["id"]) if not vor or x.get("updated", 0) < vor]
+    return {"items": items[:ARCHIVE_PAGE], "mehr": len(items) > ARCHIVE_PAGE}
 
 
 @router.delete("/api/profile/convos/{cid}", dependencies=[Depends(assistant)])

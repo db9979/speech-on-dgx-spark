@@ -138,7 +138,8 @@ enum Merken {
     /// The newest conversations with their last messages (the same shape as /api/profile/convos).
     static func keepConvos(_ list: [SavedConvo]) {
         let cut: [[String: Any]] = list.sorted { $0.updated > $1.updated }.prefix(convos).map { c in
-            ["id": c.id, "title": c.title, "updated": Int(c.updated.timeIntervalSince1970 * 1000), "msgs": Array(c.msgs.suffix(messages))]
+            ["id": c.id, "title": c.title, "updated": Int(c.updated.timeIntervalSince1970 * 1000), "msgs": Array(c.msgs.suffix(messages)),
+             "name": c.name, "pin": c.pin]
         }
         if let d = try? JSONSerialization.data(withJSONObject: cut) { keep("verlauf", d) }
     }

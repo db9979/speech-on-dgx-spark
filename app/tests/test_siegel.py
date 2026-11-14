@@ -109,7 +109,7 @@ class OnlyThroughTheHelpers(unittest.TestCase):
     def test_the_register_is_the_one_list(self):
         self.assertEqual(dateien.SIEGEL, frozenset({"memory.json", "convos.json", "toollog.json", "room-history.json",
                                                     "learned.json", "zuordnungen.json", "memory-ask.json",
-                                                    "interessen.json", "tagebuch.json"}))
+                                                    "interessen.json", "tagebuch.json", "convos-archiv.json"}))
         for d in dateien.DATEIEN:     # what a profile says or the Spark learned about it: memory and conversations
             if d.ort == "profil" and d.bereich in ("gedaechtnis", "gespraeche"):
                 self.assertTrue(d.siegel, d.name)

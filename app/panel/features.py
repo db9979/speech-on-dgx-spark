@@ -153,6 +153,7 @@ FEATURES = (
     F(**steckbrief.feature("gedkurz")),
     F(**steckbrief.feature("gleichzeitig")),
     F(**steckbrief.feature("verlaufkurz")),
+    F(**steckbrief.feature("gespraechsthema")),
     F(**steckbrief.feature("ack")),
     F(**steckbrief.feature("weicheabstimmen")),
     F(**steckbrief.feature("weicheunklar")),

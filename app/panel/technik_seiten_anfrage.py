@@ -792,7 +792,7 @@ SEITEN = {
         "heute": [],
     },
     "antwort": {
-        "stand": "b72a98aa11",
+        "stand": "e08d9217f1",
         "bezug": {
             "chat.MAX_SAVES": ["s11"], "chat.LOOP_SAME": ["s11"], "chat._answer": ["s4", "s5", "s11"], "chat_modell.model_turn": ["s4", "s11"], "chat_modell.herkunft_und_chip": ["s3"], "chat_modell.quellenangabe_zeile": ["s3"], "chat_ton.speech_out": ["s8"],
             "chat.split_sentences": ["s5"], "chat.said_key": ["s8"], "chat.no_code": ["s8"],
@@ -896,10 +896,14 @@ SEITEN = {
               ("erster Satz ab {chat.FIRST_CUT} Zeichen am Komma", "first sentence cut at a comma after {chat.FIRST_CUT} characters"),
               ("Die Antwort kommt Stück für Stück. Denktext und als Text geschriebene Werkzeugaufrufe werden nie "
                "gezeigt oder gesprochen. split_sentences schneidet fertige Sätze ab („z. B.“ und „5. Oktober“ sind "
-               "kein Satzende); ein langer erster Satz geht schon am Komma los, damit der erste Ton früh kommt.",
+               "kein Satzende); ein langer erster Satz geht schon am Komma los, damit der erste Ton früh kommt. Mit „Gespräche "
+               "nach Thema“ sagt das Panel der Seite vor dem ersten Wort, ob die Frage ein neues Gespräch beginnt "
+               "(gespraechsthema.entscheide: Pause oder andere Gruppe der Weiche, keine Rückfrage).",
                "The answer comes piece by piece. Thinking and tool calls written as text are never shown or spoken. "
                "split_sentences cuts finished sentences off („z. B.“ and „5. Oktober“ are no sentence end); a long "
-               "first sentence goes at a comma, so the first sound comes early.")),
+               "first sentence goes at a comma, so the first sound comes early. With „Conversations by topic“ the panel "
+               "tells the page before the first word whether the question begins a new conversation "
+               "(gespraechsthema.entscheide: a pause or another group of the Weiche, no follow-up).")),
             S("s6", "frage", ("Zahl ohne Beleg?", "Figure without proof?"),
               ("Antwort-Prüfung: Uhrzeit, Datum, Spielstand, Betrag", "answer check: time, date, score, amount"),
               ("Bei Datenfragen vergleicht answercheck jede Uhrzeit, jedes Datum, jeden Spielstand und Betrag im Satz "

@@ -348,7 +348,7 @@ class Web(unittest.TestCase):
         a = self.body("async function ask(")
         self.assertIn("else if(ev.type==='ende')", self.js)
         self.assertIn("if(ended){drop();", self.js)
-        self.assertIn("const g=chat.turn,msgs=chat.msgs,cid=chat.cid", a)
+        self.assertIn("const g=chat.turn;let msgs=chat.msgs,cid=chat.cid", a)
 
     def test_another_conversation_stops_the_answer_first(self):
         """A-H1: Finden, Offen and Ich open a conversation only through showConvo (endTurn first); an answer whose

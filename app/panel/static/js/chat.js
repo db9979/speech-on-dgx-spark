@@ -280,7 +280,7 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
   if(!chat.cid)chat.cid=Date.now().toString(36);
   // this turn and its conversation: Stopp or another conversation opened meanwhile never reopens the microphone, and
   // the answer goes into the conversation it was asked in (A-H1), never into the one open now
-  const g=chat.turn,msgs=chat.msgs,cid=chat.cid;let ended='';
+  const g=chat.turn;let msgs=chat.msgs,cid=chat.cid,ended='';
   const el=chatLog('assistant','');$('fabtext').textContent='';
   // shown formatted while it streams (md.js), at most once per frame; the small answer line gets the plain text
   let drawn=null,frame=0;const draw=()=>{frame=0;md.render(el,drawn);$('fabtext').textContent=md.plain(drawn);$('chatlog').scrollTop=1e9};
@@ -317,6 +317,7 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
         else if(ev.type==='docmake'){mkcards.push(ev.card)}
         else if(ev.type==='bild'||ev.type==='musik'){blcards.push(ev)}   // a picture or a song made for this answer (bilder.js, musik.js)
         else if(ev.type==='choice'){chcards.push(ev)}   // the panel asks which one (klaeren.py)
+        else if(ev.type==='thema'){const n=topicTurn(ev,msgs,um,ub);if(n){msgs=n.msgs;cid=n.cid}}   // Gespräche nach Thema (gespraechsthema.py)
         else if(ev.type==='step'){steps.push(ev)}   // Ablauf zeigen (ablauf.py): tool name, ok and time, never what it found
         else if(ev.type==='confirm'){confirms.push(ev)}   // Freigabe-Karte: a proposal of this answer waits for "Ja"
         else if(ev.type==='goto'){if(!gotos.some(x=>x.to===ev.to&&x.day===ev.day&&x.id===ev.id)&&gotos.length<3)gotos.push(ev)}   // Kalender or E-Mail page of what the answer read
@@ -565,17 +566,20 @@ let PROFILE_GEN=0;   // counts profile changes (setProfile): an answer asked for
 const TAB=Math.random().toString(36).slice(2,12);   // this page among the profile's open pages (verlauf.js: not "answering elsewhere" for itself)
 // Logged in, conversations live in the profile on the Spark (same list on every device); this
 // page keeps a copy in convos.cache. Guests keep theirs in this browser only.
-const convos={cache:[],
+// the Spark's own fields of a conversation (Gespräche nach Thema): a device never sends them, the copy here keeps them
+const CV_META=['area','name','own','pin'];
+const cvMeta=c=>{const o=convos.cache.find(x=>x.id===c.id);if(o)for(const k of CV_META)if(o[k]!==undefined&&c[k]===undefined)c[k]=o[k];return c};
+const convos={cache:[],arch:[],archMore:null,
   load(){if(PROFILE)return this.cache;try{return JSON.parse(localStorage.getItem('convos')||'[]')}catch{return []}},
   local(l){try{localStorage.setItem('convos',JSON.stringify(l.slice(0,30)))}catch{}},
-  put(c){if(PROFILE){this.cache=[c,...this.cache.filter(x=>x.id!==c.id)];
+  put(c){if(PROFILE){cvMeta(c);this.cache=[c,...this.cache.filter(x=>x.id!==c.id)];
       api('/api/profile/convos',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(c)}).catch(()=>{})}
     else this.local([c,...this.load().filter(x=>x.id!==c.id)])},
   // only the new messages: the Spark adds them to its copy, so what another device (phone, iPhone app) added
   // to the same conversation meanwhile stays; the answer is the conversation as the Spark has it now
-  async add(c,news){this.cache=[c,...this.cache.filter(x=>x.id!==c.id)];const gen=PROFILE_GEN;
+  async add(c,news){cvMeta(c);this.cache=[c,...this.cache.filter(x=>x.id!==c.id)];this.arch=this.arch.filter(x=>x.id!==c.id);const gen=PROFILE_GEN;
     try{const d=await (await api('/api/profile/convos',{method:'PUT',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({id:c.id,title:c.title,add:news})})).json();
+      body:JSON.stringify({id:c.id,title:c.title,add:news,...(c.area?{area:c.area}:{})})})).json();
       if(gen!==PROFILE_GEN)return null;   // another profile signed in meanwhile: never into its list
       if(d&&d.item){this.cache=[d.item,...this.cache.filter(x=>x.id!==d.item.id)];return d.item}}catch{}return null},
   del(id){if(PROFILE){this.cache=this.cache.filter(x=>x.id!==id);api('/api/profile/convos/'+encodeURIComponent(id),{method:'DELETE'}).catch(()=>{})}
@@ -604,13 +608,13 @@ const convos={cache:[],
 // the messages not yet saved (chat.saved counts them) are added there
 // an answer whose conversation is no longer open here (A-H1): its question and answer go into that conversation
 function saveOther(cid,msgs,news){if(!cid||!news.length)return;const first=msgs.find(m=>m.role==='user');
-  const c={id:cid,title:(first?first.content:'').slice(0,60),updated:Date.now(),msgs:msgs.slice(-60)};
+  const c={id:cid,title:(first?first.content:'').slice(0,60),updated:Date.now(),msgs:msgs.slice(-60),...(msgs.area?{area:msgs.area}:{})};
   if(PROFILE)convos.add(c,news).then(()=>fillConvos());else{convos.put(c);fillConvos()}}
 // another conversation opened from elsewhere (Finden, Offen, Ich): the running answer and recording end first
 function showConvo(id){endTurn();openConvo(id,true)}
 function saveConvo(whole){if(!chat.msgs.length)return;
   if(!chat.cid)chat.cid=Date.now().toString(36);const first=chat.msgs.find(m=>m.role==='user');
-  const c={id:chat.cid,title:(first?first.content:'').slice(0,60),updated:Date.now(),msgs:chat.msgs.slice(-60)};
+  const c={id:chat.cid,title:(first?first.content:'').slice(0,60),updated:Date.now(),msgs:chat.msgs.slice(-60),...(chat.msgs.area?{area:chat.msgs.area}:{})};
   const news=chat.msgs.slice(Math.min(chat.saved||0,chat.msgs.length));chat.saved=chat.msgs.length;
   if(!PROFILE||whole===true){convos.put(c);fillConvos();return}
   if(!news.length){fillConvos();return}
@@ -644,18 +648,56 @@ function convoWhen(ts){const d=new Date(ts),n=ldDay(ts);if(n<1)return convoTs(ts
 // the line below the title: the last answer, as plain text in one line
 function convoLine(c){const m=(c.msgs||[]).slice().reverse().find(x=>x.role==='assistant')||(c.msgs||[]).at(-1);
   return m?md.plain(String(m.content||'')).replace(/\s+/g,' ').slice(0,120):''}
-function fillConvos(){const l=convos.load().slice().sort((a,b)=>b.updated-a.updated),parts=[];let g=null;
-  for(const c of l){const h=ldDayGroup(c.updated);if(h!==g){g=h;parts.push(['g:'+h,`<div class="ld-grp"><span>${esc(h)}</span></div>`])}
-    parts.push(['c:'+c.id,`<div class="ld-row${c.id===chat.cid?' on':''}" role="button" tabindex="0" data-cid="${esc(c.id)}"${c.id===chat.cid?' aria-current="true"':''}>`+
-      `<span class="ld-ico" aria-hidden="true">${ic('chat')}</span><span class="ld-mid"><b>${esc(c.title||'…')}</b><small>${esc(convoLine(c))}</small></span>`+
-      `<span class="ld-right"><span class="ld-when">${esc(convoWhen(c.updated))}</span></span></div>`])}
+function fillConvos(){const topics=!!window.TOPICS_ON&&!!PROFILE,own=convos.load().slice().sort((a,b)=>b.updated-a.updated);
+  const arch=topics?convos.arch.filter(a=>!own.some(c=>c.id===a.id)):[],l=own.concat(arch),parts=[];let g=null;
+  const pinned=topics?l.filter(c=>c.pin):[],rest=l.filter(c=>!pinned.includes(c));
+  const row=c=>['c:'+c.id,`<div class="ld-row${c.id===chat.cid?' on':''}" role="button" tabindex="0" data-cid="${esc(c.id)}"${c.id===chat.cid?' aria-current="true"':''}>`+
+      `<span class="ld-ico" aria-hidden="true">${ic(topics&&CV_IC[c.area]||'chat')}</span><span class="ld-mid"><b>${esc(convoName(c))}</b><small>${esc(convoLine(c))}</small></span>`+
+      `<span class="ld-right">${c.pin&&topics?`<span class="cvpin" title="${esc(t('Angeheftet','Pinned'))}">${ic('pin')}</span>`:''}<span class="ld-when">${esc(convoWhen(c.updated))}</span></span></div>`];
+  if(pinned.length){parts.push(['g:pin',`<div class="ld-grp"><span>${esc(t('Angeheftet','Pinned'))}</span></div>`]);pinned.forEach(c=>parts.push(row(c)))}
+  for(const c of rest){const h=ldDayGroup(c.updated);if(h!==g){g=h;parts.push(['g:'+h,`<div class="ld-grp"><span>${esc(h)}</span></div>`])}parts.push(row(c))}
   if(!l.length)parts.push(['leer',`<div class="ld-empty">${ic('chat')}<span>${esc(t('Noch keine früheren Gespräche.','No earlier conversations yet.'))}</span></div>`]);
+  // the archive (Gespräche nach Thema): older ones on request, a page at a time
+  if(topics&&convos.archMore!==false&&own.length)parts.push(['arch',`<button type="button" class="b cvarch" data-arch="1">${esc(t('Ältere Gespräche laden','Load older conversations'))}</button>`]);
   keyFill($('cvlrows'),parts);
-  const c=chat.cid&&l.find(x=>x.id===chat.cid);$('convotitle').textContent=c?(c.title||'…'):t('Neues Gespräch','New conversation');
-  $('convodel').disabled=!chat.cid;if(typeof offlineKeep==='function')offlineKeep()}   // verlauf.js loads after this file
+  const c=chat.cid&&l.find(x=>x.id===chat.cid);if(!$('convotitle').isContentEditable)$('convotitle').textContent=c?convoName(c):t('Neues Gespräch','New conversation');
+  $('convodel').disabled=!chat.cid;$('cvpinbtn').hidden=$('cvnamebtn').hidden=!(topics&&c&&own.includes(c));
+  if(c)$('cvpinbtn').setAttribute('aria-pressed',String(!!c.pin));if(typeof offlineKeep==='function')offlineKeep()}   // verlauf.js loads after this file
+// Gespräche nach Thema (gespraechsthema.py): the turn says the Weiche's group of the question and whether it begins a
+// new conversation (fixed rules on the Spark). New: this question and its answer go into a new conversation, a line
+// marks where it begins, everything above stays where it is. The group becomes the conversation's area (its symbol).
+function topicTurn(ev,msgs,um,ub){const g=typeof ev.g==='string'&&CV_IC[ev.g]?ev.g:'';
+  if(!ev.neu){if(g&&!msgs.area)msgs.area=g;return null}
+  const i=msgs.lastIndexOf(um);if(i>=0)msgs.splice(i,1);
+  const n=[um];n.area=g||undefined;const cid=Date.now().toString(36);
+  if(chat.msgs===msgs){chat.msgs=n;chat.cid=cid;chat.saved=0;chat.known=null;chat.picked=false;
+    const d=document.createElement('div');d.className='cvsep';d.setAttribute('role','separator');d.textContent=t('Neues Gespräch','New conversation');
+    const row=ub.closest('.msg')||ub;row.parentNode.insertBefore(d,row)}
+  return {msgs:n,cid}}
+// the symbol of each area (icons.js); a conversation without one shows the speech bubble
+const CV_IC={plaudern:'chat',smarthome:'home',kalender:'cal',mail:'mail',websuche:'globe',erinnerung:'alarm',liste:'listen',
+  wetter:'globe',paket:'box',kontakt:'kontakte',gedaechtnis:'mem',dokument:'doc',nachricht:'sms',agent:'bolt',iphone:'mobile',
+  spark:'help',wikipedia:'book',erstellen:'pen',bild:'image',musik:'music',zustand:'pulse',codeauftrag:'wrench',finden:'finden',
+  mappe:'folder',hoerstueck:'speaker',doklink:'link',archiv:'arch'};
+const convoName=c=>(window.TOPICS_ON&&c.name)||c.title||'…';   // off: the names stay stored, hidden
 // a click on a row (or Enter) opens that conversation; narrow the list closes again
 function convoPick(id){endTurn();openConvo(id||null,true);setTalk();chatSay(t('Bereit.','Ready.'));convoList(false)}
-$('cvlrows').addEventListener('click',e=>{const r=e.target.closest('[data-cid]');if(r)convoPick(r.dataset.cid)});
+$('cvlrows').addEventListener('click',e=>{if(e.target.closest('[data-arch]')){convoArch();return}const r=e.target.closest('[data-cid]');if(r)convoPick(r.dataset.cid)});
+// Gespräche nach Thema: the archive a page at a time, pin and a name of one's own for the open conversation
+async function convoArch(){const last=convos.arch.at(-1)||convos.load().slice().sort((a,b)=>a.updated-b.updated)[0];
+  try{const d=await (await api('/api/profile/convos/archiv?vor='+(last?last.updated:0))).json();
+    convos.arch=convos.arch.concat((d.items||[]).filter(x=>x&&typeof x.id==='string'&&Array.isArray(x.msgs)));convos.archMore=!!d.mehr}catch{convos.archMore=null}
+  fillConvos()}
+async function convoMeta(body){try{const d=await (await api('/api/profile/convos/meta',xjson('POST',Object.assign({id:chat.cid},body)))).json();
+    if(d&&d.item){convos.cache=convos.cache.map(x=>x.id===d.item.id?Object.assign(x,{name:d.item.name,own:d.item.own,pin:d.item.pin}):x);if(!d.item.name)convos.cache.forEach(x=>{if(x.id===d.item.id)delete x.name})}}
+  catch{sayToast(t('Ging gerade nicht.','Did not work right now.'))}fillConvos()}
+$('cvpinbtn').onclick=()=>{const c=convos.load().find(x=>x.id===chat.cid);if(c)convoMeta({pin:!c.pin})};
+// the name in place: the title becomes a field, Enter keeps it, Escape goes back; empty gives the automatic name back
+$('cvnamebtn').onclick=()=>{const h=$('convotitle');if(!chat.cid||h.isContentEditable)return;const was=h.textContent;
+  h.contentEditable='plaintext-only';h.classList.add('cvedit');h.focus();document.getSelection().selectAllChildren(h);
+  const done=keep=>{h.onkeydown=h.onblur=null;h.contentEditable='false';h.classList.remove('cvedit');const v=h.textContent.replace(/\s+/g,' ').trim().slice(0,60);
+    if(keep&&v!==was)convoMeta({name:v});else h.textContent=was};
+  h.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();done(true)}else if(e.key==='Escape'){e.preventDefault();done(false)}};h.onblur=()=>done(true)};
 $('cvlrows').addEventListener('keydown',e=>{const r=e.target.closest('[data-cid]');if(r&&(e.key==='Enter'||e.key===' ')){e.preventDefault();convoPick(r.dataset.cid)}});
 // the list over the conversation (narrow card, phone): open with the list button, closes with a pick, Escape or the button
 function convoList(open){const c=$('convocard');if(!c)return;if(open&&typeof setView==='function'&&MOBILE.matches)setView('log');
@@ -665,7 +707,7 @@ $('cvlnew').onclick=()=>{convoList(false);$('chatnew').click()};
 $('convolist').addEventListener('keydown',e=>{if(e.key==='Escape'&&$('convocard').classList.contains('lsopen')){convoList(false);$('cvlbtn').focus()}});
 // wide or narrow: only when the card's width changes, never in every frame
 if(window.ResizeObserver)new ResizeObserver(es=>{for(const e of es){const w=(e.borderBoxSize&&e.borderBoxSize[0]?e.borderBoxSize[0].inlineSize:e.target.offsetWidth)>=CV_WIDE;if(w!==e.target.classList.contains('cvwide'))e.target.classList.toggle('cvwide',w)}}).observe($('convocard'));
-function openConvo(id,picked){const c=id&&convos.load().find(x=>x.id===id);chat.cid=c?c.id:null;chat.picked=!!(c&&picked);chat.msgs=c?c.msgs.slice():[];chat.saved=chat.msgs.length;chat.known=PROFILE&&c?c.id:null;chat.fresh=false;
+function openConvo(id,picked){const c=id&&(convos.load().find(x=>x.id===id)||convos.arch.find(x=>x.id===id));chat.cid=c?c.id:null;chat.picked=!!(c&&picked);chat.msgs=c?c.msgs.slice():[];if(c&&c.area)chat.msgs.area=c.area;chat.saved=chat.msgs.length;chat.known=PROFILE&&c?c.id:null;chat.fresh=false;
   $('chatlog').innerHTML='';$('chattiming').textContent='';chat.msgs.forEach(m=>{const b=chatLog(m.role,m.content);deletable(b,m);if(m.att||m.via)attRender(b,m.att,false,m.via);if(m.vg&&window.vgMount)vgMount(b,m);if(m.mem&&window.gmChips)b.appendChild(gmChips(m.mem))});fillConvos();if(!chat.msgs.length&&typeof moreStart==='function')moreStart()}
 // What stood under an answer (sources, own documents, a document made), kept with the message so every device and a
 // reload show it again (profiles._att checks it on the Spark). live: right after the answer, where the card itself shows.

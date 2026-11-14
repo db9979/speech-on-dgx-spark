@@ -27,6 +27,7 @@ import recall  # noqa: E402
 import answercheck  # noqa: E402
 import taten  # noqa: E402  (Taten prüfen, Fehlerschleife stoppen)
 import quellenangabe  # noqa: E402  (Quellenangabe: „Woher weißt du das?“)
+import gespraechsthema  # noqa: E402  (Gespräche nach Thema)
 import hintergrund  # noqa: E402
 import homeassistant  # noqa: E402
 import mail  # noqa: E402
@@ -2160,6 +2161,13 @@ async def _answer(request, turn):
         out.put_nowait({"type": "speaker", "name": heard["name"], "foreign": not own_browser})
     if getattr(turn, "explain", None):
         out.put_nowait(dict(turn.explain, type="why"))
+    # Gespräche nach Thema (gespraechsthema.py): the group of this question and whether it begins a new conversation,
+    # by fixed rules, before any word of the answer (the page keeps the turn in the right conversation)
+    if who and own_browser and isinstance(body.get("convo"), str) and features.allowed(gespraechsthema.KEY, who["id"], ccfg):
+        cid = body["convo"][:40]
+        convo = next((c for c in await asyncio.to_thread(profiles.convos, who["id"]) if c.get("id") == cid), None) \
+            if cid else None
+        out.put_nowait(gespraechsthema.ereignis(convo, getattr(turn, "route", None), bool(getattr(turn, "follow", None))))
     for ev in getattr(turn, "kl_events", None) or []:   # buttons for a question the panel asked (klaeren.py, messages.py)
         out.put_nowait(ev)
     sentences = asyncio.Queue()

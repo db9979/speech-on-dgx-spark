@@ -1037,7 +1037,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ntwortet gerade“ (nur die Art des Geräts). 7. Text und Ton in einem Strom: Die Antwort kommt als Ereignisse: Textstücke, Tonstücke, Suche, Quellen, Rückfragen, Fehler. Der Text wird höchstens einmal pro Bild neu gezeichnet. Der Ton läuft in einem eigenen Audio-Kontext mit der Rate der Sprachausgabe; jedes Stück endet mit einer kurzen Blende, damit die Nähte nicht knacken. 8. Spricht jemand dazwischen?: Während die Antwort spielt, hört das Mikrofon weiter. Ist der Pegel eine Weile deutlich über der eigenen Ausgabe und dem Raum (Fernseher), bricht die Antwort ab, und die schon laufende Aufnahme wird die nächste Frage. 9. Fehler im Strom?: Ein Fehler erscheint unter der Antwort in einfachen Worten; der Admin sieht zusätzlich die technische Angabe, Gäste nur die Art des Fehlers. Fehlt nur die Sprachausgabe, bleibt die Antwort als Text. 10. Gespräch speichern: Bei einem Profil schickt die Seite nur die neuen Nachrichten (PUT /api/profile/convos mit „add“). Der Spark hängt sie unter einer Sperre an seine Kopie an, damit ein anderes Gerät nichts überschreibt, und behält höchstens 50 Gespräche mit je 60 Nachrichten. 11. Abgleich mit anderen Geräten: Kommt die Seite wieder nach vorn und reg"
+"text": "ntwortet gerade“ (nur die Art des Geräts). 7. Text und Ton in einem Strom: Die Antwort kommt als Ereignisse: Textstücke, Tonstücke, Suche, Quellen, Rückfragen, Fehler. Der Text wird höchstens einmal pro Bild neu gezeichnet. Der Ton läuft in einem eigenen Audio-Kontext mit der Rate der Sprachausgabe; jedes Stück endet mit einer kurzen Blende, damit die Nähte nicht knacken. 8. Spricht jemand dazwischen?: Während die Antwort spielt, hört das Mikrofon weiter. Ist der Pegel eine Weile deutlich über der eigenen Ausgabe und dem Raum (Fernseher), bricht die Antwort ab, und die schon laufende Aufnahme wird die nächste Frage. 9. Fehler im Strom?: Ein Fehler erscheint unter der Antwort in einfachen Worten; der Admin sieht zusätzlich die technische Angabe, Gäste nur die Art des Fehlers. Fehlt nur die Sprachausgabe, bleibt die Antwort als Text. 10. Gespräch speichern: Bei einem Profil schickt die Seite nur die neuen Nachrichten (PUT /api/profile/convos mit „add“). Der Spark hängt sie unter einer Sperre an seine Kopie an, damit ein anderes Gerät nichts überschreibt, und behält höchstens 50 Gespräche mit je 60 Nachrichten. Mit „Gespräche nach Thema“ gehen ältere ins Archiv (convos-archiv.json, hö"
 },
 {
 "lang": "de",
@@ -1045,7 +1045,15 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "elmäßig dazwischen, fragt sie, was sich seit dem letzten Mal geändert hat; ein anderswo gelöschtes Gespräch schließt sich. Mit dem Sofort-Abgleich hält jede sichtbare Seite einen Ereignis-Strom offen, der nur „Gespräch geändert“ und „antwortet gerade“ meldet, nie Inhalte (höchstens 8 pro Profil, je 30 Minuten); eine verdeckte Seite schließt ihn, um den Akku zu schonen, und fragt beim Zurückkommen nach. 12. Bereit: Die Seite wartet, bis die Antwort ausgesprochen ist. Freihändig oder nach einer gesprochenen Frage mit Nachfrage-Fenster öffnet sie das Mikrofon wieder, aber nur, wenn der Zug noch gilt: Stopp, ein neues oder anderes Gespräch und das Ereignis „ende“ (ein Stoppwort, Notaus Stufe 3) erhöhen die Zugnummer, dann öffnet nichts mehr das Mikrofon, auch keine Erkennung, die noch lief. Hört nichts mehr zu (keine Aufnahme, kein Ins-Wort-Fallen, kein Weckwort, kein Raum-Modus), gibt die Seite die Mikrofon-Spur frei. Ein anderes Gespräch (Auswahl, Finden, Offen, Ich) öffnet erst nach dem Stopp, und eine Antwort landet immer in dem Gespräch, in dem gefragt wurde."
+"text": "chstens 500), angeheftete stehen oben und bleiben. 11. Abgleich mit anderen Geräten: Kommt die Seite wieder nach vorn und regelmäßig dazwischen, fragt sie, was sich seit dem letzten Mal geändert hat; ein anderswo gelöschtes Gespräch schließt sich. Mit dem Sofort-Abgleich hält jede sichtbare Seite einen Ereignis-Strom offen, der nur „Gespräch geändert“ und „antwortet gerade“ meldet, nie Inhalte (höchstens 8 pro Profil, je 30 Minuten); eine verdeckte Seite schließt ihn, um den Akku zu schonen, und fragt beim Zurückkommen nach. 12. Bereit: Die Seite wartet, bis die Antwort ausgesprochen ist. Freihändig oder nach einer gesprochenen Frage mit Nachfrage-Fenster öffnet sie das Mikrofon wieder, aber nur, wenn der Zug noch gilt: Stopp, ein neues oder anderes Gespräch und das Ereignis „ende“ (ein Stoppwort, Notaus Stufe 3) erhöhen die Zugnummer, dann öffnet nichts mehr das Mikrofon, auch keine Erkennung, die noch lief. Hört nichts mehr zu (keine Aufnahme, kein Ins-Wort-Fallen, kein Weckwort, kein Raum-Modus), gibt die Seite die Mikrofon-Spur frei. Ein anderes Gespräch (Auswahl, Finden, Offen, Ich) öffnet erst nach dem Stopp, und eine Antwort landet immer in dem Gespräch, in dem gefragt wurde"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Ablauf",
+"title": "Ablauf",
+"text": "."
 },
 {
 "lang": "de",
@@ -2237,7 +2245,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ls Text geschriebene Werkzeugaufrufe werden nie gezeigt oder gesprochen. split_sentences schneidet fertige Sätze ab („z. B.“ und „5. Oktober“ sind kein Satzende); ein langer erster Satz geht schon am Komma los, damit der erste Ton früh kommt. 6. Zahl ohne Beleg?: Bei Datenfragen vergleicht answercheck jede Uhrzeit, jedes Datum, jeden Spielstand und Betrag im Satz mit allem, was das Modell bekommen hat. Nach einem Kalender-Abruf zählen nur Angaben aus dieser Antwort, nicht aus früheren; ein zitierter Termin-Titel muss im Ergebnis stehen. Mit „Antwort-Prüfung erweitern“ auch Temperaturen, km und Prozent (gerundet zählt, answercheck.MORE_SLACK) und jeder zitierte Name in jeder Datenantwort. Mit „Rechnen mit festem Werkzeug“ rechnet rechnen.fix vorher jede Rechnung im Satz nach, auch mit Zahlwörtern („17 mal 23 ist 381“, „sechs mal sechs ist 35“) und setzt das Ergebnis des Panels ein; seine Ergebnisse zählen hier als belegt (answercheck.calc_facts). Solange das an ist, kommt jeder Satz erst fertig. 7. Tat ohne Werkzeug?: Behauptet ein Satz eine Tat („ist jetzt an“, „habe eingetragen“), muss in dieser Antwort ein Werkzeug dieser Art geklappt haben (taten.check). Ein Satz, der einen Werk"
+"text": "ls Text geschriebene Werkzeugaufrufe werden nie gezeigt oder gesprochen. split_sentences schneidet fertige Sätze ab („z. B.“ und „5. Oktober“ sind kein Satzende); ein langer erster Satz geht schon am Komma los, damit der erste Ton früh kommt. Mit „Gespräche nach Thema“ sagt das Panel der Seite vor dem ersten Wort, ob die Frage ein neues Gespräch beginnt (gespraechsthema.entscheide: Pause oder andere Gruppe der Weiche, keine Rückfrage). 6. Zahl ohne Beleg?: Bei Datenfragen vergleicht answercheck jede Uhrzeit, jedes Datum, jeden Spielstand und Betrag im Satz mit allem, was das Modell bekommen hat. Nach einem Kalender-Abruf zählen nur Angaben aus dieser Antwort, nicht aus früheren; ein zitierter Termin-Titel muss im Ergebnis stehen. Mit „Antwort-Prüfung erweitern“ auch Temperaturen, km und Prozent (gerundet zählt, answercheck.MORE_SLACK) und jeder zitierte Name in jeder Datenantwort. Mit „Rechnen mit festem Werkzeug“ rechnet rechnen.fix vorher jede Rechnung im Satz nach, auch mit Zahlwörtern („17 mal 23 ist 381“, „sechs mal sechs ist 35“) und setzt das Ergebnis des Panels ein; seine Ergebnisse zählen hier als belegt (answercheck.calc_facts). Solange das an ist, kommt jeder Satz erst f"
 },
 {
 "lang": "de",
@@ -2245,7 +2253,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "zeugaufruf oder eine Tat nur ankündigt („Ich rufe das Timer-Werkzeug auf …“), wird nie gesagt; kommt danach kein Werkzeug, sagt das Panel am Ende seinen festen Satz (taten.announces). Klappt ein Werkzeug der behaupteten Art später in derselben Antwort („Ich mache das Lied.“ vor musik_machen), fällt der Satz still weg. Gilt, wenn ein änderndes Werkzeug oder gar keines angeboten war. 8. Zeigen und sprechen: Ein geprüfter Satz geht als Text ans Gerät und in die Warteschlange der Sprachausgabe; Codeblöcke werden nur gezeigt. Ein schon gesagter Satz aus einer früheren Runde wird ausgelassen. Die Sprachausgabe fasst nach dem ersten Satz alles Wartende zu einem Stück zusammen, damit die Stimme ruhig bleibt. Hat der Hörer noch mehr als 3 s Ton, geht ein solches Stück als Folgesatz (X-Spark-Folgesatz) und lässt erste Sätze anderer Antworten vor. 9. Datenfrage ohne Nachsehen?: Braucht die Frage ein Werkzeug und das Modell antwortet ohne eines, wird die ganze Runde nie gesagt. Das Modell wird einmal neu gefragt, mit dem Hinweis, zuerst das Werkzeug zu nutzen. 10. Werkzeug gewünscht?: Hat das Modell keinen Werkzeugaufruf geschrieben oder ist die Länge erreicht, ist die Antwort fertig. Bei erre"
+"text": "ertig. 7. Tat ohne Werkzeug?: Behauptet ein Satz eine Tat („ist jetzt an“, „habe eingetragen“), muss in dieser Antwort ein Werkzeug dieser Art geklappt haben (taten.check). Ein Satz, der einen Werkzeugaufruf oder eine Tat nur ankündigt („Ich rufe das Timer-Werkzeug auf …“), wird nie gesagt; kommt danach kein Werkzeug, sagt das Panel am Ende seinen festen Satz (taten.announces). Klappt ein Werkzeug der behaupteten Art später in derselben Antwort („Ich mache das Lied.“ vor musik_machen), fällt der Satz still weg. Gilt, wenn ein änderndes Werkzeug oder gar keines angeboten war. 8. Zeigen und sprechen: Ein geprüfter Satz geht als Text ans Gerät und in die Warteschlange der Sprachausgabe; Codeblöcke werden nur gezeigt. Ein schon gesagter Satz aus einer früheren Runde wird ausgelassen. Die Sprachausgabe fasst nach dem ersten Satz alles Wartende zu einem Stück zusammen, damit die Stimme ruhig bleibt. Hat der Hörer noch mehr als 3 s Ton, geht ein solches Stück als Folgesatz (X-Spark-Folgesatz) und lässt erste Sätze anderer Antworten vor. 9. Datenfrage ohne Nachsehen?: Braucht die Frage ein Werkzeug und das Modell antwortet ohne eines, wird die ganze Runde nie gesagt. Das Modell wird einmal"
 },
 {
 "lang": "de",
@@ -3861,7 +3869,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "1. Anfrage mit Profil: profiles.current findet das Profil aus dem signierten Anmelde-Cookie oder dem Geräteschlüssel. Was das Sprachmodell sagt, wählt nie ein Profil. 2. Pfad im eigenen Ordner: Jede Datei liegt unter users/ID/ mit einem festen Namen aus dem Code. Die ID kommt aus Schritt 1, nie aus einem Text. 3. Ein Geheimnis dabei?: Passwörter von Mail, Kalender und Speicherorten, Tokens von Home Assistant und MCP und der Schlüssel des eigenen Speichers werden mit dem Schlüssel des Spark versiegelt. Der Stimmabdruck (voice.json) ist biometrisch und wird ganz versiegelt; eine ältere offene Datei wird beim ersten Lesen versiegelt. Gedächtnis und Gespräche (9 Dateien, siegel= im Datei-Register) liegen ganz versiegelt: AES-256-GCM mit einem eigenen Schlüssel aus secret.key, Profil und Dateiname als Zusatzdaten, also weder in einem anderen Profil noch unter einem anderen Namen lesbar. Ältere offene Dateien versiegelt siegel.migrate einmal, nach einer Sicherung „vor-siegel“. 4. Schreiben nur für den Dienst: profiles._write legt den Ordner so an, dass nur der Dienst hineinsieht, schreibt eine Zwischendatei, die nur der Dienst lesen kann, und tauscht sie in einem Schritt aus. 5. Öffnet d"
+"text": "1. Anfrage mit Profil: profiles.current findet das Profil aus dem signierten Anmelde-Cookie oder dem Geräteschlüssel. Was das Sprachmodell sagt, wählt nie ein Profil. 2. Pfad im eigenen Ordner: Jede Datei liegt unter users/ID/ mit einem festen Namen aus dem Code. Die ID kommt aus Schritt 1, nie aus einem Text. 3. Ein Geheimnis dabei?: Passwörter von Mail, Kalender und Speicherorten, Tokens von Home Assistant und MCP und der Schlüssel des eigenen Speichers werden mit dem Schlüssel des Spark versiegelt. Der Stimmabdruck (voice.json) ist biometrisch und wird ganz versiegelt; eine ältere offene Datei wird beim ersten Lesen versiegelt. Gedächtnis und Gespräche (10 Dateien, siegel= im Datei-Register) liegen ganz versiegelt: AES-256-GCM mit einem eigenen Schlüssel aus secret.key, Profil und Dateiname als Zusatzdaten, also weder in einem anderen Profil noch unter einem anderen Namen lesbar. Ältere offene Dateien versiegelt siegel.migrate einmal, nach einer Sicherung „vor-siegel“. 4. Schreiben nur für den Dienst: profiles._write legt den Ordner so an, dass nur der Dienst hineinsieht, schreibt eine Zwischendatei, die nur der Dienst lesen kann, und tauscht sie in einem Schritt aus. 5. Öffnet "
 },
 {
 "lang": "de",
@@ -3869,7 +3877,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ie versiegelte Datei?: Diese Dateien liest und schreibt nur profiles.read_own und write_own. Öffnet eine nicht (fremder Schlüssel, anderes Profil, auf der Platte geändert), wird sie einmal beiseitegelegt (Name.unlesbar), nie überschrieben, und das Profil beginnt leer. Der Admin sieht einen Hinweis; nach der Umzugs-Sicherung holt „Wieder einlesen“ unter Ich → Gedächtnis sie zurück. 6. Jede Datei einsortiert: Jeder Dateiname hat genau eine Zeile im Datei-Register dateien.py: mit einem Bereich (dateien.AREAS, darf auf den eigenen Speicher) oder mit seiner Art (dateien.LOCAL, bleibt auf dem Spark: Schlüssel, Zugänge, Einstellungen, Stimmabdruck, Warteschlangen). speicher.py nimmt beide Listen von dort. test_technik prüft jeden Namen, den der Code schreibt. Dasselbe Register sagt mit export=, was „Alle meine Daten herunterladen“ (meinedaten.build, Ich → Sicherheit → Meine Daten) in die ZIP legt (35 Einträge, Versiegeltes geöffnet über read_own) und warum der Rest draußen bleibt. 7. Eigener Speicher eingerichtet?: Nur wenn der Admin den eigenen Speicher freigegeben hat und das Profil ein Ziel mit mindestens einem Bereich hat (höchstens 2 Ziele). 8. Nur Geändertes der gewählten Bereiche: "
+"text": "die versiegelte Datei?: Diese Dateien liest und schreibt nur profiles.read_own und write_own. Öffnet eine nicht (fremder Schlüssel, anderes Profil, auf der Platte geändert), wird sie einmal beiseitegelegt (Name.unlesbar), nie überschrieben, und das Profil beginnt leer. Der Admin sieht einen Hinweis; nach der Umzugs-Sicherung holt „Wieder einlesen“ unter Ich → Gedächtnis sie zurück. 6. Jede Datei einsortiert: Jeder Dateiname hat genau eine Zeile im Datei-Register dateien.py: mit einem Bereich (dateien.AREAS, darf auf den eigenen Speicher) oder mit seiner Art (dateien.LOCAL, bleibt auf dem Spark: Schlüssel, Zugänge, Einstellungen, Stimmabdruck, Warteschlangen). speicher.py nimmt beide Listen von dort. test_technik prüft jeden Namen, den der Code schreibt. Dasselbe Register sagt mit export=, was „Alle meine Daten herunterladen“ (meinedaten.build, Ich → Sicherheit → Meine Daten) in die ZIP legt (36 Einträge, Versiegeltes geöffnet über read_own) und warum der Rest draußen bleibt. 7. Eigener Speicher eingerichtet?: Nur wenn der Admin den eigenen Speicher freigegeben hat und das Profil ein Ziel mit mindestens einem Bereich hat (höchstens 2 Ziele). 8. Nur Geändertes der gewählten Bereiche:"
 },
 {
 "lang": "de",
@@ -3877,7 +3885,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "local_files nimmt nur Dateien der gewählten Bereiche: echte Dateien, keine Links, höchstens 5000 Stück. copy_once schickt nur, was sich seit dem letzten Lauf geändert hat, höchstens 2048 MB pro Lauf; der nächste Lauf macht weiter. 9. Verschlüsselt, Namen zufällig: seal_file verschlüsselt jede Datei in nummerierten Stücken mit einem eigenen Schlüssel je Objekt (abgeleitet aus dem Speicher-Schlüssel des Profils und dem Objektnamen). Die Namen auf dem Ziel sind zufällig; das Ziel sieht nur Rauschen. 10. Gelöschtes wartet im Papierkorb: Ein gelöschtes oder ersetztes Objekt bleibt 30 Tage auf dem Ziel. Ist das Ziel nicht erreichbar, ändert sich auf dem Spark nichts; der Besitzer hört nach 60 Minuten einmal davon. 11. In der Sicherung: Die tägliche Sicherung nimmt users/ ganz mit, außer users/secret (signiert die Anmeldungen) und den Nachrichten zwischen Profilen. SQLite-Dateien werden als stimmige Kopie gepackt. Gedächtnis und Gespräche liegen darin versiegelt: auf diesem Spark öffnen sie sich wieder, auf einem anderen nur mit der Umzugs-Sicherung. Die eigene Kopie (speicher.py) nimmt sie geöffnet in ihre eigene Verschlüsselung. 12. Profil gelöscht?: delete_user nimmt das Profil und sei"
+"text": " local_files nimmt nur Dateien der gewählten Bereiche: echte Dateien, keine Links, höchstens 5000 Stück. copy_once schickt nur, was sich seit dem letzten Lauf geändert hat, höchstens 2048 MB pro Lauf; der nächste Lauf macht weiter. 9. Verschlüsselt, Namen zufällig: seal_file verschlüsselt jede Datei in nummerierten Stücken mit einem eigenen Schlüssel je Objekt (abgeleitet aus dem Speicher-Schlüssel des Profils und dem Objektnamen). Die Namen auf dem Ziel sind zufällig; das Ziel sieht nur Rauschen. 10. Gelöschtes wartet im Papierkorb: Ein gelöschtes oder ersetztes Objekt bleibt 30 Tage auf dem Ziel. Ist das Ziel nicht erreichbar, ändert sich auf dem Spark nichts; der Besitzer hört nach 60 Minuten einmal davon. 11. In der Sicherung: Die tägliche Sicherung nimmt users/ ganz mit, außer users/secret (signiert die Anmeldungen) und den Nachrichten zwischen Profilen. SQLite-Dateien werden als stimmige Kopie gepackt. Gedächtnis und Gespräche liegen darin versiegelt: auf diesem Spark öffnen sie sich wieder, auf einem anderen nur mit der Umzugs-Sicherung. Die eigene Kopie (speicher.py) nimmt sie geöffnet in ihre eigene Verschlüsselung. 12. Profil gelöscht?: delete_user nimmt das Profil und se"
 },
 {
 "lang": "de",
@@ -3885,7 +3893,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ne Geräte aus profiles.json und löscht den Ordner, aber nur wenn die ID genau die Form einer Profil-ID hat. 13. Nur für dieses Profil: Jede Funktion liest nur den Ordner des angemeldeten Profils. Gäste haben keinen Ordner."
+"text": "ine Geräte aus profiles.json und löscht den Ordner, aber nur wenn die ID genau die Form einer Profil-ID hat. 13. Nur für dieses Profil: Jede Funktion liest nur den Ordner des angemeldeten Profils. Gäste haben keinen Ordner."
 },
 {
 "lang": "de",
@@ -4685,7 +4693,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Gespräche als Liste",
-"text": "Gespräche als Liste (seit V01.1.452, ohne Schalter): Statt eines Auswahlfelds stehen die Gespräche als Liste neben dem Gespräch, geordnet nach Heute, Gestern, Letzte 7 Tage und Älter, je Zeile Titel, die letzte Antwort in einer Zeile und die Zeit; das offene ist blau. Oben „＋“ für ein neues Gespräch und „In allen Gesprächen suchen“. Ist die Karte schmaler als 760 Pixel (kleiner Bildschirm, Handy), öffnet der Listen-Knopf links im Kopf die Liste über dem Gespräch; eine Wahl, Escape oder der Knopf schließen sie. Am Handy steht der Knopf im Menü unter „Frühere Gespräche“. Die Liste zeichnet nur, was sich geändert hat (keyFill), nichts springt."
+"text": "Gespräche als Liste (seit V01.1.453, ohne Schalter): Statt eines Auswahlfelds stehen die Gespräche als Liste neben dem Gespräch, geordnet nach Heute, Gestern, Letzte 7 Tage und Älter, je Zeile Titel, die letzte Antwort in einer Zeile und die Zeit; das offene ist blau. Oben „＋“ für ein neues Gespräch und „In allen Gesprächen suchen“. Ist die Karte schmaler als 760 Pixel (kleiner Bildschirm, Handy), öffnet der Listen-Knopf links im Kopf die Liste über dem Gespräch; eine Wahl, Escape oder der Knopf schließen sie. Am Handy steht der Knopf im Menü unter „Frühere Gespräche“. Die Liste zeichnet nur, was sich geändert hat (keyFill), nichts springt."
 },
 {
 "lang": "de",
@@ -4693,7 +4701,23 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Ruhige Antworten",
-"text": "Ruhige Antworten (seit V01.1.452, ohne Schalter): Was eine Antwort benutzt hat (Werkzeuge, Herkunft wie „Quelle: E-Mail“), steht in einer grauen Zeile. Die Knöpfe unter einer Antwort (Daumen, „⋯“) erscheinen erst beim Zeigen auf die Antwort, am Handy nach einem Tipp; ihr Platz bleibt frei, nichts springt. Seltene Knöpfe (Melden, Aufs reMarkable, Ins Wissensbuch, In „Meine Dokumente“) liegen hinter „⋯“ in derselben Zeile. Die Knöpfe einer Meldung von selbst („Weniger davon“, „Nicht jetzt“) zeigen sich genauso."
+"text": "Ruhige Antworten (seit V01.1.453, ohne Schalter): Was eine Antwort benutzt hat (Werkzeuge, Herkunft wie „Quelle: E-Mail“), steht in einer grauen Zeile. Die Knöpfe unter einer Antwort (Daumen, „⋯“) erscheinen erst beim Zeigen auf die Antwort, am Handy nach einem Tipp; ihr Platz bleibt frei, nichts springt. Seltene Knöpfe (Melden, Aufs reMarkable, Ins Wissensbuch, In „Meine Dokumente“) liegen hinter „⋯“ in derselben Zeile. Die Knöpfe einer Meldung von selbst („Weniger davon“, „Nicht jetzt“) zeigen sich genauso."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Gespräche nach Thema",
+"text": "Gespräche nach Thema (seit V01.1.454, *Funktionen → Gespräche nach Thema*, chat.convo_topics, aus; Gäste und eine fremde Stimme nie): Jedes Thema bekommt sein eigenes Gespräch, nach festen Regeln des Panels (gespraechsthema.entscheide): ein neues beginnt nach 30 Minuten Pause (PAUSE_S) oder wenn die Weiche die Frage in eine andere Gruppe legt als das Gespräch (Kalender, Wetter, Paket …), seit der letzten Frage 3 Minuten vergangen sind (WECHSEL_S) und die Frage keine Rückfrage ist; Plaudern, Fragen zum Spark und zum Gedächtnis zählen nie als Themenwechsel. Vor dem ersten Wort sagt der Zug es der Seite (Ereignis „thema“); sie legt Frage und Antwort in ein neues Gespräch und zeigt eine Linie „Neues Gespräch“. Das Gespräch trägt die Gruppe seiner ersten Frage als Symbol in der Liste. Nach der ersten Antwort schreibt das Sprachmodell im Hintergrund einen kurzen Namen nur aus der ersten Frage (nie aus einer Antwort, also nie aus Mail- oder Webtext; Aufgabe „Gespräch benennen“, Sprache geht vor; höchstens 48 Zeichen, eine Zeile, keine Zeichen). Mit dem Stift im Kopf benennst du es selbst um, ein eigener Name wird nie überschrieben; die Nadel heftet es an (höchstens 20, profiles.MAX_PINNED"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Gespräche nach Thema",
+"text": "): angeheftete stehen oben und gehen nie ins Archiv. Über profiles.MAX_CONVOS hinaus gehen die ältesten ins Archiv (convos-archiv.json, versiegelt, höchstens 500) statt verloren; „Ältere Gespräche laden“ unter der Liste zeigt sie seitenweise, eine Frage darin holt das Gespräch zurück. Weiterführen braucht nichts Eigenes: die Seite schickt die letzten Nachrichten mit, und „Lange Gespräche zusammenfassen“ bringt zurück, was nicht mehr passt. Hinweise, die der Spark von sich aus sagt, kommen nicht mehr in die Gespräche. Endpunkte: POST /api/profile/convos/meta (Name, Anheften; 2 KB, Rate-Limit), GET /api/profile/convos/archiv?vor= (30 je Seite); beide 403, solange die Funktion aus ist. Log (Bereich Gespräch): „thema neu pause|wechsel“ oder „gleich“ mit der Gruppe, „name ok|leer|fehler“, „meta ok|abgelehnt“, „archiv N dazu, M im Archiv“, nie ein Text."
 },
 {
 "lang": "de",
@@ -12653,6 +12677,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Alle Funktionen",
 "title": "Alle Funktionen",
+"text": "- Gespräche nach Thema (Funktionen → Gespräch → „Gespräche nach Thema“): Jedes Thema bekommt sein eigenes Gespräch."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Alle Funktionen",
+"title": "Alle Funktionen",
 "text": "- Hilfe zum Spark (Funktionen → Gespräch → „Hilfe zum Spark“; Ich → Gespräch): Fragst du den Assistenten etwas zum Spark selbst („Was macht die Gezielte Werkzeugwahl?“, „Wo stelle ich die Stimme ein?“), schaut er in den Anleitungen, den Schaltern und der Doku des Spark nach und antwortet daraus, mit dem Weg im Pane …"
 },
 {
@@ -18773,7 +18805,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "es of sound, search, sources, questions back, errors. The text is redrawn at most once per frame. The sound plays in its own audio context at the speech output's rate; every piece ends with a short fade so the seams do not click. 8. Someone talking over it?: While the answer plays, the microphone keeps listening. If the level stays clearly above the own output and the room (TV) for a moment, the answer stops and the recording already running becomes the next question. 9. Error in the stream?: An error shows under the answer in plain words; the admin also sees the technical detail, guests only the kind of error. If only speech output failed, the answer stays as text. 10. Store the conversation: For a profile the page sends only the new messages (PUT /api/profile/convos with „add“). The Spark appends them to its copy under a lock, so another device overwrites nothing, and keeps at most 50 conversations of 60 messages each. 11. Sync with other devices: When the page comes to the front again, and regularly in between, it asks what changed since last time; a conversation deleted elsewhere closes. With instant sync every visible page keeps an event stream open that only reports „conversa"
+"text": "es of sound, search, sources, questions back, errors. The text is redrawn at most once per frame. The sound plays in its own audio context at the speech output's rate; every piece ends with a short fade so the seams do not click. 8. Someone talking over it?: While the answer plays, the microphone keeps listening. If the level stays clearly above the own output and the room (TV) for a moment, the answer stops and the recording already running becomes the next question. 9. Error in the stream?: An error shows under the answer in plain words; the admin also sees the technical detail, guests only the kind of error. If only speech output failed, the answer stays as text. 10. Store the conversation: For a profile the page sends only the new messages (PUT /api/profile/convos with „add“). The Spark appends them to its copy under a lock, so another device overwrites nothing, and keeps at most 50 conversations of 60 messages each. With „Conversations by topic“ older ones go into the archive (convos-archiv.json, at most 500), pinned ones stay on top and are kept. 11. Sync with other devices: When the page comes to the front again, and regularly in between, it asks what changed since last time"
 },
 {
 "lang": "en",
@@ -18781,7 +18813,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "tion changed“ and „answering“, never contents (at most 8 per profile, 30 minutes each); a hidden page closes it to save the battery and asks again on coming back. 12. Ready: The page waits until the answer is spoken. Hands-free, or after a spoken question with a follow-up window, it opens the microphone again, but only while the turn still holds: Stop, a new or another conversation and the event „ende“ (a stop word, kill switch stage 3) raise the turn number, then nothing opens the microphone any more, not even a recognition still running. When nothing listens any more (no recording, no barge-in, no wake word, no room mode), the page releases the microphone track. Another conversation (picker, Find, Open, Me) opens only after the stop, and an answer always lands in the conversation it was asked in."
+"text": "; a conversation deleted elsewhere closes. With instant sync every visible page keeps an event stream open that only reports „conversation changed“ and „answering“, never contents (at most 8 per profile, 30 minutes each); a hidden page closes it to save the battery and asks again on coming back. 12. Ready: The page waits until the answer is spoken. Hands-free, or after a spoken question with a follow-up window, it opens the microphone again, but only while the turn still holds: Stop, a new or another conversation and the event „ende“ (a stop word, kill switch stage 3) raise the turn number, then nothing opens the microphone any more, not even a recognition still running. When nothing listens any more (no recording, no barge-in, no wake word, no room mode), the page releases the microphone track. Another conversation (picker, Find, Open, Me) opens only after the stop, and an answer always lands in the conversation it was asked in."
 },
 {
 "lang": "en",
@@ -19949,7 +19981,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "sentence goes at a comma, so the first sound comes early. 6. Figure without proof?: For data questions answercheck compares every time, date, score and amount in the sentence with everything the model was given. After a calendar read only figures from this answer count, not from earlier ones; a quoted appointment title must be in the result. With „Extended answer check“ also temperatures, km and percentages (rounded counts, answercheck.MORE_SLACK) and every quoted name in every data answer. With „Exact calculations“ rechnen.fix first computes every calculation in the sentence again, number words too („17 times 23 is 381“, „six times six is 35“) and puts in the panel's result; its results count as proven here (answercheck.calc_facts). While that is on, every sentence comes only when it is complete. 7. Deed without a tool?: When a sentence claims a deed („is on now“, „entered it“), a tool of that kind must have worked in this answer (taten.check). A sentence that only announces a tool call or a deed („I'm calling the timer tool …“) is never said; when no tool follows, the panel says its fixed sentence at the end (taten.announces). When a tool of the claimed kind works later in the sa"
+"text": "sentence goes at a comma, so the first sound comes early. With „Conversations by topic“ the panel tells the page before the first word whether the question begins a new conversation (gespraechsthema.entscheide: a pause or another group of the Weiche, no follow-up). 6. Figure without proof?: For data questions answercheck compares every time, date, score and amount in the sentence with everything the model was given. After a calendar read only figures from this answer count, not from earlier ones; a quoted appointment title must be in the result. With „Extended answer check“ also temperatures, km and percentages (rounded counts, answercheck.MORE_SLACK) and every quoted name in every data answer. With „Exact calculations“ rechnen.fix first computes every calculation in the sentence again, number words too („17 times 23 is 381“, „six times six is 35“) and puts in the panel's result; its results count as proven here (answercheck.calc_facts). While that is on, every sentence comes only when it is complete. 7. Deed without a tool?: When a sentence claims a deed („is on now“, „entered it“), a tool of that kind must have worked in this answer (taten.check). A sentence that only announces a"
 },
 {
 "lang": "en",
@@ -19957,7 +19989,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "me answer („I'm making the song.“ before musik_machen), the sentence is left out silently. Applies when a changing tool or none at all was offered. 8. Show and speak: A checked sentence goes to the device as text and into the speech output queue; code blocks are only shown. A sentence already said in an earlier round is left out. After the first sentence speech output joins everything waiting into one piece, so the voice stays calm. When the listener still has more than 3 s of audio, such a piece goes as a follow-up sentence (X-Spark-Folgesatz) and lets first sentences of other answers go first. 9. Data question without looking?: When the question needs a tool and the model answers without one, the whole round is never said. The model is asked once more, told to use the tool first. 10. Tool wanted?: When the model wrote no tool call or hit the length limit, the answer is done. At the length limit it is spoken up to the last sentence end, the rest is dropped. 11. Run the tools: Half words before the call are taken back, a finished sentence stays. Every call goes through chat_tools.run; the result comes back as a tool message. A tool that fails twice the same way is stopped for this "
+"text": " tool call or a deed („I'm calling the timer tool …“) is never said; when no tool follows, the panel says its fixed sentence at the end (taten.announces). When a tool of the claimed kind works later in the same answer („I'm making the song.“ before musik_machen), the sentence is left out silently. Applies when a changing tool or none at all was offered. 8. Show and speak: A checked sentence goes to the device as text and into the speech output queue; code blocks are only shown. A sentence already said in an earlier round is left out. After the first sentence speech output joins everything waiting into one piece, so the voice stays calm. When the listener still has more than 3 s of audio, such a piece goes as a follow-up sentence (X-Spark-Folgesatz) and lets first sentences of other answers go first. 9. Data question without looking?: When the question needs a tool and the model answers without one, the whole round is never said. The model is asked once more, told to use the tool first. 10. Tool wanted?: When the model wrote no tool call or hit the length limit, the answer is done. At the length limit it is spoken up to the last sentence end, the rest is dropped. 11. Run the tools: "
 },
 {
 "lang": "en",
@@ -21517,7 +21549,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "1. A request with a profile: profiles.current finds the profile from the signed login cookie or the device key. What the language model says never picks a profile. 2. Path in its own folder: Every file lies under users/ID/ with a fixed name from the code. The ID comes from step 1, never from a text. 3. A secret in it?: Passwords of mail, calendar and storage places, tokens of Home Assistant and MCP and the own storage key are sealed with the Spark's key. The voiceprint (voice.json) is biometric and is sealed whole; an older open file is sealed the first time it is read. Memory and conversations (9 files, siegel= in the file register) lie sealed whole: AES-256-GCM with a key of their own from secret.key, the profile and the file name as associated data, so readable neither in another profile nor under another name. siegel.migrate seals older open files once, after a backup „vor-siegel“. 4. Write for the service only: profiles._write creates the folder so that only the service looks into it, writes a temporary file only the service can read and swaps it in one step. 5. Does the sealed file open?: Only profiles.read_own and write_own read and write these files. If one does not open (a"
+"text": "1. A request with a profile: profiles.current finds the profile from the signed login cookie or the device key. What the language model says never picks a profile. 2. Path in its own folder: Every file lies under users/ID/ with a fixed name from the code. The ID comes from step 1, never from a text. 3. A secret in it?: Passwords of mail, calendar and storage places, tokens of Home Assistant and MCP and the own storage key are sealed with the Spark's key. The voiceprint (voice.json) is biometric and is sealed whole; an older open file is sealed the first time it is read. Memory and conversations (10 files, siegel= in the file register) lie sealed whole: AES-256-GCM with a key of their own from secret.key, the profile and the file name as associated data, so readable neither in another profile nor under another name. siegel.migrate seals older open files once, after a backup „vor-siegel“. 4. Write for the service only: profiles._write creates the folder so that only the service looks into it, writes a temporary file only the service can read and swaps it in one step. 5. Does the sealed file open?: Only profiles.read_own and write_own read and write these files. If one does not open ("
 },
 {
 "lang": "en",
@@ -21525,7 +21557,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "nother key, another profile, changed on the disk), it is set aside once (name.unlesbar), never overwritten, and the profile starts empty. The admin sees a hint; after the move backup „Read in again“ under Me → Memory brings it back. 6. Every file sorted: Every file name has exactly one line in the file register dateien.py: with an area (dateien.AREAS, may go to the own storage) or with its kind (dateien.LOCAL, stays on the Spark: keys, accounts, settings, voiceprint, queues). speicher.py takes both lists from there. test_technik checks every name the code writes. The same register says with export= what „Download all my data“ (meinedaten.build, Me → Security → My data) puts into the ZIP (35 entries, sealed ones opened through read_own) and why the rest stays out. 7. Own storage set up?: Only when the admin allowed the own storage and the profile has a target with at least one area (at most 2 targets). 8. Only changes of the chosen areas: local_files takes only files of the chosen areas: real files, no links, at most 5000. copy_once sends only what changed since the last run, at most 2048 MB per run; the next run goes on. 9. Encrypted, names random: seal_file encrypts every file in "
+"text": "another key, another profile, changed on the disk), it is set aside once (name.unlesbar), never overwritten, and the profile starts empty. The admin sees a hint; after the move backup „Read in again“ under Me → Memory brings it back. 6. Every file sorted: Every file name has exactly one line in the file register dateien.py: with an area (dateien.AREAS, may go to the own storage) or with its kind (dateien.LOCAL, stays on the Spark: keys, accounts, settings, voiceprint, queues). speicher.py takes both lists from there. test_technik checks every name the code writes. The same register says with export= what „Download all my data“ (meinedaten.build, Me → Security → My data) puts into the ZIP (36 entries, sealed ones opened through read_own) and why the rest stays out. 7. Own storage set up?: Only when the admin allowed the own storage and the profile has a target with at least one area (at most 2 targets). 8. Only changes of the chosen areas: local_files takes only files of the chosen areas: real files, no links, at most 5000. copy_once sends only what changed since the last run, at most 2048 MB per run; the next run goes on. 9. Encrypted, names random: seal_file encrypts every file in"
 },
 {
 "lang": "en",
@@ -21533,7 +21565,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "numbered pieces with a key of its own per object (derived from the profile's storage key and the object's name). The names on the target are random; the target sees only noise. 10. Deleted waits in the bin: A deleted or replaced object stays 30 days on the target. If the target cannot be reached, nothing changes on the Spark; the owner hears of it once after 60 minutes. 11. In the backup: The daily backup takes users/ whole, except users/secret (signs the logins) and the messages between profiles. SQLite files are packed as a consistent copy. Memory and conversations lie in it sealed: on this Spark they open again, on another one only with the move backup. The own copy (speicher.py) takes them opened into its own encryption. 12. Profile deleted?: delete_user takes the profile and its devices out of profiles.json and deletes the folder, but only when the ID has exactly the shape of a profile ID. 13. Only for this profile: Every function reads only the folder of the signed-in profile. Guests have no folder."
+"text": " numbered pieces with a key of its own per object (derived from the profile's storage key and the object's name). The names on the target are random; the target sees only noise. 10. Deleted waits in the bin: A deleted or replaced object stays 30 days on the target. If the target cannot be reached, nothing changes on the Spark; the owner hears of it once after 60 minutes. 11. In the backup: The daily backup takes users/ whole, except users/secret (signs the logins) and the messages between profiles. SQLite files are packed as a consistent copy. Memory and conversations lie in it sealed: on this Spark they open again, on another one only with the move backup. The own copy (speicher.py) takes them opened into its own encryption. 12. Profile deleted?: delete_user takes the profile and its devices out of profiles.json and deletes the folder, but only when the ID has exactly the shape of a profile ID. 13. Only for this profile: Every function reads only the folder of the signed-in profile. Guests have no folder."
 },
 {
 "lang": "en",
@@ -22309,7 +22341,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Conversations as a list",
-"text": "Conversations as a list (since V01.1.452, no switch): instead of a drop-down the conversations stand as a list beside the conversation, grouped by Today, Yesterday, Last 7 days and Older, each row with the title, the last answer in one line and the time; the open one is blue. On top \"＋\" for a new conversation and \"Search all conversations\". When the card is narrower than 760 pixels (small screen, phone), the list button on the left of the header opens the list over the conversation; a pick, Escape or the button close it. On the phone the button is in the menu under \"Earlier conversations\". The list only redraws what changed (keyFill), nothing jumps."
+"text": "Conversations as a list (since V01.1.453, no switch): instead of a drop-down the conversations stand as a list beside the conversation, grouped by Today, Yesterday, Last 7 days and Older, each row with the title, the last answer in one line and the time; the open one is blue. On top \"＋\" for a new conversation and \"Search all conversations\". When the card is narrower than 760 pixels (small screen, phone), the list button on the left of the header opens the list over the conversation; a pick, Escape or the button close it. On the phone the button is in the menu under \"Earlier conversations\". The list only redraws what changed (keyFill), nothing jumps."
 },
 {
 "lang": "en",
@@ -22317,7 +22349,23 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Calm answers",
-"text": "Calm answers (since V01.1.452, no switch): what an answer used (tools, origin such as \"Source: e-mail\") stands in one grey line. The buttons under an answer (thumbs, \"⋯\") only show when you point at the answer, on a phone after a tap; their room stays, nothing jumps. Rare buttons (Report, To the reMarkable, To the knowledge book, To \"My documents\") are behind \"⋯\" in the same row. The buttons of a note the assistant sent by itself (\"Less of this\", \"Not now\") show the same way."
+"text": "Calm answers (since V01.1.453, no switch): what an answer used (tools, origin such as \"Source: e-mail\") stands in one grey line. The buttons under an answer (thumbs, \"⋯\") only show when you point at the answer, on a phone after a tap; their room stays, nothing jumps. Rare buttons (Report, To the reMarkable, To the knowledge book, To \"My documents\") are behind \"⋯\" in the same row. The buttons of a note the assistant sent by itself (\"Less of this\", \"Not now\") show the same way."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Conversations by topic",
+"text": "Conversations by topic (since V01.1.454, *Features → Conversations by topic*, chat.convo_topics, off; never guests or an unknown voice): every topic gets its own conversation, by fixed rules of the panel (gespraechsthema.entscheide): a new one begins after a 30 minute pause (PAUSE_S) or when the Weiche puts the question into another group than the conversation's (calendar, weather, parcel …), 3 minutes have passed since the last question (WECHSEL_S) and the question is no follow-up; small talk, questions about the Spark and about memory never count as a change of topic. Before the first word the turn tells the page (event \"thema\"); it puts question and answer into a new conversation and shows a line \"New conversation\". The conversation carries the group of its first question as a symbol in the list. After the first answer the language model writes a short name in the background from the first question only (never from an answer, so never from mail or web text; task \"Gespräch benennen\", speech goes first; at most 48 characters, one line, no marks). With the pen in the header you rename it yourself, an own name is never overwritten; the pin pins it (at most 20, profiles.MAX_PINNED): "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Conversations by topic",
+"text": "pinned ones stay on top and never go into the archive. Beyond profiles.MAX_CONVOS the oldest go into the archive (convos-archiv.json, sealed, at most 500) instead of being lost; \"Load older conversations\" under the list shows them page by page, a question in one brings the conversation back. Continuing needs nothing of its own: the page sends the last messages along, and \"Summarize long conversations\" brings back what no longer fits. Notes the Spark says by itself no longer go into the conversations. Endpoints: POST /api/profile/convos/meta (name, pin; 2 KB, rate limit), GET /api/profile/convos/archiv?vor= (30 per page); both 403 while the function is off. Log (area Conversation): \"thema neu pause|wechsel\" or \"gleich\" with the group, \"name ok|leer|fehler\", \"meta ok|abgelehnt\", \"archiv N dazu, M im Archiv\", never a text."
 },
 {
 "lang": "en",
@@ -30086,6 +30134,14 @@
 "head": "All functions",
 "title": "All functions",
 "text": "- Exact calculations (Features → Conversation → \"Exact calculations\"): A language model is bad at arithmetic."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "All functions",
+"title": "All functions",
+"text": "- Conversations by topic (Features → Conversation → \"Conversations by topic\"): Every topic gets its own conversation."
 },
 {
 "lang": "en",

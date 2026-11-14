@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.454** Conversations by topic: a new conversation after a pause or a change of topic, with symbol and a short name, pin and archive
 - **V01.1.453** Conversations as a list beside the conversation instead of a drop-down, calm answers with buttons only on pointing
 - **V01.1.452** Spark clients: box "Connect a program" in the panel and the Spark-Konsole with address, ports, model names, key, certificate download, check command and error list; step-by-step guide in the docs; limits per client adjustable when making it and later, also "No limits"
 - **V01.1.451** Pair a Spark (E4c): on the Pi under Einstellungen → Spark → Spark koppeln enter name and code from the Spark-Konsole instead of `sudo speech-spark teilen koppeln`; root pairs through the fixed service `speech-spark-koppeln`; the Spark-Konsole loads, measures and adds own models, its overview shows only notes about the Spark itself
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.447** Follow-up to V01.1.446: Praxistest P891 (Spark-Konsole) in the list
 - **V01.1.446** Spark-Konsole (E4): with `sudo speech-spark konsole an <net>` the Spark has a web page of its own on port 31010 (overview, models, clients, pair an assistant with a code, updates, logs), the panel's code in a mode of its own, home network only, only its own paths
 - **V01.1.445** Natural conversation, package C: a spoken "Hello" after a few hours gets the one most important point (appointments today, rain, a parcel), otherwise nothing
-- **V01.1.444** Reading tools at the same time: several reading tools of one step (weather, calendar, web search …) run together, the answer comes faster; Summarize long conversations: the start of a long conversation no longer simply drops away (both off)
 
 
 

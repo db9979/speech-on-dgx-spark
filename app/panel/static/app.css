@@ -168,6 +168,13 @@ body.inchat #fab{display:none}
 .cvlfind svg{width:15px;height:15px;flex:none}
 .cvlrows{flex:1;min-height:0;overflow:auto;padding:0 6px 10px;contain:content}
 #convotitle{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font:var(--t-head)}
+/* Gespräche nach Thema: the line where a new conversation begins, the pin, the archive, the name in place */
+.cvsep{align-self:center;display:flex;align-items:center;gap:var(--s2);width:100%;font:var(--t-cap);color:var(--mut)}
+.cvsep::before,.cvsep::after{content:"";flex:1;border-top:1px solid var(--line)}
+.cvpin{display:inline-grid;color:var(--mut)}.cvpin svg{width:13px;height:13px}
+.cvarch{display:block;margin:8px auto 4px;font:var(--t-sub)}
+#cvpinbtn[aria-pressed=true]{color:var(--acc)}
+#convotitle.cvedit{outline:2px solid var(--acc);outline-offset:2px;border-radius:var(--r-ctl);text-overflow:clip;cursor:text}
 /* Ruhige Antworten: the grey line of what the answer used, the actions only on pointing (a phone: after a tap) */
 .bubble .mline{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 12px;margin-top:8px;font-size:12px;color:var(--mut)}
 .bubble .mline .mem,.bubble .mline .steps{margin:0;padding:0;border:0}.bubble .mline .steps[open]{flex-basis:100%}

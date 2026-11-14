@@ -73,6 +73,8 @@ BEREICHE = {
 DATEIEN = [
     # users/<id>/: what the own storage may copy (speicher.AREAS), by area
     profil("convos.json", "Gespräche", "Conversations", bereich="gespraeche", siegel=True),
+    profil("convos-archiv.json", "Archivierte Gespräche (Gespräche nach Thema)", "Archived conversations (Conversations by topic)",
+           bereich="gespraeche", siegel=True),
     profil("toollog.json", "Werkzeug-Log", "Tool log", bereich="gespraeche", siegel=True),
     profil("room-history.json", "Raummodus-Verlauf", "Room mode history", bereich="gespraeche", siegel=True),
     profil("memory.json", "Gedächtnis", "Memory", bereich="gedaechtnis", siegel=True),

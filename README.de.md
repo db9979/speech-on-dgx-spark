@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.454** Gespräche nach Thema: neues Gespräch nach Pause oder Themenwechsel, mit Symbol und kurzem Namen, Anheften und Archiv
 - **V01.1.453** Gespräche als Liste neben dem Gespräch statt Auswahlfeld, ruhige Antworten mit Knöpfen erst beim Zeigen
 - **V01.1.452** Spark-Clients: Kasten „Ein Programm verbinden“ im Panel und in der Spark-Konsole mit Adresse, Ports, Modellnamen, Schlüssel, Zertifikat zum Laden, Prüfbefehl und Fehlerliste; Schritt-für-Schritt-Anleitung in der Doku; Grenzen je Client beim Anlegen und später einstellbar, auch „Keine Grenzen“
 - **V01.1.451** Spark koppeln (E4c): am Pi unter Einstellungen → Spark → Spark koppeln Name und Code aus der Spark-Konsole eintragen statt `sudo speech-spark teilen koppeln`; root koppelt über den festen Dienst `speech-spark-koppeln`; in der Spark-Konsole Modelle laden, messen und eigene hinzufügen, der Überblick zeigt nur Hinweise zum Spark selbst
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.447** Nachtrag zu V01.1.446: Praxistest P891 (Spark-Konsole) in der Liste
 - **V01.1.446** Spark-Konsole (E4): der Spark hat mit `sudo speech-spark konsole an <Netz>` eine eigene Webseite auf Port 31010 (Überblick, Modelle, Clients, Assistent koppeln mit Code, Updates, Logs), derselbe Code wie das Panel in einem eigenen Modus, nur Heimnetz, nur eigene Wege
 - **V01.1.445** Natürliches Gespräch, Paket C: ein gesprochenes „Hallo“ nach ein paar Stunden bekommt den einen wichtigsten Punkt (Termine heute, Regen, ein Paket), sonst nichts
-- **V01.1.444** Lesende Werkzeuge gleichzeitig: mehrere lesende Werkzeuge eines Schritts (Wetter, Kalender, Websuche …) laufen zusammen, die Antwort kommt schneller; Lange Gespräche zusammenfassen: der Anfang eines langen Gesprächs fällt nicht mehr einfach weg (beide aus)
 
 
 

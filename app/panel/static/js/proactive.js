@@ -14,7 +14,8 @@ const pro={since:Date.now()-10*60e3,seen:new Set(),busy:false,greeted:0,
       if(r.ok&&!(await r.json()).play)return}catch{}
     if(x.vg&&window.vgLive)vgLive(x.vg,x.text);   // a card of Offen (offen.js): it is in today's conversation already
     else{const b=chatLog('assistant',x.text);b.classList.add('pro');
-    const m={role:'assistant',content:x.text,...(x.mail?{mail:true}:{outside:true})};chat.msgs.push(m);deletable(b,m);saveConvo();
+    const m={role:'assistant',content:x.text,...(x.mail?{mail:true}:{outside:true})};
+    if(!window.TOPICS_ON){chat.msgs.push(m);deletable(b,m);saveConvo()}   // Gespräche nach Thema: a note stays out of the conversations
     const row=document.createElement('div');row.className='prorow';   // quick feedback, same as saying it
     row.innerHTML=`<button type="button" class="ib" data-v="more" title="${t('Gut so','Good')}" aria-label="${t('Gut so','Good')}">${ic('up_thumb')}</button><button type="button" class="ib" data-v="less">${t('Weniger davon','Less of this')}</button><button type="button" class="ib" data-v="pause">${t('Nicht jetzt','Not now')}</button>`;
     row.querySelectorAll('button').forEach(btn=>btn.onclick=async()=>{const v=btn.dataset.v;

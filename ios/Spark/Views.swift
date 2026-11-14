@@ -635,7 +635,7 @@ struct HistoryView: View {
         let q = search.trimmingCharacters(in: .whitespaces).lowercased()
         guard !q.isEmpty else { return list }
         return list.filter { c in
-            c.title.lowercased().contains(q) || c.msgs.contains { ($0["content"] as? String)?.lowercased().contains(q) == true }
+            c.title.lowercased().contains(q) || c.name.lowercased().contains(q) || c.msgs.contains { ($0["content"] as? String)?.lowercased().contains(q) == true }
         }
     }
 
@@ -685,7 +685,10 @@ struct HistoryView: View {
         let today = Calendar.current.isDateInToday(c.updated)
         return HStack(alignment: .firstTextBaseline) {
             VStack(alignment: .leading, spacing: 3) {
-                Text(c.title.isEmpty ? String(localized: "Gespräch") : c.title).lineLimit(1)
+                HStack(spacing: 4) {
+                    if c.pin { Image(systemName: "pin.fill").font(.caption).foregroundStyle(.secondary) }
+                    Text(!c.name.isEmpty ? c.name : c.title.isEmpty ? String(localized: "Gespräch") : c.title).lineLimit(1)
+                }
                 if !last.isEmpty {
                     Text(verbatim: last.replacingOccurrences(of: "\n", with: " ")).lineLimit(1)
                         .font(.footnote).foregroundStyle(.secondary)

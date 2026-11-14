@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "geraet": {
-        "stand": "2fdf7329c6",
+        "stand": "6857194ed0",
         "bezug": {
             "account.CONVO_BODY": ["s10"], "admin.test_asr": ["s4"], "admin._test_asr": ["s4", "s5"],
             "admin.read_audio": ["s4"], "zwischenruf.decide": ["s5"], "chat.chat": ["s6", "s7"], "account.profile_save_convo": ["s10"],
@@ -124,10 +124,14 @@ SEITEN = {
               ("nur die neuen Nachrichten", "only the new messages"),
               ("Bei einem Profil schickt die Seite nur die neuen Nachrichten (PUT /api/profile/convos mit „add“). Der "
                "Spark hängt sie unter einer Sperre an seine Kopie an, damit ein anderes Gerät nichts überschreibt, und "
-               "behält höchstens {profiles.MAX_CONVOS} Gespräche mit je {profiles.MAX_MSGS} Nachrichten.",
+               "behält höchstens {profiles.MAX_CONVOS} Gespräche mit je {profiles.MAX_MSGS} Nachrichten. Mit „Gespräche nach "
+               "Thema“ gehen ältere ins Archiv (convos-archiv.json, höchstens {profiles.MAX_ARCHIVE}), angeheftete "
+               "stehen oben und bleiben.",
                "For a profile the page sends only the new messages (PUT /api/profile/convos with „add“). The Spark "
                "appends them to its copy under a lock, so another device overwrites nothing, and keeps at most "
-               "{profiles.MAX_CONVOS} conversations of {profiles.MAX_MSGS} messages each."),
+               "{profiles.MAX_CONVOS} conversations of {profiles.MAX_MSGS} messages each. With „Conversations by topic“ older "
+               "ones go into the archive (convos-archiv.json, at most {profiles.MAX_ARCHIVE}), pinned ones stay on "
+               "top and are kept."),
               ("info", ("Gast", "guest"), ("Gäste: nur in diesem Browser", "Guests: in this browser only"))),
             S("s11", "schritt", ("Abgleich mit anderen Geräten", "Sync with other devices"),
               ("?since= · Sofort-Abgleich", "?since= · instant sync"),

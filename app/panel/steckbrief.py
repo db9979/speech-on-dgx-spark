@@ -98,6 +98,13 @@ STECKBRIEFE = {
         ohne_werkzeug=("ohne", "Einstellung, wie Antworten entstehen"), log=("chat", "zusammenfassung"), begleiter="spark",
         modul=("verlaufkurz", "gespraech", "Lange Gespräche zusammenfassen: was die Kürzung weglässt, kommt als kurze "
                                            "Zusammenfassung wieder")),
+    # gespraechsthema.py (Dominik 2026-11-14, Plan gespraeche-ablegen 2, 3, 5): one topic, one conversation; the model
+    # only names it in the background; pinned on top, the oldest into the archive
+    "gespraechsthema": Steckbrief(de="Gespräche nach Thema", en="Conversations by topic", gruppe="talk",
+        schalter=("convo_topics",), anleitung="gespraechsthema",
+        ohne_werkzeug=("ohne", "Einstellung, wie Gespräche abgelegt werden"), log=("chat", "thema"), begleiter="talk",
+        modul=("gespraechsthema", "gespraech", "Gespräche nach Thema: neues Gespräch nach Pause oder Themenwechsel, "
+                                               "Name im Hintergrund, Anheften und Archiv")),
     "ack": Steckbrief(de="Sofortige Rückmeldung", en="Instant acknowledgement", gruppe="speed",
         schalter=("instant_ack",), anleitung="ack", parent="routing", me="setbox",
         ohne_werkzeug=("ohne", "Einstellung, wie Antworten entstehen"),

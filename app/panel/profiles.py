@@ -9,7 +9,9 @@ a request comes only from its login cookie or its device key, never from anythin
                               its browser login was last used, without the address)
     USERS_DIR/<user id>/memory.json   [{"id", "text", "created"}]
     USERS_DIR/<user id>/settings.json {conversation settings, see SETTINGS}
-    USERS_DIR/<user id>/convos.json   [{"id", "title", "updated", "msgs": [{"role", "content"}]}]
+    USERS_DIR/<user id>/convos.json   [{"id", "title", "updated", "msgs": [{"role", "content"}]}, optional "area",
+                                      "name", "own", "pin" (Gespräche nach Thema, gespraechsthema.py)]
+    USERS_DIR/<user id>/convos-archiv.json   older conversations of that function, same form
 """
 import hashlib
 import hmac
@@ -22,6 +24,7 @@ import threading
 import time
 
 from common import write_json
+import gespraechsthema
 
 USERS_DIR = os.environ.get("SPEECH_SPARK_USERS", "/var/lib/speech-spark/users")
 COOKIE = "speech_spark_user"
@@ -1479,13 +1482,83 @@ def _clean_convo(c, uid=None):
             if isinstance(m, dict) and m.get("role") in ("user", "assistant") and m.get("content")]
     item = {"id": cid, "title": str(c.get("title", ""))[:80], "msgs": msgs,
             "updated": int(c["updated"]) if isinstance(c.get("updated"), (int, float)) else int(time.time() * 1000)}
+    if c.get("area") in gespraechsthema.AREAS:   # Gespräche nach Thema: the Weiche's group of its first question, a fixed word
+        item["area"] = c["area"]
     return item
 
 
+# ---------------------------------------------------------------- Gespräche nach Thema (gespraechsthema.py)
+CONVO_META = ("area", "name", "own", "pin")   # kept by the Spark whatever a device saves (a device sends none of them)
+MAX_PINNED = 20       # pinned conversations never move to the archive
+MAX_ARCHIVE = 500     # older conversations kept (only while the function is on), the oldest go
+ARCHIVE_ON = []       # gespraechsthema.py: [f(uid) -> True while Gespräche nach Thema is on for the profile]
+
+
+def _archive_on(uid):
+    return any(f(uid) for f in ARCHIVE_ON)
+
+
+def archive(uid):
+    return read_own(uid, "convos-archiv.json", [])
+
+
+def _write_archive(uid, lst):
+    write_own(uid, "convos-archiv.json", lst)
+
+
 def _store_convo(uid, item):
-    rest = [x for x in convos(uid) if x["id"] != item["id"]]
-    write_own(uid, "convos.json", sorted([item] + rest, key=lambda x: -x["updated"])[:MAX_CONVOS])
+    have = convos(uid)
+    old = next((x for x in have if x["id"] == item["id"]), None) \
+        or next((x for x in (archive(uid) if _archive_on(uid) else []) if x["id"] == item["id"]), None)
+    for k in CONVO_META:
+        if k not in item and old and k in old:
+            item[k] = old[k]
+    rest = [x for x in have if x["id"] != item["id"]]
+    ordered = sorted([item] + rest, key=lambda x: (not x.get("pin"), -x["updated"]))
+    keep, over = ordered[:MAX_CONVOS], ordered[MAX_CONVOS:]
+    write_own(uid, "convos.json", sorted(keep, key=lambda x: -x["updated"]))
+    arch = archive(uid) if _archive_on(uid) else None
+    if arch is not None and (over or any(x["id"] == item["id"] for x in arch)):
+        # continued from the archive: back among the open ones; too many: the oldest into the archive, never lost
+        arch = sorted([x for x in arch if x["id"] != item["id"]] + [dict(x, pin=False) for x in over],
+                      key=lambda x: -x["updated"])[:MAX_ARCHIVE]
+        _write_archive(uid, arch)
+        print(f"chat: archiv {len(over)} dazu, {len(arch)} im Archiv", flush=True)
     _tell(uid, item["id"])
+
+
+def convo_meta(uid, cid, area=None, name=None, pin=None, own=None):
+    """Sets the Spark's own fields of one conversation (an open one or one in the archive); returns it or None."""
+    with _lock:
+        for arch, lst in ((False, convos(uid)), (True, archive(uid))):
+            x = next((c for c in lst if c.get("id") == cid), None)
+            if not x:
+                continue
+            if area in gespraechsthema.AREAS and not x.get("area"):
+                x["area"] = area
+            if name is not None and (own is not None or not x.get("own")):   # the model never overwrites a name by hand
+                n = " ".join(str(name).split())[:60]
+                if n:
+                    x["name"] = n
+                else:
+                    x.pop("name", None)
+                if own is not None:
+                    x["own"] = bool(own and n)
+            if pin is not None:
+                if pin and arch:
+                    return None      # first open and continue it, then pin it
+                if pin and not x.get("pin") and sum(1 for c in lst if c.get("pin")) >= MAX_PINNED:
+                    return None
+                x["pin"] = bool(pin)
+            if arch:
+                _write_archive(uid, lst)
+            else:
+                write_own(uid, "convos.json", lst)
+            break
+        else:
+            return None
+    _tell(uid, cid)
+    return x
 
 
 def _tell(uid, cid, gone=False):
@@ -1496,12 +1569,14 @@ def _tell(uid, cid, gone=False):
             print("profiles: convo hook", type(e).__name__, flush=True)
 
 
-def append_convo(uid, cid, title, msgs):
+def append_convo(uid, cid, title, msgs, area=None):
     """Adds messages to the end of one conversation (made if new), read and written under the lock: two turns at
     the same time (Telegram, a speaker, Siri) each keep their messages (V01.0.405; read, add, save lost one)."""
     with _lock:
-        old = next((x for x in convos(uid) if x.get("id") == cid), None)
-        c = {"id": cid, "title": title, "updated": int(time.time() * 1000), "msgs": (old["msgs"] if old else []) + list(msgs)}
+        old = next((x for x in convos(uid) if x.get("id") == cid), None) \
+            or next((x for x in (archive(uid) if _archive_on(uid) else []) if x.get("id") == cid), None)
+        c = {"id": cid, "title": title, "updated": int(time.time() * 1000), "msgs": (old["msgs"] if old else []) + list(msgs),
+             **({"area": area} if area else {})}
         item = _clean_convo(c, uid)
         if item:
             _store_convo(uid, item)
@@ -1511,6 +1586,9 @@ def append_convo(uid, cid, title, msgs):
 def delete_convo(uid, cid):
     with _lock:
         write_own(uid, "convos.json", [x for x in convos(uid) if x["id"] != cid])
+        arch = archive(uid)
+        if any(x.get("id") == cid for x in arch):
+            _write_archive(uid, [x for x in arch if x.get("id") != cid])
     _tell(uid, cid, gone=True)
 
 
