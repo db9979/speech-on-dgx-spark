@@ -119,7 +119,7 @@ NEVER_KEYS = {("chat", k) for k in ("llm_url", "llm_key", "public", "mfa", "repo
                                     "fernzugang", "fernzugang_hilfe", "spontanhilfe", "spontansteuern", "fernbild", "fernals", "fernzugang_sshtermy",
                                     "fernbild_zwischenablage", "fernzugang_notizen",
                                     "fernzugang_ordner", "fernzugang_gross", "fernweb", "fernweb_adresse", "fernzugang_alle", "entwickeln", "entwickeln_github", "entwickeln_terminal", "entwickeln_auftrag")} \
-    | {("entwickeln", "schluessel_sha256"), ("api", "key"), ("api", "tls_listen"), ("api", "tls_from"), ("api", "clients"), ("api", "clients_from"), ("panel", "port"), ("panel", "https_port"),
+    | {("entwickeln", "schluessel_sha256"), ("api", "key"), ("api", "tls_listen"), ("api", "tls_from"), ("api", "clients"), ("api", "clients_from"), ("konsole", "an"), ("konsole", "netze"), ("konsole", "port"), ("panel", "port"), ("panel", "https_port"),
        ("models", "host"), ("models", "cert")}
 
 ARTS = {"weiche", "test", "pflicht", "hinweis", "extra", "pron", "asr", "quality", "value", "switch", "choice", "profile", "umgebung", "issue"}

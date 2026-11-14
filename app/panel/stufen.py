@@ -160,6 +160,7 @@ LIST = {
     ("POST", "/api/admin/spark-clients/neu"): (PROTECT, "Spark", "Einen Schlüssel für einen Spark-Client anlegen", "Make a key for a Spark client"),
     ("POST", "/api/admin/spark-clients/aendern"): (CONFIRM, "Spark", "Rechte, Grenzen oder Sperre eines Spark-Clients ändern", "Change the rights, limits or block of a Spark client"),
     ("POST", "/api/admin/spark-clients/weg"): (CONFIRM, "Spark", "Einen Spark-Client löschen", "Delete a Spark client"),
+    ("POST", "/api/konsole/koppeln"): (PROTECT, "Spark", "Einen Kopplungscode für einen Assistenten zeigen (Spark-Konsole)", "Show a pairing code for an assistant (Spark-Konsole)"),
     ("POST", "/api/admin/entwickeln/einspielen"): (PROTECT, "Spark", "Lokale Änderungen einspielen (Entwickeln auf dem Pi)", "Install local changes (Develop on the Pi)"),
     ("POST", "/api/admin/entwickeln/zurueck"): (CONFIRM, "Spark", "Lokale Änderungen: zurück zur vorigen Fassung", "Local changes: back to the previous state"),
     ("POST", "/api/admin/entwickeln/verwerfen"): (CONFIRM, "Spark", "Lokale Änderungen verwerfen (bleiben im Klon)", "Drop local changes (they stay in the clone)"),

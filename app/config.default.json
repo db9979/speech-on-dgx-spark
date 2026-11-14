@@ -95,6 +95,11 @@
     "clients": false,
     "clients_from": []
   },
+  "konsole": {
+    "an": false,
+    "port": 31010,
+    "netze": []
+  },
   "models": {
     "host": "127.0.0.1",
     "cert": ""

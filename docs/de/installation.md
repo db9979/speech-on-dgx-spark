@@ -43,8 +43,24 @@ Am Ende stehen Adressen, Schlüssel und fertige `curl`-Beispiele auf dem Bildsch
 | `sudo speech-spark umziehen --von <name-oder-ip>` | Auf dem neuen Panel-Rechner: Umzug holen, einspielen, prüfen (geht auch beim Koppeln mit `install.sh --mode panel`) |
 | `sudo speech-spark zurueckholen --von <name-oder-ip>` | Auf dem Modell-Rechner: das Panel zurückholen, danach läuft wieder alles auf einem Rechner |
 | `sudo speech-spark teilen firewall [aus]` | die Ports der Tür nur vom Panel-Rechner (`api.tls_from`) erreichbar machen (nftables, Tabelle `speech_spark_teilen`), oder wieder aus |
+| `sudo speech-spark clients [liste]` | Spark-Clients: andere Programme mit eigenem Schlüssel, Rechten und Grenzen (`an <netz>`, `aus`, `neu <name> <rechte> [klasse]`, `sperren`, `entsperren`, `weg <id>`); Einzelheiten unter *Sicherheit und Betrieb → Spark-Clients* |
+| `sudo speech-spark konsole an <netz> [netz …]` | die Spark-Konsole einschalten: eigene Webseite dieses Spark unter `https://<ip>:31010`, nur aus den genannten Netzen im Heimnetz; `aus` schaltet sie ab, `status` zeigt sie |
 
 Den Wächter für hängende Dienste, der sonst im Portal läuft, übernimmt ohne Portal der Dienst `speech-spark-watch` mit denselben Regeln. Nach einem Update spricht die Sprachausgabe einen Satz, und die Spracherkennung muss ihn verstehen; klappt das nicht, spielt das Update die vorige Version wieder ein. Die Selbsttests laufen in beiden Arten vor jedem Update. Das eigene Sprachmodell aktualisiert sich mit. Läuft Open WebUI in Docker auf derselben Spark, müssen die APIs im Netz erreichbar sein (`127.0.0.1` im Container ist der Container selbst).
+
+### Spark-Konsole: eigene Webseite des Spark
+
+Ohne Panel-Rechner (oder neben ihm) hat der Spark eine eigene Webseite, die Spark-Konsole (Plan „Spark und Assistent entkoppeln“, Paket E4). Sie ist aus, bis root sie einschaltet:
+
+```bash
+sudo speech-spark konsole an 192.168.178.0/24   # nur aus diesem Netz im Heimnetz
+```
+
+Das erzeugt bei Bedarf Zertifikat und Passwort (wie die Installation) und startet den Dienst `speech-spark-konsole`. Danach im Browser `https://<ip-des-spark>:31010` öffnen, das selbst signierte Zertifikat einmal annehmen und mit dem Passwort anmelden (ist der zweite Schritt eingerichtet, fragt sie den Code). Seiten: *Überblick* (GPU, Speicher, CPU, Dienste, Hinweise, alle 3 Sekunden), *Modelle* (was der Spark lädt, Speicher und gemessenes Tempo; Wechseln und Messen bleiben vorerst beim Assistenten oder bei `sudo speech-spark modelle`), *Clients* (Spark-Clients wie im Panel), *Assistent* (Assistent koppeln, siehe unten), *Updates* (Version, „Jetzt aktualisieren“, Ablauf) und *Logs*. Schwachstellen folgen.
+
+**Assistent koppeln:** Unter *Assistent* zeigt „Code zeigen“ (mit frischem Code aus der Authenticator-App) einen Kopplungscode, 10 Minuten gültig und nur einmal nutzbar, dazu den Fingerabdruck des Spark. Auf dem Pi dann `sudo speech-spark teilen koppeln <ip-des-spark>` und den Code eingeben; der Pi prüft dabei den Fingerabdruck, der Code selbst geht nie über das Netz. Dafür startet die Konsole nur den festen root-Dienst `speech-spark-koppelcode` (`speech-spark teilen code --konsole`); er braucht die Tür (`sudo ./install.sh --mode api --teilen`). Die Eingabe am Pi unter Einstellungen → Spark folgt.
+
+Die Konsole ist derselbe Code wie das Panel in einem eigenen Modus: sie spricht nur https auf Port 31010, antwortet nur diesem Rechner und den Netzen aus `konsole.netze` (höchstens 8, nur private Netze, nicht weiter als /8) und nur auf ihre eigenen Wege; alles andere (Assistent, Profile, Werkzeuge) ist 404. Bei geteilter Installation lässt die Firewall der Tür ihren Port nur aus diesen Netzen herein. `sudo speech-spark konsole aus` schaltet sie wieder ab.
 
 ## Aktualisieren
 

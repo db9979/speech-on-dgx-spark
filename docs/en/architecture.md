@@ -110,6 +110,7 @@ flowchart TB
 | `speech-spark-musik` | 31004 → 31014 (local only) | Making music (ACE-Step 1.5), the engine only while making a song |
 | `speech-spark-waerter` | 127.0.0.1:31007 | Wärter: fixed commands from the panel computer (only with the Spark split, behind the TLS-Tor) |
 | `speech-spark-tlstor` | the same ports with TLS | TLS-Tor of the model computer (only with the Spark split), plus `speech-spark-teilen-fw` and `speech-spark-clients-fw` (firewall anew for Spark clients) |
+| `speech-spark-konsole` | HTTPS 31010 | Spark-Konsole: the model computer's own web page (overview, models, clients, pair an assistant, updates, logs), only from `konsole.netze`, only with `speech-spark konsole an`; with `speech-spark-koppelcode` (root shows a pairing code at a click, only with the door) |
 | `speech-spark-notasr` | 127.0.0.1:31009 | Emergency mode with Parakeet on the panel computer while the model computer is gone |
 | `speech-spark-watch` | – | Watchdog, only without the panel |
 | `speech-spark-update` | – | Update, only on request |
@@ -509,6 +510,7 @@ Live overview, logs, watchers, backup, update, help and the admin pages.
 | `app/panel/hilfe.py` | Spark-Hilfe: the assistant answers questions about the Spark itself ("Wie bekomme ich schnellere Antworten?", "Was macht dieser Schalter?", "Was sollte ich h … |
 | `app/installiert.py` | Schwachstellen, what a computer really has installed: the one place that reads it, on the panel's computer for itself and in the Wärter on the model computer … |
 | `app/panel/klartext.py` | Klartext für Status → Improve. |
+| `app/konsole.py` | Spark-Konsole: the model computer's own web page, so a Spark without a Pi (or beside it) can be looked after in a browser. |
 | `app/panel/latency.py` | How long people wait: the time from the question to the first sound of the answer, for every answer of the assistant (chat.py), kept for two weeks in STATE/l … |
 | `app/panel/live.py` | Status → Live: what the Spark does right now, for the admin and for a wall monitor. |
 | `app/panel/logfilter.py` | Diagnose filters for Status → Logs: the journal lines threads usually ask for ("room:", "esp32:", "chat: web search", ...), so nobody has to type journalctl … |
@@ -833,6 +835,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/iphone-update.json` | Update from the iPhone app | – | no |
 | `state/join.json` | Invitations (hashes) | hashes only | yes |
 | `state/kalender-spiegel` | Spark calendar: copy of every CalDAV calendar (one file per calendar entry) | sealed | no |
+| `state/koppelcode.json` | Spark-Konsole: pairing code for an assistant while it lives, then only the outcome | lives 10 minutes | no |
 | `state/latency.json` | Waiting times | – | no |
 | `state/live-monitors.json` | Wall monitors | – | no |
 | `state/livecheck.json` | Live check | – | no |
@@ -3818,9 +3821,9 @@ flowchart TD
 ```
 
 1. <a id="kn-teilen-s1"></a>**Shared install**: The DGX gets its own certificate, the TLS-Tor, the Wärter and the firewall. The services then listen on 127.0.0.1 only.
-2. <a id="kn-teilen-s2"></a>**Pairing code**: The DGX shows a code and waits on port 31008, only while the code lives; after 3 wrong tries it is gone.
+2. <a id="kn-teilen-s2"></a>**Pairing code**: The DGX shows a code and waits on port 31008, only while the code lives; after 3 wrong tries it is gone. Root shows it in the terminal (speech-spark teilen code) or, at a click in the Spark-Konsole, through the fixed service speech-spark-koppelcode on its page Assistant; the console reads it only while it lives.
 3. <a id="kn-teilen-s3"></a>**Proof fits the certificate?**: The panel computer proves the code with a key from the code and the fingerprint of the certificate it sees. Whoever stands in between shows another certificate, and the proof does not fit.
-4. <a id="kn-teilen-s4"></a>**Certificate pinned, firewall shut**: The panel computer keeps exactly this certificate and gets its own Wärter key. The DGX's firewall (teilen.regeln) opens the door's ports for it only, and while Features → Spark clients is open, also for the networks entered in the home network (mandanten.netze).
+4. <a id="kn-teilen-s4"></a>**Certificate pinned, firewall shut**: The panel computer keeps exactly this certificate and gets its own Wärter key. The DGX's firewall (teilen.regeln) opens the door's ports for it only, and while Features → Spark clients is open, also for the networks entered in the home network (mandanten.netze); the Spark-Konsole's port only for konsole.netze.
 5. <a id="kn-teilen-s5"></a>**Connection to the TLS-Tor allowed?**: Every request to speech recognition, speech output, the language model, pictures and the Wärter goes through the door. It speaks TLS 1.3 only and lets in only the panel computer and, with Spark clients open, their networks (tlstor.allowed); it never reads the content. It connects to the services from 127.0.0.2, so nobody through the door counts as this computer itself. Each service checks a client's key, rights and limits (mandanten.finden).
 6. <a id="kn-teilen-s6"></a>**Command to the Wärter**: steuer.call sends a command with a time stamp and a number that counts only once, signed with the Wärter key.
 7. <a id="kn-teilen-s7"></a>**Signature, time, number, command valid?**: tarswart.check checks the signature, a time at most 60 s off, the number only once and a command from the fixed list. No shell, no free names. Spark clients it manages with fixed commands (clients, client_neu, client_aendern, client_weg, clients_schalten); a client itself never reaches the Wärter. Only the sample of a designed voice (stimme_ablegen) goes over its own path /v1/wart/stimme with a bigger limit; stimmablage checks the name, the WAV and the number there.
@@ -3927,7 +3930,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Seal**: vault.seal turns the value into „enc1:“ and a Fernet token (encrypted and protected against change). A value already sealed stays as it is.
 5. <a id="kn-state-s5"></a>**Write atomically**: common.write_json writes into a fresh temporary file next to it, never through a link, gives it the rights of the old file (a new one is readable for the service only) and then swaps it in one step. A crash in the middle leaves the old file whole.
 6. <a id="kn-state-s6"></a>**Read**: A sealed value is opened with the key. If the key does not fit (backup from another Spark), an empty value comes back and the account has to be entered again. Older unsealed values are read and sealed the next time they are saved.
-7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 52), otherwise the line gives its reason (dateien.STATE_LOCAL, 116). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
+7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 52), otherwise the line gives its reason (dateien.STATE_LOCAL, 117). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
 8. <a id="kn-state-s8"></a>**Move backup?**: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup.
 9. <a id="kn-state-s9"></a>**Fine when restoring?**: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays.
 10. <a id="kn-state-s10"></a>**Put in place with a way back**: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back.
@@ -3938,7 +3941,7 @@ flowchart TD
 #### Numbers (from the code)
 
 - **52** files in every backup ([step 7](#kn-state-s7))
-- **116** files and folders that stay out with a reason ([step 7](#kn-state-s7))
+- **117** files and folders that stay out with a reason ([step 7](#kn-state-s7))
 - **8 MB** largest file when restoring ([step 9](#kn-state-s9))
 - **12** characters the move password has at least ([step 8](#kn-state-s8))
 

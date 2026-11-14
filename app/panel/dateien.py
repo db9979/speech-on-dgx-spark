@@ -296,6 +296,10 @@ DATEIEN = [
           lokal="Kopie der Kalender, holt sie nach einem Umzug neu vom Server", schutz=("versiegelt", "sealed")),  # kalenderspiegel.py
     state("rundlauf.json", "Probeläufe des Rundlauf-Wächters (Zeiten in ms, feste Wörter)", "Test runs of the round-trip check (times in ms, fixed words)",
           lokal="Messwerte dieses Geräts, ein neuer Rechner misst neu"),
+    state("koppelcode.json", "Spark-Konsole: Kopplungscode für einen Assistenten, solange er gilt, danach nur das Ergebnis",
+          "Spark-Konsole: pairing code for an assistant while it lives, then only the outcome",
+          lokal="Code von 10 Minuten, nur auf diesem Rechner", schutz=("lebt 10 Minuten", "lives 10 minutes"),
+          sonst=True),  # teilen.py konsole_schreiben (root, speech-spark-koppelcode), read by konsole.koppeln_stand
     state("waerter.key", "Schlüssel für den Wärter des Modell-Rechners", "Key for the model computer's Wärter",
           lokal="Schlüssel der Kopplung: nach einem Umzug wird neu gekoppelt", schutz=("ist ein Schlüssel", "is a key"),
           sonst=True),  # Spark teilen (tarswart.py, steuer.py): written by the pairing, the same on both computers

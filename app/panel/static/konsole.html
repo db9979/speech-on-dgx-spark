@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="de" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spark-Konsole</title>
+<link rel="icon" href="/static/favicon-32.png">
+<link rel="stylesheet" href="/static/tokens.css">
+<link rel="stylesheet" href="/static/konsole.css">
+<script src="/static/js/konsole.js" defer></script>
+</head>
+<body>
+<header class="top">
+  <div class="logo">SPARK <b id="kname">Konsole</b></div>
+  <nav class="tabs" id="ktabs" hidden>
+    <a href="#ueberblick" data-tab="ueberblick">Überblick</a>
+    <a href="#modelle" data-tab="modelle">Modelle</a>
+    <a href="#clients" data-tab="clients">Clients</a>
+    <a href="#assistent" data-tab="assistent">Assistent</a>
+    <a href="#updates" data-tab="updates">Updates</a>
+    <a href="#logs" data-tab="logs">Logs</a>
+  </nav>
+  <div class="right"><span id="kstate"></span> <button class="btn sec" type="button" id="kout" hidden>Abmelden</button></div>
+</header>
+<main id="kmain">
+  <section id="klogin" class="card login" hidden>
+    <h1 id="klt">Anmelden</h1>
+    <p class="k" id="kld">Die Konsole dieses Spark. Nur im Heimnetz, mit dem Passwort aus der Installation.</p>
+    <form id="klform">
+      <input type="password" id="klpw" autocomplete="current-password" placeholder="Passwort" aria-label="Passwort">
+      <input type="text" id="klcode" inputmode="numeric" autocomplete="one-time-code" placeholder="Code aus der App" aria-label="Code" hidden>
+      <button class="btn" type="submit" id="klgo">Anmelden</button>
+      <p class="k" id="klmsg" role="status"></p>
+    </form>
+  </section>
+  <section id="tab-ueberblick" class="tab" hidden></section>
+  <section id="tab-modelle" class="tab" hidden></section>
+  <section id="tab-clients" class="tab" hidden></section>
+  <section id="tab-assistent" class="tab" hidden></section>
+  <section id="tab-updates" class="tab" hidden></section>
+  <section id="tab-logs" class="tab" hidden></section>
+</main>
+<div id="kcode" class="modal" hidden>
+  <div class="card">
+    <h2 id="kct">Code bestätigen</h2>
+    <p class="k" id="kcd">Diese Änderung braucht einen frischen Code aus der Authenticator-App.</p>
+    <input type="text" id="kcin" inputmode="numeric" autocomplete="one-time-code" aria-label="Code">
+    <div class="row"><button class="btn" type="button" id="kcok">Bestätigen</button><button class="btn sec" type="button" id="kcno">Abbrechen</button></div>
+  </div>
+</div>
+</body>
+</html>

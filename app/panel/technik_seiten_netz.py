@@ -309,7 +309,7 @@ SEITEN = {
         "heute": [("guard_ok", ("verbunden", "connected")), ("guard_bad", ("gesperrt", "blocked"))],
     },
     "teilen": {
-        "stand": "a3897ad21e",
+        "stand": "ae96554d10",
         "bezug": {
             "teilen.CODE_SECS": ["s2"], "teilen.schluessel": ["s3"], "teilen.regeln": ["s4"], "tlstor.server_context": ["s5"],
             "tlstor.allowed": ["s5"], "steuer.call": ["s6"], "tarswart.check": ["s7"], "tarswart.COMMANDS": ["s7"], "tarswart.systemupdate_tun": ["s7"],
@@ -344,9 +344,13 @@ SEITEN = {
             S("s2", "schritt", ("Kopplungscode", "Pairing code"),
               ("{teilen.CODE_LEN} Zeichen, {teilen.CODE_SECS} s, einmal", "{teilen.CODE_LEN} characters, {teilen.CODE_SECS} s, once"),
               ("Der DGX zeigt einen Code und wartet auf Port {teilen.KOPPEL_PORT}, nur solange der Code gilt; nach "
-               "{teilen.CODE_TRIES} falschen Versuchen ist er weg.",
+               "{teilen.CODE_TRIES} falschen Versuchen ist er weg. Root zeigt ihn im Terminal (speech-spark teilen code) oder, "
+               "auf Knopfdruck in der Spark-Konsole, über den festen Dienst {konsole.KOPPEL_UNIT} auf deren Seite "
+               "Assistent; die Konsole liest ihn nur, solange er gilt.",
                "The DGX shows a code and waits on port {teilen.KOPPEL_PORT}, only while the code lives; after "
-               "{teilen.CODE_TRIES} wrong tries it is gone.")),
+               "{teilen.CODE_TRIES} wrong tries it is gone. Root shows it in the terminal (speech-spark teilen code) or, "
+               "at a click in the Spark-Konsole, through the fixed service {konsole.KOPPEL_UNIT} on its page Assistant; "
+               "the console reads it only while it lives.")),
             S("s3", "frage", ("Beweis passt zum Zertifikat?", "Proof fits the certificate?"),
               ("scrypt(Code, Fingerabdruck)", "scrypt(code, fingerprint)"),
               ("Der Panel-Rechner beweist den Code mit einem Schlüssel aus Code und dem Fingerabdruck des Zertifikats, das "
@@ -358,10 +362,12 @@ SEITEN = {
               ("nur der Panel-Rechner", "only the panel computer"),
               ("Der Panel-Rechner merkt sich genau dieses Zertifikat und bekommt einen eigenen Wärter-Schlüssel. Die "
                "Firewall des DGX (teilen.regeln) lässt die Ports der Tür nur für ihn zu, und solange Funktionen → "
-               "Spark-Clients offen ist, auch für die eingetragenen Netze im Heimnetz (mandanten.netze).",
+               "Spark-Clients offen ist, auch für die eingetragenen Netze im Heimnetz (mandanten.netze); den Port der "
+               "Spark-Konsole nur für konsole.netze.",
                "The panel computer keeps exactly this certificate and gets its own Wärter key. The DGX's firewall "
                "(teilen.regeln) opens the door's ports for it only, and while Features → Spark clients is open, also "
-               "for the networks entered in the home network (mandanten.netze).")),
+               "for the networks entered in the home network (mandanten.netze); the Spark-Konsole's port only for "
+               "konsole.netze.")),
             S("s5", "frage", ("Verbindung zum TLS-Tor erlaubt?", "Connection to the TLS-Tor allowed?"),
               ("TLS 1.3, nur api.tls_from", "TLS 1.3, only api.tls_from"),
               ("Jede Anfrage an Spracherkennung, Sprachausgabe, Sprachmodell, Bilder und Wärter geht durch das Tor. Es "

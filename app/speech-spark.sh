@@ -9,7 +9,7 @@
 #   speech-spark models            choose the models again (same questions as the first install)
 #   speech-spark update [--check]  update to the newest version (like the button in the panel)
 #   speech-spark logs [what] [-n N]  last log lines: asr, tts, asr-engine, tts-engine, tts-design, tts-klon, bild, musik,
-#                                  llm, llmtor, sehen, helfer, tlstor, waerter, notasr, schirm, panel, watch, update, messen, wechsel,
+#                                  llm, llmtor, sehen, helfer, tlstor, waerter, notasr, schirm, panel, konsole, watch, update, messen, wechsel,
 #                                  werkstatt, entwickeln or all (default)
 #   speech-spark panel enable|disable  add the web panel later, or remove it (its data stays)
 #   speech-spark notzugang [--yes]  locked out: new panel password, its second step and
@@ -21,7 +21,7 @@
 #   speech-spark modelle messen [llm] [sehen] [helfer] [qwen36] [flash] [gemma4] [gemma4mtp] [eigen-…] [--yes]  measure catalog models; the running language model pauses meanwhile
 #   speech-spark teilen [status]   split install (panel on another computer): door, panel computers, fingerprint
 #   speech-spark teilen firewall [aus]  the door's ports only from the panel computer (nftables), or off again
-#   speech-spark teilen code       on the model computer: show a pairing code (10 min, once) and wait for the panel
+#   speech-spark teilen code [--konsole]  on the model computer: show a pairing code (10 min, once) and wait for the panel
 #   speech-spark teilen koppeln <dgx>  on the panel computer: pair with the model computer (asks for the code)
 #   speech-spark teilen rundlauf   on the panel computer: Wärter, TTS speaks and ASR hears, through the door
 #   speech-spark umziehen --code   give the panel to another computer (shows the code, sends the move backup)
@@ -44,6 +44,7 @@
 #   speech-spark systemupdate einspielen|neustart  the fixed apt run of the panel's „Jetzt einspielen“, or the restart it needs
 #   speech-spark gputakt [status]|setzen  GPU-Taktgrenze: the chosen and the set clock cap, or set it again now
 #   speech-spark clients [liste]|an [netz …]|aus|neu <name> <rechte> [klasse]|sperren|entsperren|weg <id>  Spark-Clients
+#   speech-spark konsole [status]|an <netz> [netz …]|aus  Spark-Konsole: own web page https://<ip>:31010, home network only
 set -euo pipefail
 # runuser, nft, systemctl live in /usr/sbin on Debian and Raspberry Pi OS; a caller with PATH=/usr/bin:/bin (teilen.py
 # runs "teilen umzug-einspielen" that way) would not find them
@@ -225,12 +226,12 @@ cmd_logs() {
   [[ "$n" =~ ^[0-9]{1,5}$ ]] || die "-n needs a number"
   case "$what" in
     all) units=(-u 'speech-spark-*') ;;
-    asr|tts|asr-engine|tts-engine|tts-design|tts-klon|bild|musik|llm|llmtor|sehen|helfer|panel|watch|update|tlstor|waerter|notasr|schirm) units=(-u "speech-spark-$what") ;;
+    asr|tts|asr-engine|tts-engine|tts-design|tts-klon|bild|musik|llm|llmtor|sehen|helfer|panel|konsole|watch|update|tlstor|waerter|notasr|schirm) units=(-u "speech-spark-$what") ;;
     messen) units=(-u speech-spark-messen -u speech-spark-messen-wunsch -u speech-spark-messen-engine) ;;
     werkstatt) units=(-u speech-spark-werkstatt -u speech-spark-werkstatt-lauf) ;;
     entwickeln) units=(-u speech-spark-update -u speech-spark-lokaltest -u speech-spark-lokaltest-umgebung -u speech-spark-github) ;;
     wechsel) units=(-u speech-spark-wechsel -u speech-spark-llm -u speech-spark-sehen) ;;
-    *) die "logs: asr, tts, asr-engine, tts-engine, tts-design, tts-klon, bild, musik, llm, llmtor, sehen, helfer, tlstor, waerter, notasr, schirm, panel, watch, update, messen, wechsel, werkstatt, entwickeln or all" ;;
+    *) die "logs: asr, tts, asr-engine, tts-engine, tts-design, tts-klon, bild, musik, llm, llmtor, sehen, helfer, tlstor, waerter, notasr, schirm, panel, konsole, watch, update, messen, wechsel, werkstatt, entwickeln or all" ;;
   esac
   journalctl --namespace=speech-spark "${units[@]}" --no-pager -n "$n"
 }
@@ -664,7 +665,7 @@ cmd_modelle() {
 teilen_py() {  # app/teilen.py with the system python (stdlib only; the DGX in --mode api has no panel venv)
   env -i PATH=/usr/bin:/bin LANG=C.UTF-8 SPEECH_SPARK_CONFIG="$CONFIG" SPEECH_SPARK_TLS="${TEILEN_TLS:-$ETC/tls}" \
     SPEECH_SPARK_STATE="$VAR/state" ${SPEECH_SPARK_CODE:+SPEECH_SPARK_CODE="$SPEECH_SPARK_CODE"} \
-    python3 "$PREFIX/app/teilen.py" "$@"
+    TEILEN_KONSOLE="${TEILEN_KONSOLE:-0}" python3 "$PREFIX/app/teilen.py" "$@"
 }
 
 # the certificate the pairing shows, copied as the service user into root's own folder <dir> (root never reads a path
@@ -717,12 +718,14 @@ tuer_oeffnen() {
 }
 
 # B6a: the model computer shows a pairing code and waits; on a fit the door opens for exactly that panel computer
+# --konsole (unit speech-spark-koppelcode, the Spark-Konsole's "Assistent koppeln"): the code also goes to the console
 teilen_code() {
-  local tmp
+  local tmp k=0
+  case "${1:-}" in "") ;; --konsole) k=1 ;; *) die "speech-spark teilen code [--konsole]" ;; esac
   [ -s "$ETC/tls/tor-cert.pem" ] || die "no door certificate in $ETC/tls (sudo ./install.sh --mode api --teilen)"
   tmp=$(mktemp -d)   # root's own folder, never the service user's $ETC
   tls_kopie "$tmp"
-  if ! TEILEN_TLS="$tmp" teilen_py warten "$tmp/ergebnis.json"; then rm -rf "$tmp"; return 1; fi
+  if ! TEILEN_KONSOLE=$k TEILEN_TLS="$tmp" teilen_py warten "$tmp/ergebnis.json"; then rm -rf "$tmp"; return 1; fi
   tuer_oeffnen "$tmp/ergebnis.json"
   rm -rf "$tmp"
   restart_if_there speech-spark-tlstor speech-spark-waerter   # the services read api.key at every request
@@ -834,6 +837,28 @@ cmd_zurueckholen() {
   teilen_koppeln "${2:-}" zurueck
 }
 
+# Spark-Konsole (app/konsole.py, plan spark-entkoppeln E4): the model computer's own page. On: the config as the service
+# user, then the install itself makes certificate, password and unit (like any install); off: the unit stops. The
+# door's firewall follows the config when a pairing made its rules file.
+cmd_konsole() {
+  local rules
+  rules="$(dirname "$ETC")/speech-spark-teilen.nft"
+  case "${1:-status}" in
+    status) as_panel_user ../konsole.py status ;;
+    an)
+      shift
+      as_panel_user ../konsole.py an "$@" || return 1
+      "$PREFIX/src/install.sh" --yes --no-smoke || die "konsole: install fehler"
+      if [ -f "$rules" ]; then cmd_teilen firewall; fi ;;
+    aus)
+      as_panel_user ../konsole.py aus || return 1
+      systemctl disable --now speech-spark-konsole.service 2>/dev/null || true
+      if [ -f "$rules" ]; then cmd_teilen firewall; fi
+      echo "konsole: aus" ;;
+    *) die "speech-spark konsole [status]|an <netz> [netz …]|aus" ;;
+  esac
+}
+
 cmd_teilen() {  # Spark teilen (plan raspberry-split B3): the TLS-Tor's state and its firewall
   need_root teilen "$@"
   local rules n
@@ -857,7 +882,7 @@ cmd_teilen() {  # Spark teilen (plan raspberry-split B3): the TLS-Tor's state an
       teilen_py regeln >"$rules.part" || { rm -f "$rules.part"; echo "teilen: firewall abgelehnt"; return 1; }
       if nft -f "$rules.part"; then mv "$rules.part" "$rules"; echo "teilen: firewall gesetzt"
       else rm -f "$rules.part"; echo "teilen: firewall fehler"; return 1; fi ;;
-    code) teilen_code ;;
+    code) teilen_code "${2:-}" ;;
     zertifikat) tor_zertifikat ;;
     umzug-einspielen) umzug_einspielen "${2:-}" ;;
     rundlauf) as_panel_user steuer.py rundlauf ;;
@@ -1206,9 +1231,10 @@ case "${1:-}" in
   wissen) shift; cmd_wissen "$@" ;;
   systemupdate) shift; cmd_systemupdate "$@" ;;
   gputakt) shift; cmd_gputakt "$@" ;;
-  clients) shift; need_root clients "$@"; as_panel_user ../mandanten.py "$@" ;;   # Spark-Clients (mandanten.py): as the service user
+  clients) shift; need_root clients "$@"; as_panel_user ../mandanten.py "$@" ;;
+  konsole) shift; need_root konsole "$@"; cmd_konsole "$@" ;;   # Spark-Clients (mandanten.py): as the service user
   lokal) shift; cmd_lokal "$@" ;;
   entwickeln) shift; cmd_entwickeln "$@" ;;
-  ""|-h|--help|help) sed -n '2,46p' "$0" | sed 's/^# \{0,1\}//' ;;
+  ""|-h|--help|help) sed -n '2,47p' "$0" | sed 's/^# \{0,1\}//' ;;
   *) die "unknown command: $1 (see: speech-spark help)" ;;
 esac

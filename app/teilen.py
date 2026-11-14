@@ -20,7 +20,8 @@ carry counts and fixed words, never addresses.
     python3 teilen.py regeln           the nftables rules for this config (printed, applied by speech-spark teilen)
     python3 teilen.py fingerabdruck    the fingerprint of the door's certificate (TOR_CERT)
     python3 teilen.py warten <datei> [<ordner>]   show a code, wait for the pairing, the result into <datei>; with
-                                       <ordner> (umzug.bin, passwort from umziehen.py packen) the move goes along
+                                       <ordner> (umzug.bin, passwort from umziehen.py packen) the move goes along;
+                                       with TEILEN_KONSOLE=1 the code also goes to konsole.KOPPEL_CODE for the console page
     python3 teilen.py koppeln <host> <datei> [<ordner> -- <einspielen …>]  ask for the code, pair, the result into
                                        <datei>; a move the other side sends lands in <ordner> and <einspielen> restores it
 
@@ -40,6 +41,8 @@ import ssl
 import sys
 import time
 
+import konsole
+import mandanten
 from common import TLS_DIR, TOR_CERT, TOR_KEY, load_config, write_json
 
 TABLE = "speech_spark_teilen"
@@ -90,8 +93,8 @@ def pruefen(cfg):
 
 def regeln(cfg):
     """The nftables rules: the door's ports only from the panel computer and, while api.clients is on, from the
-    networks of api.clients_from (Spark-Clients, mandanten.netze); loads atomically with nft -f."""
-    import mandanten
+    networks of api.clients_from (Spark-Clients, mandanten.netze); the Spark-Konsole's port only from konsole.netze;
+    loads atomically with nft -f."""
     _, von, ports = pruefen(cfg)
     von = von + mandanten.netze(cfg)
     p = ", ".join(str(x) for x in ports)
@@ -103,6 +106,15 @@ def regeln(cfg):
         out.append(f"    ip saddr {{ {v4} }} tcp dport {{ {p} }} accept")
     if v6:
         out.append(f"    ip6 saddr {{ {v6} }} tcp dport {{ {p} }} accept")
+    if konsole.an(cfg):   # the Spark-Konsole (konsole.py): its port only from its home networks
+        kp, kn = konsole.port(cfg), konsole.netze(cfg)
+        k4 = ", ".join(str(a) for a in kn if a.version == 4)
+        k6 = ", ".join(str(a) for a in kn if a.version == 6)
+        if k4:
+            out.append(f"    ip saddr {{ {k4} }} tcp dport {kp} accept")
+        if k6:
+            out.append(f"    ip6 saddr {{ {k6} }} tcp dport {kp} accept")
+        out.append(f"    tcp dport {kp} drop")
     out += [f"    tcp dport {{ {p} }} drop", "  }", "}", ""]
     return "\n".join(out)
 
@@ -396,6 +408,19 @@ class _Ctx:
         return self.ctx.wrap_socket(*a, **kw)
 
 
+def konsole_schreiben(daten, pfad=None):
+    """The code (or only the outcome) for the Spark-Konsole: 0600, owned like the state folder (the console runs as
+    the service user, this as root). Never fails the pairing."""
+    pfad = pfad or konsole.KOPPEL_CODE
+    try:
+        write_json(pfad, daten, mode=0o600)
+        st = os.stat(os.path.dirname(pfad))
+        if os.geteuid() == 0:
+            os.chown(pfad, st.st_uid, st.st_gid)
+    except OSError:
+        _log("konsole fehler")
+
+
 def lauschen(port=KOPPEL_PORT, host=""):
     if socket.has_dualstack_ipv6() and not host:
         return socket.create_server(("::", port), family=socket.AF_INET6, dualstack_ipv6=True)
@@ -419,11 +444,22 @@ def main(argv):
                 with open(os.path.join(argv[2], "passwort")) as f:
                     umzug = {"pfad": os.path.join(argv[2], "umzug.bin"), "passwort": f.read().strip()}
             code = code_neu()
+            fuer_konsole = os.environ.get("TEILEN_KONSOLE") == "1"
             with lauschen() as sock:
                 print(f"Kopplungscode: {zeigen(code)}  (10 Minuten gültig, einmal nutzbar)", flush=True)
                 print(f"Fingerabdruck: {fingerabdruck(cert)}", flush=True)
                 _log("code gezeigt")
-                write_json(argv[1], warten(cfg, code, ctx, sock, umzug=umzug), mode=0o600)
+                if fuer_konsole:
+                    konsole_schreiben({"code": zeigen(code), "bis": int(time.time()) + CODE_SECS,
+                                       "fingerabdruck": fingerabdruck(cert)})
+                try:
+                    write_json(argv[1], warten(cfg, code, ctx, sock, umzug=umzug), mode=0o600)
+                except (Fehler, OSError) as e:
+                    if fuer_konsole:
+                        konsole_schreiben({"stand": str(e) if isinstance(e, Fehler) else "fehler", "t": int(time.time())})
+                    raise
+                if fuer_konsole:
+                    konsole_schreiben({"stand": "gekoppelt", "t": int(time.time())})
         elif cmd == "koppeln" and (len(argv) == 3 or (len(argv) > 5 and argv[4] == "--")):
             code = os.environ.get("SPEECH_SPARK_CODE") or input("Kopplungscode vom anderen Rechner: ")
             ordner, befehl = (argv[3], argv[5:]) if len(argv) > 3 else (None, None)

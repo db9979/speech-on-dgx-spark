@@ -455,7 +455,9 @@ cfg_int() { local v; v=$(cfg "$1"); if [[ "$v" =~ ^[0-9]{1,6}$ ]]; then echo "$v
 # Browsers only allow the microphone on https (or localhost), so the panel also listens on an
 # https port with a self-signed certificate for the voice chat.
 TLS="$ETC/tls"
-if [ "$MODE" = full ] && [ "$(cfg '.panel.https_port // 0')" != 0 ] && [ ! -s "$TLS/cert.pem" ]; then
+# the Spark-Konsole (app/konsole.py, plan spark-entkoppeln E4) speaks https with the same certificate, in any mode
+KONSOLE_AN=0; [ "$(cfg '.konsole.an // false')" = true ] && KONSOLE_AN=1
+if { { [ "$MODE" = full ] && [ "$(cfg '.panel.https_port // 0')" != 0 ]; } || [ "$KONSOLE_AN" = 1 ]; } && [ ! -s "$TLS/cert.pem" ]; then
   say "Creating a self-signed certificate for the panel's https port (needed for the microphone)"
   [ -L "$TLS" ] && rm -f -- "$TLS"
   as_svc mkdir -p "$TLS"
@@ -999,8 +1001,8 @@ EOF
 chmod 755 /usr/local/bin/speech-spark
 
 # ---------------------------------------------------------------- password, sudoers
-# Only the web panel has a password (mode full); the APIs use the API key.
-if [ "$MODE" = full ]; then
+# Only the web panel has a password (mode full, or the Spark-Konsole in any mode); the APIs use the API key.
+if [ "$MODE" = full ] || [ "$KONSOLE_AN" = 1 ]; then
   # a password given here replaces one changed in the panel (whose hash would win otherwise)
   [ -n "$PASSWORD" ] && rm -f -- "$VAR/state/panel-password"
   if [ ! -f "$ETC/panel.env" ] || [ -n "$PASSWORD" ]; then
@@ -1029,6 +1031,7 @@ fi
   printf ', /usr/bin/systemctl start --no-block speech-spark-systemupdate'   # System-Updates: the checked wish (both computers)
   printf ', /usr/bin/systemctl start --no-block speech-spark-gpu-takt'   # GPU-Taktgrenze: root reads the setting itself
   printf ', /usr/bin/systemctl start --no-block speech-spark-clients-fw'   # Spark-Clients: root builds the firewall from the config
+  printf ', /usr/bin/systemctl start --no-block speech-spark-koppelcode'   # Spark-Konsole → Assistent koppeln: root shows the code
   printf ', /usr/bin/systemctl enable --now speech-spark-schirm, /usr/bin/systemctl disable --now speech-spark-schirm, /usr/bin/systemctl start getty@tty1.service'   # B9
   printf ', /usr/bin/systemctl start --no-block speech-spark-wechsel'   # stage E4: takes the panel's checked wish
   printf ', /usr/bin/systemctl start --no-block speech-spark-werkstatt'   # Funktionen → Werkstatt: takes the checked wish
@@ -1271,6 +1274,38 @@ OOMScoreAdjust=900
 CPUQuota=$PANEL_CPU
 CPUWeight=1000
 IOWeight=1000
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Spark-Konsole (app/konsole.py, plan spark-entkoppeln E4): the panel's code as the model computer's own page, only https
+# on konsole.port and only to konsole.netze; written in every mode, running only while konsole.an (speech-spark konsole)
+cat >/etc/systemd/system/speech-spark-konsole.service <<EOF
+[Unit]
+Description=Speech on DGX Spark: Spark-Konsole (the model computer's own page)
+After=network-online.target
+
+[Service]
+LogNamespace=speech-spark
+User=$SVC_USER
+Group=$SVC_USER
+WorkingDirectory=$PREFIX/app/panel
+$common_env
+Environment=SPEECH_SPARK_PREFIX=$PREFIX
+Environment=SPEECH_SPARK_KONSOLE=1
+EnvironmentFile=-$ETC/panel.env
+ExecStart=$PREFIX/venv-panel/bin/python $PREFIX/app/panel/panel.py
+Restart=on-failure
+RestartSec=5
+WatchdogSec=90
+NotifyAccess=main
+WatchdogSignal=SIGKILL
+MemoryHigh=1G
+MemoryMax=2G
+OOMScoreAdjust=900
+CPUQuota=$PANEL_CPU
 PrivateTmp=yes
 
 [Install]
@@ -1734,10 +1769,23 @@ ConditionPathExists=$(dirname "$ETC")/speech-spark-teilen.nft
 Type=oneshot
 ExecStart=/bin/bash $PREFIX/app/speech-spark.sh teilen firewall
 EOF
+# Spark-Konsole → Assistent koppeln (E4b): root shows a pairing code for the console page (teilen code --konsole);
+# the panel only starts this fixed unit (sudoers), the code never passes through it
+cat >/etc/systemd/system/speech-spark-koppelcode.service <<EOF
+[Unit]
+Description=Speech on DGX Spark: pairing code for an assistant (Spark-Konsole)
+ConditionPathExists=$ETC/tls/tor-cert.pem
+
+[Service]
+Type=oneshot
+TimeoutStartSec=900
+ExecStart=/bin/bash $PREFIX/app/speech-spark.sh teilen code --konsole
+EOF
 else
   systemctl disable --now speech-spark-tlstor.service speech-spark-waerter.service speech-spark-teilen-fw.service 2>/dev/null || true
   rm -f /etc/systemd/system/speech-spark-tlstor.service /etc/systemd/system/speech-spark-waerter.service \
-    /etc/systemd/system/speech-spark-teilen-fw.service /etc/systemd/system/speech-spark-clients-fw.service
+    /etc/systemd/system/speech-spark-teilen-fw.service /etc/systemd/system/speech-spark-clients-fw.service \
+    /etc/systemd/system/speech-spark-koppelcode.service
 fi
 # Notbetrieb mit Parakeet (plan raspberry-split B5c), only on the panel computer: the ASR front end with Parakeet on
 # 127.0.0.1:31009 (common.NOTASR_PORT); it loads the model at the first recording, only while the model computer is
@@ -2055,6 +2103,12 @@ else
   systemctl enable speech-spark-watch.service >/dev/null 2>&1
   systemctl restart speech-spark-watch.service
 fi
+if [ "$KONSOLE_AN" = 1 ]; then   # Spark-Konsole: on only while konsole.an (sudo speech-spark konsole an <netz>)
+  systemctl enable speech-spark-konsole.service >/dev/null 2>&1
+  systemctl restart speech-spark-konsole.service
+else
+  systemctl disable --now speech-spark-konsole.service 2>/dev/null || true
+fi
 systemctl daemon-reload
 
 # an engine restarts only when its settings changed or it is not running, on an update and on a run by hand alike: a
@@ -2301,6 +2355,11 @@ else
   if [ "$FROM_UPDATE" = 1 ]; then echo " Connection details and keys: sudo speech-spark info"; else cat "$ETC/connection.txt" 2>/dev/null || true; fi
   echo
   echo " Installed without the web panel. Status: sudo speech-spark status   Update: sudo speech-spark update"
+  if [ "$KONSOLE_AN" = 1 ]; then
+    echo " Spark-Konsole: https://$IP:$(cfg_int .konsole.port 31010)   (password: $PASSWORD)"
+  else
+    echo " Spark-Konsole (own web page): sudo speech-spark konsole an <home network, e.g. 192.168.178.0/24>"
+  fi
   echo " Add the panel later: sudo speech-spark panel enable"
   echo "------------------------------------------------------------------"
 fi

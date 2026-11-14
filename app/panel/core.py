@@ -26,7 +26,7 @@ from common import MODEL_LOG_UNITS, OWN_LLM_UNITS, PREFIX, SERVICES, STATE, UNIT
 VOICES_DIR = os.environ.get("SPEECH_SPARK_VOICES", "/var/lib/speech-spark/voices")
 PASSWORD = os.environ.get("PANEL_PASSWORD", "")
 STATIC = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
-LOG_UNITS = dict(UNITS, panel="speech-spark-panel", update="speech-spark-update", **MODEL_LOG_UNITS, **OWN_LLM_UNITS)
+LOG_UNITS = dict(UNITS, panel="speech-spark-panel", konsole="speech-spark-konsole", update="speech-spark-update", **MODEL_LOG_UNITS, **OWN_LLM_UNITS)
 # asr keys the vLLM engine reads; changing them restarts it
 ASR_ENGINE_KEYS = ("model", "engine_port", "engine_mem", "engine_max_seqs")
 # tts keys that only the vllm-omni engine reads; changing them restarts the engine

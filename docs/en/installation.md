@@ -43,8 +43,24 @@ At the end the addresses, the key and ready-made `curl` examples are printed and
 | `sudo speech-spark umziehen --von <name-or-ip>` | On the new panel computer: fetch the move, restore, check (also happens when pairing with `install.sh --mode panel`) |
 | `sudo speech-spark zurueckholen --von <name-or-ip>` | On the model computer: take the panel back; everything runs on one computer again |
 | `sudo speech-spark teilen firewall [aus]` | make the door's ports reachable only from the panel computer (`api.tls_from`, nftables table `speech_spark_teilen`), or off again |
+| `sudo speech-spark clients [liste]` | Spark clients: other programs with a key of their own, rights and limits (`an <net>`, `aus`, `neu <name> <rights> [class]`, `sperren`, `entsperren`, `weg <id>`); details under *Security and operation → Spark clients* |
+| `sudo speech-spark konsole an <net> [net …]` | switch the Spark-Konsole on: this Spark's own web page at `https://<ip>:31010`, only from the given networks in the home network; `aus` switches it off, `status` shows it |
 
 The watchdog for hung services, which otherwise runs in the panel, runs as `speech-spark-watch` with the same rules. After an update, TTS speaks a sentence and ASR has to understand it; if that fails, the update puts the previous version back. The self-tests run before every update in both modes. The own language model is updated along. If Open WebUI runs in Docker on the same Spark, the APIs have to be reachable from the network (`127.0.0.1` inside the container is the container itself).
+
+### Spark-Konsole: the Spark's own web page
+
+Without a panel computer (or beside it) the Spark has a web page of its own, the Spark-Konsole (plan "Decouple Spark and assistant", package E4). It is off until root switches it on:
+
+```bash
+sudo speech-spark konsole an 192.168.178.0/24   # only from this network in the home network
+```
+
+That makes certificate and password when needed (like the installation) and starts the service `speech-spark-konsole`. Then open `https://<ip-of-the-spark>:31010` in a browser, accept the self-signed certificate once and sign in with the password (with the second step set up it asks for the code). Pages: *Overview* (GPU, memory, CPU, services, notes, every 3 seconds), *Models* (what the Spark loads, memory and measured speed; switching and measuring stay with the assistant or `sudo speech-spark modelle` for now), *Clients* (Spark clients as in the panel), *Assistant* (pair an assistant, see below), *Updates* (version, "Update now", progress) and *Logs*. Vulnerabilities follow.
+
+**Pair an assistant:** under *Assistant*, "Show a code" (with a fresh code from the authenticator app) shows a pairing code, valid 10 minutes and usable once, and the Spark's fingerprint. Then on the Pi `sudo speech-spark teilen koppeln <ip-of-the-spark>` and enter the code; the Pi checks the fingerprint on the way, the code itself never crosses the network. For this the console only starts the fixed root service `speech-spark-koppelcode` (`speech-spark teilen code --konsole`); it needs the door (`sudo ./install.sh --mode api --teilen`). Entering it on the Pi under Einstellungen → Spark follows.
+
+The console is the panel's code in a mode of its own: it speaks only https on port 31010, answers only this computer and the networks of `konsole.netze` (at most 8, private networks only, not wider than /8) and only its own paths; everything else (assistant, profiles, tools) is 404. With a split install the door's firewall lets its port in only from these networks. `sudo speech-spark konsole aus` switches it off again.
 
 ## Updating
 

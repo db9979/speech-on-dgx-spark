@@ -1,0 +1,34 @@
+/* Spark-Konsole (konsole.html, plan spark-entkoppeln E4): the slim dark look of the pictures 4-7-b, only from the
+   tokens (tokens.css loads first; konsole.html sets data-theme="dark") */
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:var(--t-body);font-family:var(--font)}
+.top{display:flex;align-items:center;gap:22px;padding:14px 26px;border-bottom:1px solid var(--line);background:var(--side);flex-wrap:wrap}
+.logo{font-weight:800;font-size:17px;letter-spacing:.02em}.logo b{color:var(--acc)}
+.tabs a{color:var(--mut);margin-right:18px;font-weight:600;text-decoration:none;padding-bottom:12px}
+.tabs a.on{color:var(--fg);border-bottom:2px solid var(--acc)}
+.right{margin-left:auto;color:var(--mut);font-size:12.5px;display:flex;gap:10px;align-items:center}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--ok);margin-right:6px}.dot.bad{background:var(--bad)}
+main{padding:22px 26px;max-width:1400px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;min-width:0}
+h1{font-size:22px;margin:0 0 4px}h2{font-size:12.5px;margin:0 0 10px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em}
+.k{color:var(--mut);font-size:12.5px}.big{font-size:26px;font-weight:700}
+.g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:14px 0}
+.g2{display:grid;grid-template-columns:1.4fr 1fr;gap:14px}
+.pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600;background:var(--acc-weak);color:var(--acct)}
+.pill.ok{background:var(--fill);color:var(--okt)}.pill.warn{background:var(--fill);color:var(--warnt)}.pill.bad{background:var(--fill);color:var(--badt)}.pill.grey{background:var(--fill);color:var(--mut)}
+.btn{display:inline-block;padding:8px 14px;border-radius:9px;border:0;background:var(--acc);color:var(--on-acc);font-weight:700;font-size:14px;cursor:pointer;font-family:inherit}
+.btn.sec{background:var(--fill);color:var(--fg)}.btn.bad{background:var(--fill);color:var(--badt)}.btn:disabled{opacity:.5;cursor:default}
+.bar{height:7px;border-radius:9px;background:var(--fill);overflow:hidden;margin-top:6px}.bar i{display:block;height:100%;background:var(--acc)}
+table{width:100%;border-collapse:collapse}td,th{padding:9px 8px;border-bottom:1px solid var(--line);text-align:left;font-size:14px;vertical-align:top}
+th{color:var(--mut);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+.mono,pre{font-family:var(--mono);font-size:12.5px}
+.mono.code{font-size:32px;letter-spacing:.12em}
+pre{white-space:pre-wrap;word-break:break-all;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px;max-height:65vh;overflow:auto;margin:0}
+input,select{background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:9px;padding:8px 10px;font:inherit;min-width:0}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:10px 0}
+.row label{display:flex;gap:6px;align-items:center}
+.login{max-width:420px;margin:60px auto}.login form{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:20px}
+.modal[hidden],[hidden]{display:none!important}.modal .card{max-width:380px;width:100%}
+.key{background:var(--bg);border:1px dashed var(--acc);border-radius:10px;padding:10px;word-break:break-all;margin-top:8px}
+@media (max-width:900px){.g4{grid-template-columns:repeat(2,minmax(0,1fr))}.g2{grid-template-columns:1fr}main{padding:14px}.top{padding:12px 14px;gap:12px}}

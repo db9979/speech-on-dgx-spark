@@ -22,6 +22,8 @@ from core import spawn, ADMIN_IDLE, COOKIE, SERVICES, STATIC, admin_cookie_ok, a
 from core import main_loop  # noqa: E402
 from monitor import history, service_health, system_stats  # noqa: E402
 import steuer  # noqa: E402
+import loopwacht  # noqa: E402  (the Hänge-Wächter: systemd restarts a panel whose loop stands still, WatchdogSec=)
+import konsole  # noqa: E402  (Spark-Konsole: the same process as the model computer's own page, ../konsole.py)
 from chat import LEARN_EVERY, learn_once  # noqa: E402
 from update import update_lock  # noqa: E402
 import account  # noqa: E402
@@ -363,6 +365,28 @@ async def slow_reads(request: Request, call_next):
     if line:
         print(line, flush=True)
     return response
+
+
+# Spark-Konsole (../konsole.py, plan spark-entkoppeln E4): started with SPEECH_SPARK_KONSOLE=1 this process is the model
+# computer's own page. The outermost check: only this machine and konsole.netze, only the paths of konsole.WEGE; any
+# other answer is 404 before a route reads the request. The assistant's background work does not start (KONSOLE_START).
+KONSOLE = konsole.aktiv()
+KONSOLE_START = ("sampler",)
+
+
+@app.middleware("http")
+async def konsole_tor(request: Request, call_next):
+    if not KONSOLE:
+        if not konsole.nur_konsole(request.url.path):
+            return await call_next(request)
+        r = JSONResponse({"detail": "not found"}, status_code=404)   # the console's own pages exist only there
+        protect(request, r)
+        return r
+    if not konsole.erlaubt(request.client.host if request.client else "") or not konsole.weg_ok(request.url.path):
+        r = JSONResponse({"detail": "not found"}, status_code=404)
+        protect(request, r)
+        return r
+    return await call_next(request)
 
 
 @app.exception_handler(notaus.NotausAktiv)
@@ -731,13 +755,13 @@ def file_tag(path):
     return hit[2]
 
 
-def page_html():
+def page_html(name="index.html"):
     """index.html with the fingerprint of each file on every style and script link (/static/js/chat.js?v=3fa9c0d1e2b4,
     file_tag) and the version in <meta name="spark-version">: after an update the browser loads the changed files at
     once (no Strg+F5, also behind a caching proxy), and an open page sees that a newer version is there (base.js)."""
-    path = os.path.join(STATIC, "index.html")
+    path = os.path.join(STATIC, name)
     ver = re.sub(r"[^A-Za-z0-9.\-]", "", app_version())[:32] or "0"
-    key = (ver, os.path.getmtime(path))
+    key = (name, ver, os.path.getmtime(path))
     if _PAGE.get("key") != key:
         with open(path, encoding="utf-8") as f:
             html = f.read()
@@ -752,7 +776,7 @@ def page_html():
 def index(request: Request):
     # never stored: the page names the current files, those are only revalidated (no-cache). Gzipped when the browser
     # takes it (212 KB → about 40 KB); the page is the same for everybody and holds no secret (no BREACH target).
-    html = page_html()
+    html = page_html("konsole.html" if KONSOLE else "index.html")   # the Spark-Konsole has a page of its own
     head = {"Cache-Control": "no-store", "Pragma": "no-cache", "Expires": "0", "Vary": "Accept-Encoding"}
     if "gzip" in request.headers.get("accept-encoding", "").lower():
         return Response(_PAGE["gz"], media_type="text/html; charset=utf-8", headers={**head, "Content-Encoding": "gzip"})
@@ -790,7 +814,7 @@ def _asset(request: Request, path, media):
 
 @app.get("/static/{name}")
 def static_file(name: str, request: Request):
-    if name in ("tokens.css", "app.css", "appview.css", "live.css", "weiche.css", "technik.css", "spontanhilfe.css"):  # the page's style and scripts: revalidated, so an update shows at once
+    if name in ("konsole.css", "tokens.css", "app.css", "appview.css", "live.css", "weiche.css", "technik.css", "spontanhilfe.css"):  # the page's style and scripts: revalidated, so an update shows at once
         return _asset(request, os.path.join(STATIC, name), "text/css")
     if name not in PUBLIC_FILES:
         raise HTTPException(404, "not found")
@@ -923,6 +947,8 @@ def https_config(pcfg, cert, key):
 async def serve():
     import signal
     quiet_access_log()
+    if KONSOLE:
+        return await serve_konsole()
     pcfg = load_config("panel")
     servers = [Server(uvicorn.Config(app, host=pcfg["host"], port=pcfg["port"]))]
     cert, key = os.path.join(TLS_DIR, "cert.pem"), os.path.join(TLS_DIR, "key.pem")
@@ -932,12 +958,34 @@ async def serve():
         # the http server; before V01.0.214 they ran twice, and two Telegram pollers knocked each other out
         servers.append(Server(https_config(pcfg, cert, key)))
     asyncio.get_running_loop().create_task(fernweb.wache())   # the Webdienste' door (TOR_PORT) with its switch
-    import loopwacht   # the Hänge-Wächter: systemd restarts a panel whose loop stands still (WatchdogSec=)
     loopwacht.start()
     loop = asyncio.get_running_loop()
     for sig in (signal.SIGINT, signal.SIGTERM):
         loop.add_signal_handler(sig, lambda: [setattr(x, "should_exit", True) for x in servers])
     await asyncio.gather(*(x.serve() for x in servers))
+
+
+async def serve_konsole():
+    """Spark-Konsole: only https on konsole.port (all addresses, konsole_tor lets in only the home networks), with the
+    panel's certificate; of the startup work only KONSOLE_START (the sampler for Überblick)."""
+    import signal
+    cfg = load_config()
+    if not konsole.an(cfg):
+        print("konsole: aus, nichts gestartet", flush=True)
+        return
+    cert, key = os.path.join(TLS_DIR, "cert.pem"), os.path.join(TLS_DIR, "key.pem")
+    if not (os.path.exists(cert) and os.path.exists(key)):
+        print("konsole: kein zertifikat", flush=True)
+        return
+    app.router.on_startup[:] = [f for f in app.router.on_startup if getattr(f, "__name__", "") in KONSOLE_START]
+    server = Server(uvicorn.Config(app, host="0.0.0.0", port=konsole.port(cfg), ssl_certfile=cert, ssl_keyfile=key,
+                                   ssl_context_factory=tls_context))
+    loopwacht.start()
+    loop = asyncio.get_running_loop()
+    for sig in (signal.SIGINT, signal.SIGTERM):
+        loop.add_signal_handler(sig, lambda: setattr(server, "should_exit", True))
+    print(f"konsole: gestartet port {konsole.port(cfg)} netze {len(konsole.netze(cfg))}", flush=True)
+    await server.serve()
 
 
 if __name__ == "__main__":

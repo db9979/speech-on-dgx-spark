@@ -194,7 +194,7 @@ def an(cfg=None):
     return (cfg.get("api") or {}).get("clients") is True
 
 
-def _netz(n):
+def netz_pruefen(n):
     """A network of the home network (private, not loopback, not everything), as text; Fehler("netz") otherwise."""
     try:
         net = ipaddress.ip_network(str(n), strict=False)
@@ -211,7 +211,7 @@ def schalten(ein, netze_neu, wer="panel"):
     import json
     if not isinstance(ein, bool) or not isinstance(netze_neu, list) or len(netze_neu) > MAX_NETZE:
         raise Fehler("wert")
-    liste = sorted({_netz(n) for n in netze_neu})
+    liste = sorted({netz_pruefen(n) for n in netze_neu})
     with _lock:
         with open(CONFIG_PATH) as f:
             raw = json.load(f)
@@ -236,13 +236,18 @@ def uebersicht(cfg=None):
 def im_netz(host, cfg=None):
     """True when a caller that comes straight to a service (not through the TLS-Tor, not from this machine) is in one
     of the networks of api.clients_from."""
+    return adresse_in(host, netze(cfg))
+
+
+def adresse_in(host, nets):
+    """True for this machine and for an address in one of nets (also the Spark-Konsole's, konsole.erlaubt)."""
     try:
         ip = ipaddress.ip_address(str(host or "").split("%")[0])
     except ValueError:
         return False
     if ip.version == 6 and ip.ipv4_mapped:
         ip = ip.ipv4_mapped
-    return ip.is_loopback or any(ip.version == n.version and ip in n for n in netze(cfg))
+    return ip.is_loopback or any(ip.version == n.version and ip in n for n in nets)
 
 
 def netze(cfg=None):

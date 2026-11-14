@@ -13,6 +13,8 @@ Admins only, never guests, no tool for the model; off until the admin switches F
     POST /api/admin/spark-clients/neu       {"name", "rechte", "klasse", "minute", "parallel", "tokens_tag"} (fresh code)
     POST /api/admin/spark-clients/aendern   {"id", "felder"} (code)
     POST /api/admin/spark-clients/weg       {"id"} (code)
+    GET  /api/konsole/koppeln               only in the Spark-Konsole: the pairing code while it lives, else the outcome
+    POST /api/konsole/koppeln               only in the Spark-Konsole: show a new pairing code (fresh code; root unit)
 Journal lines: "sparkclient: panel …" with fixed words and counts, never a name or key.
 """
 import asyncio
@@ -24,6 +26,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import features  # noqa: E402
 import guard  # noqa: E402
+import konsole  # noqa: E402
 import mandanten  # noqa: E402
 import steuer  # noqa: E402
 from core import admin_code, admin_code_fresh, auth, json_body  # noqa: E402
@@ -36,11 +39,14 @@ WARUM = {"aus": "Spark-Clients sind aus (Funktionen → Spark-Clients).",
          "recht": "Mindestens ein Recht wählen.", "klasse": "Unbekannte Vorrangklasse.",
          "wert": "Ein Wert liegt außerhalb der Grenzen.", "voll": "Es gibt schon die größte Zahl an Clients.",
          "unbekannt": "Diesen Client gibt es nicht mehr.",
-         "netz": "Nur Netze im Heimnetz, z. B. 192.168.178.0/24."}
+         "netz": "Nur Netze im Heimnetz, z. B. 192.168.178.0/24.",
+         "laeuft": "Es gibt schon einen gültigen Code.",
+         "start": "Der Kopplungsdienst startet nicht. Ist die Tür eingerichtet (sudo ./install.sh --mode api --teilen)?"}
 
 
 def admin_on(c=None):
-    return features.admin_on("sparkclients", c)
+    """Funktionen → Spark-Clients; the Spark-Konsole (konsole.py) is that page itself, there it is always open."""
+    return konsole.aktiv() or features.admin_on("sparkclients", c)
 
 
 def _tun(cmd, args=(), daten=None):
@@ -123,3 +129,29 @@ async def admin_weg(request: Request):
     d = await asyncio.to_thread(_tun, "client_weg", (cid,))
     guard.log("spark_client", detail="gelöscht")
     return d
+
+
+def _nur_konsole():
+    if not konsole.aktiv():
+        raise HTTPException(404, "Not Found")
+
+
+@router.get("/api/konsole/koppeln", dependencies=[Depends(auth)])
+async def konsole_koppeln_get(request: Request):
+    """Spark-Konsole → Überblick → Assistent koppeln: the code (6 signs, 10 minutes, once) while it lives."""
+    _nur_konsole()
+    guard.limit(request, "sparkclients", admin=True)
+    return await asyncio.to_thread(konsole.koppeln_stand)
+
+
+@router.post("/api/konsole/koppeln", dependencies=[Depends(auth), Depends(admin_code_fresh)])
+async def konsole_koppeln(request: Request):
+    _nur_konsole()
+    await _body(request)
+    if (await asyncio.to_thread(konsole.koppeln_stand)).get("code"):
+        print("konsole: koppeln abgelehnt laeuft", flush=True)
+        raise HTTPException(409, WARUM["laeuft"])
+    if not await asyncio.to_thread(konsole.koppeln_starten):
+        raise HTTPException(503, WARUM["start"])
+    guard.log("spark_koppeln", detail="Code gezeigt")
+    return {"ok": True}

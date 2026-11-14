@@ -39,7 +39,7 @@ AREAS = (("search", r"^chat: web search"), ("werkzeug", r"^chat: tool "),
          ("fernzugang", r"^fernzugang:"),
          ("spontanhilfe", r"^spontanhilfe:"),
          ("system", r"^(notaus|notzugang|wartung|guard|ausleiten|arbeiter|audit|coadmin|dienstwacht|watchdog|livecheck|update|geraeteupdate|logs|vault|zustand|"
-                    r"ghtoken|netguard|verbrauch|modelle|llmtor|tlstor|dockertor|teilen|waerter|steuer|notbetrieb|gehaeuse|systemupdate|gputakt|rechner|schirm|praxistest|rundlauf|werkstatt|entwickeln|wachposten|loopwacht|offline|" + "|".join(steckbrief.log_woerter("system")) + r")\b"),
+                    r"ghtoken|netguard|verbrauch|modelle|llmtor|tlstor|konsole|dockertor|teilen|waerter|steuer|notbetrieb|gehaeuse|systemupdate|gputakt|rechner|schirm|praxistest|rundlauf|werkstatt|entwickeln|wachposten|loopwacht|offline|" + "|".join(steckbrief.log_woerter("system")) + r")\b"),
          ("ereignis", r"^ereignis:"))
 _AREAS = [(k, re.compile(rx)) for k, rx in AREAS]
 # filter keys the page may send: every area, "errors" (lines at level err) and "update" (the update unit)

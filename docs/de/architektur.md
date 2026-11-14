@@ -110,6 +110,7 @@ flowchart TB
 | `speech-spark-musik` | 31004 → 31014 (nur lokal) | Musik machen (ACE-Step 1.5), die Engine nur während eines Lieds |
 | `speech-spark-waerter` | 127.0.0.1:31007 | Wärter: feste Befehle vom Panel-Rechner (nur bei Spark teilen, hinter dem TLS-Tor) |
 | `speech-spark-tlstor` | dieselben Ports mit TLS | TLS-Tor des Modell-Rechners (nur bei Spark teilen), dazu `speech-spark-teilen-fw` und `speech-spark-clients-fw` (Firewall neu für Spark-Clients) |
+| `speech-spark-konsole` | HTTPS 31010 | Spark-Konsole: eigene Webseite des Modell-Rechners (Überblick, Modelle, Clients, Assistent koppeln, Updates, Logs), nur aus `konsole.netze`, nur mit `speech-spark konsole an`; dazu `speech-spark-koppelcode` (root zeigt auf Knopfdruck einen Kopplungscode, nur mit der Tür) |
 | `speech-spark-notasr` | 127.0.0.1:31009 | Notbetrieb mit Parakeet auf dem Panel-Rechner, wenn der Modell-Rechner weg ist |
 | `speech-spark-watch` | – | Wächter, nur ohne Panel |
 | `speech-spark-update` | – | Update, nur auf Knopfdruck |
@@ -509,6 +510,7 @@ Live-Übersicht, Logs, Wächter, Sicherung, Update, Hilfe und die Admin-Seiten.
 | `app/panel/hilfe.py` | Spark-Hilfe und Index der Doku |
 | `app/installiert.py` | Was ein Rechner wirklich installiert hat: Pakete der venvs, Pakete in den Docker-Abbildern |
 | `app/panel/klartext.py` | Klartext eines Falls: was, woher, warum, was hilft; Fehlercodes in Worten |
+| `app/konsole.py` | Spark-Konsole: das Panel als eigene Webseite des Modell-Rechners, nur https, nur Heimnetz, nur eigene Wege |
 | `app/panel/latency.py` | Wartezeit bis zum ersten Ton |
 | `app/panel/live.py` | Live-Übersicht: was der Spark gerade tut |
 | `app/panel/logfilter.py` | Diagnose-Filter und Hinweise für die Logs |
@@ -833,6 +835,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `state/iphone-update.json` | Update aus der iPhone-App | – | nein |
 | `state/join.json` | Einladungen (Hashes) | nur Hashes | ja |
 | `state/kalender-spiegel` | Spark-Kalender: Kopie jedes CalDAV-Kalenders (je Kalender-Eintrag eine Datei) | versiegelt | nein |
+| `state/koppelcode.json` | Spark-Konsole: Kopplungscode für einen Assistenten, solange er gilt, danach nur das Ergebnis | lebt 10 Minuten | nein |
 | `state/latency.json` | Wartezeiten | – | nein |
 | `state/live-monitors.json` | Wandmonitore | – | nein |
 | `state/livecheck.json` | Echtprüfung | – | nein |
@@ -3818,9 +3821,9 @@ flowchart TD
 ```
 
 1. <a id="kn-teilen-s1"></a>**Installation geteilt**: Der DGX bekommt ein eigenes Zertifikat, das TLS-Tor, den Wärter und die Firewall. Die Dienste hören dann nur noch auf 127.0.0.1.
-2. <a id="kn-teilen-s2"></a>**Kopplungscode**: Der DGX zeigt einen Code und wartet auf Port 31008, nur solange der Code gilt; nach 3 falschen Versuchen ist er weg.
+2. <a id="kn-teilen-s2"></a>**Kopplungscode**: Der DGX zeigt einen Code und wartet auf Port 31008, nur solange der Code gilt; nach 3 falschen Versuchen ist er weg. Root zeigt ihn im Terminal (speech-spark teilen code) oder, auf Knopfdruck in der Spark-Konsole, über den festen Dienst speech-spark-koppelcode auf deren Seite Assistent; die Konsole liest ihn nur, solange er gilt.
 3. <a id="kn-teilen-s3"></a>**Beweis passt zum Zertifikat?**: Der Panel-Rechner beweist den Code mit einem Schlüssel aus Code und dem Fingerabdruck des Zertifikats, das er sieht. Wer sich dazwischenstellt, zeigt ein anderes Zertifikat, und der Beweis passt nicht.
-4. <a id="kn-teilen-s4"></a>**Zertifikat angeheftet, Firewall zu**: Der Panel-Rechner merkt sich genau dieses Zertifikat und bekommt einen eigenen Wärter-Schlüssel. Die Firewall des DGX (teilen.regeln) lässt die Ports der Tür nur für ihn zu, und solange Funktionen → Spark-Clients offen ist, auch für die eingetragenen Netze im Heimnetz (mandanten.netze).
+4. <a id="kn-teilen-s4"></a>**Zertifikat angeheftet, Firewall zu**: Der Panel-Rechner merkt sich genau dieses Zertifikat und bekommt einen eigenen Wärter-Schlüssel. Die Firewall des DGX (teilen.regeln) lässt die Ports der Tür nur für ihn zu, und solange Funktionen → Spark-Clients offen ist, auch für die eingetragenen Netze im Heimnetz (mandanten.netze); den Port der Spark-Konsole nur für konsole.netze.
 5. <a id="kn-teilen-s5"></a>**Verbindung zum TLS-Tor erlaubt?**: Jede Anfrage an Spracherkennung, Sprachausgabe, Sprachmodell, Bilder und Wärter geht durch das Tor. Es spricht nur TLS 1.3 und lässt nur den Panel-Rechner und, bei offenen Spark-Clients, deren Netze herein (tlstor.allowed); den Inhalt liest es nie. Zu den Diensten verbindet es sich von 127.0.0.2, so zählt niemand durch die Tür als dieser Rechner selbst. Schlüssel, Rechte und Grenzen eines Clients prüft jeder Dienst (mandanten.finden).
 6. <a id="kn-teilen-s6"></a>**Befehl an den Wärter**: steuer.call schickt einen Befehl mit Zeitstempel und einer Nummer, die nur einmal gilt, unterschrieben mit dem Wärter-Schlüssel.
 7. <a id="kn-teilen-s7"></a>**Unterschrift, Zeit, Nummer, Befehl gültig?**: tarswart.check prüft die Unterschrift, eine Zeit höchstens 60 s daneben, die Nummer nur einmal und einen Befehl aus der festen Liste. Keine Shell, keine freien Namen. Spark-Clients verwaltet er mit festen Befehlen (clients, client_neu, client_aendern, client_weg, clients_schalten); ein Client selbst kommt nie an den Wärter. Nur die Probe einer gestalteten Stimme (stimme_ablegen) geht über den eigenen Pfad /v1/wart/stimme mit größerem Limit; stimmablage prüft dort Name, WAV und Anzahl.
@@ -3927,7 +3930,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Versiegeln**: vault.seal macht aus dem Wert „enc1:“ und ein Fernet-Token (verschlüsselt und gegen Änderung geschützt). Ein schon versiegelter Wert bleibt, wie er ist.
 5. <a id="kn-state-s5"></a>**Atomar schreiben**: common.write_json schreibt in eine frische Zwischendatei daneben, nie durch einen Link, gibt ihr die Rechte der alten Datei (eine neue ist nur für den Dienst lesbar) und tauscht sie dann in einem Schritt aus. Ein Absturz mittendrin lässt die alte Datei ganz.
 6. <a id="kn-state-s6"></a>**Lesen**: Ein versiegelter Wert wird mit dem Schlüssel geöffnet. Passt der Schlüssel nicht (Sicherung von einem anderen Spark), kommt ein leerer Wert zurück und der Zugang muss neu eingetragen werden. Ältere unversiegelte Werte werden gelesen und beim nächsten Speichern versiegelt.
-7. <a id="kn-state-s7"></a>**Kommt in die Sicherung?**: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 52), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 116). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile.
+7. <a id="kn-state-s7"></a>**Kommt in die Sicherung?**: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 52), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 117). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile.
 8. <a id="kn-state-s8"></a>**Umzugs-Sicherung?**: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung.
 9. <a id="kn-state-s9"></a>**Beim Wiederherstellen in Ordnung?**: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt.
 10. <a id="kn-state-s10"></a>**Einsetzen mit Rückweg**: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück.
@@ -3938,7 +3941,7 @@ flowchart TD
 #### Zahlen (aus dem Code)
 
 - **52** Dateien in jeder Sicherung ([Schritt 7](#kn-state-s7))
-- **116** Dateien und Ordner, die mit Grund draußen bleiben ([Schritt 7](#kn-state-s7))
+- **117** Dateien und Ordner, die mit Grund draußen bleiben ([Schritt 7](#kn-state-s7))
 - **8 MB** größte Datei beim Wiederherstellen ([Schritt 9](#kn-state-s9))
 - **12** Zeichen hat das Umzugs-Passwort mindestens ([Schritt 8](#kn-state-s8))
 
