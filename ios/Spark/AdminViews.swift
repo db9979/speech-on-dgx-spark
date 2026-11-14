@@ -136,6 +136,7 @@ struct AdminView: View {
                     if s.role != "manager" { NavigationLink("Modelle") { ModelsView() } }
                     if s.role != "manager" { NavigationLink("Praxistest") { PraxisView() } }
                     if s.role != "manager" { NavigationLink("Wartungspause") { WartungView() } }
+                    if s.role != "manager" { NavigationLink("Schwachstellen") { SchwachView() } }
                 } header: { Text("Zustand") }
                 Section {
                     // only the admin switches functions on and off; a Verwalter lifts blocks (Dominik 2026-10-14)

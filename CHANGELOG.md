@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older versions (V01.0.000 to V01.0.999 and the lines before version numbers): [CHANGELOG-V01.0.md](CHANGELOG-V01.0.md).
 
+- **V01.1.431** · 2026-11-14 · iPhone-App: „Im Panel öffnen“ führt bei Seiten, die die App selbst kann (Kalender, E-Mail, Listen, Gedächtnis, Sicherheit und mehr), direkt zur App-Ansicht; lange drücken öffnet weiter das Panel. Neu in Spark verwalten: Schwachstellen mit Funden, „Als Issue melden“, „Bewusst hinnehmen“ und „Jetzt prüfen“ (P875, P876)
 - **V01.1.430** · 2026-11-14 · Morgenrunde: Themen werden wirklich recherchiert: aus dem eigenen Satz werden Suchbegriffe, „meine Interessen“ sucht je bestätigtem Interesse (Ich → Was ich über dich weiß), ohne Treffer von heute kommen die der letzten Tage mit Tag statt „nichts gefunden“, fünf Treffer und die erste Seite je Thema (P874)
 - **V01.1.429** · 2026-11-14 · Webseiten und HTML-Dateien als Markdown lesen: nur der Hauptteil ohne Menüs und Cookie-Hinweise, Überschriften, Listen und Tabellen bleiben (Idee aus get-md, Nano Collective)
 - **V01.1.428** · 2026-11-14 · Alles auch im Hochformat: am Handy unter Heute → Meine Seiten stehen Kalender, E-Mail, Listen, Offen, Kontakte, Wissensbuch, Finden, Mappen, Dungeon-Master und Open WebUI (vorher nur im Querformat erreichbar); das Menü der Rechner-Ansicht am Handy zeigt auch Profilen ihre Seiten (P872)

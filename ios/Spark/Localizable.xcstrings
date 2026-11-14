@@ -6581,12 +6581,12 @@
         }
       }
     },
-    "Öffnet das Panel hier in der App an dieser Stelle. Beim ersten Mal meldest du dich an wie im Browser.": {
+    "Was die App selbst kann, öffnet sie direkt. Alles andere zeigt das Panel hier in der App; beim ersten Mal meldest du dich an wie im Browser. Lange drücken öffnet auch eine App-Seite im Panel.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Opens the panel here in the app at this place. The first time you sign in as in the browser."
+            "value": "What the app can do itself opens right there. Everything else shows the panel here in the app; the first time you sign in as in the browser. A long press opens an app page in the panel too."
           }
         }
       }
@@ -21317,6 +21317,336 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hide until something changes"
+          }
+        }
+      }
+    },
+    "Als Issue melden" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Report as issue"
+          }
+        }
+      }
+    },
+    "Als Issue melden braucht Probleme melden mit GitHub-Token: Funktionen → Zugang → Probleme melden" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reporting as an issue needs Problem reports with a GitHub token: Features → Access → Reporting problems"
+          }
+        }
+      }
+    },
+    "Behoben in" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fixed in"
+          }
+        }
+      }
+    },
+    "Bewusst hingenommen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accepted knowingly"
+          }
+        }
+      }
+    },
+    "Bewusst hinnehmen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accept knowingly"
+          }
+        }
+      }
+    },
+    "Bewusst hinnehmen …" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accept knowingly …"
+          }
+        }
+      }
+    },
+    "Diesen Fund gibt es nicht mehr." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This finding is gone."
+          }
+        }
+      }
+    },
+    "Fragt OSV nach allen Paketen auf Pi, tars, in den Abbildern und Apps. Ein Update spielt „Spark-Version“ in den Einstellungen der App ein." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Asks OSV about every package on the Pi, tars, in the images and apps. \"Spark version\" in the app's settings installs an update."
+          }
+        }
+      }
+    },
+    "Fund" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finding"
+          }
+        }
+      }
+    },
+    "Gemeldet." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reported."
+          }
+        }
+      }
+    },
+    "Hingenommen bis" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accepted until"
+          }
+        }
+      }
+    },
+    "Hinnehmen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accept"
+          }
+        }
+      }
+    },
+    "Hoch" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "High"
+          }
+        }
+      }
+    },
+    "Issue" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Issue"
+          }
+        }
+      }
+    },
+    "Keine bekannte Lücke." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No known hole."
+          }
+        }
+      }
+    },
+    "Kennungen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ids"
+          }
+        }
+      }
+    },
+    "Kritisch" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Critical"
+          }
+        }
+      }
+    },
+    "Mittel" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medium"
+          }
+        }
+      }
+    },
+    "Nicht mehr hinnehmen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop accepting"
+          }
+        }
+      }
+    },
+    "Niedrig" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Low"
+          }
+        }
+      }
+    },
+    "Noch nicht geprüft." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not checked yet."
+          }
+        }
+      }
+    },
+    "Schwachstellen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vulnerabilities"
+          }
+        }
+      }
+    },
+    "Schwachstellen sind aus. Einschalten unter Funktionen → Schwachstellen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vulnerabilities are off. Switch on under Features → Vulnerabilities."
+          }
+        }
+      }
+    },
+    "Schweregrad" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Severity"
+          }
+        }
+      }
+    },
+    "Unbekannt" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unknown"
+          }
+        }
+      }
+    },
+    "Warum? Gilt %lld Tage und nur für diese Version." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Why? Holds %lld days and only for this version."
+          }
+        }
+      }
+    },
+    "Was zu tun ist und wie weit die Stelle erreichbar ist, steht bei Zustand → Schwachstellen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What to do and how far the place can be reached is under Status → Vulnerabilities."
+          }
+        }
+      }
+    },
+    "Zuletzt geprüft" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last checked"
+          }
+        }
+      }
+    },
+    "Zuletzt ohne Antwort, Stand" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No answer last time, state of"
+          }
+        }
+      }
+    },
+    "%lld hoch, %lld Funde." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld high, %lld findings."
+          }
+        }
+      }
+    },
+    "%lld kritisch, %lld Funde." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld critical, %lld findings."
+          }
+        }
+      }
+    },
+    "%lld Funde." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld findings."
+          }
+        }
+      }
+    },
+    "noch keine Version" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "no version yet"
           }
         }
       }

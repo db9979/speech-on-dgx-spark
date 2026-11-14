@@ -348,7 +348,7 @@ def overview(now=None):
     return {"on": True, "t": int(d.get("t") or 0), "fehler": d.get("fehler") is True, "t_fehler": int(d.get("t_fehler") or 0),
             "next": int(max(d.get("t") or 0, d.get("t_fehler") or 0) + CHECK_EVERY), "funde": funde, "zahl": zahl,
             "orte": orte, "n": d["n"], "internet": not notaus.blocks("internet"), "docker_tage": DOCKER_TAGE,
-            "system_updates": bool(_sysup_on()), "aktionen": AKTION_NAME, "hin_tage": HIN_TAGE,
+            "system_updates": bool(_sysup_on()), "aktionen": AKTION_NAME, "ort_name": ORT_NAME, "hin_tage": HIN_TAGE,
             "melden": meldung.bereit()}
 
 

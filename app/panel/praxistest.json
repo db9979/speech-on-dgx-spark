@@ -5974,6 +5974,22 @@
 "text": "Pi updaten. Unter Kalender → Einstellungen bei den Themen fürs Briefing z. B. „Wichtigste Neuigkeiten für Deutschland und der Welt.“ und „Gibt es wichtige Informationen zu meinen Interessen.“ stehen lassen. Im Assistenten „Guten Morgen“ sagen oder auf die nächste Morgenrunde warten: zu jedem Thema stehen ein bis zwei Sätze mit Inhalt (ältere Meldungen mit ihrem Tag), nicht mehr „nichts gefunden“. Für die Interessen sucht der Spark die bestätigten Interessen unter Ich → Was ich über dich weiß; sind keine bestätigt, sagt die Morgenrunde, wo man sie einträgt.",
 "thread": "Morgenrunde-Themen wirklich recherchieren",
 "test": "test_tagesaktuell.Search.test_briefing_topic_widens_to_the_last_days"
+},
+{
+"id": "P875",
+"v": 1431,
+"titel": "iPhone: Im Panel öffnen springt zur App-Seite",
+"text": "In der iPhone-App Einstellungen → Im Panel öffnen. Kalender, E-Mail, Listen, Gedächtnis oder Sicherheit antippen: es öffnet sich die Seite der App selbst (kein Safari-Fenster, kein Anmelden). Eine Seite wie Speicher oder reMarkable öffnet wie bisher das Panel. Lange auf Kalender drücken → „Im Panel öffnen“: jetzt kommt die Panel-Seite.",
+"thread": "Fehlende Seiten nativ in die iOS-App bringen",
+"test": "test_app_gleichstand.InTheApps.test_pages_the_app_shows_itself"
+},
+{
+"id": "P876",
+"v": 1431,
+"titel": "iPhone: Schwachstellen unter Spark verwalten",
+"text": "In der iPhone-App (Admin-Profil) Einstellungen → Spark verwalten → Schwachstellen. Oben steht ein Satz mit Ampel und „Zuletzt geprüft“, darunter die Funde nach „Was zu tun ist“ gruppiert. Einen Fund antippen: Schweregrad, Wo, Behoben in, Kennungen (öffnen osv.dev). „Bewusst hinnehmen …“ mit kurzem Grund: der Fund wandert nach unten unter „Bewusst hingenommen“; „Nicht mehr hinnehmen“ holt ihn zurück. „Als Issue melden“ legt ein Issue in spark-meldungen an, danach steht „Issue #N“. „Jetzt prüfen“ kurz nach einer Prüfung sagt „Eben erst geprüft“.",
+"thread": "Fehlende Seiten nativ in die iOS-App bringen",
+"test": "test_app_gleichstand.InTheApps.test_admin_vulnerabilities_in_the_app"
 }
 ]
 }

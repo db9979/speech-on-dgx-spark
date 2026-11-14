@@ -4,11 +4,13 @@ import SwiftUI
 /// "Im Panel öffnen": every page of Ich the app does not show itself, opened inside the app at the right place
 /// (the profile signs in there once, like in the browser). The list of pages comes from the Spark
 /// (/api/features "pages", features.ME_PAGES), never from a list here: a new page shows up without an app update
-/// (Richtlinie, App-Gleichstand, Dominik 2026-10-14). The app takes over more of them bit by bit.
+/// (Richtlinie, App-Gleichstand, Dominik 2026-10-14). The app takes over more of them bit by bit: a page with "app"
+/// (features.APP_NATIVE) leads to the app's own view (NativePage), a long press still opens it in the panel.
 struct PanelBridgeView: View {
     let admin: Bool
-    /// the Ich pages this profile can use now, in the panel's order: (place "me=<page>", name)
-    @State private var pages: [(String, String)] = []
+    @EnvironmentObject var talk: Conversation
+    /// the Ich pages this profile can use now, in the panel's order: (place "me=<page>", name, the app's own view)
+    @State private var pages: [(String, String, NativePage?)] = []
     @State private var loaded = false
     @State private var open: PanelPlace?
 
@@ -22,9 +24,16 @@ struct PanelBridgeView: View {
         List {
             Section {
                 if !loaded { LadeZeilen(rows: 4) }
-                ForEach(pages, id: \.0) { p in row(Text(verbatim: p.1), p.0) }
+                ForEach(pages, id: \.0) { p in
+                    if let n = p.2, n.open(talk.allowed) {
+                        NavigationLink { n.page } label: { Text(verbatim: p.1) }
+                            .contextMenu { panelButton(p.0) }
+                    } else {
+                        row(Text(verbatim: p.1), p.0)
+                    }
+                }
             } header: { Text("Ich") } footer: {
-                Text("Öffnet das Panel hier in der App an dieser Stelle. Beim ersten Mal meldest du dich an wie im Browser.")
+                Text("Was die App selbst kann, öffnet sie direkt. Alles andere zeigt das Panel hier in der App; beim ersten Mal meldest du dich an wie im Browser. Lange drücken öffnet auch eine App-Seite im Panel.")
             }
             if admin {
                 Section("Spark verwalten") {
@@ -48,6 +57,12 @@ struct PanelBridgeView: View {
         }
     }
 
+    @ViewBuilder private func panelButton(_ place: String) -> some View {
+        if let url = SparkAPI.panelLink(place) {
+            Button { open = PanelPlace(url: url) } label: { Label("Im Panel öffnen", systemImage: "safari") }
+        }
+    }
+
     private func load() async {
         defer { loaded = true }
         if pages.isEmpty, let k = Merken.object("funktionen") {   // the last state first (Merken.swift)
@@ -59,12 +74,67 @@ struct PanelBridgeView: View {
         pages = Self.pages(d)
     }
 
-    private static func pages(_ d: [String: Any]) -> [(String, String)] {
+    private static func pages(_ d: [String: Any]) -> [(String, String, NativePage?)] {
         guard let list = d["pages"] as? [[String: Any]] else { return [] }
         return list.prefix(60).compactMap { p in
             guard let id = p["id"] as? String, id.range(of: #"^[a-z]{2,12}$"#, options: .regularExpression) != nil,
                   let name = FeaturesView.pick(p["name"]) else { return nil }
-            return ("me=" + id, name)
+            return ("me=" + id, name, (p["app"] as? String).flatMap(NativePage.init(rawValue:)))
+        }
+    }
+}
+
+/// The app's own view of an Ich page or a page of its own (features.APP_NATIVE, the same words): a word this app
+/// does not know yet (an older app) opens the panel as before. `area` is the app's right for it (iphone.AREAS,
+/// iphone.THINGS); without it the panel opens, which says why.
+enum NativePage: String {
+    case kalender, post, listen, offen, kontakte, wissensbuch, finden, mappen
+    case zustand, gedaechtnis, dokumente, bilder, musik, ichweiss, vonselbst, sicherheit, stimme, profil
+
+    var area: String? {
+        switch self {
+        case .kalender: return "calendar"
+        case .post: return "mail"
+        case .listen: return "tasks"
+        case .offen: return "vorgaenge"
+        case .kontakte: return "contacts"
+        case .wissensbuch: return "wissensbuch"
+        case .finden: return "fund"
+        case .mappen: return "mappen"
+        case .gedaechtnis: return "memory"
+        case .dokumente: return "documents"
+        case .bilder: return "bilder"
+        case .musik: return "musik"
+        case .ichweiss: return "ichweiss"
+        case .vonselbst: return "app_auto"
+        case .sicherheit: return "app_security"
+        case .stimme: return "app_voice"
+        case .zustand, .profil: return nil   // the Spark lists the page only when the profile may use it
+        }
+    }
+
+    func open(_ a: Allowed) -> Bool { area.map { a.areas.contains($0) } ?? true }
+
+    @MainActor @ViewBuilder var page: some View {
+        switch self {
+        case .kalender: KalenderView()
+        case .post: PostView()
+        case .listen: ListenView()
+        case .offen: OffenView()
+        case .kontakte: KontakteView()
+        case .wissensbuch: WissensbuchView()
+        case .finden: FindenView()
+        case .mappen: MappenView()
+        case .zustand: MyStatusView()
+        case .gedaechtnis: MemoryView()
+        case .dokumente: DocumentsView()
+        case .bilder: PicturesView()
+        case .musik: SongsView()
+        case .ichweiss: IchWeissView()
+        case .vonselbst: AutoView()
+        case .sicherheit: SecurityView()
+        case .stimme: VoiceView()
+        case .profil: ProfileView()
         }
     }
 }

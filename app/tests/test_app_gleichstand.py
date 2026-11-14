@@ -122,6 +122,41 @@ class InTheApps(unittest.TestCase):
         self.assertIn('d["pages"]', bridge)
         self.assertIn("SFSafariViewController", bridge)   # opens inside the app, not in Safari
 
+    def test_pages_the_app_shows_itself(self):
+        """features.APP_NATIVE (plan ios-nativ 5): every page is a page the app gets, every word a view of the app's
+        NativePage, every view word in the app comes from the Spark; the page keeps its way into the panel."""
+        ids = {k for k, _, _ in ALL_PAGES} - set(features.APP_SKIP)
+        for k, word in features.APP_NATIVE.items():
+            self.assertIn(k, ids, k)
+            self.assertRegex(word, r"^[a-z]{2,16}$", k)
+        bridge = read(need(IOS), "Spark", "PanelViews.swift")
+        enum = re.search(r"enum NativePage: String \{(.*?)\n    var area", bridge, re.S)
+        self.assertTrue(enum, "NativePage in PanelViews.swift")
+        cases = set(re.findall(r"[a-z]+", re.sub(r"\bcase\b", "", enum.group(1))))
+        self.assertEqual(cases, set(features.APP_NATIVE.values()))
+        self.assertIn("contextMenu { panelButton(p.0) }", bridge)
+
+    def test_admin_vulnerabilities_in_the_app(self):
+        """Spark verwalten → Schwachstellen (plan ios-nativ 2): only the Spark's own admin paths, the names of the
+        groups and places come from the overview, not from the app."""
+        import schwachstellen
+        view = read(need(IOS), "Spark", "SchwachView.swift")
+        self.assertIn("SchwachView()", read(IOS, "Spark", "AdminViews.swift"))
+        src = read(APP, "panel", "schwachstellen.py")
+        for path in set(re.findall(r'"(api/[a-z/]+)"', view)):
+            self.assertIn(f'"/{path}"', src, path)
+        self.assertIn('d["aktionen"]', view)
+        self.assertIn('d["ort_name"]', view)
+        self.assertEqual(set(schwachstellen.ORT_NAME), set(schwachstellen.ORTE))
+        was = schwachstellen.admin_on
+        schwachstellen.admin_on = lambda c=None: True
+        try:
+            d = schwachstellen.overview()
+        finally:
+            schwachstellen.admin_on = was
+        self.assertEqual(d["ort_name"], schwachstellen.ORT_NAME)
+        self.assertEqual(d["aktionen"], schwachstellen.AKTION_NAME)
+
     def test_the_apps_admin_places_exist_in_the_panel(self):
         bridge = read(need(IOS), "Spark", "PanelViews.swift")
         html = read(APP, "panel", "static", "index.html")
@@ -158,6 +193,7 @@ class PagesFollowTheRelease(unittest.TestCase):
             names = {k: [de, en] for k, de, en in ALL_PAGES}
             for p in features.app_pages(uid):
                 self.assertEqual(p["name"], names[p["id"]])
+                self.assertEqual(p.get("app"), features.APP_NATIVE.get(p["id"]))
             self.assertEqual(features.app_pages(None), [])  # guests: only questions and answers
         finally:
             helpers.set_config(weather=False, deny={})
@@ -167,7 +203,7 @@ class PagesFollowTheRelease(unittest.TestCase):
         from tests.test_iphone import profile
         c = profile("Gleich Gero")
         pages = c.get("/api/features").json()["pages"]
-        self.assertIn({"id": "factbox", "name": ["Gedächtnis", "Memory"]}, pages)
+        self.assertIn({"id": "factbox", "name": ["Gedächtnis", "Memory"], "app": "gedaechtnis"}, pages)
 
 
 class Begleiter(unittest.TestCase):

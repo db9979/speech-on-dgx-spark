@@ -77,6 +77,14 @@ APP_SKIP = {"overbox": "the app's own start screen shows the overview",
             "gobox": "first steps in the browser after signing up",
             "loginbox": "the app is signed in by its own key",
             "andbox": "the Android app, not for an iPhone"}
+# Pages the iPhone app shows itself (plan ios-nativ 5, Dominik 2026-11-14 „1-5“): „Im Panel öffnen“ leads there and
+# not into the panel; the word names the app's own view (PanelViews.swift NativePage), a long press still opens the
+# panel. A page only partly in the app (Gespräch, Dungeon-Master: new rounds) stays out until the app holds all of it.
+APP_NATIVE = {"calbox": "kalender", "mailbox": "post", "taskbox": "listen", "vgbox": "offen", "conbox": "kontakte",
+              "wbbox": "wissensbuch", "fundbox": "finden", "mpbox": "mappen",
+              "bgbox": "zustand", "factbox": "gedaechtnis", "docbox": "dokumente", "bildbox": "bilder",
+              "musikbox": "musik", "wissbox": "ichweiss", "probox": "vonselbst", "agentbox": "vonselbst",
+              "wxbox": "vonselbst", "secbox": "sicherheit", "voicebox": "stimme", "notebox": "profil"}
 # Begleiter-Gleichstand (Dominik 2026-10-30, Begleiter Paket A): every function is in the Begleiter on purpose or
 # left out with its reason. DESK: the function → the Begleiter parts (begleiter.PARTS) that carry it; DESK_SKIP: the
 # function → why not. A sub-function follows its parent unless it stands here itself. test_app_gleichstand.Begleiter
@@ -815,7 +823,8 @@ def features_list(request: Request):
 
 def app_pages(uid):
     """The pages an app lists for this profile, in the panel's order: the pages of their own (OWN_PAGES) and the
-    Ich pages but APP_SKIP with at least one function this profile may use, and the pages of ME_ALWAYS.
+    Ich pages but APP_SKIP with at least one function this profile may use, and the pages of ME_ALWAYS; "app" names
+    the app's own view of a page it shows itself (APP_NATIVE).
     Guests get none: they only ask and get answers."""
     if not uid:
         return []
@@ -827,7 +836,10 @@ def app_pages(uid):
         mine = [f for f in FEATURES if f.me == key]
         if key not in ME_ALWAYS and not any(reason(f.key, uid, c, s) in (None, "profile", "mfa") for f in mine):
             continue
-        out.append({"id": key, "name": [de, en]})
+        page = {"id": key, "name": [de, en]}
+        if key in APP_NATIVE:
+            page["app"] = APP_NATIVE[key]
+        out.append(page)
     return out
 
 
