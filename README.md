@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.432** Mark answers that are not backed up and report made-up ones by itself; the nightly run may only fix faults
 - **V01.1.431** iPhone app: "Open in the panel" leads straight to the app's own view for pages the app can show itself (calendar, mail, lists, memory, security and more); plus vulnerabilities under Manage the Spark
 - **V01.1.430** Morning briefing: topics are really researched, "my interests" per interest, without a hit of today those of the last days instead of "nothing found"
 - **V01.1.429** Web pages and HTML files read as Markdown: only the main part without menus and cookie notes, headings, lists and tables stay (idea from get-md, Nano Collective)
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.425** Mail: search with to:, before:, after: and suggestions, "why is this mail here", sender confirmed, mailbox state
 - **V01.1.424** Measure Gemma 4 with its draft model (MTP), for more speed
 - **V01.1.423** Fix: no more wrong start display with hundreds of minutes while a model is measured
-- **V01.1.422** Check request: opentelemetry-api 1.45.1 → 1.45.2 in the panel's lock file (GHSA-mf5v-w3w3-f6cg, moderate, CVSS 5.3); no other package moves
 
 
 

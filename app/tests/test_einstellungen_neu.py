@@ -115,7 +115,7 @@ class Static(unittest.TestCase):
         self.assertEqual(keys, [g for g, _, _ in features.GROUPS])
         speed = {f.key for f in features.FEATURES if f.group == "speed"}
         self.assertEqual(speed, {"toolthink", "routing", "direct", "hoeren", "sofort", "gedkurz", "ack", "vorab", "einordnung", "einordnungpost", "einordnungtest",
-                                 "einordnungrat", "einordnungcheck", "einordnungklage", "weicheabstimmen", "weicheunklar",
+                                 "einordnungrat", "einordnungcheck", "unbelegt", "einordnungklage", "weicheabstimmen", "weicheunklar",
                                  "helfer", "helferangriff"})
         for k in speed:
             self.assertIn(f"{{id:'{k}',grp:'speed'", js)

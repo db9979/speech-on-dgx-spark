@@ -349,6 +349,7 @@ struct ChatView: View {
                             }
                             if m.role != "user", m.rateId != nil { RateBar(message: m) }
                             if m.role != "user", m.reportId != nil { ReportAnswerBar(message: m) }
+                            if m.role != "user", m.unbelegt == true { UnbelegtZeile(message: m) }
                             if m.role != "user", m.wbId != nil { WbFileButton(message: m) }
                             if m.role != "user", let q = m.fundQ, talk.allowed.areas.contains("fund") { FundKarte(q: q, id: m.fundId) }
                             if m.role != "user", m.herkunft != nil || m.webChip != nil {
@@ -1084,6 +1085,29 @@ struct ReportAnswerBar: View {
             }
             .presentationDetents([.medium])
         }
+    }
+}
+
+/// Nicht belegte Antworten markieren (systemone.py): a fixed line and „Nochmal nachschauen“ under a marked answer
+struct UnbelegtZeile: View {
+    let message: Conversation.Message
+    @State private var asked = false
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Label("Nicht belegt, bitte prüfen.", systemImage: "exclamationmark.triangle")
+                .foregroundStyle(Theme.warn)
+            Spacer()
+            Button("Nochmal nachschauen") {
+                asked = true
+                Conversation.shared.recheck(message.id)
+            }
+            .disabled(asked)
+        }
+        .buttonStyle(.borderless)
+        .font(.footnote)
+        .padding(.leading, 6)
+        .accessibilityElement(children: .combine)
     }
 }
 

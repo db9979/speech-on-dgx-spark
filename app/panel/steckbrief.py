@@ -123,6 +123,12 @@ STECKBRIEFE = {
     "einordnungcheck": Steckbrief(de="Antworten im Hintergrund prüfen", en="Check answers in the background",
         gruppe="speed", schalter=("systemone_check", "berater"), anleitung="einordnungcheck", parent="einordnung",
         me="setbox", ohne_werkzeug=("ohne", "Signal fürs Panel, keine Bitte")),
+    # Nicht belegte Antworten markieren (Issue 3 in spark-meldungen, Dominik 2026-11-14 „Ok“): the background check's
+    # „erfunden“ shows under the answer, with „Nochmal nachschauen“; a speaker hears one fixed sentence (systemone.py)
+    "unbelegt": Steckbrief(de="Nicht belegte Antworten markieren", en="Mark answers that are not backed up",
+        gruppe="speed", schalter=("unbelegt_mark", "systemone_check", "berater"), anleitung="unbelegt",
+        parent="einordnungcheck", me="setbox",
+        ohne_werkzeug=("ohne", "Signal fürs Panel unter der Antwort, keine Bitte")),
     "einordnungklage": Steckbrief(de="Beschwerde erkennen", en="Recognize complaints", gruppe="speed",
         schalter=("systemone_klage", "loop_stop"), anleitung="einordnungklage", parent="einordnung", me="setbox",
         ohne_werkzeug=("ohne", "Signal fürs Panel, keine Bitte")),
@@ -807,6 +813,11 @@ STECKBRIEFE = {
     "melden": Steckbrief(de="Probleme melden", en="Reporting problems", gruppe="sec", schalter=("report",),
         anleitung="melden", me="rpbox", ohne_werkzeug=("regel", "meldung.py: „Spark, Problem melden: …“"),
         begleiter="stays in the panel; the Begleiter's Kopplung page opens it (Problem melden …)"),
+    # Erfundenes automatisch melden (Dominik 2026-11-14 „Ok“): an answer the background check holds for made up becomes a
+    # report like „Melden“ under it, at most systemone.MARK_REPORTS a day; with „direkt an GitHub“ an issue at once
+    "meldenerfunden": Steckbrief(de="Erfundenes automatisch melden", en="Report made-up answers by itself",
+        gruppe="sec", schalter=("report_madeup", "report"), anleitung="meldenerfunden", parent="melden", me="rpbox",
+        ohne_werkzeug=("regel", "systemone.py: nach der Antwort-Prüfung, nie das Modell")),
     "meldenadmin": Steckbrief(de="Admin über Meldungen informieren", en="Tell admins about reports", gruppe="sec",
         schalter=("report_notify",), anleitung="meldenadmin", parent="melden", me="rpbox",
         ohne_werkzeug=("ohne", "meldet sich von selbst")),

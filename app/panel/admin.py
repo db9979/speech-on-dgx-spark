@@ -1036,7 +1036,7 @@ def validate(new):
 SENSITIVE = [("api", "key"), ("chat", "llm_url"), ("chat", "llm_key"), ("chat", "telegram_api"),
              ("chat", "search_url"), ("chat", "kiwix_url"), ("chat", "kiwix_link_url"), ("chat", "openwebui"), ("chat", "openwebui_url"), ("chat", "openwebui_link_url"), ("chat", "public"), ("chat", "esp32_url"), ("chat", "telegram_panel_url"), ("chat", "esp32_ota_http"), ("chat", "esp32_repo"),
              ("chat", "mfa"), ("chat", "mcp_server"), ("chat", "mcp_server_extern"), ("chat", "mcp_server_act"), ("chat", "llm_api"), ("chat", "llm_api_extern"), ("chat", "llm_api_assistant"),
-             ("chat", "mcp_own"), ("chat", "mcp_own_oauth"), ("chat", "report"), ("chat", "report_repo"), ("chat", "report_direct"),
+             ("chat", "mcp_own"), ("chat", "mcp_own_oauth"), ("chat", "report"), ("chat", "report_repo"), ("chat", "report_direct"), ("chat", "report_madeup"),
              ("chat", "chats_verbund"), ("chat", "verbund_media"), ("chat", "verbund_groups"), ("chat", "verbund_mode"), ("chat", "verbund_domain"),
              ("chat", "calls_turn"), ("chat", "calls_turn_host"),
              ("panel", "trusted_proxies"), ("panel", "allow_lan"), ("panel", "notaus_auto"), ("panel", "update_night"), ("chat", "system_updates_night_panel"), ("chat", "system_updates_night_models"), ("panel", "session_days"), ("panel", "trust_days"), ("asr", "model"), ("asr", "aligner_model"),

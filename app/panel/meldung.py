@@ -1146,6 +1146,13 @@ def describe(d, text):
     return d
 
 
+def channel_of(client):
+    """The report channel (CHANNELS) of a trace client (tracelog.CLIENTS): for a report the Spark makes itself
+    („Erfundenes automatisch melden“, systemone)."""
+    return {"web": "panel", "app": "app", "android": "android", "telegram": "telegram",
+            "desk": "begleiter"}.get(str(client or ""), "sprache")
+
+
 def direct_on(c=None):
     try:
         return features.admin_on("meldendirekt", c)

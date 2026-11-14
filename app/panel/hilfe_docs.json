@@ -1157,7 +1157,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": " und speichert nur seinen SHA-256-Hash in profiles.json. Die App bekommt ihn genau einmal und legt ihn im Schlüsselbund ab. 6. Jede Anfrage mit Schlüssel: profiles.current sucht den Hash des Schlüssels in der Geräteliste. Ein Geräteschlüssel geht vor dem Cookie; das Profil kommt so immer aus dem Schlüssel, nie aus dem, was die App schreibt. 7. Pfad für die App erlaubt?: Ein App-Schlüssel gilt nur für die 72 Pfade in profiles.APP_PATHS (Chat, Spracherkennung, Gespräche, Erinnerungen, Chats, Anrufe …), ein paar Lese-Muster, die Panel-Bereiche (Admin-Schalter iPhone-App mit Panel) und „Meine Sachen“ (iphone.THINGS, je Teil nur mit der Freigabe seiner eigenen Funktion). Alles andere sieht er ohne Profil. 8. App gerade aus oder Mein Notaus?: Ist die App vom Admin aus- oder für das Profil gesperrt, oder hat das Profil Mein Notaus an, gibt es für diese Anfrage kein Profil. Die App bekommt „gerade nicht“ (503), behält ihre Kopplung und geht wieder, sobald der Schalter zurück ist. 9. Wie ein Browser des Profils: Die App fragt über dieselben Endpunkte wie die Seite, mit denselben Grenzen. Was sie zusätzlich darf (Smart Home, CarPlay, Zuhören, Dokumente, Bilder), sagt ihr der Spark in /api/ip"
+"text": " und speichert nur seinen SHA-256-Hash in profiles.json. Die App bekommt ihn genau einmal und legt ihn im Schlüsselbund ab. 6. Jede Anfrage mit Schlüssel: profiles.current sucht den Hash des Schlüssels in der Geräteliste. Ein Geräteschlüssel geht vor dem Cookie; das Profil kommt so immer aus dem Schlüssel, nie aus dem, was die App schreibt. 7. Pfad für die App erlaubt?: Ein App-Schlüssel gilt nur für die 73 Pfade in profiles.APP_PATHS (Chat, Spracherkennung, Gespräche, Erinnerungen, Chats, Anrufe …), ein paar Lese-Muster, die Panel-Bereiche (Admin-Schalter iPhone-App mit Panel) und „Meine Sachen“ (iphone.THINGS, je Teil nur mit der Freigabe seiner eigenen Funktion). Alles andere sieht er ohne Profil. 8. App gerade aus oder Mein Notaus?: Ist die App vom Admin aus- oder für das Profil gesperrt, oder hat das Profil Mein Notaus an, gibt es für diese Anfrage kein Profil. Die App bekommt „gerade nicht“ (503), behält ihre Kopplung und geht wieder, sobald der Schalter zurück ist. 9. Wie ein Browser des Profils: Die App fragt über dieselben Endpunkte wie die Seite, mit denselben Grenzen. Was sie zusätzlich darf (Smart Home, CarPlay, Zuhören, Dokumente, Bilder), sagt ihr der Spark in /api/ip"
 },
 {
 "lang": "de",
@@ -1197,7 +1197,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 10 Minuten gilt ein Kopplungs-Code (Schritt 3) - 5 iPhones pro Profil (Schritt 2) - 72 feste Pfade für den App-Schlüssel (Schritt 7) - 30 Minuten gilt ein Android-Download-Link (Schritt 3) - 5 Downloads pro Android-Link (Schritt 3) - 10 Minuten gilt eine Kopplungszeile fürs Terminal (Schritt 3) - 5 Terminals pro Profil (Schritt 2) - 120 Sekunden nach der letzten Eingabe gilt ein Gerät als benutzt (Schritt 9) - 5 Minuten bis eine ungesehene Mitteilung aufs Handy nachkommt (Schritt 9)"
+"text": "- 10 Minuten gilt ein Kopplungs-Code (Schritt 3) - 5 iPhones pro Profil (Schritt 2) - 73 feste Pfade für den App-Schlüssel (Schritt 7) - 30 Minuten gilt ein Android-Download-Link (Schritt 3) - 5 Downloads pro Android-Link (Schritt 3) - 10 Minuten gilt eine Kopplungszeile fürs Terminal (Schritt 3) - 5 Terminals pro Profil (Schritt 2) - 120 Sekunden nach der letzten Eingabe gilt ein Gerät als benutzt (Schritt 9) - 5 Minuten bis eine ungesehene Mitteilung aufs Handy nachkommt (Schritt 9)"
 },
 {
 "lang": "de",
@@ -12197,7 +12197,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Einordnung mit Wahrscheinlichkeit (`systemone.py`)",
-"text": " vier Werkzeugergebnisse, Antwort). Ab 90 % „erfunden“ (systemone.CHECK_MIN) entsteht ein Fall „Erfundenes vermutet“ (faelle.KINDS[\"erfunden\"], Vorschläge Antwort-Prüfung, Temperatur, Qualitätstest). Läuft über vorrang („Antwort prüfen“, wartet, solange jemand spricht), höchstens 50-mal am Tag, nie vor dem Sprechen; nie bei Sätzen mit Codewort. - Beschwerde erkennen (chat.systemone_klage, braucht „Fehlerschleife stoppen“): die Taten der letzten Antwort bleiben 10 Minuten im Speicher (taten.note_last). Sagt die nächste Nachricht „geht immer noch nicht“ (taten.COMPLAINT) oder erkennt die Einordnung ab 80 % (systemone.KLAGE_MIN, 1,5 s) eine Beschwerde, muss das Modell erst nachsehen und ehrlich antworten; Werkzeuge dieser Art (taten.locked) sind gesperrt, außer die Nachricht bittet selbst darum (taten.RETRY). Logs → Anfragen „Beschwerde (Panel)“; Live „n Beschwerden erkannt“. - Erzähler-Prüfstand (unter *Prüfstände*, chat.dungeon_pruefstand, nur Admin, auf Knopf): je fester Szene die Einschätzung des Modells, „lebendig“ und „folgt den Aktionen“ in Prozent (Verwendung erzaehler); Punkte geben nur die festen Regeln. - Label-Masse: x-systemone-label-mass sagt, wie viel Wahrscheinlichkeit"
+"text": " vier Werkzeugergebnisse, Antwort). Ab 90 % „erfunden“ (systemone.CHECK_MIN) entsteht ein Fall „Erfundenes vermutet“ (faelle.KINDS[\"erfunden\"], Vorschläge Antwort-Prüfung, Temperatur, Qualitätstest). Läuft über vorrang („Antwort prüfen“, wartet, solange jemand spricht), höchstens 50-mal am Tag, nie vor dem Sprechen; nie bei Sätzen mit Codewort. - Nicht belegte Antworten markieren (ab V01.1.432, chat.unbelegt_mark, aus, baut auf „Antworten im Hintergrund prüfen“; Issue 3 in spark-meldungen): Hält die Prüfung eine Antwort für erfunden (ab 90 %), steht unter ihr „Nicht belegt, bitte prüfen.“ mit „Nochmal nachschauen“ (Panel, Android, iPhone). Die Seite fragt nach der Antwort einmal GET /api/answer/check?id=… (nur die eigene Antwort, wartet höchstens 60 s, systemone.MARK_WAIT_S, Rate-Limit unbelegt, nichts wird geändert); das Ergebnis bleibt 10 Minuten nur im Speicher. „Nochmal nachschauen“ stellt dieselbe Frage mit recheck: die erste Runde muss ein Werkzeug rufen, und ein fester Satz verlangt, nur aus dessen Ergebnis zu antworten. Am Lautsprecher, am Telefon und im Auto sagt der Spark nach der nächsten Antwort innerhalb von 5 Minuten einmal „Noch ein Hinweis: Meine letzte Antwort war "
 },
 {
 "lang": "de",
@@ -12205,7 +12205,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Einordnung mit Wahrscheinlichkeit (`systemone.py`)",
-"text": " auf die Optionen fiel; unter 50 % (systemone.MIN_MASS) gilt die Antwort als unsicher, der Aufrufer macht ohne weiter (Live zählt „unsicher“). x-systemone-branches nennt die Zahl der gestellten Fragen; „Einordnung prüfen“ und Live zeigen es. - Einordnung messen (Knopf unter Funktionen → Weiche bei „Fragen, die keine Regel erkennt“, POST/GET /api/admin/systemone/messen, nur Admin): bis zu 200 Testsätze der Weiche (intent_bench.BENCH ohne Zwei-Gruppen-Sätze, plus eigene) laufen als Hintergrundarbeit („Einordnung messen“) durch die Werkzeugwahl. Je Schwelle 60/70/80/90 %: Eingrenzungen, Fehler, Label-Masse, Zeit, Verwechslungen. Vorschlag: niedrigste Schwelle mit mindestens 10 Eingrenzungen und höchstens 3 % Fehlern; „Vorschlag übernehmen“ setzt chat.systemone_min (0.6/0.7/0.8/0.9, Standard 0.8). Nur im Arbeitsspeicher. Journal: systemone: mit Einsatz und Millisekunden, weiche: systemone wetter 0.91; nie Text. Zustand → Live: „⚖ n“ am Sprachmodell, Ausfälle unter Ereignisse („Einordnung“). Selbsttests: app/tests/test_systemone.py."
+"text": "nicht belegt. Frag lieber noch einmal nach.“ Die Antwort selbst wird nie aufgehalten. Log (Bereich Weiche): systemone: Antwort nicht belegt markiert|belegt|nicht geprüft, chat: nochmal nachschauen | Werkzeug Pflicht. - Beschwerde erkennen (chat.systemone_klage, braucht „Fehlerschleife stoppen“): die Taten der letzten Antwort bleiben 10 Minuten im Speicher (taten.note_last). Sagt die nächste Nachricht „geht immer noch nicht“ (taten.COMPLAINT) oder erkennt die Einordnung ab 80 % (systemone.KLAGE_MIN, 1,5 s) eine Beschwerde, muss das Modell erst nachsehen und ehrlich antworten; Werkzeuge dieser Art (taten.locked) sind gesperrt, außer die Nachricht bittet selbst darum (taten.RETRY). Logs → Anfragen „Beschwerde (Panel)“; Live „n Beschwerden erkannt“. - Erzähler-Prüfstand (unter *Prüfstände*, chat.dungeon_pruefstand, nur Admin, auf Knopf): je fester Szene die Einschätzung des Modells, „lebendig“ und „folgt den Aktionen“ in Prozent (Verwendung erzaehler); Punkte geben nur die festen Regeln. - Label-Masse: x-systemone-label-mass sagt, wie viel Wahrscheinlichkeit auf die Optionen fiel; unter 50 % (systemone.MIN_MASS) gilt die Antwort als unsicher, der Aufrufer macht ohne weiter (Live zählt "
 },
 {
 "lang": "de",
@@ -12990,6 +12990,14 @@
 "head": "Tempo und Genauigkeit",
 "title": "Tempo und Genauigkeit",
 "text": "- Antworten im Hintergrund prüfen (Funktionen → Tempo und Genauigkeit → „Antworten im Hintergrund prüfen“; baut auf „Einordnung mit Wahrscheinlichkeit“; Ich → Gespräch): Nach einer Antwort, für die Werkzeuge gelaufen sind, fragt das Panel im Hintergrund, ob die Antwort Angaben nennt, die in keinem Ergebnis stehen."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Tempo und Genauigkeit",
+"title": "Tempo und Genauigkeit",
+"text": "- Nicht belegte Antworten markieren (Funktionen → Tempo und Genauigkeit → „Nicht belegte Antworten markieren“; baut auf „Antworten im Hintergrund prüfen“; Ich → Gespräch): Hält die Prüfung im Hintergrund eine Antwort für erfunden (ab 90 %), steht unter ihr „Nicht belegt, bitte prüfen“ mit „Nochmal nachschauen“: dieselbe Frage noch einmal, die erste Runde muss ein Werkzeug rufen, und die Antwort stützt sich …"
 },
 {
 "lang": "de",
@@ -14598,6 +14606,14 @@
 "head": "Zugang",
 "title": "Zugang",
 "text": "- Antwort-Meldungen direkt an GitHub (Funktionen → Zugang → „Antwort-Meldungen direkt an GitHub“; baut auf „Probleme melden“; Ich → Probleme melden): War eine Antwort falsch, sagst du direkt danach „Mach ein Issue draus“ (oder tippst „Melden“ unter der Antwort)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Zugang",
+"title": "Zugang",
+"text": "- Erfundenes automatisch melden (Funktionen → Zugang → „Erfundenes automatisch melden“; baut auf „Probleme melden“; Ich → Probleme melden): Hält die Prüfung im Hintergrund eine Antwort für erfunden (ab 90 %), legt der Spark selbst einen Bericht an, wie „Melden“ unter der Antwort: Frage und Antwort, die Ergebnisse der Werkzeuge und der Weg der Anfrage, alles mit festen Regeln …"
 },
 {
 "lang": "de",
@@ -16374,6 +16390,22 @@
 "head": "Probleme melden",
 "title": "Antwort-Meldungen direkt an GitHub",
 "text": "Antwort-Meldungen direkt an GitHub (ab V01.1.408, Unterschalter chat.report_direct, aus, frischer Code): Dann geht ein Antwort-Bericht mit Beschreibung sofort als Issue raus, mit Frage und Antwort anonymisiert, ohne Blick auf die Vorschau, aber nur, wenn die Leck-Prüfung nichts findet und die Grenzen es erlauben; sonst bleibt er ein Entwurf, und der Assistent sagt warum. So kann ein Claude-Thread das Issue direkt lesen und beheben. Logs: meldung: Antwort-Entwurf <id> | <weg> | n Schritte | n Quellen | n Logzeilen, meldung: Beschreibung | <id> | n Zeichen, meldung: direkt gesperrt durch die Leck-Prüfung: …, meldung: direkt nicht gesendet 429, meldung: Antwort melden | keine Antwort. API (Profil, iPhone-Schlüssel): POST /api/report/answer mit {id, text}; das Ereignis melden mit der Kennung kommt am Ende jeder Antwort, solange Probleme melden für das Profil frei ist."
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Probleme melden",
+"title": "Erfundenes automatisch melden",
+"text": "Erfundenes automatisch melden (ab V01.1.432, Unterschalter chat.report_madeup unter „Probleme melden“, aus, Dominik 2026-11-14): Hält „Antworten im Hintergrund prüfen“ eine Antwort für erfunden (ab 90 %), legt der Spark selbst einen Bericht zu genau dieser Antwort an wie „Melden“ unter ihr (meldung.create_answer, Beschreibung als fester Satz mit der Zahl, Label falsche-antwort); mit „Antwort-Meldungen direkt an GitHub“ geht er nach der Leck-Prüfung sofort als Issue raus, sonst wartet er unter Ich → Probleme melden. Höchstens 3 am Tag (systemone.MARK_REPORTS), nie für Gäste. Log: systemone: Erfundenes melden | direkt|Entwurf|Tagesgrenze 3|nicht angelegt."
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Probleme melden",
+"title": "Nachtlauf nur für Fehler",
+"text": "Nachtlauf nur für Fehler (Dominik 2026-11-14): Der tägliche Lauf um 22 Uhr, der Issues aus spark-meldungen behebt, nimmt nur Issues vom Konto des Besitzers mit dem Anonymisiert-Fuß des Spark und behebt nur Fehler. python3 tools/vorpush.py --nachtlauf bricht ab, wenn die Änderung eine Datei von Anmeldung, Rechten, Sperren, Netz-Wächter, Wärter, Update, Installation, Paketen, Schaltern oder Steckbriefen, die GitHub-Abläufe oder die Werkzeuge in tools/ berührt, oder wenn eine neue Zeile einen Endpunkt, ein Werkzeug fürs Modell, eine Verbindung nach außen, ein Programm oder einen Steckbrief bringt (NIGHT_FILES, NIGHT_LINES); so ein Wunsch wird ein Vorschlag an den Besitzer."
 },
 {
 "lang": "de",
@@ -18837,7 +18869,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": " the keychain. 6. Every request with the key: profiles.current looks up the key's hash in the device list. A device key comes before the cookie; the profile always comes from the key, never from what the app writes. 7. Path allowed for the app?: An app key only works for the 72 paths in profiles.APP_PATHS (chat, speech recognition, conversations, reminders, chats, calls …), a few read patterns, the panel areas (admin switch iPhone app with panel) and \"My things\" (iphone.THINGS, each part only with the release of its own function). Everything else it sees without a profile. 8. App off right now or My kill switch?: If the app is switched off by the admin or blocked for the profile, or the profile has My kill switch on, this request has no profile. The app gets „not now“ (503), keeps its pairing and works again as soon as the switch is back. 9. Like a browser of the profile: The app asks through the same endpoints as the page, with the same limits. What it may do on top (smart home, CarPlay, listening, documents, pictures) the Spark tells it in /api/iphone/hello; the app only shows it and follows it. Calls between profiles ring through a VoIP push from Apple that carries only the call"
+"text": " the keychain. 6. Every request with the key: profiles.current looks up the key's hash in the device list. A device key comes before the cookie; the profile always comes from the key, never from what the app writes. 7. Path allowed for the app?: An app key only works for the 73 paths in profiles.APP_PATHS (chat, speech recognition, conversations, reminders, chats, calls …), a few read patterns, the panel areas (admin switch iPhone app with panel) and \"My things\" (iphone.THINGS, each part only with the release of its own function). Everything else it sees without a profile. 8. App off right now or My kill switch?: If the app is switched off by the admin or blocked for the profile, or the profile has My kill switch on, this request has no profile. The app gets „not now“ (503), keeps its pairing and works again as soon as the switch is back. 9. Like a browser of the profile: The app asks through the same endpoints as the page, with the same limits. What it may do on top (smart home, CarPlay, listening, documents, pictures) the Spark tells it in /api/iphone/hello; the app only shows it and follows it. Calls between profiles ring through a VoIP push from Apple that carries only the call"
 },
 {
 "lang": "en",
@@ -18869,7 +18901,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 10 minutes a pairing code is valid (step 3) - 5 iPhones per profile (step 2) - 72 fixed paths for the app key (step 7) - 30 minutes an Android download link is valid (step 3) - 5 downloads per Android link (step 3) - 10 minutes a terminal pairing line is valid (step 3) - 5 terminals per profile (step 2) - 120 seconds after the last input a device counts as in use (step 9) - 5 minutes until an unseen note follows to the phone (step 9)"
+"text": "- 10 minutes a pairing code is valid (step 3) - 5 iPhones per profile (step 2) - 73 fixed paths for the app key (step 7) - 30 minutes an Android download link is valid (step 3) - 5 downloads per Android link (step 3) - 10 minutes a terminal pairing line is valid (step 3) - 5 terminals per profile (step 2) - 120 seconds after the last input a device counts as in use (step 9) - 5 minutes until an unseen note follows to the phone (step 9)"
 },
 {
 "lang": "en",
@@ -29573,7 +29605,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Classification with probabilities (`systemone.py`)",
-"text": "its while somebody speaks), at most 50 times a day, never before speaking; never for sentences with the code word. - Recognize complaints (chat.systemone_klage, needs \"Stop error loops\"): the deeds of the last answer stay in memory for 10 minutes (taten.note_last). When the next message says \"still does not work\" (taten.COMPLAINT) or the classification finds a complaint from 80 % (systemone.KLAGE_MIN, 1.5 s), the model has to look first and answer honestly; tools of that kind (taten.locked) are locked unless the message itself asks for it (taten.RETRY). Logs → Requests \"Beschwerde (Panel)\"; Live \"n Beschwerden erkannt\". - Narrator bench (under *Test benches*, chat.dungeon_pruefstand, admin only, on the button): per fixed scene the model's view, \"vivid\" and \"follows the actions\" in per cent (use erzaehler); only the fixed rules give points. - Label mass: x-systemone-label-mass says how much probability fell on the options; below 50 % (systemone.MIN_MASS) the answer counts as unsure and the caller goes on without it (Live counts \"unsure\"). x-systemone-branches gives the number of questions asked; \\\"Check classification\\\" and Live show it. - Measure classification (button under Featur"
+"text": "its while somebody speaks), at most 50 times a day, never before speaking; never for sentences with the code word. - Mark answers that are not backed up (since V01.1.432, chat.unbelegt_mark, off, builds on \"Check answers in the background\"; issue 3 in spark-meldungen): if the check holds an answer for made up (from 90 %), \"Not backed up, please check.\" stands under it with \"Look again\" (panel, Android, iPhone). After the answer the page asks once GET /api/answer/check?id=… (only its own answer, waits at most 60 s, systemone.MARK_WAIT_S, rate limit unbelegt, nothing is changed); the result stays in memory only, 10 minutes. \"Look again\" asks the same question with recheck: the first round must call a tool, and a fixed sentence asks to answer only from its result. At a speaker, on the phone and in the car the Spark says once after the next answer within 5 minutes \"Noch ein Hinweis: Meine letzte Antwort war nicht belegt. Frag lieber noch einmal nach.\" The answer itself is never held up. Log (area Weiche): systemone: Antwort nicht belegt markiert|belegt|nicht geprüft, chat: nochmal nachschauen | Werkzeug Pflicht. - Recognize complaints (chat.systemone_klage, needs \"Stop error loops\"): t"
 },
 {
 "lang": "en",
@@ -29581,7 +29613,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Classification with probabilities (`systemone.py`)",
-"text": "es → Routing at \"Questions no rule recognizes\", POST/GET /api/admin/systemone/messen, admin only): up to 200 test sentences of the switch (intent_bench.BENCH without two-group sentences, plus own ones) run as background work (\"Einordnung messen\") through the tool choice. Per threshold 60/70/80/90 %: narrowings, errors, label mass, time, mix-ups. Suggestion: the lowest threshold with at least 10 narrowings and at most 3 % errors; \"Take the suggestion\" sets chat.systemone_min (0.6/0.7/0.8/0.9, default 0.8). Memory only. Journal: systemone: with use and milliseconds, weiche: systemone wetter 0.91; never text. Status → Live: \"⚖ n\" at the language model, failures under events (\"Einordnung\"). Self-tests: app/tests/test_systemone.py."
+"text": "he deeds of the last answer stay in memory for 10 minutes (taten.note_last). When the next message says \"still does not work\" (taten.COMPLAINT) or the classification finds a complaint from 80 % (systemone.KLAGE_MIN, 1.5 s), the model has to look first and answer honestly; tools of that kind (taten.locked) are locked unless the message itself asks for it (taten.RETRY). Logs → Requests \"Beschwerde (Panel)\"; Live \"n Beschwerden erkannt\". - Narrator bench (under *Test benches*, chat.dungeon_pruefstand, admin only, on the button): per fixed scene the model's view, \"vivid\" and \"follows the actions\" in per cent (use erzaehler); only the fixed rules give points. - Label mass: x-systemone-label-mass says how much probability fell on the options; below 50 % (systemone.MIN_MASS) the answer counts as unsure and the caller goes on without it (Live counts \"unsure\"). x-systemone-branches gives the number of questions asked; \\\"Check classification\\\" and Live show it. - Measure classification (button under Features → Routing at \"Questions no rule recognizes\", POST/GET /api/admin/systemone/messen, admin only): up to 200 test sentences of the switch (intent_bench.BENCH without two-group sentences, pl"
 },
 {
 "lang": "en",
@@ -30366,6 +30398,14 @@
 "head": "Speed and accuracy",
 "title": "Speed and accuracy",
 "text": "- Check answers in the background (Features → Speed and accuracy → \"Check answers in the background\"; builds on \"Classification with probabilities\"; Me → Conversation): After an answer for which tools ran, the panel asks in the background whether the answer names details that are in no result."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Speed and accuracy",
+"title": "Speed and accuracy",
+"text": "- Mark answers that are not backed up (Features → Speed and accuracy → \"Mark answers that are not backed up\"; builds on \"Check answers in the background\"; Me → Conversation): If the background check holds an answer for made up (from 90 %), \"Not backed up, please check\" stands under it with \"Look again\": the same question once more, the first round must call a tool, and the answer rests only on its result."
 },
 {
 "lang": "en",
@@ -31974,6 +32014,14 @@
 "head": "Access",
 "title": "Access",
 "text": "- Answer reports straight to GitHub (Features → Access → \"Answer reports straight to GitHub\"; builds on \"Reporting problems\"; Me → Reporting problems): If an answer was wrong, say \"Make an issue of it\" right after it (or tap \"Report\" under the answer)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Access",
+"title": "Access",
+"text": "- Report made-up answers by itself (Features → Access → \"Report made-up answers by itself\"; builds on \"Reporting problems\"; Me → Reporting problems): If the background check holds an answer for made up (from 90 %), the Spark makes a report itself, like \"Report\" under the answer: question and answer, the toolsu2019 results and the way of the request, all anonymized with fixed rules, la …"
 },
 {
 "lang": "en",
@@ -33670,6 +33718,22 @@
 "head": "Reporting problems",
 "title": "Answer reports straight to GitHub",
 "text": "Answer reports straight to GitHub (since V01.1.408, sub-switch chat.report_direct, off, fresh code): then an answer report with a description goes out as an issue at once, with question and answer anonymized, without a look at the preview, but only when the leak check finds nothing and the limits allow it; else it stays a draft and the assistant says why. So a Claude thread can read the issue directly and fix it. Logs: meldung: Antwort-Entwurf <id> | <way> | n Schritte | n Quellen | n Logzeilen, meldung: Beschreibung | <id> | n Zeichen, meldung: direkt gesperrt durch die Leck-Prüfung: …, meldung: direkt nicht gesendet 429, meldung: Antwort melden | keine Antwort. API (profile, iPhone key): POST /api/report/answer with {id, text}; the event melden with the id comes at the end of every answer while Reporting problems is released for the profile."
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Reporting problems",
+"title": "Report made-up answers by itself",
+"text": "Report made-up answers by itself (since V01.1.432, sub-switch chat.report_madeup below \"Reporting problems\", off, Dominik 2026-11-14): if \"Check answers in the background\" holds an answer for made up (from 90 %), the Spark makes a report on exactly that answer itself, like \"Report\" under it (meldung.create_answer, the description a fixed sentence with the number, label falsche-antwort); with \"Answer reports straight to GitHub\" it goes out as an issue at once after the leak check, else it waits under Me → Reporting problems. At most 3 a day (systemone.MARK_REPORTS), never for guests. Log: systemone: Erfundenes melden | direkt|Entwurf|Tagesgrenze 3|nicht angelegt."
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Reporting problems",
+"title": "Nightly run only for faults",
+"text": "Nightly run only for faults (Dominik 2026-11-14): the daily run at 22:00 that fixes issues from spark-meldungen takes only issues from the owner's account with the Spark's anonymized footer and only fixes faults. python3 tools/vorpush.py --nachtlauf stops when the change touches a file of login, rights, locks, the network guard, the Wärter, update, install, packages, switches or Steckbriefe, the GitHub workflows or the tools in tools/, or when a new line brings an endpoint, a tool for the model, a connection to the outside, a program or a Steckbrief (NIGHT_FILES, NIGHT_LINES); such a wish becomes a proposal to the owner."
 },
 {
 "lang": "en",

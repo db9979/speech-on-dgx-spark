@@ -114,7 +114,7 @@ NEVER = (
     ("Mail senden, MCP nach außen, Probleme melden", "Sending mail, MCP to the outside, reporting problems"),
     ("Updates und Sicherungen", "Updates and backups"),
 )
-NEVER_KEYS = {("chat", k) for k in ("llm_url", "llm_key", "public", "mfa", "report", "report_repo", "report_direct", "mail_send",
+NEVER_KEYS = {("chat", k) for k in ("llm_url", "llm_key", "public", "mfa", "report", "report_repo", "report_direct", "report_madeup", "mail_send",
                                     "mail_send_voice", "mcp_server_extern", "llm_api", "llm_api_extern", "llm_api_minute", "llm_api_tag_k", "llm_api_assistant", "openwebui", "openwebui_url", "openwebui_link_url", "dev_updates", "system_updates", "system_updates_night_panel", "system_updates_night_models", "schwachstellen", "telegram_api",
                                     "fernzugang", "fernzugang_hilfe", "spontanhilfe", "spontansteuern", "fernbild", "fernals", "fernzugang_sshtermy",
                                     "fernbild_zwischenablage", "fernzugang_notizen",
@@ -177,7 +177,7 @@ OHNE = {
         "self_echo_mode", "spark_drawer", "spark_help", "spark_suggest", "speaker_code", "speaker_id",
         "speaker_strictness", "storage_folder", "storage_lan", "storage_offload", "storage_own", "storage_root",
         "svc_watch", "svc_watch_users", "grund_internet", "rundlauf", "rundlauf_min", "wachposten", "wartung", "wartung_auto", "notbetrieb_asr", "gehaeuse", "gehaeuse_art", "gehaeuse_wechsel_s", "gehaeuse_hell", "gehaeuse_led_hell", "gehaeuse_nacht", "gehaeuse_nacht_von", "gehaeuse_nacht_bis", "gehaeuse_anzeige", "gehaeuse_drehung", "gehaeuse_seiten_aus", "gehaeuse_reihenfolge", "gehaeuse_luefter_an", "gehaeuse_luefter_aus", "schirm", "schirm_an", "schirm_aus", "schirm_schrift", "modelle_wechseln", "modelle_eigene", "werkstatt", "werkstatt_nacht", "werkstatt_stunde", "angriffsprobe", "fernzugang_meldung", "fernzugang_verlauf_tage", "fernzugang_entsperrt_min", "fernzugang_datei_mb", "fernzugang_gross_mb", "fernzugang_ki_zeilen", "spontanhilfe_max_min", "fernzugang_leerlauf_min", "fernzugang_sitzungen", "fernzugang_offline_min", "route_tune", "system_prompt", "systemone", "systemone_berater", "helfer", "helfer_angriff", 
-        "systemone_check", "systemone_klage", "systemone_mail", "systemone_min", "systemone_quality", "systemone_tidy", "tasks", "telegram", "thinking", "tool_thinking", "top_p", "transit",
+        "systemone_check", "unbelegt_mark", "systemone_klage", "systemone_mail", "systemone_min", "systemone_quality", "systemone_tidy", "tasks", "telegram", "thinking", "tool_thinking", "top_p", "transit",
         "transit_url", "usage_count", "usage_quota", "usage_quota_k", "usage_quota_mk", "usage_quota_warn", "usage_quota_wk", "vorgaenge", "weather", "weather_url", "wiki", "wiki_url", "write_apps", "write_help", "wyoming",
         "wyoming_allow", "wyoming_port", "wyoming_voice", "telefon", "telefon_aussen", "telefon_gaeste", "telefon_anrufen", "telefon_ziel", "telefon_alarm", "telefon_max", "telefon_ton",
     ),

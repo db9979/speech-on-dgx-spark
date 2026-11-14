@@ -21,6 +21,8 @@ final class Conversation: ObservableObject {
         /// „Melden“ (Probleme melden, Dominik 2026-11-13): the id the Spark gave this answer, and the outcome once sent
         var reportId: String?
         var reported: String?
+        /// Nicht belegte Antworten markieren (systemone.py): the background check held this answer for made up
+        var unbelegt: Bool?
         /// a picture painted for this answer (bilder.py): its job, and its prompt for the conversation list
         var picJob: String?
         var picPrompt: String?
@@ -135,6 +137,11 @@ final class Conversation: ObservableObject {
         } catch {
             self.error = error.localizedDescription
         }
+    }
+    /// „Nochmal nachschauen“ under an answer marked „Nicht belegt“: the question before it once more, a tool a must
+    func recheck(_ id: UUID) {
+        guard let i = messages.firstIndex(where: { $0.id == id }), i > 0, messages[i - 1].role == "user" else { return }
+        write(messages[i - 1].text, recheck: true)
     }
     /// "Ins Wissensbuch": only the owner's tap files the answer the Spark kept; the Spark checks every sentence
     /// against the answer's own sources and drops the ones without a passage.
@@ -1041,7 +1048,7 @@ final class Conversation: ObservableObject {
     // ---------------------------------------------------------------- asking
     /// hint: in the car a short sentence said at once while the Spark looks (Mails, Fristen, Mein Tag: their tools
     /// take seconds, the car seemed stuck; Dominik 2026-10-21 „4“). Only while nothing of the answer plays yet.
-    func write(_ text: String, hint: String? = nil) {
+    func write(_ text: String, hint: String? = nil, recheck: Bool = false) {
         let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
         if Demo.live, !text.isEmpty {   // the demo answers here with an example (Demo.swift), nothing goes out
             messages.append(Message(role: "user", text: text))
@@ -1060,7 +1067,7 @@ final class Conversation: ObservableObject {
         hintTask = nil
         audio.stopPlaying()
         error = nil
-        task = Task { await send(text, api, typed: true) }
+        task = Task { await send(text, api, typed: true, recheck: recheck) }
         if let hint, inCar {
             hintTask = Task { [weak self] in
                 do {
@@ -1080,7 +1087,7 @@ final class Conversation: ObservableObject {
     }
 
     /// typed: a typed question that waits in the outbox when the Spark cannot be reached.
-    private func send(_ text: String, _ api: SparkAPI, typed: Bool = false) async {
+    private func send(_ text: String, _ api: SparkAPI, typed: Bool = false, recheck: Bool = false) async {
         unasked = false
         lastEnd = ""
         if Date().timeIntervalSince(last) > Self.newAfter { fresh() }
@@ -1109,7 +1116,7 @@ final class Conversation: ObservableObject {
         let more = suggested?.text == text ? suggested?.tool : nil
         suggested = nil
         do {
-            for try await ev in api.chat(history, car: inCar, attachment: attachment, speak: inCar || Prefs.speakAnswers, more: more, convo: convoId) {
+            for try await ev in api.chat(history, car: inCar, attachment: attachment, speak: inCar || Prefs.speakAnswers, recheck: recheck, more: more, convo: convoId) {
                 got = true
                 unreachable = false
                 switch ev {
@@ -1133,6 +1140,12 @@ final class Conversation: ObservableObject {
                     CallCenter.shared.dial(chat: chat, name: name, video: video)
                 case .rate(let id): edit { $0.rateId = id }
                 case .report(let id): edit { $0.reportId = id }
+                case .pruef(let id):
+                    let mid = answer.id
+                    Task { [weak self] in
+                        if await api.answerCheck(id) == "unbelegt",
+                           let self, let i = self.messages.firstIndex(where: { $0.id == mid }) { self.messages[i].unbelegt = true }
+                    }
                 case .picture(let job, let prompt): edit { $0.picJob = job; $0.picPrompt = prompt }
                 case .more(let kind, let items): edit { $0.more = items; $0.moreKind = kind }
                 case .step(let x): edit { $0.steps = ($0.steps ?? []) + [x] }

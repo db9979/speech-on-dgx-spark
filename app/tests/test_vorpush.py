@@ -161,5 +161,33 @@ class Vorpush(unittest.TestCase):
             self.assertIn("apt-get install -y -q --no-install-recommends x11vnc", out)   # the exact command
 
 
+class Nachtlauf(unittest.TestCase):
+    """--nachtlauf (Dominik 2026-11-14 „Nach Empfehlung“): the nightly run that fixes reported issues only fixes; a new
+    endpoint, tool, outside connection, switch or a file of login, locks, update or packages stops it."""
+    def setUp(self):
+        self.v = load()
+
+    def test_a_plain_fix_passes(self):
+        files = ["app/panel/intent.py", "app/tests/test_fast_start.py", "CHANGELOG.md"]
+        added = [("app/panel/intent.py", '    ("mail_search", re.compile(r"(?i)letzte bestellung")),'),
+                 ("app/tests/test_fast_start.py", '        r = httpx.get("http://x")   # a test may do this')]
+        self.assertEqual(self.v.night_findings(files, added), [])
+
+    def test_new_functions_and_locked_files_stop(self):
+        files = ["app/panel/guard.py", ".github/workflows/tests.yml", "app/requirements-panel.lock", "tools/vorpush.py",
+                 "app/panel/steckbrief.py", "app/config.default.json", "install.sh", "app/panel/intent.py"]
+        added = [("app/panel/intent.py", '@router.post("/api/neu")'),
+                 ("app/panel/intent.py", '    {"type": "function", "function": {"name": "neu"}}'),
+                 ("app/panel/intent.py", "    c = netguard.client(netguard.PUBLIC)"),
+                 ("app/panel/intent.py", "    subprocess.run(['x'])")]
+        found = self.v.night_findings(files, added)
+        for f in ("app/panel/guard.py", ".github/workflows/tests.yml", "app/requirements-panel.lock",
+                  "tools/vorpush.py", "app/panel/steckbrief.py", "app/config.default.json", "install.sh"):
+            self.assertIn(f + ": gesperrte Datei", found)
+        for what in ("ein neuer Endpunkt", "ein neues Werkzeug", "eine neue Verbindung nach außen", "ein neues Programm"):
+            self.assertIn("app/panel/intent.py: " + what, found)
+        self.assertNotIn("app/panel/intent.py: gesperrte Datei", found)
+
+
 if __name__ == "__main__":
     unittest.main()

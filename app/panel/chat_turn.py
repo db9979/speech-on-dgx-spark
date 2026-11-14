@@ -1222,6 +1222,14 @@ async def _prompt(z):
         z.recent_ask = wissen.recent_window(z.ask_text, chat.user_zone(z.body.get("tz")))
         if z.recent_ask is not None:
             z.force, z.need = "document_search", ["document_search"]
+    # „Nochmal nachschauen“ under an answer marked „Nicht belegt“ (systemone.py): the same question again, the first
+    # round must call a tool and the answer rests only on what it gave back (a fixed sentence, never the model's)
+    if z.body.get("recheck") is True and z.who and z.tools and not z.need and features.allowed("unbelegt", z.who["id"], z.ccfg):
+        z.need = sorted({t["function"]["name"] for t in z.tools})[:1]
+        z.system = z.per_turn(z.system, "Nochmal nachschauen: Die letzte Antwort auf diese Frage war nicht belegt. Rufe "
+                              "zuerst ein passendes Werkzeug und antworte nur mit dem, was es zurückgibt. Findet es "
+                              "nichts, sag genau das und erfinde nichts.")
+        print("chat: nochmal nachschauen | Werkzeug Pflicht", flush=True)
     # a module's own fixed rule (begleiter.py: "Öffne Safari" asked at the computer itself): that tool first
     if not z.force and z.ex.get("must") and z.ex["must"] in {t["function"]["name"] for t in z.tools}:
         z.force, z.need = z.ex["must"], [z.ex["must"]]

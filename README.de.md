@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.432** Nicht belegte Antworten markieren und Erfundenes automatisch melden; der Nachtlauf darf nur Fehler beheben
 - **V01.1.431** iPhone-App: „Im Panel öffnen“ führt bei Seiten, die die App selbst kann (Kalender, E-Mail, Listen, Gedächtnis, Sicherheit und mehr), direkt zur App-Ansicht; dazu Schwachstellen unter Spark verwalten
 - **V01.1.430** Morgenrunde: Themen werden wirklich recherchiert, „meine Interessen“ je Interesse, ohne Treffer von heute die der letzten Tage statt „nichts gefunden“
 - **V01.1.429** Webseiten und HTML-Dateien als Markdown lesen: nur der Hauptteil ohne Menüs und Cookie-Hinweise, Überschriften, Listen und Tabellen bleiben (Idee aus get-md, Nano Collective)
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.425** E-Mail: Suche mit an:, vor:, nach: und Vorschlägen, „Warum liegt die Mail hier?“, Absender bestätigt, Postfach-Zustand
 - **V01.1.424** Gemma 4 mit Entwurfsmodell (MTP) messen, für mehr Tempo
 - **V01.1.423** Fix: keine falsche Startanzeige mit Hunderten Minuten mehr, während ein Modell gemessen wird
-- **V01.1.422** Prüfbitte: opentelemetry-api 1.45.1 → 1.45.2 in der Lock-Datei des Panels (GHSA-mf5v-w3w3-f6cg, mittel, CVSS 5.3); sonst bewegt sich kein Paket
 
 
 

@@ -526,6 +526,68 @@ class AntwortPruefen(Base):
         self.assertEqual(befund.diagnose(case)[0]["k"], "erfunden")
         helpers.set_config(berater=False)
 
+    def test_unbelegt_marks_tells_and_reports(self):
+        """Nicht belegte Antworten markieren and Erfundenes automatisch melden (Issue 3 in spark-meldungen, Dominik
+        2026-11-14): the check's number decides by fixed rules; the page asks once for its own answer only, a speaker
+        hears one fixed sentence once, a report is made at most MARK_REPORTS a day; off, guests: nothing."""
+        import types
+        name = "EinoMark"
+        r = ADMIN.post("/api/admin/profiles", json={"name": name, "pin": "1234"})
+        self.assertIn(r.status_code, (200, 409))
+        uid = next(u["id"] for u in profiles._load()["users"] if u["name"] == name)
+        page = TestClient(panel.app, client=("127.0.0.1", 50000))
+        self.assertEqual(page.post("/api/profile/login", json={"name": name, "pin": "1234"}).status_code, 200)
+        who = {"id": uid, "name": name}
+        cc = dict(features.chat_cfg(), llm_url="http://127.0.0.1:1/v1", systemone=True, systemone_check=True, berater=True)
+        calls = [{"name": "fund_suche", "args": "{}", "result": "Messe Frankfurt, Bestellung 18.10."}]
+        fake = types.SimpleNamespace(steps=[], intent="paket", marks={}, errors=[], kind="profile", client="web",
+                                     persist=False, id="x")
+
+        async def run(client, p, cfg, aid=None):
+            REPLY[0] = lambda b: answer(passt=[0.6, 0.3, 0.1], erfunden=p)
+            mid = systemone.check_later(cfg, fake, who, "Was war meine letzte Bestellung?", "Thomann, 12. Juli.", calls,
+                                        client=client, aid=aid)
+            await asyncio.gather(*list(systemone._bg))
+            return mid
+
+        with mock.patch("vorrang.speaking", return_value=False), contextlib.redirect_stdout(io.StringIO()):
+            self.assertIsNone(asyncio.run(run("web", 0.95, cc)))                           # switch off: no mark
+            on = dict(cc, unbelegt_mark=True)
+            mid = asyncio.run(run("web", 0.95, on))
+            self.assertEqual(systemone._marks[mid]["res"], "unbelegt")
+            self.assertEqual(page.get("/api/answer/check", params={"id": mid}).json(), {"state": "unbelegt"})
+            ok = asyncio.run(run("web", 0.2, on))
+            self.assertEqual(page.get("/api/answer/check", params={"id": ok}).json(), {"state": "belegt"})
+            self.assertEqual(page.get("/api/answer/check", params={"id": "0" * 12}).status_code, 404)   # not its own
+            other = systemone.mark_start("someone-else")
+            self.assertEqual(page.get("/api/answer/check", params={"id": other}).status_code, 404)
+            self.assertIn(TestClient(panel.app).get("/api/answer/check", params={"id": mid}).status_code, (401, 403))
+            self.assertIsNone(asyncio.run(run("speaker", 0.95, on)))                      # no page: a sentence instead
+            self.assertTrue(systemone.spoken_note(uid).startswith("Noch ein Hinweis"))
+            self.assertEqual(systemone.spoken_note(uid), "")                                 # once
+            self.assertIsNone(systemone.check_later(on, fake, None, "Was?", "Das.", calls))   # never guests
+            # Erfundenes automatisch melden: a report bound to the answer, at most MARK_REPORTS a day
+            made = []
+
+            def create(uid_, name_, channel, aid, text, *a, **k):
+                made.append((channel, aid, text))
+                return {"id": "r1", "status": "entwurf"}
+
+            async def direct(d, uid_, channel):
+                return ""
+            systemone._reported.clear()
+            rep = dict(on, report=True, report_madeup=True)
+            with mock.patch("meldung.create_answer", create), mock.patch("meldung.direct", direct):
+                asyncio.run(run("web", 0.95, dict(on, report=True), aid="a" * 12))        # switch off: no report
+                self.assertEqual(made, [])
+                asyncio.run(run("web", 0.2, rep, aid="a" * 12))                             # backed up: no report
+                self.assertEqual(made, [])
+                for _ in range(systemone.MARK_REPORTS + 2):
+                    asyncio.run(run("web", 0.95, rep, aid="a" * 12))
+            self.assertEqual(len(made), systemone.MARK_REPORTS)
+            self.assertEqual(made[0][:2], ("panel", "a" * 12))
+            self.assertIn("nicht belegt (95 %)", made[0][2])
+
 
 class Beschwerde(Base):
     def test_fixed_list_and_retry(self):

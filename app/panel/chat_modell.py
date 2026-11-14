@@ -21,6 +21,7 @@ import quellenangabe
 import re
 import saetze
 import stufe
+import systemone
 import taten
 import tidy
 import time
@@ -615,6 +616,15 @@ async def model_turn(*, acked, body, c, came_from, carry, ccfg, cfg, check_on, e
                 await sentences.put(tip)
         if who:   # „Erst lokal“'s Herkunft and chip, the Quellenangabe (quellenangabe.py) for every answer
             await herkunft_und_chip(turn, lk_found, st, searches, trace, out, who, src, messages, sentences, tr)
+        # Nicht belegte Antworten markieren (systemone.py): a speaker, call or car hears once that its last answer
+        # was marked, one fixed sentence after this answer
+        mark = systemone.spoken_note(who["id"], chat.guess_language(messages[-1]["content"]) == "English") \
+            if who and getattr(tr, "client", "") in systemone.VOICE_ONLY else ""
+        if mark:
+            trace["calls"].append({"name": "Hinweis nicht belegt (Panel)", "args": "", "result": "gesagt"})
+            await out.put({"type": "text", "delta": "\n\n" + mark})
+            trace["said"] += " " + mark
+            await sentences.put(mark)
         zeit = verbrauch.warn(who["id"]) if who else ""
         if zeit:   # Kontingent (verbrauch.py): one fixed sentence under the answer, once per period
             note = verbrauch.warn_text(zeit, chat.guess_language(messages[-1]["content"]) == "English")

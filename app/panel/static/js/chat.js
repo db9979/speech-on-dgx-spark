@@ -271,7 +271,7 @@ const ERRS={llm_auth:t('Das Sprachmodell lehnt den Schlüssel ab. Unter Einstell
   net:t('Keine Verbindung zum Spark. Ist das Netz weg?','No connection to the Spark. Is the network down?')};
 function errText(code,msg){const plain=ERRS[code];if(!plain)return msg||t('Unbekannter Fehler.','Unknown error.');
   return plain+(typeof ADMIN!=='undefined'&&ADMIN&&msg&&code!=='net'?' ('+String(msg).slice(0,160)+')':'')}
-async function ask(text,asrS,spk){const spoken=!!chat.nextSpoken;chat.nextSpoken=false;
+async function ask(text,asrS,spk){const spoken=!!chat.nextSpoken;chat.nextSpoken=false;const recheck=!!chat.nextRecheck;chat.nextRecheck=false;
   if(S.daily&&chat.cid&&!chat.picked){const c=convos.load().find(x=>x.id===chat.cid);if(c&&c.updated<today0())openConvo(null)}   // past midnight
 const pids=typeof picIds==='function'?picIds():[],thumbs=pids.length?picThumbs():[];   // attached pictures (pics.js)
 const ub=chatLog('user',text);const um={role:'user',content:text};
@@ -284,10 +284,10 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
   const el=chatLog('assistant','');$('fabtext').textContent='';
   // shown formatted while it streams (md.js), at most once per frame; the small answer line gets the plain text
   let drawn=null,frame=0;const draw=()=>{frame=0;md.render(el,drawn);$('fabtext').textContent=md.plain(drawn);$('chatlog').scrollTop=1e9};
-  const show=(x,now)=>{drawn=x;if(now){if(frame)cancelAnimationFrame(frame);draw()}else if(!frame)frame=requestAnimationFrame(draw)};let full='',llmS=null,audioS=null,ackS=null,err='';const searches=[],sources=[],mems=[],gms=[],docs=[],drefs=[],hcards=[],mkcards=[],chcards=[],blcards=[],steps=[],confirms=[],gotos=[];let rateId='',rpaId='',wbId='',more=null,herk=null;const moreTool=typeof moreTake==='function'?moreTake(text):undefined;if(typeof moreStartGone==='function')moreStartGone();
+  const show=(x,now)=>{drawn=x;if(now){if(frame)cancelAnimationFrame(frame);draw()}else if(!frame)frame=requestAnimationFrame(draw)};let full='',llmS=null,audioS=null,ackS=null,err='';const searches=[],sources=[],mems=[],gms=[],docs=[],drefs=[],hcards=[],mkcards=[],chcards=[],blcards=[],steps=[],confirms=[],gotos=[];let rateId='',rpaId='',prId='',wbId='',more=null,herk=null;const moreTool=typeof moreTake==='function'?moreTake(text):undefined;if(typeof moreStartGone==='function')moreStartGone();
   const ctrl=new AbortController();chat.ctrl=ctrl;chat.said='';chat.firstPlay=null;chat.gaps=[];chat.blocks=[];chat.t0b=null;chat.stalls=0;chat.pieceStart=true;setTalk();chatSay(t('Antwort kommt …','Answer coming …'));
   try{const r=await api('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},signal:ctrl.signal,
-      body:JSON.stringify({speak:voiceOn()?undefined:false,messages:chat.msgs.slice(-20).map(m=>({role:m.role,content:m.content,...(m.mail?{mail:true}:{}),...(m.outside?{outside:true}:{}),...(m.screen?{screen:true}:{})})),tab:TAB,tz:(()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone}catch{return ''}})(),voice:PROFILE&&S.voice||undefined,speed:S.speed,length:S.length,convo:chat.cid||undefined,speaker:spk&&spk.token||undefined,images:pids.length?pids:undefined,page:typeof hilfeNow==='function'?hilfeNow():undefined,focus:typeof hilfeFocusTake==='function'?hilfeFocusTake():undefined,view:document.body.classList.contains('appview')?'app':undefined,more:moreTool,mappe:window.MP_CHAT&&MP_CHAT.id||undefined})});
+      body:JSON.stringify({speak:voiceOn()?undefined:false,messages:chat.msgs.slice(-20).map(m=>({role:m.role,content:m.content,...(m.mail?{mail:true}:{}),...(m.outside?{outside:true}:{}),...(m.screen?{screen:true}:{})})),tab:TAB,tz:(()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone}catch{return ''}})(),voice:PROFILE&&S.voice||undefined,speed:S.speed,length:S.length,convo:chat.cid||undefined,speaker:spk&&spk.token||undefined,images:pids.length?pids:undefined,page:typeof hilfeNow==='function'?hilfeNow():undefined,focus:typeof hilfeFocusTake==='function'?hilfeFocusTake():undefined,view:document.body.classList.contains('appview')?'app':undefined,more:moreTool,mappe:window.MP_CHAT&&MP_CHAT.id||undefined,recheck:recheck||undefined})});
     const rd=r.body.getReader(),dec=new TextDecoder();let buf='';
     for(;;){const{value,done}=await rd.read();if(done)break;buf+=dec.decode(value,{stream:true});let i;
       while((i=buf.indexOf('\n\n'))>=0){const line=buf.slice(0,i).split('\n').find(l=>l.startsWith('data:'));buf=buf.slice(i+2);if(!line)continue;
@@ -326,6 +326,7 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
         else if(ev.type==='herkunft'){herk=ev}   // Herkunft (lokal.herkunft): kinds and numbers only, and maybe the chip „Auch im Internet suchen“
         else if(ev.type==='rate'){rateId=ev.id}
         else if(ev.type==='melden'){rpaId=ev.id}   // „Melden“ under this answer (meldung.py, melden.js)
+        else if(ev.type==='pruef'){prId=ev.id}   // „Nicht belegt“: the background check's result, asked once (systemone.py)
         else if(ev.type==='wbuch'){wbId=ev.id}
         else if(ev.type==='more'){more=ev}   // the panel's sentences under the answer (saetze.js)   // thumbs for this answer (faelle.py, bewerten.js)
         else if(ev.type==='reminder'){rem.event(ev);mems.push(ev.action==='set'?t('Erinnerung: ','Reminder: ')+rem.when(ev.item.due)+' '+ev.item.text:t('Erinnerung gelöscht','Reminder cancelled'))}
@@ -360,6 +361,7 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
   if(herk&&!err&&!foreign&&full.trim())el.appendChild(herkunftRow(herk));
   if(rateId&&full.trim()&&!err&&typeof rateBar==='function')el.appendChild(rateBar(rateId));
   if(rpaId&&full.trim()&&!err&&typeof rpAnswerBar==='function')el.appendChild(rpAnswerBar(rpaId));
+  if(prId&&full.trim()&&!err)pruefWatch(el,prId,text);
   if(more&&full.trim()&&!err&&!foreign&&typeof moreRow==='function')el.appendChild(moreRow(more));
   if(typeof hilfeFabCards==='function')hilfeFabCards(hcards);
   if(pids.length&&full.trim()&&PROFILE&&!err){const b=document.createElement('button');b.type='button';b.className='b picsave';   // 7: only on a click
@@ -711,3 +713,13 @@ function findRun(){const q=$('findq').value.trim(),hits=findHits(q);
 let findT=null;$('findq').oninput=()=>{clearTimeout(findT);findT=setTimeout(findRun,150)};
 $('findq').onkeydown=e=>{if(e.key==='Escape')$('findmodal').style.display='none'};
 $('convofind').onclick=async()=>{if(typeof closeSheet==='function')closeSheet();if(PROFILE)try{await convos.sync()}catch{}$('findmodal').style.display='grid';findRun();setTimeout(()=>$('findq').focus(),50)};
+
+// Nicht belegte Antworten markieren (systemone.py, Dominik 2026-11-14): the page asks once for the background check of
+// this answer (the server waits at most a minute); „nicht belegt“ puts a fixed line and „Nochmal nachschauen“ under it,
+// which asks the same question again with a tool as a must (chat_turn „recheck“). Never the model's words.
+async function pruefWatch(el,id,text){let r;try{r=await (await api('/api/answer/check?id='+encodeURIComponent(id))).json()}catch{return}
+  if(!r||r.state!=='unbelegt'||!el.isConnected||el.querySelector('.unbelegt'))return;
+  const d=document.createElement('div');d.className='unbelegt';d.setAttribute('role','status');
+  d.innerHTML=`${ic('warn')}<span>${esc(t('Nicht belegt, bitte prüfen.','Not backed up, please check.'))}</span><button type="button" class="b">${esc(t('Nochmal nachschauen','Look again'))}</button>`;
+  d.querySelector('button').onclick=e=>{e.currentTarget.disabled=true;chat.nextRecheck=true;ask(text)};
+  el.appendChild(d)}

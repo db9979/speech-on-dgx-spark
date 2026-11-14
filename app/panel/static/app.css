@@ -1546,6 +1546,7 @@ textarea.factedit{width:100%;margin:0 0 6px}
 .vbk-chips{display:flex;flex-wrap:wrap;gap:4px;margin:2px 0}.vbk-chips .ld-badge{background:color-mix(in srgb,var(--line) 75%,transparent);white-space:normal}
 .vbk-cases{margin:4px 0;padding-left:18px}.vbk-cases li{margin:2px 0}.vbk-cases .mlink{text-align:left}
 .ratebar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:8px;-webkit-user-select:none;user-select:none}
+.unbelegt{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:8px;color:var(--warnt)}.unbelegt .ic{flex:none}.unbelegt .b{margin-left:auto}
 .ratebar .rb{padding:3px 10px;font-size:14px;line-height:1.3}.ratebar .rb.on{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 14%,transparent)}
 .ratebar .rmsg{font-size:12px}
 .ratesheet{flex:1 1 100%;display:flex;flex-direction:column;gap:6px;border:1px solid var(--line);border-radius:12px;padding:8px;min-width:0}

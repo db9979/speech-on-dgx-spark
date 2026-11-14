@@ -2608,17 +2608,22 @@ async def _answer(request, turn):
                 said = profiles.SCREEN_NOTE if screen else trace["said"]
                 rid = await asyncio.to_thread(faelle.turn_end, tr, who, turn.ask_text, said, outside,
                                               None, bool(getattr(turn, "explain", None)))
-                # Antworten im Hintergrund prüfen (systemone.py): after the answer, never before it is spoken
-                if not screen:
-                    systemone.check_later(ccfg, tr, who, turn.ask_text, trace["said"], trace["calls"], outside)
                 if rid:
                     yield f"data: {json.dumps({'type': 'rate', 'id': rid})}\n\n"
             # „Melden“ under the answer and „Mach ein Issue draus“ (meldung.py): question and answer in memory only
+            aid = None
             if not screen and not getattr(turn, "mcp", None) and (getattr(turn, "role_cmd", None) or ("",))[0] not in ("meldung", "bewertung"):
                 aid = await asyncio.to_thread(meldung.keep_answer, tr, who, turn.ask_text, trace["said"], trace["calls"],
                                               found, body.get("client") or "web", None, getattr(turn, "src", None))
                 if aid:
                     yield f"data: {json.dumps({'type': 'melden', 'id': aid})}\n\n"
+            # Antworten im Hintergrund prüfen (systemone.py): after the answer, never before it is spoken; with
+            # „Nicht belegte Antworten markieren“ the page asks once for the result of this answer ("pruef")
+            if tr and not screen:
+                mid = systemone.check_later(ccfg, tr, who, turn.ask_text, trace["said"], trace["calls"], outside,
+                                            getattr(tr, "client", ""), aid)
+                if mid:
+                    yield f"data: {json.dumps({'type': 'pruef', 'id': mid})}\n\n"
             if tr:
                 import wissensbuch   # "Ins Wissensbuch" under an answer resting on own documents or Kiwix
                 fid = "" if screen else wissensbuch.keep_offer(who and who["id"], turn.ask_text, trace["said"])

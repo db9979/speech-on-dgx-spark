@@ -5,12 +5,17 @@
     python3 tools/vorpush.py --liste      only shows which tests would run
     python3 tools/vorpush.py -j 2         two test modules at the same time (default JOBS)
     python3 tools/vorpush.py --rotfix     the push repairs a red main: the stop in 0. does not hold
+    python3 tools/vorpush.py --nachtlauf  the nightly fix of a reported issue: only bug fixing (see 0a.)
     python3 tools/vorpush.py test_live    adds test modules by name
 
 What it does, in this order, and it stops loudly at the first problem:
 0. PUSH-STOPP: the newest finished GitHub "Tests" run on main is red (V01.0.820, Dominik 2026-10-19 "1b"; main was
    red 10 h over night and nine pushes landed on it). Only a fix for it passes, with --rotfix. When GitHub cannot
    be asked, it says so and goes on (the full run on GitHub still decides).
+0a. --nachtlauf (Dominik 2026-11-14 „Nach Empfehlung“): the nightly run that fixes issues from spark-meldungen may
+   only fix. It stops when the change touches a file of login, rights, locks, the network guard, the Wärter, update
+   or install, packages, switches or this script itself (NIGHT_FILES), or when an added line brings a new endpoint,
+   tool, outside connection, switch or Steckbrief (NIGHT_LINES). Such a wish becomes a proposal to Dominik instead.
 1. app/VERSION is higher than on origin/main and is the top line of CHANGELOG.md (bump forgotten or stale).
 1a. Known holes (Schwachstellen, Dominik 2026-11-13; security checklist "known holes are checked before a version with
    new packages ships"): every package version that is new or changed against origin/main in app/requirements-*.lock
@@ -145,6 +150,52 @@ def changed_files(base):
     names = set(git("diff", "--name-only", mb).stdout.split())
     names |= set(git("ls-files", "--others", "--exclude-standard").stdout.split())
     return sorted(n for n in names if n)
+
+
+# 0a. what the nightly run never changes (fnmatch on the repo path)
+NIGHT_FILES = ("app/panel/core.py", "app/panel/guard.py", "app/panel/netguard.py", "app/panel/mfa.py",
+               "app/panel/static/js/mfa.js", "app/panel/stufen.py", "app/panel/profiles.py", "app/panel/features.py",
+               "app/panel/steckbrief.py", "app/panel/update.py", "app/panel/appupdate.py", "app/panel/geraeteupdate.py",
+               "app/panel/systemupdates.py", "app/tarswart.py", "app/tlstor.py", "app/llm_tor.py", "app/dockertor.py",
+               "app/config.default.json", "app/requirements-*", "app/restart-map", "install.sh", "update.sh",
+               "uninstall.sh", "app/*.sh", ".github/*", "tools/*")
+# 0a. what an added line of the nightly run never brings
+NIGHT_LINES = (("ein neuer Endpunkt", re.compile(r"@(router|app)\.(get|post|put|patch|delete|websocket)\(")),
+               ("ein neues Werkzeug", re.compile(r"[\"']type[\"']\s*:\s*[\"']function[\"']")),
+               ("eine neue Verbindung nach außen", re.compile(r"\b(netguard\.client|httpx\.|urllib\.request|urlopen\(|"
+                                                                 r"socket\.socket|requests\.(get|post))")),
+               ("ein neuer Steckbrief oder Schalter", re.compile(r"\bSteckbrief\(|steckbrief\.feature\(")),
+               ("ein neues Programm", re.compile(r"\b(subprocess|os\.system|os\.popen|eval\(|exec\()")))
+
+
+def night_findings(files, added):
+    """0a.: what the nightly run may not do, in fixed words. files: changed paths; added: the added lines (path, text)."""
+    import fnmatch
+    out = [f"{f}: gesperrte Datei" for f in files if any(fnmatch.fnmatch(f, g) for g in NIGHT_FILES)]
+    for path, line in added:
+        if not path.startswith("app/") or "/tests/" in path:
+            continue
+        for what, rx in NIGHT_LINES:
+            if rx.search(line):
+                out.append(f"{path}: {what}")
+    return sorted(set(out))
+
+
+def added_lines(base):
+    mb = git("merge-base", "HEAD", base).stdout.strip() or base
+    out, path = [], ""
+    for ln in git("diff", "-U0", mb).stdout.splitlines():
+        if ln.startswith("+++ "):
+            path = ln[6:] if ln.startswith("+++ b/") else ""
+        elif ln.startswith("+") and path:
+            out.append((path, ln[1:]))
+    for f in git("ls-files", "--others", "--exclude-standard").stdout.split():
+        try:
+            with open(os.path.join(ROOT, f), encoding="utf-8") as fh:
+                out += [(f, x) for x in fh.read().splitlines()]
+        except (OSError, UnicodeDecodeError):
+            out.append((f, ""))
+    return out
 
 
 def tests_for(files, tests_dir=TESTS):
@@ -367,7 +418,7 @@ def keep_durations(measured, fresh=()):
 
 
 def main(argv):
-    jobs, extra, only_list, base, rotfix = JOBS, [], False, "origin/main", False
+    jobs, extra, only_list, base, rotfix, night = JOBS, [], False, "origin/main", False, False
     i = 0
     while i < len(argv):
         a = argv[i]
@@ -377,6 +428,8 @@ def main(argv):
             only_list = True
         elif a == "--rotfix":
             rotfix = True
+        elif a == "--nachtlauf":
+            night = True
         elif a == "--basis" and i + 1 < len(argv):
             base, i = argv[i + 1], i + 1
         elif re.fullmatch(r"test_\w+", a) and os.path.exists(os.path.join(TESTS, a + ".py")):
@@ -390,6 +443,11 @@ def main(argv):
     if base == "origin/main" and not only_list:
         check_main(rotfix)
     files = changed_files(base)
+    if night:
+        found = night_findings(files, added_lines(base))
+        if found:
+            stop("Nachtlauf darf nur Fehler beheben, das hier wird ein Vorschlag an Dominik: " + "; ".join(found))
+        print("vorpush: Nachtlauf, nur Fehlerbehebung: ok", flush=True)
     names = pick(files, extra)
     print("vorpush: %d changed files, %d test modules: %s" % (len(files), len(names), " ".join(names)), flush=True)
     if only_list:

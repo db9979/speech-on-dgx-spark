@@ -21191,6 +21191,26 @@
         }
       }
     },
+    "Nicht belegt, bitte prüfen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not backed up, please check."
+          }
+        }
+      }
+    },
+    "Nochmal nachschauen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Look again"
+          }
+        }
+      }
+    },
     "Was soll besser werden?": {
       "localizations": {
         "en": {

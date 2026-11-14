@@ -5990,6 +5990,22 @@
 "text": "In der iPhone-App (Admin-Profil) Einstellungen → Spark verwalten → Schwachstellen. Oben steht ein Satz mit Ampel und „Zuletzt geprüft“, darunter die Funde nach „Was zu tun ist“ gruppiert. Einen Fund antippen: Schweregrad, Wo, Behoben in, Kennungen (öffnen osv.dev). „Bewusst hinnehmen …“ mit kurzem Grund: der Fund wandert nach unten unter „Bewusst hingenommen“; „Nicht mehr hinnehmen“ holt ihn zurück. „Als Issue melden“ legt ein Issue in spark-meldungen an, danach steht „Issue #N“. „Jetzt prüfen“ kurz nach einer Prüfung sagt „Eben erst geprüft“.",
 "thread": "Fehlende Seiten nativ in die iOS-App bringen",
 "test": "test_app_gleichstand.InTheApps.test_admin_vulnerabilities_in_the_app"
+},
+{
+"id": "P877",
+"v": 1432,
+"titel": "Nicht belegte Antwort markiert",
+"text": "Pi updaten. Admin: Funktionen → Tempo und Genauigkeit, unter „Antworten im Hintergrund prüfen“ „Nicht belegte Antworten markieren“ an. Im Chat eine Frage stellen, für die ein Werkzeug läuft und die es nicht genau beantworten kann (etwa „Was war meine letzte Bestellung bei Thomann?“). Hält die Prüfung die Antwort für erfunden, erscheint nach einigen Sekunden darunter „Nicht belegt, bitte prüfen.“ mit „Nochmal nachschauen“; Tippen stellt die Frage noch einmal, Logs zeigt „chat: nochmal nachschauen | Werkzeug Pflicht“. Auch in der iPhone-App nach dem nächsten TestFlight. Am Lautsprecher: nach der nächsten Antwort kommt einmal der Hinweissatz.",
+"thread": "Fehler und Wünsche als Issue melden",
+"test": "test_systemone.AntwortPruefen.test_unbelegt_marks_tells_and_reports"
+},
+{
+"id": "P878",
+"v": 1432,
+"titel": "Erfundenes automatisch melden",
+"text": "Pi updaten. Admin: Funktionen → Zugang, unter „Probleme melden“ „Erfundenes automatisch melden“ an. Nach einer als nicht belegt markierten Antwort liegt unter Ich → Probleme melden ein Bericht mit Frage, Antwort und Weg (oder mit „Antwort-Meldungen direkt an GitHub“ gleich ein Issue in spark-meldungen). Höchstens 3 am Tag.",
+"thread": "Fehler und Wünsche als Issue melden",
+"test": "test_systemone.AntwortPruefen.test_unbelegt_marks_tells_and_reports"
 }
 ]
 }

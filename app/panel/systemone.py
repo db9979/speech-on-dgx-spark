@@ -52,9 +52,10 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 
 import guard
 import llm
+import meldung
 from common import DayCounter, load_config
 from einordnung import MAX_OPTIONS, MAX_QUESTIONS, MAX_STATE, NAME, check_questions, clean_state  # noqa: F401  (the shared rules)
-from core import auth
+from core import assistant, auth, own_profile
 
 router = APIRouter()
 MODEL = "jev-latest"
@@ -382,8 +383,11 @@ _bg = set()                   # running background checks (a reference, so they 
 TOOL_NAME = re.compile(r"[a-z][a-z0-9_]{1,40}")
 
 
-def check_later(ccfg, tr, who, ask_text, said, calls, outside=False):
-    """Antworten im Hintergrund prüfen: schedules check_answer after a finished answer; never raises, never waits."""
+def check_later(ccfg, tr, who, ask_text, said, calls, outside=False, client="", aid=None):
+    """Antworten im Hintergrund prüfen: schedules check_answer after a finished answer; never raises, never waits.
+    Returns the id of the answer's mark (Nicht belegte Antworten markieren) when the page may ask for the result
+    (GET /api/answer/check), else None. `aid`: the answer kept for „Melden“ (meldung.keep_answer), for the report
+    „Erfundenes automatisch melden“ makes."""
     try:
         import asyncio
         import features
@@ -397,20 +401,24 @@ def check_later(ccfg, tr, who, ask_text, said, calls, outside=False):
                    and TOOL_NAME.fullmatch(str(c.get("name"))) and c.get("result")][:4]
         if not results or not str(said or "").strip() or "[Codewort]" in str(ask_text or ""):
             return None
-        task = asyncio.create_task(check_answer(ccfg, tr, who, ask_text, said, results, outside, quality=quality,
-                                                angriff=angriff))
+        mid = mark_start(who["id"]) if quality and features.allowed("unbelegt", who["id"], ccfg) else None
+        report = bool(aid) and quality and features.allowed("meldenerfunden", who["id"], ccfg)
+        task = asyncio.create_task(_check_and_mark(ccfg, tr, who, ask_text, said, results, outside, quality, angriff,
+                                                   mid, str(client or ""), aid if report else None))
         _bg.add(task)
         task.add_done_callback(_bg.discard)
-        return task
+        return mid if mid and str(client or "") not in VOICE_ONLY else None
     except Exception as e:
         print("systemone: Antwort prüfen nicht geplant", type(e).__name__, flush=True)
         return None
 
 
-async def check_answer(ccfg, tr, who, ask_text, said, results, outside=False, now=None, quality=True, angriff=False):
+async def check_answer(ccfg, tr, who, ask_text, said, results, outside=False, now=None, quality=True, angriff=False,
+                       seen=None):
     """The quality questions about one finished answer, as background work (vorrang: speech first). From CHECK_MIN
     on „erfunden“ the panel makes a case „Erfundenes vermutet“ (faelle.add); the model only gives the number.
-    With `angriff` also the attack question (check_angriff); its case comes first, it is the rarer one."""
+    With `angriff` also the attack question (check_angriff); its case comes first, it is the rarer one.
+    `seen` (a dict) gets the number as "p" when the question was asked."""
     case = await check_angriff(ccfg, tr, who, ask_text, said, results, now) if angriff else None
     if not quality:
         return case
@@ -427,11 +435,112 @@ async def check_answer(ccfg, tr, who, ask_text, said, results, outside=False, no
     except (Unavailable, vorrang.Busy, ValueError):
         return case
     p = ans["erfunden"]["yes"]
+    if seen is not None:
+        seen["p"] = p
     if p < CHECK_MIN or not faelle.wanted():
         return case
     found = faelle.add("erfunden", faelle.summary(tr, who, ask_text, said, outside, now), now=now)
     print(f"systemone: Antwort prüfen erfunden {p:.2f}, Fall angelegt", flush=True)
     return case or found
+
+
+# ---------------------------------------------------------------- Nicht belegte Antworten markieren
+# Issue 3 in spark-meldungen (Dominik 2026-11-14 „Ok“): the check above runs after the answer (never before it is
+# spoken). Its result for one answer is kept in memory only, ten minutes: the page asks for it once
+# (GET /api/answer/check, waits at most MARK_WAIT_S) and shows „Nicht belegt, bitte prüfen“ with „Nochmal
+# nachschauen“; a channel without a screen hears one fixed sentence after its next answer within MARK_SAY_S; with
+# „Erfundenes automatisch melden“ a report of the answer is made (meldung.create_answer), at most MARK_REPORTS a
+# day. Fixed rules on the number, never the model's words.
+MARK_KEEP_S, MARK_WAIT_S, MARK_SAY_S, MARK_REPORTS, MARK_MAX = 600, 60, 300, 3, 200
+MARK_ID = re.compile(r"[0-9a-f]{12}")
+VOICE_ONLY = ("speaker", "telefon", "car")   # channels that hear the answer and see no mark (tracelog.CLIENTS)
+SAY = ("Noch ein Hinweis: Meine letzte Antwort war nicht belegt. Frag lieber noch einmal nach.",
+       "One more note: my last answer was not backed up. Better ask once more.")
+_marks = {}                   # mid -> {"uid", "t", "ev": asyncio.Event, "res": None | "belegt" | "unbelegt" | "offen"}
+_say = {}                     # uid -> time of the last answer marked on a channel without a screen
+_reported = {}                # day -> reports made by „Erfundenes automatisch melden“
+
+
+def mark_start(uid, now=None):
+    import asyncio
+    import secrets
+    now = time.time() if now is None else now
+    mid = secrets.token_hex(6)
+    with _lock:
+        for k in [k for k, m in _marks.items() if now - m["t"] > MARK_KEEP_S]:
+            _marks.pop(k, None)
+        while len(_marks) >= MARK_MAX:
+            _marks.pop(next(iter(_marks)))
+        _marks[mid] = {"uid": uid, "t": now, "ev": asyncio.Event(), "res": None}
+    return mid
+
+
+def mark_done(mid, res):
+    with _lock:
+        m = _marks.get(mid)
+    if m and m["res"] is None:
+        m["res"] = res
+        m["ev"].set()
+
+
+def spoken_note(uid, english=False, now=None):
+    """The fixed sentence for a channel without a screen, once, when its last answer was marked within MARK_SAY_S."""
+    now = time.time() if now is None else now
+    with _lock:
+        t = _say.pop(uid, None)
+    return SAY[1 if english else 0] if t and now - t <= MARK_SAY_S else ""
+
+
+def _report_room(now):
+    day = time.strftime("%Y-%m-%d", time.localtime(now))
+    with _lock:
+        for k in [k for k in _reported if k != day]:
+            _reported.pop(k, None)
+        if _reported.get(day, 0) >= MARK_REPORTS:
+            return False
+        _reported[day] = _reported.get(day, 0) + 1
+    return True
+
+
+async def _check_and_mark(ccfg, tr, who, ask_text, said, results, outside, quality, angriff, mid, client, aid):
+    """aid: the kept answer when „Erfundenes automatisch melden“ is allowed (check_later), else None."""
+    import asyncio
+    seen = {}
+    try:
+        await check_answer(ccfg, tr, who, ask_text, said, results, outside, quality=quality, angriff=angriff,
+                           seen=seen)
+    finally:
+        made_up = seen.get("p", 0.0) >= CHECK_MIN
+        if mid and "p" not in seen:
+            mark_done(mid, "offen")
+            print("systemone: Antwort nicht geprüft", flush=True)
+        elif mid and made_up:
+            mark_done(mid, "unbelegt")
+            print("systemone: Antwort nicht belegt markiert", flush=True)
+        elif mid:
+            mark_done(mid, "belegt")
+            print("systemone: Antwort belegt", flush=True)
+        if mid and made_up and client in VOICE_ONLY:
+            with _lock:
+                _say[who["id"]] = time.time()
+    if not made_up or not aid:
+        return
+    if not _report_room(time.time()):
+        print("systemone: Erfundenes melden | Tagesgrenze", MARK_REPORTS, flush=True)
+        return
+    text = (f"Die Antwort-Prüfung hält diese Antwort für nicht belegt ({round(seen['p'] * 100)} %): sie nennt Angaben, "
+            "die weder in der Frage noch in den Werkzeug-Ergebnissen stehen.")
+    try:
+        d = await asyncio.to_thread(meldung.create_answer, who["id"], who.get("name") or "", meldung.channel_of(client),
+                                    aid, text)
+        sent = await meldung.direct(d, who["id"], meldung.channel_of(client))
+    except Exception as e:   # the answer is gone (24 hours) or the limits: the case in Fälle stays
+        print("systemone: Erfundenes melden | nicht angelegt", type(e).__name__, flush=True)
+        return
+    if sent.startswith("Er ist"):
+        print("systemone: Erfundenes melden | direkt", flush=True)
+    else:
+        print("systemone: Erfundenes melden | Entwurf", flush=True)
 
 
 def angriff_question():
@@ -649,3 +758,20 @@ async def admin_bench(request: Request):
 async def admin_bench_state():
     """The state of the measurement: how far, and the numbers of the last one (fixed group names and numbers)."""
     return bench_view()
+
+
+@router.get("/api/answer/check", dependencies=[Depends(assistant)])
+async def answer_check(request: Request, id: str = "", prof=Depends(own_profile)):
+    """Nicht belegte Antworten markieren: the check's result for one of the caller's own answers, waiting for it at
+    most MARK_WAIT_S. {"state": "belegt" | "unbelegt" | "offen"}; nothing is changed (GET)."""
+    import asyncio
+    guard.limit(request, "unbelegt", uid=prof["id"])
+    with _lock:
+        m = _marks.get(id) if MARK_ID.fullmatch(str(id or "")) else None
+    if not m or m["uid"] != prof["id"]:
+        raise HTTPException(404, "unknown answer")
+    try:
+        await asyncio.wait_for(m["ev"].wait(), MARK_WAIT_S)
+    except asyncio.TimeoutError:
+        pass
+    return {"state": m["res"] or "offen"}

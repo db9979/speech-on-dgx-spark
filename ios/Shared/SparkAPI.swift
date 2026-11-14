@@ -21,6 +21,7 @@ enum ChatEvent {
     case face(String)       // what the answer is doing, for the face: search, calendar, mail, home, memory, happy, error
     case rate(String)       // 👍/👎 may go under this answer (only when the profile's switch is on): its id
     case report(String)     // „Melden“ may go under this answer (meldung.py, Probleme melden frei): its id
+    case pruef(String)      // Nicht belegte Antworten markieren (systemone.py): the id to ask for the check's result
     case picture(job: String, prompt: String)   // a picture is painted for this answer (bilder.py): its job
     case more(kind: String, items: [MoreItem])  // the Spark's fixed sentences under the answer (saetze.py)
     case step(StepItem)     // Ablauf zeigen (ablauf.py): one tool of this answer, its readable name, ok and time
@@ -309,6 +310,16 @@ struct SparkAPI {
 
     static func object(_ data: Data) -> [String: Any] {
         (try? JSONSerialization.jsonObject(with: data) as? [String: Any]) ?? [:]
+    }
+
+    /// Nicht belegte Antworten markieren (GET /api/answer/check): the background check's result for one answer of this
+    /// profile, "belegt", "unbelegt" or "offen"; the Spark waits for it at most a minute.
+    func answerCheck(_ id: String) async -> String {
+        var r = request("api/answer/check?id=" + id)
+        r.timeoutInterval = 75
+        guard let (data, response) = try? await URLSession.shared.data(for: r), (try? Self.check(data, response)) != nil
+        else { return "offen" }
+        return Self.object(data)["state"] as? String ?? "offen"
     }
 
     func post(_ path: String, _ body: [String: Any]) async throws -> [String: Any] {
@@ -890,7 +901,8 @@ struct SparkAPI {
     }
 
     func chat(_ messages: [[String: Any]], car: Bool = false, attachment: Attachment? = nil,
-              speak: Bool = true, more: String? = nil, convo: String? = nil) -> AsyncThrowingStream<ChatEvent, Error> {
+              speak: Bool = true, recheck: Bool = false,
+              more: String? = nil, convo: String? = nil) -> AsyncThrowingStream<ChatEvent, Error> {
         AsyncThrowingStream { cont in
             let task = Task {
                 do {
@@ -909,6 +921,8 @@ struct SparkAPI {
                         if let m = more { body["more"] = m }
                         // the conversation: a yes or an answer to the Spark's question counts only in it (profiles.quelle)
                         if let c = convo { body["convo"] = c }
+                        // „Nochmal nachschauen“ under an answer marked „Nicht belegt“: the Spark makes a tool a must
+                        if recheck { body["recheck"] = true }
                         if let a = att { body["attachment"] = ["kind": a.kind, "name": a.name, "text": String(a.text.prefix(Reader.chatChars)),
                                                                 "cut": a.text.count > Reader.chatChars] }
                         if !ids.isEmpty { body["images"] = ids }
@@ -1019,6 +1033,10 @@ struct SparkAPI {
                             // only a short id of hex digits (meldung.keep_answer), never other text from the event
                             if let id = ev["id"] as? String, id.count == 12,
                                id.allSatisfy({ $0.isASCII && $0.isHexDigit }) { cont.yield(.report(id)) }
+                        case "pruef":
+                            // only a short id of hex digits (systemone.mark_start), never other text from the event
+                            if let id = ev["id"] as? String, id.count == 12,
+                               id.allSatisfy({ $0.isASCII && $0.isHexDigit }) { cont.yield(.pruef(id)) }
                         case "goto" where ev["to"] as? String == "fund":
                             // Finden: the search words as plain text (at most 120) and, for the Sofort-Karte, only an
                             // entry's number; opening it, the Spark checks again that it is the profile's own

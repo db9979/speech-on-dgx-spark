@@ -272,6 +272,23 @@ class Direct(unittest.TestCase):
         self.assertEqual(msgs[-1]["role"], "tool")
         self.assertTrue(text_of(evs).startswith("Ergebnis:"))
 
+    def test_look_again_makes_a_tool_a_must(self):
+        """„Nochmal nachschauen“ under an answer marked „Nicht belegt“ (systemone.py): the same question with
+        recheck, the first round must call a tool (tool_choice required) and gets the fixed sentence; only with the
+        switch, and a question without it stays as it was."""
+        p = profile("Nachschau1")
+        q = [{"role": "user", "content": "Was war meine letzte Bestellung bei Thomann?"}]
+        helpers.keep_chat(self, "unbelegt_mark", "systemone", "systemone_check", "berater")
+        for on, want in ((False, None), (True, "required")):
+            helpers.set_config(unbelegt_mark=on, systemone=on, systemone_check=on, berater=on)
+            helpers.LLM_CALLS.clear()
+            r = p.post("/api/chat", json={"messages": q, "recheck": True})
+            self.assertEqual(r.status_code, 200)
+            first = streamed()[0]
+            self.assertEqual(first.get("tool_choice"), want, on)
+            sysmsg = " ".join(str(m.get("content")) for m in first["messages"] if m["role"] == "system")
+            self.assertEqual("Nochmal nachschauen" in sysmsg or "Nochmal nachschauen" in json.dumps(first["messages"]), on)
+
     def test_off_for_a_blocked_profile_or_the_spark(self):
         p = profile("Direkt2")
         helpers.set_config(deny={"direct": [p.get("/api/whoami").json()["profile"]["id"]]})   # the admin blocks it
