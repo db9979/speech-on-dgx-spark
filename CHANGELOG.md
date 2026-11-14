@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older versions (V01.0.000 to V01.0.999 and the lines before version numbers): [CHANGELOG-V01.0.md](CHANGELOG-V01.0.md).
 
+- **V01.1.436** · 2026-11-14 · Fix E-Mail: unter dem Suchfeld lag ein leerer weißer Balken über den Spalten (die Vorschlagsliste blieb trotz „versteckt“ sichtbar); der Seitentest prüft jetzt, dass nichts Verstecktes sichtbar ist (P883)
 - **V01.1.435** · 2026-11-14 · iPhone-App: Lautsprecher nativ unter Einstellungen (Name, Lautstärke, Mikrofon, Updates von selbst, Raum-Modus, Test, Netz prüfen, Jetzt aktualisieren); Einrichten bleibt im Browser (P882)
 - **V01.1.434** · 2026-11-14 · Natürliches Gespräch, Paket A: beim Plaudern im Sprachmodus ein natürlicher Ton ohne „Kann ich sonst noch helfen?“ und ab und zu ein fester Hinweis aus eigenen Daten, der zum Gespräch passt (Termine, Wetter, Pakete, Einkaufsliste); ein „Ja“ sagt mehr (aus, je Profil abschaltbar, P881)
 - **V01.1.433** · 2026-11-14 · Zurückstellen (Idee aus pl_mail 2, Admin-Schalter, aus): „Später …“ (Taste H) legt eine Mail bis heute Abend, morgen früh, zum Wochenende, nächste Woche oder zu einer eigenen Zeit in den Ordner „Später“, dann kommt sie ungelesen oben in den Posteingang zurück, auch wenn der Schalter inzwischen aus ist; „Jetzt zurückholen“; auch am iPhone; dazu Fix: ✕ an Sendungen geht jetzt auch in der iPhone-App (P879, P880)

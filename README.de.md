@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.436** Fix: kein leerer weißer Balken mehr unter der Mail-Suche
 - **V01.1.435** iPhone-App: eigene Lautsprecher direkt in der App einstellen und prüfen
 - **V01.1.434** Natürliches Gespräch, Paket A: beim Plaudern im Sprachmodus ein natürlicher Ton und ab und zu ein fester Hinweis aus eigenen Daten, der zum Gespräch passt (Termine, Wetter, Pakete, Einkaufsliste); ein „Ja“ sagt mehr (aus, je Profil abschaltbar)
 - **V01.1.433** Zurückstellen: eine Mail bis heute Abend, morgen, Wochenende oder nächste Woche weglegen, sie kommt ungelesen oben zurück
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.429** Webseiten und HTML-Dateien als Markdown lesen: nur der Hauptteil ohne Menüs und Cookie-Hinweise, Überschriften, Listen und Tabellen bleiben (Idee aus get-md, Nano Collective)
 - **V01.1.428** Alles auch im Hochformat: am Handy unter Heute → Meine Seiten stehen Kalender, E-Mail, Listen, Offen, Kontakte, Wissensbuch, Finden, Mappen, Dungeon-Master und Open WebUI (vorher nur im Querformat erreichbar); das Menü der Rechner-Ansicht am Handy zeigt auch Profilen ihre Seiten
 - **V01.1.427** Schwachstellen, Paket 4: „Als Issue melden“ je Fund und auf der Prüfbitte-Karte (spark-meldungen, Label schwachstelle, je Kennung nur ein offenes Issue), „Erreichbar“ als fester Satz und „Bewusst hinnehmen“ für 30 Tage mit Grund
-- **V01.1.426** E-Mail: bis zu 3 Sendungen über dem Posteingang mit Verfolgen-Link, ein Bestätigungscode verschwindet, wenn er laut Mail abläuft
 
 
 

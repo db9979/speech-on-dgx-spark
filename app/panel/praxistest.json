@@ -6037,6 +6037,14 @@
 "text": "In der iPhone-App Einstellungen → Lautsprecher (mit freigegebenen eigenen Lautsprechern). Die Liste zeigt jeden eigenen Lautsprecher mit Board und grünem Punkt, wenn er verbunden ist. Einen antippen: Name ändern, Lautstärke schieben (der Lautsprecher wird sofort leiser oder lauter), Mikrofon umstellen. „Test“ sagt einen Testsatz, „Netz prüfen“ zeigt die Ergebnisse mit Haken. Unter Einstellungen → Im Panel öffnen führt „Lautsprecher“ jetzt direkt hierher.",
 "thread": "Fehlende Seiten nativ in die iOS-App bringen",
 "test": "test_iphone_panel.Things.test_speakers_from_the_app"
+},
+{
+"id": "P883",
+"v": 1436,
+"titel": "Kein leerer Balken unter der Mail-Suche",
+"text": "Pi updaten. E-Mail öffnen: unter dem Suchfeld liegt kein leerer weißer Balken mehr über Postfächern, Posteingang und Lesebereich. „vor:“ ins Suchfeld tippen: die Vorschläge erscheinen, mit Esc verschwinden sie ganz.",
+"thread": "Mail mit Ideen aus pl_mail verbessern",
+"test": "test_post_seite.Page.test_search_offers_marks_why_and_mailbox_state"
 }
 ]
 }

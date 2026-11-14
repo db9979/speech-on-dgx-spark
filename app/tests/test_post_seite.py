@@ -342,6 +342,8 @@ class Page(Fake):
                     await pg.evaluate("MAIL_ON=true;ORD_ON=true;postStart({profile:PROFILE,mail:true});icTabSet('post','show');goSec('post')")
                     await b.until(pg, "!POST.busy&&!!POST.data&&document.querySelectorAll('#postview .ld-row').length===2")
                     split = await pg.evaluate("document.querySelector('#postview .ld-split').getBoundingClientRect().top")
+                    # nothing marked hidden shows (Dominik 2026-11-14: an empty suggestion box lay over the columns)
+                    self.assertEqual(await pg.evaluate("[...document.querySelectorAll('#postview [hidden]')].filter(x=>getComputedStyle(x).display!=='none').map(x=>x.className)"), [])
                     await pg.click("#postview [data-k=q]")
                     await pg.keyboard.type("betr")
                     await b.until(pg, "!document.querySelector('#postview .postqsug').hidden")
@@ -354,6 +356,7 @@ class Page(Fake):
                     await b.until(pg, "document.querySelector('#postview .postqsug').textContent.includes('von:shop@example.de')")
                     await pg.keyboard.press("Escape")
                     await b.until(pg, "document.querySelector('#postview .postqsug').hidden")
+                    self.assertEqual(await pg.evaluate("getComputedStyle(document.querySelector('#postview .postqsug')).display"), "none")
                     # found words marked, a subject's markup stays text
                     await pg.evaluate("POST.q='auto';postDraw()")
                     self.assertEqual(await pg.evaluate("[...document.querySelectorAll('#postview .ld-row mark')].map(m=>m.textContent)"), ["Auto"])
