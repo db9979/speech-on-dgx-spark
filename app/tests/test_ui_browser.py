@@ -607,16 +607,16 @@ class Browser(unittest.TestCase):
         async def go():
             async with async_playwright() as p:
                 br, pg, errors = await self.page(p, 1280, 900)
-                self.assertFalse(await pg.evaluate("TR_ON"))
+                self.assertFalse(await pg.evaluate("TG_ON"))
                 await pg.evaluate("window.__same=1")
-                await pg.evaluate("""(async()=>{const c=await (await api('/api/config')).json();c.chat.transit=true;
+                await pg.evaluate("""(async()=>{const c=await (await api('/api/config')).json();c.chat.telegram=true;
                   const r=await api('/api/config',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(c)});
                   window.putOk=!!(r&&r.ok)})()""")
                 await self.until(pg, "WHO_PENDING===true", 20)
                 self.assertEqual(await pg.evaluate("window.__same"), 1)   # the open page stayed
                 async with pg.expect_navigation():
                     await pg.evaluate("goSec('prof')")
-                await self.until(pg, "typeof TR_ON!=='undefined'&&TR_ON", 20)   # was a fixed 800 ms (red on GitHub)
+                await self.until(pg, "typeof TG_ON!=='undefined'&&TG_ON", 20)   # was a fixed 800 ms (red on GitHub)
                 old_p, old_a = panel.app_version, account.app_version
                 panel.app_version = account.app_version = lambda: "V99.0.1"
                 try:
@@ -633,7 +633,7 @@ class Browser(unittest.TestCase):
         try:
             self.run_async(go())
         finally:
-            helpers.set_config(transit=False)
+            helpers.set_config(telegram=False)
 
     def test_wer_darf_was_name_jumps_to_its_switch(self):
         """V01.0.398 (Dominik: the click on a function did not load right): the name under Gesperrte Funktionen opens
@@ -3107,7 +3107,7 @@ class Browser(unittest.TestCase):
         import features
         import profiles
         me = next(u["id"] for u in profiles._load()["users"] if u["name"] == "Uitest")
-        helpers.set_config(weather=True, transit=False)
+        helpers.set_config(weather=True, telegram=False)
 
         def denied():
             return {k: v for k, v in (features.chat_cfg().get("deny") or {}).items() if me in v}
@@ -3115,12 +3115,12 @@ class Browser(unittest.TestCase):
         async def go():
             async with async_playwright() as p:
                 for name, w, h in VIEWS + (("klein", 320, 640),):
-                    helpers.set_config(deny={"weather": [me], "transit": [me]})
+                    helpers.set_config(deny={"weather": [me], "telegram": [me]})
                     br, pg, errors = await self.page(p, w, h)
                     await pg.evaluate("goSec('prof')")
                     await pg.wait_for_selector("#whobox .wrow")
                     rows = await pg.evaluate("[...document.querySelectorAll('#whobox .wrow .wname')].map(x=>x.textContent)")
-                    self.assertEqual(sorted(rows), ["Bus und Bahn", "Wetter"], name)   # nothing else is blocked
+                    self.assertEqual(sorted(rows), ["Telegram", "Wetter"], name)   # nothing else is blocked
                     self.assertEqual(await pg.evaluate("document.querySelectorAll('#whobox .wchip').length"), 2, name)
                     self.assertFalse(await pg.evaluate("!!document.querySelector('#whobox table,#whobox [aria-label*=\"Spark\"]')"), name)
                     over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
@@ -3128,9 +3128,9 @@ class Browser(unittest.TestCase):
                     # a chip lifts the block for that profile: its row goes, the Spark holds it
                     await pg.click("#whobox .wchip[aria-label^='Wetter – Uitest']")
                     await self.until(pg, "!document.querySelector(\"#whobox .wchip[aria-label^='Wetter – Uitest']\")")
-                    self.assertEqual(set(denied()), {"transit"}, name)
-                    # transit is off on the Spark: its block still shows and lifts
-                    await pg.click("#whobox .wchip[aria-label^='Bus und Bahn – Uitest']")
+                    self.assertEqual(set(denied()), {"telegram"}, name)
+                    # Telegram is off on the Spark: its block still shows and lifts
+                    await pg.click("#whobox .wchip[aria-label^='Telegram – Uitest']")
                     await pg.wait_for_selector("#whobox .wempty")
                     self.assertEqual(denied(), {}, name)
                     self.assertIn("Kein Profil ist gesperrt. Sperren setzt du in der Funktion unter „Wer darf es“.",
@@ -3722,7 +3722,7 @@ class Browser(unittest.TestCase):
         """Phase 4 (V01.0.270): what the admin switched off stays visible under Ich, locked with the reason, and Ich
         names the functions the admin has not switched on."""
         # (the profile's own manner of a function, here "Rückfrage ohne Weckwort"; release switches per profile are gone)
-        helpers.set_config(follow_up=False, transit=False)
+        helpers.set_config(follow_up=False, telegram=False)
         async def go():
             async with async_playwright() as p:
                 for name, w, h in VIEWS:
@@ -3731,7 +3731,7 @@ class Browser(unittest.TestCase):
                     await pg.wait_for_selector("#setbox .melocked")
                     rows = await pg.evaluate("[...document.querySelectorAll('#setform .setrow.locked')].map(r=>r.querySelector('b').textContent+'|'+(r.querySelector('.why')||{}).textContent+'|'+r.querySelector('input,select,textarea').disabled)")
                     self.assertIn("Rückfrage ohne Weckwort|Vom Admin ausgeschaltet|true", rows, name)
-                    self.assertIn("Bus und Bahn", await pg.inner_text("#setbox .melocked"), name)
+                    self.assertIn("Telegram", await pg.inner_text("#setbox .melocked"), name)
                     self.assertTrue(await pg.is_visible("#setbox .melocked button"), name)   # this browser is admin too
                     self.assertEqual(errors, [], name)
                     await br.close()

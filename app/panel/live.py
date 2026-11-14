@@ -67,7 +67,7 @@ TOOLS = {
     # notes the Spark sends (push.py) and what it says by itself (proactive.py, live.note)
     "reMarkable": "rm",
     # what the Spark does by itself with services (live.job): update check, backup to the NAS
-    "GitHub": "github", "NAS-Sicherung": "nas", "Feeds": "feeds", "Geräte-Updates": "geraete", "System-Updates": "systemupdate",
+    "GitHub": "github", "NAS-Sicherung": "nas", "Geräte-Updates": "geraete", "System-Updates": "systemupdate",
     "Speicher-Abgleich": "speicher", "Speicher holen": "speicher", "Meine Daten packen": "mem", "Wissensordner-Abgleich": "nasquelle",
     "Ablage-Eingang": "nasablage", "Ablegen": "nasablage",
     # Docling-Server (doclingdienst.py): a document read a second time in a quiet moment
@@ -105,9 +105,7 @@ TARGETS = {
     "contacts": ("Kontakte", "CardDAV · Internet", "net", False),
     "wiki": ("Wikipedia", "HTTPS · Internet", "net", False),
     "weather": ("Wetter", "HTTPS · Internet", "net", False),
-    "transit": ("Bahn", "HTTPS · Internet", "net", False),
     "parcels": ("Pakete", "HTTPS · Internet", "net", False),
-    "feeds": ("Feeds", "Reddit und RSS · Internet", "net", False),
     "rm": ("reMarkable", "Cloud · Internet", "net", True),
     "push": ("Apple Push", "APNs · Internet", "net", True),
     "hilfe": ("Spark-Hilfe", "Anleitungen · auf dem Spark", "spark", False),
@@ -218,7 +216,7 @@ TARGETS = {
 }
 RETURNS = {"cal": "Termine oder Aufgaben", "ha": "Zustände oder Schaltung", "web": "Suchergebnisse", "pages": "Seitentext", "kiwix": "Archiv-Treffer",
            "wiki": "Artikel", "mail": "Mails (nur Anzahl und Größe)", "contacts": "Kontakte", "rm": "Ablage", "push": "Zustellung",
-           "weather": "Wetterwerte", "parcels": "Sendungen", "transit": "Verbindungen", "feeds": "Beiträge", "mem": "eigene Daten",
+           "weather": "Wetterwerte", "parcels": "Sendungen", "mem": "eigene Daten",
            "hilfe": "Anleitungen oder Vorschlagskarte", "webpush": "Zustellung", "tg": "Zustellung",
            "android": "liegt bereit", "desk": "liegt bereit", "page": "liegt bereit",
            "github": "Stand und Testergebnis", "nas": "Ablage bestätigt", "speicher": "Ablage bestätigt oder Datei geholt", "nasquelle": "Ordnerliste und Dateien", "nasablage": "Ablage bestätigt oder Datei geholt", "naszustand": "Belegung und Zustand in Zahlen", "docling": "Text des Dokuments", "mcp": "Antwort des Dienstes",
@@ -1061,8 +1059,8 @@ def _num(v):
 # Dominik 2026-10-12: a target that is not set up (its function off, no address, no profile connected) is not shown
 # at all, not even in "+ N ruhig"; once a request goes there it shows like any used target
 SETUP = {"web": "search", "cal": "calendar", "mail": "mail", "ha": "ha", "kiwix": "kiwix", "rm": "remarkable",
-         "push": "iphonepush", "wiki": "wiki", "weather": "weather", "transit": "transit", "parcels": "parcels", "feeds": "feeds", "tg": "telegram"}
-SETUP_FILE = {"cal": "calendar.json", "mail": "mail.json", "ha": "homeassistant.json", "rm": "remarkable.json", "feeds": "feeds.json"}
+         "push": "iphonepush", "wiki": "wiki", "weather": "weather", "parcels": "parcels", "tg": "telegram"}
+SETUP_FILE = {"cal": "calendar.json", "mail": "mail.json", "ha": "homeassistant.json", "rm": "remarkable.json"}
 _unset = [0.0, frozenset()]
 
 

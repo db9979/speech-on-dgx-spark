@@ -1,7 +1,7 @@
 """Notaus (kill switch, plan plaene/notaus.md, V01.0.31x): three stages that stop the Spark from the outside in.
 
     1 "Außen zu"    nothing from the internet (reverse proxy, MCP from outside, Telegram), and the Spark itself
-                    reaches nothing on the internet (netguard, web search, weather, transit, Wikipedia, parcels,
+                    reaches nothing on the internet (netguard, web search, weather, Wikipedia, parcels,
                     reMarkable, firmware and app downloads); the home network goes on as before
     2 "Hände weg"   stage 1, and no actions: smart home, mail changes, messages, reminders and appointments,
                     lists, reMarkable, MCP actions, memory; agent jobs are held, "Von selbst", briefings, mail
@@ -69,7 +69,7 @@ KINDS = (("aussen", "Zugriffe von außen (Internet, Proxy, MCP von außen)", "Ac
 
 # Tools the model may not use from a stage on (chat_tools / chat_turn): stage 1 the ones that go to the internet
 # by themselves (fixed services, not through netguard), stage 2 every tool that changes something.
-INTERNET_TOOLS = {"web_search", "weather", "transit", "wikipedia", "article_more", "parcels", "read_page", "link_als_dokument"}
+INTERNET_TOOLS = {"web_search", "weather", "wikipedia", "article_more", "parcels", "read_page", "link_als_dokument"}
 # the to-do change of Home Assistant is decided in chat_tools (the same tool also reads)
 BLOCKED = ("Not done: the Notaus (emergency stop) is on and holds this off. Tell the user exactly that in one "
            "sentence: the Notaus blocks it until an admin switches it off. Do not try again, do not offer a workaround.")

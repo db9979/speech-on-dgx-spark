@@ -165,7 +165,6 @@ DIRECT_OK = {
     "telegram": ("fest", "Telegram-Bot-API und eigene Sprachdienste auf localhost"),
     "tidy": ("sprachmodell", "Sprachmodell"),
     "tonteile": ("sprachmodell", "eigene Sprachausgabe über common.model_url (Vorlesen im Dungeon, Hörstück)"),
-    "transit": ("fest", "Fahrplan-Dienst (chat.transit_url)"),
     "update": ("fest", "Update-Prüfung bei GitHub"),
     "vorrang": ("sprachmodell", "Sprachmodell und eigene Sprachdienste"),
     "weather": ("fest", "Wetter-Dienst (chat.weather_url, chat.geocode_url)"),

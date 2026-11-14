@@ -295,14 +295,11 @@ struct Job: Identifiable, Hashable {
 
 @MainActor
 final class AutoModel: ObservableObject {
-    /// what the admin released for this profile (weather, parcels, transit): on for every profile at once
+    /// what the admin released for this profile (weather, parcels): on for every profile at once
     @Published var services: [String: Bool] = [:]
     @Published var place = ""
     @Published var placeInput = ""
     @Published var choices: [[String: Any]] = []
-    @Published var home = ""
-    @Published var stopInput = ""
-    @Published var stops: [(id: String, name: String)] = []
     @Published var parcels: [String] = []
     @Published var parcelNote: String?
     @Published var jobs: [Job] = []
@@ -318,9 +315,6 @@ final class AutoModel: ObservableObject {
         }
         if let w = try? await api.object("GET", "api/profile/weather") {
             place = (w["place"] as? [String: Any])?["name"] as? String ?? ""
-        }
-        if let t = try? await api.object("GET", "api/profile/transit") {
-            home = (t["home"] as? [String: Any])?["name"] as? String ?? ""
         }
         do {
             let p = try await api.object("GET", "api/profile/parcels")
@@ -366,26 +360,6 @@ final class AutoModel: ObservableObject {
             place = (d["place"] as? [String: Any])?["name"] as? String ?? place
             choices = Array((d["choices"] as? [[String: Any]] ?? []).prefix(8))
             sample = (d["sample"] as? String).flatMap { $0.isEmpty ? nil : String($0.prefix(1000)) }
-            error = nil
-        } catch { self.error = error.localizedDescription }
-    }
-
-    func findStops() async {
-        do {
-            let d = try await SparkAPI.current?.object("POST", "api/profile/transit/find", body: ["q": String(stopInput.prefix(80))])
-            stops = ((d?["stops"] as? [[String: Any]]) ?? []).prefix(10).compactMap { x in
-                guard let id = x["id"] as? String else { return nil }
-                return (id, x["name"] as? String ?? id)
-            }
-            error = stops.isEmpty ? String(localized: "Keine Haltestelle gefunden.") : nil
-        } catch { self.error = error.localizedDescription }
-    }
-
-    func setHome(_ id: String, _ name: String) async {
-        do {
-            let d = try await SparkAPI.current?.object("PUT", "api/profile/transit", body: ["home": ["id": id, "name": name]])
-            home = (d?["home"] as? [String: Any])?["name"] as? String ?? name
-            stops = []
             error = nil
         } catch { self.error = error.localizedDescription }
     }
@@ -445,22 +419,6 @@ struct AutoView: View {
                     if let n = m.parcelNote { Text(verbatim: n).font(.caption).foregroundStyle(.secondary) }
                 }
             } header: { Text("Pakete") }
-            Section {
-                if m.services["transit_on"] == false {
-                    Text(SparkAPI.way(String(localized: "Der Admin hat Bus und Bahn noch nicht freigegeben (Funktionen → Bus und Bahn).")))
-                        .foregroundStyle(.secondary)
-                } else if m.services["transit_on"] == true {
-                    if !m.home.isEmpty { LabeledContent("Haltestelle", value: m.home) }
-                    HStack {
-                        TextField("Haltestelle suchen", text: $m.stopInput)
-                        Button("Suchen") { Task { await m.findStops() } }.disabled(m.stopInput.trimmingCharacters(in: .whitespaces).count < 2)
-                    }
-                    ForEach(m.stops, id: \.id) { s in
-                        Button { Task { await m.setHome(s.id, s.name) } } label: { Text(verbatim: s.name) }
-                    }
-                    if !m.home.isEmpty { Button("Abfahrten ausprobieren") { Task { await m.test("api/profile/transit/test") } } }
-                }
-            } header: { Text("Bus und Bahn") }
             Section {
                 ForEach(m.jobs) { j in
                     NavigationLink { JobView(job: j) } label: {

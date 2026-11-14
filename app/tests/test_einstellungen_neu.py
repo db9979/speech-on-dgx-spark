@@ -643,7 +643,7 @@ class Frame(unittest.TestCase):
     def test_me_is_a_page_with_sections(self):
         """Ich → Gespräch: no tabs, the groups one below the other in boxes, no switch for what the admin releases (it
         works at once), what the admin switched off collected at the bottom; symbols in the column, no "Schließen"."""
-        helpers.set_config(routing=True, transit=False, wiki=False)
+        helpers.set_config(routing=True, telegram=False, wiki=False)
         async def go():
             async with async_playwright() as p:
                 br, pg, errors = await self.page(p, 1280, 900)

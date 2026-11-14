@@ -13,7 +13,7 @@ klasse() reads only the person's own latest message and the Weiche's groups. The
   1. small talk, a plain yes or no                                          -> ""
   2. asks for the web in so many words                                      -> extern
   3. names an own source („in meinen Unterlagen“, „laut Angebot“)            -> intern, the web left out of this answer
-  4. a group of the world (web search, weather, trains, feeds, Wikipedia; parcels without an own order)
+  4. a group of the world (web search, weather, Wikipedia; parcels without an own order)
                                                                             -> extern („Neuigkeiten von …“: the probe)
   5. a group of an action (smart home, iPhone, Spark …), unless a how-to question about the own device
                                                                             -> ""
@@ -60,10 +60,10 @@ LOCAL = re.compile(r"(?i)\b(mein\w* (dokument\w*|unterlage\w*|datei\w*|pdfs?|pap
 EXTERN = re.compile(r"(?i)\b(aktuell\w*|neueste\w*|neuste\w*|heute|heutige\w*|gestern|morgen|übermorgen|gerade|derzeit|"
                     r"zurzeit|momentan|diese[nrms]? (woche|monat|jahr)|letzte[nrms]? (woche|monat|nacht)|live|"
                     r"nachrichten|news|schlagzeile\w*|preis\w*|kostet|kurs\w*|aktie\w*|börse\w*|bitcoin|wahl\w*|"
-                    r"umfrage\w*|öffnungszeit\w*|geöffnet|stau\w*|verkehrslage|20[2-9]\d|latest|today|yesterday|"
+                    r"umfrage\w*|öffnungszeit\w*|geöffnet|stau\w*|verkehrslage|fahrplan\w*|abfahrt\w*|verspätung\w*|zug|züge|bahn|straßenbahn|bus|ice|20[2-9]\d|latest|today|yesterday|"
                     r"current\w*|price\w*|\w*kanzler\w*|präsident\w*|minister\w*|bürgermeister\w*|papst|"
                     r"weltmeister\w*|chancellor|president|prime minister|mayor)\b")
-WORLD_GROUPS = {"websuche", "wetter", "bahn", "feeds", "wikipedia"}
+WORLD_GROUPS = {"websuche", "wetter", "wikipedia"}
 # groups that read the person's own data
 OWN_GROUPS = {"mail", "kalender", "kontakt", "finden", "liste", "gedaechtnis", "nachricht", "mappe"}
 # groups the second stage reads at all; any other group is an action of the first stage

@@ -3,7 +3,7 @@ world or to both, and can it reach the right own sources?
 
 Each line: sentence -> expected class and the sources it needs ("+" between them):
     intern   only the person's own data (mail, anhang, dokument, termin, kontakt, chat, liste, wissensbuch)
-    extern   only the world outside (web: web search, weather, transit, Wikipedia, archive)
+    extern   only the world outside (web: web search, weather, Wikipedia, archive)
     beides   own data and the world (a timeless knowledge question: the quick look and the web with the own words)
 
 measure() runs every sentence through the decision path, with every switch released for the own profile in the own
@@ -120,8 +120,8 @@ TOOL_SOURCES = {
     "contacts_search": {"kontakt"},
     "history_search": {"chat"}, "message_read": {"chat"},
     "tasks_show": {"liste"}, "home_assistant_todo": {"liste"},
-    "web_search": {"web"}, "weather": {"web"}, "transit": {"web"}, "wikipedia": {"web"}, "archive_search": {"web"},
-    "article_more": {"web"}, "feeds_news": {"web"},
+    "web_search": {"web"}, "weather": {"web"}, "wikipedia": {"web"}, "archive_search": {"web"},
+    "article_more": {"web"},
 }
 # the quick look of „Erst lokal“ (lokal.look) for intern and beides, by the source it asks: Finden over every released
 # source (step 4), the documents, the earlier conversations; beides also the panel's web search with the own words

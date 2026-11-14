@@ -264,7 +264,7 @@ class CoAdmin(unittest.TestCase):
             self.assertEqual(c.request(method, "/api/admin/switches", json={"key": "weather", "on": False}).status_code, 403, method)
         self.assertTrue(features.chat_cfg()["weather"])
         # setting a block: refused, nothing written
-        r = c.put(f"/api/admin/features/transit/profiles/{kid}", json={"on": False})
+        r = c.put(f"/api/admin/features/telegram/profiles/{kid}", json={"on": False})
         self.assertEqual(r.status_code, 403, r.text)
         self.assertEqual(features.chat_cfg()["deny"], {"weather": [kid]})
         # lifting one: allowed, logged with who

@@ -1213,8 +1213,6 @@ SETTINGS = {
     "pro_parcel": (True, lambda v: isinstance(v, bool)),
     "pro_fuerdich": (True, lambda v: isinstance(v, bool)),   # Für dich: deadlines today or tomorrow and phishing (fuerdich.due_notes)
     "pro_rueckblick": (True, lambda v: isinstance(v, bool)),   # Wochenrückblick on Sundays at 18 o'clock (ichweiss.week_sentence)
-    "pro_transit": (True, lambda v: isinstance(v, bool)),
-    "pro_feeds": (True, lambda v: isinstance(v, bool)),     # replies and keyword hits from Reddit und Feeds (feeds.py)
     "pro_tips": (True, lambda v: isinstance(v, bool)),     # one hint on a function a week (tipps.py, chat.feature_tips_push)
     "voice_tips": (True, lambda v: isinstance(v, bool)),   # one example sentence a day at speakers (saetze.py, chat.feature_sentences_voice)
     "talk_hints": (True, lambda v: isinstance(v, bool)),   # Natürliches Gespräch: tone and hints while talking (gespraech.py, chat.gespraech)
@@ -1237,10 +1235,10 @@ SETTINGS = {
     "berater_note": (True, lambda v: isinstance(v, bool)),
     "berater_skip": ([], lambda v: isinstance(v, list) and len(v) <= 20 and all(isinstance(x, str) and re.fullmatch(r"p[a-z]{1,6}", x) for x in v)),
     "android_live": (True, lambda v: isinstance(v, bool)),  # ... with a lasting connection: notes at once
-    # Uhr: Schnellbefehle (pebblewatch.py, admin chat.pebble_quick): the profile's own fixed sentences on the watch
+    # Uhr: Schnellbefehle (pebblewatch.py, admin chat.pebble): the profile's own fixed sentences on the watch
     "peb_cmds": ([], lambda v: isinstance(v, list) and len(v) <= 12 and all(
         isinstance(x, str) and 0 < len(x) <= 60 and x == x.strip() and not re.search(r"[\x00-\x1f\x7f]", x) for x in v)),
-    # Uhr: Fernbedienung (pebblewatch.py, admin chat.pebble_remote): the Home Assistant devices picked for the watch
+    # Uhr: Fernbedienung (pebblewatch.py, admin chat.pebble): the Home Assistant devices picked for the watch
     "peb_fern": ([], lambda v: isinstance(v, list) and len(v) <= 12 and all(
         isinstance(x, str) and re.fullmatch(r"[a-z0-9_]{1,64}\.[a-z0-9_]{1,200}", x) for x in v)),
     "report_notify": (True, lambda v: isinstance(v, bool)),   # an admin profile hears of a new report (meldung.tell_admins)
@@ -1292,7 +1290,7 @@ GONE = frozenset((
     "direct_read", "doc_brief", "doc_make", "doc_make_templates", "doc_make_wikipics", "doc_originals",
     "doc_pictures", "doc_semantic", "doc_shared", "esp_on", "esp_stop", "fix_learn", "images_on", "instant_ack",
     "kiwix_on", "klaeren", "klaeren_merken", "local_first", "mcps_on", "mem_ask", "mem_check", "mem_topics",
-    "msg_announce", "my_status", "mymcp_on", "par_on", "pebble_on", "prefetch", "pro_ha_voice", "rate_on",
+    "msg_announce", "my_status", "mymcp_on", "par_on", "pebble_on", "prefetch", "pro_feeds", "pro_ha_voice", "pro_transit", "rate_on",
     "report_on", "rm_ask", "rm_folders", "rm_fresh", "rm_guide", "rm_meet", "rm_on", "rm_paper", "rm_send",
     "rm_todo", "rm_web", "roles_on", "room_remote", "route", "spark_help", "spk_code", "storage_on", "svc_hint",
     "sync_live", "sync_offline", "sync_one", "systemone_on", "tagebuch_on", "tasks_on", "tips_on", "tool_think",

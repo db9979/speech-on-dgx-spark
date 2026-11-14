@@ -23,10 +23,10 @@ def save(**chat):
 
 class Undo(unittest.TestCase):
     def setUp(self):
-        helpers.set_config(weather=False, transit=False)
+        helpers.set_config(weather=False, telegram=False)
 
     def tearDown(self):
-        helpers.set_config(weather=False, transit=False)
+        helpers.set_config(weather=False, telegram=False)
 
     def test_change_kept_and_undone(self):
         x = save(weather=True)
@@ -42,10 +42,10 @@ class Undo(unittest.TestCase):
         self.assertEqual(items[0]["changes"], [{"k": "chat.weather", "old": True, "new": False}])  # the undo itself
 
     def test_a_value_changed_since_stays(self):
-        x = save(weather=True, transit=True)
-        save(transit=False)
+        x = save(weather=True, telegram=True)
+        save(telegram=False)
         r = ADMIN.post(f"/api/admin/undo/{x['id']}").json()
-        self.assertEqual((r["undone"], r["kept"]), (["chat.weather"], ["chat.transit"]))
+        self.assertEqual((r["undone"], r["kept"]), (["chat.weather"], ["chat.telegram"]))
         y = save(weather=True)
         save(weather=False)
         self.assertEqual(ADMIN.post(f"/api/admin/undo/{y['id']}").status_code, 409)     # nothing left to undo

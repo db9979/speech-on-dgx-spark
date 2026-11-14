@@ -1407,7 +1407,8 @@
 "v": 678,
 "titel": "Hinweis auf neue XiaoZhi-Version",
 "text": "Nach dem Update auf dem Pi: Personen und Geräte → Lautsprecher zeigt keinen Fehler TooLarge mehr, eine neue XiaoZhi-Version wird gemeldet.",
-"thread": "XiaoZhi-Prüfung meldet TooLarge"
+"thread": "XiaoZhi-Prüfung meldet TooLarge",
+"erledigt": true
 },
 {
 "id": "P225",
@@ -1610,7 +1611,8 @@
 "v": 739,
 "titel": "Reddit und Feeds verbinden",
 "text": "A: Funktionen → Reddit und Feeds einschalten. P: Ich → Reddit und Feeds öffnen, auf reddit.com unter Einstellungen → RSS-Feeds den privaten Link „Posteingang“ kopieren, einfügen, „Verbinden“ (Code eingeben): der Posteingang steht mit „zuletzt geholt“ da. r/LocalLLaMA hinzufügen und ein Stichwort wie „DGX Spark“ eintragen. Unter „Zuletzt gekommen“ stehen Titel mit Link. Im Chat „Was gibt's Neues auf Reddit?“ fragen: kurze Zusammenfassung. Jemanden auf einen eigenen Kommentar antworten lassen: höchstens 30 Minuten später kommt „Neu in deinem Reddit-Posteingang …“ als Mitteilung. „Alles löschen“ leert die Seite.",
-"thread": "Reddit-Konto verbinden"
+"thread": "Reddit-Konto verbinden",
+"erledigt": true
 },
 {
 "id": "P254",
@@ -6061,6 +6063,14 @@
 "text": "Funktionen → Natürliches Gespräch ist an. Mit dem Mikrofon fragen: „Wie wird das Wetter heute?“ Am Ende der Antwort kommt „Soll ich dir auch sagen, was heute noch im Kalender steht?“; „Ja“ sagt die Termine. Dann „Was gibt’s Neues?“ sagen: sofort (ohne Denkpause des Modells) kommen zwei bis vier kurze Sätze zu Terminen, Wetter, Paketen und Einkaufsliste und „Worüber soll ich mehr erzählen?“; „Das Wetter“ sagt das Wetter. „Was gibt es Neues in der Welt?“ geht weiter an die Websuche. Getippt kommt kein Überblick.",
 "thread": "Natürlichere Gespräche im Sprachmodus",
 "test": "test_gespraech.Ueberblick.test_fixed_overview_and_a_word_picks_the_kind"
+},
+{
+"id": "P886",
+"v": 1439,
+"titel": "Ausgedünnt: Pebble-Uhr ein Schalter, Bus und Bahn, Feeds, Zifferblatt und XiaoZhi-Hinweis weg",
+"text": "Pi updaten. Funktionen → Pebble-Uhr koppeln: darunter steht nur noch „Uhr: Schritte, Puls und Schlaf“. Mit „Pebble-Uhr koppeln“ an auf der Uhr Schnellbefehle (lang OBEN), Mein Tag, Merken, Nachrichten und Fernbedienung durchgehen: alles da, ohne weitere Schalter. Unter Funktionen gibt es Bus und Bahn, Reddit und Feeds, Neues aus Feeds melden, Spark-Zifferblatt, Uhr: Meldungen für Admins und Hinweis auf neue XiaoZhi-Version nicht mehr; Ich → Pebble-Uhr zeigt nur einen QR-Code. „Wann fährt der nächste Zug nach München?“ sucht im Web.",
+"thread": "Spark ausdünnen und zusammenführen",
+"test": "test_pebble.Pebble.test_the_watchface_is_gone"
 }
 ]
 }

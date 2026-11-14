@@ -1,5 +1,5 @@
 """Geräte-Updates (plan plaene/firmware-verteilen.md): an overview of what the Spark keeps for the devices,
-a note when a new version is there, the speakers updated at night and a note when XiaoZhi has a new version.
+a note when a new version is there and the speakers updated at night.
 
 What the devices get comes only from the modules that already fetch and check it, each from GitHub's own
 download addresses with size and SHA-256 from its release's manifest: speaker firmware (esp32.py, fw-…),
@@ -19,15 +19,13 @@ only version numbers that match VERSION.
   back stops the round for this version: owner and admin get a note, the rest waits until the admin says
   "Weiter verteilen" in Zustand. Nothing restarts during a Notaus, the profile's own Notaus, a Spark update,
   a conversation, room mode or a test at that speaker.
-- XiaoZhi (admin chat.dev_updates_upstream): the newest release of github.com/78/xiaozhi-esp32 compared with
-  the version our firmware builds on; one note to the admin per new version. Nothing is built by itself.
 
 Off until the admin switches chat.dev_updates on (Funktionen → Geräte-Updates); then for every profile the
 admin did not block; guests never. The language model has no tool for any of this.
 
     STATE/geraete-updates.json  {"seen": {kind: version}, "due": {kind: {"v", "uids", "admin"}}, "checked": t,
-                                 "night": {...}, "upstream": {"version", "told", "checked", "error"}}
-    GET  /api/admin/devup                 overview of all devices, night round, XiaoZhi
+                                 "night": {...}}
+    GET  /api/admin/devup                 overview of all devices, night round
     POST /api/admin/devup/check           look for new versions now (all kinds), at most every CHECK_GAP
     POST /api/admin/devup/night/resume    the stopped night round may go on
 """
@@ -58,10 +56,7 @@ NIGHT_LEN = 60 * 60        # the window's length after chat.dev_updates_night_at
 BACK_WAIT = 10 * 60        # a restarted speaker must be back with the new version within this
 REST_GAP = 30 * 60         # after the first speaker came back: this long until the others
 QUIET = 10 * 60            # a speaker used this lately is left for now
-UPSTREAM = "78/xiaozhi-esp32"
-UPSTREAM_MAX = 4 * 1048576  # GitHub's release answer lists every asset (XiaoZhi: one zip per board, far over 256 KB)
 VERSION = re.compile(r"\d{1,4}(\.\d{1,4}){0,3}")
-TAG = re.compile(r"v?(\d{1,4}(?:\.\d{1,4}){1,3})")
 HHMM = re.compile(r"([01]\d|2[0-3]):[0-5]\d")
 MAX_UIDS = 500
 LIVE_CACHE = 10
@@ -82,10 +77,6 @@ def admin_on():
 
 def night_on():
     return features.admin_on("geraetenacht")
-
-
-def upstream_on():
-    return features.admin_on("xiaozhihinweis")
 
 
 def vt(v):
@@ -121,7 +112,7 @@ def _read():
         d = {}
     if not isinstance(d, dict):
         d = {}
-    for k in ("seen", "due", "night", "upstream"):
+    for k in ("seen", "due", "night"):
         if not isinstance(d.get(k), dict):
             d[k] = {}
     return d
@@ -261,16 +252,12 @@ def overview(uid=None, now=None):
            "night": {"on": night_on(), "at": night_at(), "version": n.get("version", ""), "ok": len(n.get("ok") or []),
                      "pending": len(n.get("pending") or {}), "stopped": bool(n.get("stopped")),
                      "failed": n.get("failed_name", "") if not uid else ""}}
-    if not uid:
-        u = st["upstream"]
-        out["upstream"] = {"on": upstream_on(), "version": u.get("version", ""), "base": base_version(),
-                           "checked": int(u.get("checked") or 0) or None, "error": bool(u.get("error"))}
     return out
 
 
 # ---------------------------------------------------------------- looking for new versions
-async def check_all(c=None, now=None):
-    """Asks every module that fetches something for devices (only the ones that are on), and XiaoZhi."""
+async def check_all(now=None):
+    """Asks every module that fetches something for devices (only the ones that are on)."""
     import live
     if notaus.blocks("internet"):
         return {"ok": False, "why": "notaus"}
@@ -290,51 +277,12 @@ async def check_all(c=None, now=None):
             import begleiter
             for p in begleiter.platforms():
                 await begleiter.check(p)    # "noch keine Version" is no failure here
-        if upstream_on() and await check_upstream(c):
-            bad.append("xiaozhi")
         ok = not bad
         _change(lambda d: d.update(checked=now or time.time()))
         if bad:
             print("geraeteupdate: check failed for", ", ".join(bad), flush=True)
         live.job("Geräte-Updates", "Geräte-Updates", t0, ok, code="_".join(bad)[:30])
         return {"ok": ok}
-
-
-def base_version():
-    """The XiaoZhi version our speaker firmware builds on: its version without our build number."""
-    import esp32
-    v = _clean((esp32.manifest() or {}).get("version"))
-    parts = v.split(".")
-    return ".".join(parts[:-1]) if len(parts) >= 2 else ""
-
-
-async def check_upstream(c=None):
-    """The newest XiaoZhi release (version number only). Returns the error or ""."""
-    import ghtoken
-    import netguard
-    api = os.environ.get("SPEECH_SPARK_GITHUB_API", "https://api.github.com")
-    err, ver = "", ""
-    try:
-        if c is not None:
-            r = await ghtoken.get(c, f"{api}/repos/{UPSTREAM}/releases/latest")
-        else:
-            async with netguard.client(netguard.PUBLIC, max_bytes=UPSTREAM_MAX, timeout=20, follow_redirects=False) as cl:
-                r = await ghtoken.get(cl, f"{api}/repos/{UPSTREAM}/releases/latest", headers={"Accept": "application/vnd.github+json"})
-        r.raise_for_status()
-        m = TAG.fullmatch(str((r.json() or {}).get("tag_name", "")))
-        if not m:
-            raise ValueError("unknown version")
-        ver = m.group(1)
-    except Exception as e:
-        err = type(e).__name__
-        print("geraeteupdate: XiaoZhi check failed:", err, flush=True)
-
-    def keep(d):
-        d["upstream"].update(checked=time.time(), error=err)
-        if ver:
-            d["upstream"]["version"] = ver
-    _change(keep)
-    return err
 
 
 # ---------------------------------------------------------------- notes
@@ -438,30 +386,6 @@ def _admin_uid():
         return coadmin.main_uid()
     except Exception:
         return ""
-
-
-async def upstream_note():
-    """One note to the admin per new XiaoZhi version newer than our base."""
-    if not upstream_on():
-        return 0
-    st = _read()["upstream"]
-    v, base = st.get("version", ""), base_version()
-    if not v or not base or not newer(v, base) or st.get("told") == v:
-        return 0
-    uid = _admin_uid()
-    if not uid or notaus.blocks("auto", uid):
-        return 0
-    import live
-    import push
-    try:
-        await push.send(uid, "🛠 XiaoZhi " + v + " ist erschienen",
-                        f"Die Lautsprecher-Firmware baut auf XiaoZhi {base}. Eine neue Firmware entsteht erst auf dein Wort "
-                        "(firmware/xiaozhi.json, Commit anheben) und will dann getestet werden.", tag="devup", private=False)
-    except Exception as e:
-        print("geraeteupdate: XiaoZhi note", type(e).__name__, flush=True)
-    _change(lambda d: d["upstream"].update(told=v))
-    live.event("Geräte-Updates", f"XiaoZhi {v} erschienen (wir: {base})")
-    return 1
 
 
 # ---------------------------------------------------------------- speakers at night
@@ -648,7 +572,6 @@ async def tick(now=None):
     if not notaus.blocks("internet") and now - float(_read().get("checked") or 0) > CHECK_EVERY:
         await check_all(now=now)
     await notes(now)
-    await upstream_note()
     await night_step(now)
 
 
@@ -668,7 +591,6 @@ async def admin_check(request: Request):
         raise HTTPException(429, "eben erst gesucht, bitte gleich noch einmal", headers={"Retry-After": str(CHECK_GAP)})
     r = await check_all()
     await notes()
-    await upstream_note()
     return dict(r, **overview())
 
 

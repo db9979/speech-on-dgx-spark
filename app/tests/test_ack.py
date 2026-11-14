@@ -136,7 +136,7 @@ class Rules(unittest.TestCase):
         ack.count("kalender", True, now=1_000_000)
         ack.count("unklar", False, now=1_000_000)
         ack.count("unklar", False, now=1_000_000)
-        ack.count("bahn", False, now=1_000_000)
+        ack.count("paket", False, now=1_000_000)
         s = ack.today(now=1_000_000)
         self.assertEqual((s["with"], s["without"]), (1, 3))
         self.assertEqual(s["top"][0], {"group": "unklar", "n": 2})

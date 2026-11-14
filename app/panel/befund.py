@@ -108,8 +108,8 @@ def karte():
 
 
 # the modules that define tools for the chat (scanned by tool_defs; the agent, MCP and the health check have their own)
-TOOL_MODULES = ("chat", "contacts", "docmake", "messages", "parcels", "remarkable", "rmplus", "tasks", "transit",
-                "feeds", "weather", "wiki", "begleiter", "hilfe")
+TOOL_MODULES = ("chat", "contacts", "docmake", "messages", "parcels", "remarkable", "rmplus", "tasks",
+                "weather", "wiki", "begleiter", "hilfe")
 _DEFS = {}
 
 

@@ -79,7 +79,7 @@ def apps(root):
     for rel in ("tools/begleiter/windows/SparkBegleiter.csproj", "tools/begleiter/outlook-classic/SparkOutlook.csproj",
                 "tools/sparkhilfe/windows/SparkHilfe.csproj"):
         out += [("begleiter", n, v, "NuGet") for n, v in NUGET.findall(_lies(root, rel))]
-    for rel in ("pebble/package.json", "pebble/zifferblatt/package.json"):
+    for rel in ("pebble/package.json",):
         try:
             deps = json.loads(_lies(root, rel) or "{}").get("dependencies") or {}
         except ValueError:

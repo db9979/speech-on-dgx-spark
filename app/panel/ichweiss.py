@@ -5,7 +5,7 @@ page under Ich that shows what the Spark knows about the person and lets it be c
                      interest) with their evidence: the senders as chips, the counts of orders, offers and newsletters
                      and up to EXAMPLES subjects (shown as text, kept in memory only); a sender without a topic stays
                      „Thema unklar“ with its subjects and a field for an own topic; the own addresses and service
-                     senders (TOPICS rules below) are never proposed; words in Reddit und Feeds; counted only after
+                     senders (TOPICS rules below) are never proposed; counted only after
                      „Stimmt“ (the topic with its senders); „Nicht so“ is remembered; own words can be added; an older
                      confirmed sender is asked once for its topic
     Wiederkehrendes  bills of the same sender in three or more months, about the same day („um den 15.“), with
@@ -248,7 +248,7 @@ def forget(uid):
 
 features.OWN["ichweiss"] = (count, forget)
 SOURCES = {"thema": ("Thema aus deinen Mails", "Topic from your mails"),
-           "shop": ("Mails eines Shops", "Mails of a shop"), "feeds": ("Stichwort in Reddit und Feeds", "Keyword in Reddit and feeds"),
+           "shop": ("Mails eines Shops", "Mails of a shop"),
            "karte": ("„Mehr davon“ an einer Karte", "\"More of this\" on a card"), "hand": ("selbst eingetragen", "added by you")}
 
 
@@ -414,7 +414,7 @@ def _own(uid):
 def proposals(uid):
     """[{"name", "en", "src", "why", "topic", "senders", "ex", "unclear"}]: topics found in the senders of the last
     reading of Für dich with SHOP_MIN or more mails (3a), a sender without a topic as „Thema unklar“ when it sent offers or
-    newsletters (4a), words of Reddit und Feeds; never the own addresses or a service (2a), never what was said yes or no
+    newsletters (4a); never the own addresses or a service (2a), never what was said yes or no
     to. Only counts and up to EXAMPLES subjects as evidence (memory only)."""
     d = load(uid)["items"]
     told = set(d) | {norm(x) for v in d.values() for x in v["senders"]}
@@ -443,15 +443,6 @@ def proposals(uid):
                     "why": _counts_line(t["o"], t["f"], t["n"]) + (f" von {many} Absendern" if many > 1 else "")
                     + f" in {fuerdich.DAYS} Tagen", "ex": t["ex"][:EXAMPLES], "unclear": False})
     out += [{k: v for k, v in x.items() if k != "_n"} for x in sorted(unclear, key=lambda x: -x["_n"])]
-    try:
-        import feeds
-        if features.allowed("feeds", uid):
-            for w in feeds.get(uid).get("words", [])[:20]:
-                if norm(w) not in d and clean(w):
-                    out.append({"name": clean(w), "en": clean(w), "src": "feeds", "why": "Stichwort in Reddit und Feeds",
-                                "topic": "", "senders": [], "ex": [], "unclear": False})
-    except Exception:
-        pass
     seen, res = set(), []
     for x in out:
         if norm(x["name"]) not in seen:

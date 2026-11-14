@@ -821,16 +821,6 @@
         }
       }
     },
-    "Abfahrten ausprobieren": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Try departures"
-          }
-        }
-      }
-    },
     "Abgelegt.": {
       "localizations": {
         "en": {
@@ -1437,16 +1427,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Needs you"
-          }
-        }
-      }
-    },
-    "Bus und Bahn": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bus and train"
           }
         }
       }
@@ -3251,26 +3231,6 @@
         }
       }
     },
-    "Haltestelle": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Stop"
-          }
-        }
-      }
-    },
-    "Haltestelle suchen": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Search stop"
-          }
-        }
-      }
-    },
     "Haupt-Admin": {
       "localizations": {
         "en": {
@@ -3727,16 +3687,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "No devices."
-          }
-        }
-      }
-    },
-    "Keine Haltestelle gefunden.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No stop found."
           }
         }
       }
@@ -7817,16 +7767,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "The admin has blocked chats for you."
-          }
-        }
-      }
-    },
-    "Der Admin hat Bus und Bahn noch nicht freigegeben (Funktionen → Bus und Bahn).": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The admin has not released bus and train yet (Features → Bus and train)."
           }
         }
       }

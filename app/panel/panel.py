@@ -71,8 +71,6 @@ import wyoming  # noqa: E402
 import telefon  # noqa: E402
 import telefon_ich  # noqa: E402
 import vorrang  # noqa: E402
-import transit  # noqa: E402
-import feeds  # noqa: E402
 import esp32  # noqa: E402
 import iphone  # noqa: E402
 import pebblewatch  # noqa: E402
@@ -215,7 +213,7 @@ import ferngross  # noqa: E402
 
 # no /docs, /redoc or /openapi.json: a map of every path for guests, and Swagger from a CDN
 app = FastAPI(title="Speech on DGX Spark", docs_url=None, redoc_url=None, openapi_url=None)
-for _module in (account, admin, chat, chats, chatsec, verbund, anrufe, update, system, proactive, room, roomlive, tidy, mailstil, fuerdich, ichweiss, weather, contacts, parcels, spaeter, sparkclients, telegram, tasks, esp32, iphone, pebblewatch, terminal, android, appupdate, appmerken, pruefzugang, apns, transit, feeds, logfilter, agent, auftragsplan, images, messages, intent, wissen, tracelog, lokal, features, remarkable, rmplus, rmpapier, join, onboard, hintergrund, stufe, today, offsite, doclingdienst, suchpruefung, wissensmessung, wissensbuch, fund, mappen, auswertung, hoerstueck, stimmdesign, abschrift, doklink, gemerkt, meinedaten, siegel, dungeon_dingbild, dungeon_musik, dungeon_echt, dungeon_lied, dungeon_knapp, dungeon_fluestern, dungeon_wunsch, dungeon_rast, dungeon_chronik, dungeon_buch, dungeon_regelseite, dungeon_pruefstand, dungeon_erzaehlstand, dungeon_import, dungeon_geschichten, dungeon, dungeon_karte, dungeon_gesicht, dungeon_wappen, wissenskarte, wissensdoppelt, mcpserver, llmapi, openwebui, meinmcp, live, hamelden, notaus, hilfe, tipps, saetze, spickzettel, schreib, begleiter, fernsicht, systemone, geraeteupdate, meldung, ghtoken, docmake, weiche, weiche_abstimmen, weiche_unklar, dienstwacht, offline, wartung, faelle, berater, speicher, nashilfe, nas, nasquelle, auslassen, nasablage, naszustand, gehaeuse, systemupdates, schwachstellen, geraetebild, schirm, verlauf, klaeren, technik, bilder, musik, verbrauch, modellseite, werkstattseite, entwickelnseite, praxistest, telefon, telefon_ich, kalenderserver, kontaktserver, einladung, zustellung, geteilt, vorgaenge, mailansicht, mitschreiblink, mitteilungen, fernzugang, spontanhilfe, spontansteuern, ferndateien, fernbild, fernweb, fernanker, fernnotiz, fernordner, fernals, fernsshtermy, ferngross):
+for _module in (account, admin, chat, chats, chatsec, verbund, anrufe, update, system, proactive, room, roomlive, tidy, mailstil, fuerdich, ichweiss, weather, contacts, parcels, spaeter, sparkclients, telegram, tasks, esp32, iphone, pebblewatch, terminal, android, appupdate, appmerken, pruefzugang, apns, logfilter, agent, auftragsplan, images, messages, intent, wissen, tracelog, lokal, features, remarkable, rmplus, rmpapier, join, onboard, hintergrund, stufe, today, offsite, doclingdienst, suchpruefung, wissensmessung, wissensbuch, fund, mappen, auswertung, hoerstueck, stimmdesign, abschrift, doklink, gemerkt, meinedaten, siegel, dungeon_dingbild, dungeon_musik, dungeon_echt, dungeon_lied, dungeon_knapp, dungeon_fluestern, dungeon_wunsch, dungeon_rast, dungeon_chronik, dungeon_buch, dungeon_regelseite, dungeon_pruefstand, dungeon_erzaehlstand, dungeon_import, dungeon_geschichten, dungeon, dungeon_karte, dungeon_gesicht, dungeon_wappen, wissenskarte, wissensdoppelt, mcpserver, llmapi, openwebui, meinmcp, live, hamelden, notaus, hilfe, tipps, saetze, spickzettel, schreib, begleiter, fernsicht, systemone, geraeteupdate, meldung, ghtoken, docmake, weiche, weiche_abstimmen, weiche_unklar, dienstwacht, offline, wartung, faelle, berater, speicher, nashilfe, nas, nasquelle, auslassen, nasablage, naszustand, gehaeuse, systemupdates, schwachstellen, geraetebild, schirm, verlauf, klaeren, technik, bilder, musik, verbrauch, modellseite, werkstattseite, entwickelnseite, praxistest, telefon, telefon_ich, kalenderserver, kontaktserver, einladung, zustellung, geteilt, vorgaenge, mailansicht, mitschreiblink, mitteilungen, fernzugang, spontanhilfe, spontansteuern, ferndateien, fernbild, fernweb, fernanker, fernnotiz, fernordner, fernals, fernsshtermy, ferngross):
     app.include_router(_module.router)
 app.middleware("http")(update_lock)
 
@@ -876,15 +874,6 @@ def pebble_app():
     if not os.path.exists(path):
         raise HTTPException(404, "not built")
     return FileResponse(path, media_type="application/octet-stream", filename="speech-spark.pbw")
-
-
-@app.get("/pebble/spark-zifferblatt.pbw")
-def pebble_face():
-    """The Spark-Zifferblatt, a watchface of its own (public: it holds no data; it only works with a paired key)."""
-    path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "pebble", "spark-zifferblatt.pbw")
-    if not os.path.exists(path):
-        raise HTTPException(404, "not built")
-    return FileResponse(path, media_type="application/octet-stream", filename="spark-zifferblatt.pbw")
 
 
 @app.get("/tui/spark-tui.py")

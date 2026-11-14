@@ -31,7 +31,7 @@ GRUND = ("aktiv", "arbeiter", "ausleiten", "beobachten", "dateien", "docrender",
 CHAT_KREIS = {"chat", "chat_modell", "chat_ton", "chat_tools", "chat_turn"}
 DUNGEON_KREIS = {"dungeon", "dungeon_auto", "dungeon_geschichten", "dungeon_gesicht"}
 MODUL_KREISE = (CHAT_KREIS, DUNGEON_KREIS)   # the cycles at module level on V01.1.395: they may only shrink
-LOKAL_MAX = 2939
+LOKAL_MAX = 2917
 KNOTEN_ALT = ('ablauf', 'abschrift', 'account', 'ack', 'admin', 'aendern', 'agent', 'android', 'angriffsprobe', 'anrufe',
     'answercheck', 'antwortvorschlag', 'apns', 'appmerken', 'appupdate', 'auftragsplan', 'auslassen', 'auswertung',
     'backup', 'bedienen', 'befund', 'begleiter', 'berater', 'berater_katalog', 'bilder', 'calendars', 'chat',
@@ -48,7 +48,7 @@ KNOTEN_ALT = ('ablauf', 'abschrift', 'account', 'ack', 'admin', 'aendern', 'agen
     'dungeon_rueckfrage', 'dungeon_runen', 'dungeon_schreiber', 'dungeon_schrift', 'dungeon_sicht',
     'dungeon_sprachen', 'dungeon_stimmen', 'dungeon_tageszeit', 'dungeon_tiefe', 'dungeon_umgebung',
     'dungeon_wandern', 'dungeon_wappen', 'dungeon_warten', 'dungeon_wunsch', 'dungeon_zeugen', 'dungeon_zufall',
-    'echo', 'einladung', 'einordnen', 'entwickelnseite', 'esp32', 'extras', 'faelle', 'features', 'feeds', 'fernals',
+    'echo', 'einladung', 'einordnen', 'entwickelnseite', 'esp32', 'extras', 'faelle', 'features', 'fernals',
     'fernanker', 'fernbild', 'ferndateien', 'ferngross', 'fernnotiz', 'fernordner', 'fernsicht', 'fernsshtermy',
     'fernweb', 'fernwindows', 'fernzugang', 'fixes', 'fremdstimme', 'frisch', 'fuerdich', 'fund', 'fundmail',
     'fundmessung', 'fundquellen', 'gedaechtnis', 'gehaeuse', 'gemerkt', 'geraetebild', 'geraeteupdate', 'geteilt',
@@ -65,7 +65,7 @@ KNOTEN_ALT = ('ablauf', 'abschrift', 'account', 'ack', 'admin', 'aendern', 'agen
     'satzende', 'schirm', 'schreib', 'senden', 'siegel', 'sofort', 'sparkkalender', 'speakers', 'speicher', 'spkcode',
     'spontanhilfe', 'spontansteuern', 'stille', 'stimmdesign', 'stufe', 'suchpruefung', 'system', 'systemone',
     'systemupdates', 'tagebuch', 'tasks', 'technik', 'technik_knoten', 'telefon', 'telefon_anruf', 'telefon_ich',
-    'telegram', 'terminal', 'tidy', 'tipps', 'today', 'tonteile', 'tracelog', 'transit', 'umziehen', 'update',
+    'telegram', 'terminal', 'tidy', 'tipps', 'today', 'tonteile', 'tracelog', 'umziehen', 'update',
     'verbrauch', 'verbund', 'verbundgruppe', 'verlauf', 'vorab', 'vorgaenge', 'vorrang', 'vorrat', 'vorwaermen',
     'wachposten', 'wartung', 'watch', 'weather', 'weiche', 'weiche_unklar', 'werkstattseite', 'wiki', 'wissen',
     'wissensbuch', 'wissensdoppelt', 'wissenskarte', 'wissensmessung', 'wyoming', 'ytquelle', 'zertpin', 'zustand_wz',

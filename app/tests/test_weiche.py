@@ -46,7 +46,7 @@ class Rules(unittest.TestCase):
     def test_extra_tools_stay_within_the_offer(self):
         route = intent.classify("Mach das Licht an")
         cfg = {"route_extra": "smarthome: weather, web_search"}
-        have = tools("home_assistant_action", "weather", "memory_save", "transit")
+        have = tools("home_assistant_action", "weather", "memory_save", "parcels")
         self.assertEqual(offered(intent.narrow(route, have, cfg)), ["home_assistant_action", "memory_save", "weather"])
         # not offered this turn (the profile may not search the web): not added
         self.assertNotIn("web_search", offered(intent.narrow(route, have, cfg)))
@@ -58,7 +58,7 @@ class Rules(unittest.TestCase):
 
     def test_groups_without_narrowing(self):
         route = intent.classify("Mach das Licht an")
-        have = tools("home_assistant_action", "weather", "transit")
+        have = tools("home_assistant_action", "weather", "parcels")
         self.assertEqual(intent.narrow(route, have, {"route_off": ["smarthome"]}), have)
         self.assertEqual(len(intent.narrow(route, have, {"route_off": ["wetter"]})), 1)
         for bad in ("smarthome", ["tresor"], [1]):

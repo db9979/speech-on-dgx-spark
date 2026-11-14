@@ -32,13 +32,6 @@ BENCH = [
     ("Mach mir eine Malvorlage mit einem Dinosaurier", "bild"),
     ("Mal mir ein Haus mit Garten", "bild"),
     ("Was ist auf dem Bild?", ""),
-    # Reddit und Feeds (feeds.py): the own feeds, never the web search, the mailbox or chat messages
-    ("Was gibt's Neues auf Reddit?", "feeds"),
-    ("Hat mir jemand auf Reddit geantwortet?", "feeds"),
-    ("Was ist heute in r/LocalLLaMA los?", "feeds"),
-    ("Gibt es neue Nachrichten in meinem Reddit-Posteingang?", "feeds"),
-    ("Was steht Neues in meinen Feeds?", "feeds"),
-    ("Lies mir die neuesten Beiträge aus meinen Subreddits vor", "feeds"),
     # Musik machen (musik.py): a song to make, never a document or a search
     ("Mach mir ein Lied über unsere Katze", "musik"),
     ("Komponier mir was Ruhiges zum Einschlafen", "musik"),
@@ -165,9 +158,6 @@ BENCH = [
     ("Schneit es am Wochenende?", "wetter"),
     ("Wie warm wird es morgen?", "wetter"),
     ("What's the weather tomorrow?", "wetter"),
-    ("Wann fährt der nächste Bus?", "bahn"),
-    ("Wann geht die nächste S-Bahn nach Karlsruhe?", "bahn"),
-    ("Hat der Zug Verspätung?", "bahn"),
     ("Wo ist mein Paket?", "paket"),
     ("Wann kommt die Lieferung von Amazon?", "paket"),
     ("Ist mein Päckchen schon unterwegs?", "paket"),
@@ -286,7 +276,6 @@ BENCH = [
     ("Was sind die Schlagzeilen?", "websuche"),
     # P4 Weiche genauer (Code-Review 10.11., D-6/D-9): one normalization step before the rules (umlauts, „ss“, glued
     # device words, a few English phrases); a call for later is a reminder, an emergency number gets no tool
-    ("Wann fährt die Strassenbahn", "bahn"),
     ("Mach die Wohnzimmerlampe aus", "smarthome"),
     ("Mach den Heizlüfter aus", "smarthome"),
     ("Alles aus", "smarthome"),

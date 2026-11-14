@@ -442,9 +442,9 @@ KNOTEN = {
                "Home Assistant, NAS, Kiwix, SearXNG and MCP services in the own network. Through the guard at level home; "
                "fixed services with a reason in netguard.DIRECT_OK.", []),
     "internet": (780, 794, "Dienste im Internet", "Internet services", "IMAP, CalDAV, Web", "",
-                 "Mail und Kalender beim Anbieter, Seiten aus der Suche, Wetter, Fahrplan, Wikipedia, reMarkable, Telegram, "
+                 "Mail und Kalender beim Anbieter, Seiten aus der Suche, Wetter, Wikipedia, reMarkable, Telegram, "
                  "Update-Prüfung. Über den Wächter oder feste Adressen; der Notaus schaltet sie ab.",
-                 "Mail and calendars at the provider, pages from search, weather, transit, Wikipedia, reMarkable, Telegram, "
+                 "Mail and calendars at the provider, pages from search, weather, Wikipedia, reMarkable, Telegram, "
                  "update check. Through the guard or fixed addresses; the kill switch turns them off.", []),
     "teilen": (896, 270, "Spark teilen", "Spark split", "TLS-Tor · :31007", "teilen",
                "Nur wenn das Panel auf einem eigenen Rechner läuft: jeder Weg zu den Modellen geht durch das TLS-Tor "

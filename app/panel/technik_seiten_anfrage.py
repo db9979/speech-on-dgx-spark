@@ -296,7 +296,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Antwort bauen (chat._answer)
     "weiche": {
-        "stand": "13052b11fc",
+        "stand": "bf24ff66c6",
         "bezug": {
             "intent.GROUPS": ["s4", "s6"], "intent_bench.BENCH": ["s4", "s5"], "intent_alltag.ALLTAG": ["s14"],
             "weiche.KEEP_VERSIONS": ["s4"], "intent.Route": ["s6"], "intent.follow_up": ["s8"],
@@ -338,11 +338,11 @@ SEITEN = {
               ("Gelesen wird nur die letzte Nachricht der Person selbst, nie eine Antwort davor, fremder Text oder was "
                "das Modell geschrieben hat. Dazu kommen die Wörter, die der Admin unter Funktionen → Weiche gespeichert "
                "hat. Vor allen Regeln läuft ein Schritt Normalisierung (intent.normalize, auch für die Pflicht-Wörter): "
-               "„Strassenbahn“ und „Kueche“ in der Schreibweise der Wortlisten, „Wohnzimmerlampe“ als „Wohnzimmer "
+               "„Paeckchen“ und „Kueche“ in der Schreibweise der Wortlisten, „Wohnzimmerlampe“ als „Wohnzimmer "
                "lampe“, einige englische Wendungen auf Deutsch.",
                "Only the person's own latest message is read, never an answer before, outside text or what the "
                "model wrote. The words the admin saved under Features → Routing are added. Before every rule one "
-               "normalization step runs (intent.normalize, also for the must words): „Strassenbahn“ and „Kueche“ in "
+               "normalization step runs (intent.normalize, also for the must words): „Paeckchen“ and „Kueche“ in "
                "the spelling of the word lists, „Wohnzimmerlampe“ as „Wohnzimmer lampe“, a few English phrases in "
                "German.")),
             S("s2", "frage", ("Nur Plaudern?", "Only small talk?"),
@@ -394,8 +394,8 @@ SEITEN = {
                "gemeldet?“, „Was hatte ich bestellt?“), nie bei Zeitung, Web oder Archiv; „Habe ich neue "
                "Nachrichten?“ ist eine Nachricht, „Was gibt es in den Nachrichten?“ die Websuche; ein Auftrag, der "
                "regelmäßig wiederkommt oder etwas beobachtet, ist ein Agent; eine Frage zu Sprache oder Natur oder "
-               "nach einem Unterschied ist nie ein Gerät; ein Preis oder Streik ist die Websuche, nicht iPhone oder "
-               "Bahn; „Ruf mich an“ ist der Rückruf des Spark, nicht das iPhone; „Liste der …“ in einer Datei ist "
+               "nach einem Unterschied ist nie ein Gerät; ein Preis oder Streik ist die Websuche, nicht das iPhone; "
+               "„Ruf mich an“ ist der Rückruf des Spark, nicht das iPhone; „Liste der …“ in einer Datei ist "
                "nicht die eigene Liste; ein schwaches Suchwort allein („Ergebnis“, „gewonnen“, „Nachrichten“) in einem "
                "privaten Satz („Ergebnis meiner Blutuntersuchung“, „Nachrichten von Tom“, „Ich habe gewonnen“) ist "
                "keine Websuche. Eine Wissensfrage („Was ist eine Lampe?“, „Wie funktioniert eine Steckdose?“, „Wer hat den "
@@ -415,7 +415,7 @@ SEITEN = {
                "archive; „Do I have "
                "new messages?“ is a message, „What is in the news?“ the web search; a job that comes back regularly "
                "or watches something is an agent; a question about language, nature or a difference is never a "
-               "device; a price or a strike is the web search, not the iPhone or the train; „Call me“ is the Spark "
+               "device; a price or a strike is the web search, not the iPhone; „Call me“ is the Spark "
                "calling back, not the iPhone; „a list of …“ in a file is not the own list; a weak search word alone "
                "(„result“, „won“, „news“) in a private sentence („result of my blood test“, „messages from Tom“, „I "
                "won“) is no web search. A knowledge question („What is a lamp?“, „How does a socket work?“, „Who invented "
@@ -718,7 +718,7 @@ SEITEN = {
                 ("Die Weiche hier ist die erste Stufe: sie bestimmt, was eine Handlung braucht. Für eine Wissens- oder "
                  "Lesefrage entscheidet danach die Quellen-Weiche (quellen.klasse) mit festen Regeln, nie das Modell: "
                  "intern (eigene Daten), extern (Welt) oder beides. Eigene Quelle genannt, eine Gruppe der eigenen "
-                 "Daten oder ein Besitzwort mit eigenen Daten heißt intern; Aktuelles und Welt (Wetter, Preise, "
+                 "Daten oder ein Besitzwort mit eigenen Daten heißt intern; Aktuelles und Welt (Wetter, Bahn, Preise, "
                  "Nachrichten, Ämter) extern; zeitloses Wissen und Wie-Fragen zum eigenen Gerät beides. Sonst prüft "
                  "eine Treffer-Probe im eigenen Finden-Index (höchstens {quellen.PROBE_MS} ms, im eigenen Thread, nur "
                  "für das eigene Profil, nie für Gäste, fremde Stimmen oder MCP): starke Treffer intern, schwache "
@@ -728,7 +728,7 @@ SEITEN = {
                  "The switch here is the first stage: it decides what an action needs. For a knowledge or reading "
                  "question the source switch (quellen.klasse) then decides by fixed rules, never the model: internal "
                  "(own data), external (the world) or both. An own source named, a group of the own data or a word "
-                 "of ownership with own data means internal; current things and the world (weather, prices, news, "
+                 "of ownership with own data means internal; current things and the world (weather, trains, prices, news, "
                  "offices) external; timeless knowledge and how-to questions about the own device both. Otherwise a "
                  "hit probe in the own Find index decides (at most {quellen.PROBE_MS} ms, in a thread of its own, "
                  "only for the own profile, never for guests, other voices or MCP): strong hits internal, weak ones "
@@ -1099,7 +1099,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Werkzeuge (chat_tools.run)
     "werkzeuge": {
-        "stand": "b1b794d0b2",
+        "stand": "02d286ed48",
         "bezug": {
             "chat.LOCKED_OUTSIDE": ["s4"], "notaus.INTERNET_TOOLS": ["s3"], "werkzeuge.NAMES": ["s11"],
             "chat_tools.run": ["s2", "s7"], "chat.wrap_outside": ["s9"], "chat.LOCKED_AFTER_MAIL": ["s4"],
@@ -1149,7 +1149,7 @@ SEITEN = {
               ("Sperre nach Web, Kalender, Dokumenten, Mail", "lock after web, calendar, documents, mail"),
               ("Hat diese Antwort schon Text von draußen gelesen, darf nichts mehr das Zuhause, das Gedächtnis, "
                "Termine oder Erinnerungen ändern. Nach einer Mail ist auch alles zu, was ins Internet fragt (Websuche, "
-               "Wikipedia, Wetter, Fahrplan), nach eigenen Dokumenten die Websuche "
+               "Wikipedia, Wetter), nach eigenen Dokumenten die Websuche "
                "ebenfalls (außer bei „Erst lokal suchen“, dann nur mit den eigenen Worten der Frage; hat das Panel sie "
                "vorab schon gesucht, kommt dieses Ergebnis). Eine Mail unter den Treffern von „Erst lokal“ sperrt wie "
                "eine gelesene Mail. Nach jedem anderen Text von außen geht ein Werkzeug ins Internet nur noch mit Wörtern "
@@ -1157,7 +1157,7 @@ SEITEN = {
                "Person selbst wünscht, bleibt nach Text von außen offen (own), nach Mail nicht.",
                "When this answer already read text from outside, nothing may change the home, the memory, "
                "appointments or reminders any more. After a mail everything that asks the internet is closed too (web "
-               "search, Wikipedia, weather, transit), after own documents the web search "
+               "search, Wikipedia, weather), after own documents the web search "
                "(except with „search locally first“, then only with the question's own words; when the panel searched "
                "them before, that result comes). A mail among the hits of „local first“ locks like a read mail. After any "
                "other outside text a tool goes to the internet only with words from the own message or from what a search "

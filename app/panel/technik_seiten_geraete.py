@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "geraet": {
-        "stand": "e44041b4c6",
+        "stand": "2fdf7329c6",
         "bezug": {
             "account.CONVO_BODY": ["s10"], "admin.test_asr": ["s4"], "admin._test_asr": ["s4", "s5"],
             "admin.read_audio": ["s4"], "zwischenruf.decide": ["s5"], "chat.chat": ["s6", "s7"], "account.profile_save_convo": ["s10"],
@@ -485,14 +485,14 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Telegram, Siri, Uhr
     "kanaele": {
-        "stand": "9730136967",
+        "stand": "bd03501cc4",
         "bezug": {
             "watch.JOB_TTL": ["s9"], "telegram.loop": ["s1"], "telegram.handle": ["s2", "s3", "s4"],
             "telegram.ask": ["s7", "s8", "s11"], "telegram.transcribe": ["s5"], "chat.siri_ask": ["s1", "s3"],
             "chat.text_ask": ["s6", "s7", "s11"], "chat.watch_ask": ["s1", "s7"], "chat._watch_run": ["s11"], "verlauf.main_today": ["s11"],
             "watch.run": ["s8"], "watch.poll": ["s9"], "regeln": ["s1", "s9", "s11"], "chat.ENDE_SAY": ["s8"],
             "watch.follow_ups": ["s9"], "watch.follow_clean": ["s9"], "pebblewatch.watch_sync": ["s9"],
-            "pebblewatch.watch_reminder": ["s9"], "pebblewatch.watch_blick": ["s9"], "pebblewatch.watch_brief": ["s9"],
+            "pebblewatch.watch_reminder": ["s9"], "pebblewatch.watch_brief": ["s9"],
             "pebblewatch.watch_note": ["s9"], "pebblewatch.watch_chat": ["s9"], "pebblewatch.watch_chat_send": ["s9"],
             "pebblewatch.reply_clean": ["s9"], "pebblewatch.watch_remote_act": ["s9"], "pebblewatch.watch_health": ["s9"],
         },
@@ -598,16 +598,14 @@ SEITEN = {
                "Bytes je Abruf, für ihren kleinen Lautsprecher gepackt) über /api/watch/poll, nur das Profil, das gefragt hat (fremde Auftrags-Nummern geben 404); höchstens "
                "{watch.MAX_RUNNING} Uhr-Antworten laufen gleichzeitig. Der Begleiter bekommt Text ohne Markdown und "
                "zusätzlich die Antwort mit Markdown (höchstens {chat.MD_ANSWER_MAX} Zeichen), wenn darin nicht weniger "
-               "Geheimnisse verdeckt sind. Mit ihren Schaltern bekommt die Uhr außerdem bis zu {watch.FOLLOW_MAX} "
+               "Geheimnisse verdeckt sind. Mit Funktionen → Pebble-Uhr koppeln bekommt die Uhr außerdem bis zu {watch.FOLLOW_MAX} "
                "Nachfragen zum Antippen (das Modell schlägt nur vor, watch.follow_clean lässt nur kurze Fragen ohne Ja, "
                "Nein, Links oder Zahlen durch; nie nach Mail, Web oder einem Vorschlag; endet die Antwort mit einer Frage, "
                "sind deren Knöpfe aus ablauf.asks die Nachfragen), einen Vorschlag als ✓ und ✕ "
                "und über /api/watch/sync die Schnellbefehle und die nächsten {pebblewatch.AGENDA_MAX} Erinnerungen, "
-               "die sie selbst als Wecker klingeln lässt; Push wartet zuerst auf sie. Das Spark-Zifferblatt holt alle 15 "
-               "Minuten über /api/watch/blick den nächsten Termin, die nächste Erinnerung, das Wetter, einen Tipp und "
-               "für Admins einen Ausfall; /api/watch/brief baut Mein Tag und Meine Woche aus festen Sätzen, "
-               "/api/watch/merken legt einen diktierten Satz ins Gedächtnis (mit Ort auf etwa 100 m nur mit eigenem "
-               "Schalter). /api/watch/chats und /api/watch/chat zeigen die letzten Chats (ohne private) und schicken "
+               "die sie selbst als Wecker klingeln lässt; Push wartet zuerst auf sie. /api/watch/brief baut Mein Tag "
+               "und Meine Woche aus festen Sätzen, /api/watch/merken legt einen diktierten Satz ins Gedächtnis (mit Ort "
+               "auf etwa 100 m, wenn die Person es am Handy erlaubt). /api/watch/chats und /api/watch/chat zeigen die letzten Chats (ohne private) und schicken "
                "eine angetippte oder diktierte Antwort über chats.send; bis zu {pebblewatch.REPLY_MAX} Vorschläge "
                "des Modells prüft pebblewatch.reply_clean fest. /api/watch/fern schaltet nur Geräte der eigenen Liste "
                "mit festen Tasten (nie mit Smart-Home-Codewort), /api/watch/gesundheit legt Schritte, Puls und Schlaf "
@@ -616,15 +614,14 @@ SEITEN = {
                "speakable text without passwords and codes. The watch fetches text and sound (packed for its small "
                "speaker, {watch.MAX_AUDIO} bytes per fetch) through /api/watch/poll, only for the profile that asked (a foreign job number gives 404); at most {watch.MAX_RUNNING} watch "
                "answers run at once. The companion gets text without Markdown and also the answer with Markdown (at "
-               "most {chat.MD_ANSWER_MAX} characters) when it hides no fewer secrets. With its switches the watch also "
+               "most {chat.MD_ANSWER_MAX} characters) when it hides no fewer secrets. With Features → Pair the Pebble watch the watch also "
                "gets up to {watch.FOLLOW_MAX} follow-ups to tap (the model only suggests, watch.follow_clean keeps short "
                "questions without yes, no, links or numbers; never after mail, web or a proposal; when the answer ends with a "
                "question, its buttons from ablauf.asks are the follow-ups), a proposal as ✓ and "
                "✕, and through /api/watch/sync the quick commands and the next {pebblewatch.AGENDA_MAX} reminders, "
-               "which it rings itself as wake-ups; push waits for it first. The Spark watchface fetches the next appointment, "
-               "reminder, weather, a hint and for admins an outage through /api/watch/blick every 15 minutes; "
-               "/api/watch/brief builds My day and My week from fixed sentences, /api/watch/merken keeps a dictated "
-               "sentence in memory (with the place to about 100 m only with its own switch). /api/watch/chats and "
+               "which it rings itself as wake-ups; push waits for it first. /api/watch/brief builds My day and My week "
+               "from fixed sentences, /api/watch/merken keeps a dictated sentence in memory (with the place to about "
+               "100 m when the person allows it on the phone). /api/watch/chats and "
                "/api/watch/chat show the latest chats (no private ones) and send a tapped or dictated reply through "
                "chats.send; up to {pebblewatch.REPLY_MAX} suggestions of the model pass the fixed check "
                "pebblewatch.reply_clean. /api/watch/fern switches only devices on the own list with fixed buttons "
@@ -689,12 +686,12 @@ SEITEN = {
              "Fernbedienung und die eigenen Schritte, Puls und Schlaf (ansehen, löschen).",
              "Me → Pebble watch: pair the watch, the address on the road (https only), the quick commands, the devices of "
              "the remote and the own steps, pulse and sleep (see, delete)."),
-            ("Funktionen → Pebble-Uhr: Nachfragen, Schnellbefehle, Erinnerungen am Handgelenk, Spark-Zifferblatt, Mein Tag "
-             "und meine Woche, Meldungen für Admins, Schnell merken und Ort beim Merken, Nachrichten, Antwortvorschläge, "
-             "Fernbedienung, Schritte, Puls und Schlaf, je ein Schalter (Standard aus).",
-             "Features → Pebble watch: follow-ups, quick commands, reminders on the wrist, Spark watchface, my day and my "
-             "week, notes for admins, quick notes and place with a note, messages, reply suggestions, remote, steps, pulse "
-             "and sleep, one switch each (default off)."),
+            ("Funktionen → Pebble-Uhr koppeln: ein Schalter für Nachfragen, Schnellbefehle, Erinnerungen am Handgelenk, "
+             "Mein Tag und meine Woche, Schnell merken mit Ort, Nachrichten mit Antwortvorschlägen und Fernbedienung; "
+             "Schritte, Puls und Schlaf mit eigenem Schalter (beide Standard aus).",
+             "Features → Pair the Pebble watch: one switch for follow-ups, quick commands, reminders on the wrist, my day "
+             "and my week, quick notes with the place, messages with reply suggestions and the remote; steps, pulse and "
+             "sleep with a switch of their own (both default off)."),
             ("Funktionen → Ein Gespräch für alle Kanäle: alle Kanäle schreiben ins Hauptgespräch des Tages.",
              "Features → One conversation for all channels: every channel writes into the day's main conversation."),
         ],
@@ -723,7 +720,6 @@ SEITEN = {
             ("pebblewatch.watch_sync", ("Schnellbefehle und Erinnerungen für die Uhr", "quick commands and reminders for the watch")),
             ("pebblewatch.watch_reminder", ("Erinnerung auf der Uhr: gespielt, später, beenden, +1, Stopp",
                                             "reminder on the watch: played, later, end, +1, stop")),
-            ("pebblewatch.watch_blick", ("was das Spark-Zifferblatt zeigt", "what the Spark watchface shows")),
             ("pebblewatch.watch_brief", ("Mein Tag und Meine Woche, feste Sätze", "My day and My week, fixed sentences")),
             ("pebblewatch.watch_note", ("Schnell merken ins Gedächtnis", "quick note into memory")),
             ("pebblewatch.watch_chat", ("ein Chat auf der Uhr, mit Antworten", "one chat on the watch, with replies")),
@@ -1084,7 +1080,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ MCP-Programme
     "mcpc": {
-        "stand": "4fd55454f8",
+        "stand": "79ccedcefc",
         "bezug": {
             "mcpserver.MAX_CONNS": ["s3"], "mcpserver.mcp_post": ["s1"], "mcpserver.origin_ok": ["s2"],
             "mcpserver.check_conn": ["s3"], "mcpserver.is_local": ["s4"], "mcpserver.find": ["s3"],

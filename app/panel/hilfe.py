@@ -176,7 +176,7 @@ SPOKEN = {"speaker", "telefon", "watch", "siri"}
 APPLY_ADMIN = {"routing", "direct", "vorab", "toolthink", "follow", "selfecho", "fixes", "images", "history",
                "lokal", "roles", "style", "docmeaning", "docbrief", "mystatus", "hilfe", "hilfevorschlag", "hilfeseite"}
 # the profile's own switch may also be set for these (the admin already let them out to the internet)
-APPLY_PROFILE = APPLY_ADMIN | {"wiki", "weather", "transit", "tasks", "kiwix"}
+APPLY_PROFILE = APPLY_ADMIN | {"wiki", "weather", "tasks", "kiwix"}
 # fixed bundles the model may name instead of single functions
 RECIPES = {
     "schneller": (("Schneller antworten", "Faster answers"), ("routing", "direct", "vorab")),

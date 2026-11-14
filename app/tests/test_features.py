@@ -166,7 +166,7 @@ class Check(unittest.TestCase):
 class Api(unittest.TestCase):
     def test_profile_sees_why(self):
         c, uid = profile("FeaYvonne")
-        helpers.set_config(weather=True, transit=False, proactive=True, search=True)
+        helpers.set_config(weather=True, telegram=False, proactive=True, search=True)
         self.addCleanup(helpers.set_config, weather=False, proactive=False, search=False)
         block(self, "search", uid)
         d = c.get("/api/features").json()
@@ -174,7 +174,7 @@ class Api(unittest.TestCase):
         self.assertIsNone(f["weather"]["why"])                          # released: works at once
         self.assertIs(f["weather"]["can"], True)
         self.assertIsNone(f["weather"]["mine"])                         # no preference of its own
-        self.assertEqual(f["transit"]["why"], "spark")
+        self.assertEqual(f["telegram"]["why"], "spark")
         self.assertEqual(f["search"]["why"], "blocked")
         self.assertIs(f["proactive"]["mine"], True)                     # a preference: on unless switched off
         profiles.save_settings(uid, {"pro_on": False})
@@ -297,13 +297,13 @@ class Matrix(unittest.TestCase):
 
     def test_first_on_recorded(self):
         """tipps.py shows „neu freigegeben“ from the time a function was first on; it stays known once it was on."""
-        helpers.set_config(transit=False)
-        self.addCleanup(helpers.set_config, transit=False)
-        if "transit" not in features._seen(features.chat_cfg()):
-            helpers.set_config(transit=True)
-            self.assertIn("transit", features._seen(features.chat_cfg()))
-            helpers.set_config(transit=False)
-            self.assertIn("transit", features._seen(features.chat_cfg()))     # stays known once it was on
+        helpers.set_config(telegram=False)
+        self.addCleanup(helpers.set_config, telegram=False)
+        if "telegram" not in features._seen(features.chat_cfg()):
+            helpers.set_config(telegram=True)
+            self.assertIn("telegram", features._seen(features.chat_cfg()))
+            helpers.set_config(telegram=False)
+            self.assertIn("telegram", features._seen(features.chat_cfg()))     # stays known once it was on
         self.assertIn("features-seen.json", __import__("backup").STATE_FILES)
 
 

@@ -1,7 +1,7 @@
 """Einrichten an der Hand (plan plaene/registrierung-onboarding.md, V01.0.269).
 
 One list per profile of what is still to set up: second step, devices (iPhone app, Pebble, speakers,
-voice, notifications, Telegram) and services (calendar, mail, contacts, weather, bus and train, smart
+voice, notifications, Telegram) and services (calendar, mail, contacts, weather, smart
 home). Only what the Spark allows (features.py) shows; "done" is checked by the panel itself (an iPhone is
 paired, a calendar connected …), never taken from the browser. The page "Los geht's" walks through it step
 by step, and the same list gives "Einrichten x von y" (Ich, and for the admin under Personen und Geräte).
@@ -52,8 +52,6 @@ ITEMS = (
     ("contacts", "contacts", "services", "conbox", "Kontakte verbinden", "Connect contacts"),
     ("remarkable", "remarkable", "services", "rmbox", "reMarkable verbinden", "Connect the reMarkable"),
     ("weather", "weather", "services", "wxbox", "Wetterort wählen", "Pick a weather place"),
-    ("transit", "transit", "services", "trbox", "Haltestelle wählen", "Pick a stop"),
-    ("feeds", "feeds", "services", "feedbox", "Reddit oder Feeds verbinden", "Connect Reddit or feeds"),
     ("ha", "ha", "services", "habox", "Smart Home verbinden", "Connect the smart home"),
 )
 KEYS = tuple(x[0] for x in ITEMS)
@@ -129,12 +127,6 @@ def done(key, uid):
         if key == "weather":
             import weather
             return bool(weather.get(uid))
-        if key == "transit":
-            import transit
-            return bool((transit.get(uid).get("home") or {}).get("id"))
-        if key == "feeds":
-            import feeds
-            return bool(feeds.get(uid).get("sources"))
         if key == "ha":
             import homeassistant
             return bool(homeassistant.public(uid).get("has_token"))

@@ -311,10 +311,10 @@ GUEST_HINT = ("Du sprichst mit einem Gast ohne Profil. Du hast keine Werkzeuge: 
               "Erinnerungen, keine Termine, kein Gedächtnis, kein Smart Home. Beantworte Fragen aus deinem eigenen Wissen. "
               "Braucht eine Frage etwas Aktuelles oder eine dieser Funktionen, sag ehrlich in einem Satz, dass das als Gast "
               "nicht geht und mit einem eigenen Profil möglich ist; erfinde nichts.")
-SEARCH_LOCKED_HINT = ("Websuche, Wikipedia, Wetter und Fahrplan sind in dieser Antwort gesperrt, weil die Antwort davor aus E-Mails stammt (eine Mail "
+SEARCH_LOCKED_HINT = ("Websuche, Wikipedia und Wetter sind in dieser Antwort gesperrt, weil die Antwort davor aus E-Mails stammt (eine Mail "
                       "könnte sonst Inhalte ins Internet tragen). Will der Nutzer etwas im Internet nachsehen, sag ihm "
                       "das kurz und bitte ihn, die Frage gleich noch einmal zu stellen; dann geht die Suche wieder.")
-SEARCH_LOCKED_NOTE = ("Note: web search and every other look-up on the internet (Wikipedia, weather, transit) are locked "
+SEARCH_LOCKED_NOTE = ("Note: web search and every other look-up on the internet (Wikipedia, weather) are locked "
                       "for the rest of this answer because e-mail was read. If the user wanted one, tell them so; asked "
                       "again as a new question it works.")
 SEARCH_HINT = ("Du kannst mit dem Werkzeug web_search im Internet suchen. Nutze es, wenn die Frage aktuelle "
@@ -706,11 +706,6 @@ NEED_TOOLS = [  # tool that has to be offered, words in the question: one place 
     ("web_search", NEED_SEARCH),
     ("weather", re.compile(r"(?i)\b(wetter\w*|regnet|regen|schnee\w*|weather|rain\w*)\b")),
     ("parcels", re.compile(r"(?i)\b(paket\w*|päckchen|lieferung\w*|sendung\w*|parcels?|packages?|deliver\w*)\b")),
-    ("transit", re.compile(r"(?i)\b(bus|busse|bahn|s-?bahn|zug|züge|tram|straßenbahn|abfahrt\w*|verbindung\w*|"
-                           r"fahrplan|train|departures?)\b")),
-    # Reddit und Feeds (feeds.py): the person's own inbox, subreddits and feeds
-    ("feeds_news", re.compile(r"(?i)(\breddit\w*|\bsubreddits?\b|(?<![\w/])r/[a-z0-9_]{2,21}\b|\b(meine[nm]?|deine[nm]?) feeds?\b|"
-                              r"\b(rss|news)-?feeds?\b|\bfeeds\b)")),
     ("wikipedia", re.compile(r"(?i)\b(wikipedia|wiki|lexikon|enzyklopädie|encyclopedia)\b")),
     ("archive_search", re.compile(r"(?i)\b(kiwix|offline-?archiv\w*|(mein|dein|unser|euer|eur)(em|e|er|en)? archiv|im archiv|"
                                   r"archiv (nach|durch)\w*|nachschlagewerk\w*)\b")),
@@ -809,7 +804,7 @@ def needed(text, offered, extra=""):
     the panel (P1 Sicherheit): only reading tools are ever a must (the admin's Pflicht-Regel for a changing tool only
     finds its group, review D-5); a private sentence (PRIVATE_WORDS) never makes the web search a must; a negated one
     (intent.negated) never one that changes something or goes out to the internet. The words are read after the
-    Weiche's one normalization step (intent.normalize: „Strassenbahn“, „Wohnzimmerlampe“)."""
+    Weiche's one normalization step (intent.normalize: „Paeckchen“, „Wohnzimmerlampe“)."""
     import intent
     text = intent.normalize(text)
     own = own_words(extra)
@@ -2713,8 +2708,8 @@ async def watch_ask(request: Request):
     prof = profiles.current(request)
     job.owner = prof["id"] if prof else ""
     import pebblewatch
-    # Uhr: Nachfragen zum Antippen (its own admin switch): "done" waits for them, at most watch.FOLLOW_TIMEOUT
-    job.follow_wait = bool(prof) and features.allowed("pebblefolge", prof["id"]) and not wartung.paused("llm")
+    # Uhr: Nachfragen zum Antippen (with chat.pebble): "done" waits for them, at most watch.FOLLOW_TIMEOUT
+    job.follow_wait = bool(prof) and features.allowed("pebble", prof["id"]) and not wartung.paused("llm")
     job.task = asyncio.create_task(_watch_run(job, response, prof, text, inner.get("tz")))
     watch.JOBS[job.id] = job
     # the profile's face (own pick, else the Spark's), so the watch shows the same one (fixed names only)

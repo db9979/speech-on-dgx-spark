@@ -40,10 +40,6 @@ Source of `app/pebble/speech-spark.pbw`, which the panel serves at `/pebble/spee
   letter: T Mein Tag, W Meine Woche, M Merken). Tag/Woche send `BRIEF_ASK`, Merken dictates and sends `NOTE`; the
   phone answers with `BRIEF` (fixed sentences from `GET /api/watch/brief`, or "Gemerkt: …" from `POST
   /api/watch/merken`, with the place when `place` is on and the person allowed location).
-- `zifferblatt/`: the Spark-Zifferblatt, a watchface of its own (served as `/pebble/spark-zifferblatt.pbw`, paired
-  with a setup code of its own). Every 15 minutes it sends `REFRESH`; the phone fetches `GET /api/watch/blick` and
-  sends `NEXT_T`/`NEXT`, `REM_T`/`REM`, `WX`, `TIP`, `ALERT` (admins; a new one buzzes twice) and `WHERE`. The parts
-  are kept in persistent storage. The workflow builds both and puts both files on `pebble-build`.
 - App 2.2: two more fixed entries, C Nachrichten and F Fernbedienung. They send `LIST_ASK` ("C"/"F"); the phone
   answers with `LIST` ("C" or "F", then one line per chat or per device as "name|letters", one letter per button:
   u toggle, a on, o off, p play/pause, w next, l louder, s quieter, f up, z down) and the watch opens an ActionMenu.

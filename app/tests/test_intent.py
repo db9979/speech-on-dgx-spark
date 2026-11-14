@@ -413,7 +413,7 @@ class Genauer(unittest.TestCase):
         self.assertLessEqual(len(intent._ASKED), intent.FOLLOW_KEEP)
 
     def test_one_normalization_step(self):
-        self.assertEqual(intent.normalize("Wann kommt die Strassenbahn"), "Wann kommt die Straßenbahn")
+        self.assertEqual(intent.normalize("Wo ist mein Paeckchen"), "Wo ist mein Päckchen")
         self.assertEqual(intent.normalize("Kueche und Haustuer"), "Küche und Haustür")
         self.assertEqual(intent.normalize("Mach die Wohnzimmerlampe aus"), "Mach die Wohnzimmer lampe aus")
         for keep in ("Taschenlampe", "Tageslicht", "Schulpflicht", "Feuer", "Wasser", "neue Mails"):
@@ -422,9 +422,10 @@ class Genauer(unittest.TestCase):
         # the one helper for folding is homeassistant._norm; the must words read the same step
         import chat
         import homeassistant
-        self.assertIn(homeassistant._norm("straßenbahn"), intent._umlaut_words())
-        offered = {"transit", "web_search"}
-        self.assertEqual(chat.needed("Wann fährt die Strassenbahn?", offered), chat.needed("Wann fährt die Straßenbahn?", offered))
+        self.assertIn(homeassistant._norm("päckchen"), intent._umlaut_words())
+        offered = {"parcels", "web_search"}
+        self.assertEqual(chat.needed("Wo ist mein Paeckchen?", offered), chat.needed("Wo ist mein Päckchen?", offered))
+        self.assertTrue(chat.needed("Wo ist mein Paeckchen?", offered))
         for q, want in (("Kueche Licht an", ["smarthome"]), ("Mach den Heizlüfter aus", ["smarthome"])):
             self.assertEqual(intent.classify(q).names, want, q)
 

@@ -75,13 +75,9 @@ AREAS = {
     # "Stimme hier anlernen" at one of the profile's own speakers
     "app_voice": ((("GET", "POST", "DELETE"), r"/api/profile/voice"), (("GET",), r"/api/profile/esp32"),
                   (("POST",), rf"/api/profile/esp32/{_DEV}/voice")),
-    # Von selbst: weather place, parcels, bus and train, the profile's jobs (look, stop), room mode longer
+    # Von selbst: weather place, parcels, the profile's jobs (look, stop), room mode longer
     "app_auto": ((("GET", "PUT"), r"/api/profile/weather"), (("POST",), r"/api/profile/weather/test"),
-                 (("GET", "PUT"), r"/api/profile/transit"), (("POST",), r"/api/profile/transit/(?:find|test)"),
                  (("GET",), r"/api/profile/parcels"), (("POST",), r"/api/profile/parcels/hide"), (("GET",), r"/api/profile/agent"),
-                 # Reddit und Feeds (feeds.py): look, add a subreddit or feed, keywords, fetch now, remove
-                 (("GET", "DELETE"), r"/api/profile/feeds"), (("POST",), r"/api/profile/feeds/(?:source|now)"),
-                 (("PUT",), r"/api/profile/feeds/words"), (("DELETE",), r"/api/profile/feeds/source/[0-9a-f]{8}"),
                  (("GET",), rf"/api/profile/agent/jobs/{_ID}"), (("POST",), rf"/api/profile/agent/jobs/{_ID}/cancel"),
                  # own tasks (plan „Eigene Aufgaben“): pause, run again or delete a watch or scheduled job
                  (("POST",), rf"/api/profile/agent/plans/{_ID}/pause"), (("DELETE",), rf"/api/profile/agent/plans/{_ID}"),
@@ -100,8 +96,7 @@ AREAS = {
                      (("DELETE",), rf"/api/profile/(?:mail|calendar|contacts)/{_ACC}"),
                      (("POST",), r"/api/profile/mail/test"),
                      (("GET", "PUT", "DELETE"), r"/api/profile/homeassistant"),   # the code word stays in the browser
-                     (("GET", "DELETE"), r"/api/profile/telegram"), (("POST",), r"/api/profile/telegram/link"),
-                     (("POST",), r"/api/profile/feeds/inbox")),   # the private Reddit link carries Reddit's feed token
+                     (("GET", "DELETE"), r"/api/profile/telegram"), (("POST",), r"/api/profile/telegram/link")),
 }
 # "Meine Sachen" in the app (Dominik 2026-10-17, plan app-meine-sachen/plan.md): each part opens with the admin
 # release of its own function (the key is its features.py key), no panel switch and no profile switch: what the
@@ -253,7 +248,7 @@ AUTO_FIELDS = ()
 # switches older apps still send although the admin release alone decides now: ignored. Only the keys the old
 # apps sent, all out of profiles.GONE (the one list); app_on and the other rights stay refused (400).
 GONE = frozenset(("fix_learn", "tool_think", "route", "doc_pictures", "doc_semantic", "doc_originals", "doc_shared",
-                  "doc_brief", "wx_on", "par_on", "transit_on", "agent_on", "con_on",
+                  "doc_brief", "wx_on", "par_on", "transit_on", "pro_transit", "agent_on", "con_on",
                   "app_mine", "app_docs_edit", "app_docs", "app_voice", "app_auto", "app_security", "app_accounts",
                   "app_admin"))
 
@@ -544,7 +539,7 @@ async def app_doc(request: Request, prof=Depends(own_profile)):
 # The app's "Mein Profil": only these fields, each checked by the same rule as in the panel. What the app
 # may do (app_*), Telegram, the smart home and the tone ("style", told to the model) stay in the panel.
 APP_FIELDS = ("voice", "speed", "length", "pro_on", "pro_quiet", "pro_max", "pro_events", "pro_lead",
-              "pro_weather", "pro_place", "pro_weather_at", "pro_parcel", "pro_fuerdich", "pro_rueckblick", "pro_bday", "pro_transit", "pro_feeds",
+              "pro_weather", "pro_place", "pro_weather_at", "pro_parcel", "pro_fuerdich", "pro_rueckblick", "pro_bday",
               "pro_greet", "pro_mail", "briefing_at",
               "hands", "barge",   # Freihändig and Ins Wort fallen: the same values as in the browser (Vereinheitlichen Phase 6)
               "face",             # Einstellungen → Gesicht: the profile's own face, the same as Ich → Gespräch → Anzeige
@@ -581,8 +576,7 @@ def app_settings(request: Request, prof=Depends(own_profile)):
                       "documents": features.allowed("documents", prof["id"], chat)},
             # services the admin released for this profile ("Von selbst" can only use those)
             "services": {k: features.allowed(f, prof["id"], chat)
-                         for k, f in (("wx_on", "weather"), ("par_on", "parcels"), ("fd_on", "fuerdich"), ("con_on", "contacts"),
-                                      ("transit_on", "transit"))}}
+                         for k, f in (("wx_on", "weather"), ("par_on", "parcels"), ("fd_on", "fuerdich"), ("con_on", "contacts"))}}
 
 
 @router.put("/api/iphone/settings", dependencies=[Depends(assistant)])

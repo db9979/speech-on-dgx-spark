@@ -236,10 +236,6 @@ PRESS = re.compile(r"(?i)\b(zeitung\w*|presse|medien|spiegel|faz|taz|bild-?zeitu
 LIST_OF = re.compile(r"(?i)\bliste (der|von|mit|aller|über)\b")
 # „Was ist der Unterschied zwischen Wetter und Klima?“: knowledge, no forecast and no device
 COMPARE = re.compile(r"(?i)\bunterschied(e)? zwischen\b")
-TRANSIT_WORDS = re.compile(dict(chat.NEED_TOOLS)["transit"].pattern + r"|(?i:\b(ice|ic|regionalbahn|regionalexpress|"
-                           r"u-?bahn|bahnhof|gleis)\b)")
-# Reddit und Feeds (feeds.py): „Was gibt's Neues auf Reddit?“, „Hat mir jemand auf Reddit geantwortet?“
-FEED_WORDS = dict(chat.NEED_TOOLS)["feeds_news"]
 # a job that comes back by itself („Schick mir jeden Morgen die Schlagzeilen“) or a watch („Pass auf, wann …“):
 # the group agent, not a search now (a reminder „jeden Montag“ stays a reminder)
 RECUR = re.compile(r"(?i)\b(jeden|jede[nr]?) (morgen|abend|tag|früh|woche|montag|dienstag|mittwoch|donnerstag|freitag|"
@@ -305,7 +301,6 @@ HINTS = {
     "gedaechtnis": re.compile(r"(?i)\b(ich (mag|bin|esse|trinke)|mein(e)? \w+ ist|erzählt|geredet|gesprochen)\b"),
     "agent": re.compile(r"(?i)\b(automatisch\w*|regelmäßig\w*|immer wenn)\b"),
     "dokument": re.compile(r"(?i)\b(versichert|bezahlt|kosten|frist)\b"),
-    "bahn": re.compile(r"(?i)\b(los|fahren|fahrt|ankomm\w*|umsteig\w*)\b"),
     # „von Thomann“, „vom OP“: a sender or an event of the own data (Finden); a hint only, it never narrows
     "finden": re.compile(r"(?i)\b(vo[nm] (der |dem )?[A-ZÄÖÜ]\w+|beim [A-ZÄÖÜ]\w+|abgelegt|eingescannt|gespeichert)\b"),
 }
@@ -321,8 +316,6 @@ GROUPS = {
     "erinnerung": ({"reminder_set", "reminder_list", "reminder_cancel", "anruf_planen"}, REMINDER_WORDS),
     "liste": ({"tasks_show", "tasks_add", "tasks_change", "home_assistant_todo"}, LIST_WORDS),
     "wetter": ({"weather"}, WEATHER_WORDS),
-    "bahn": ({"transit"}, TRANSIT_WORDS),
-    "feeds": ({"feeds_news"}, FEED_WORDS),
     "paket": ({"parcels", "mail_list", "mail_search"}, PARCEL_WORDS),
     "kontakt": ({"contacts_search", "iphone_action"}, CONTACT_WORDS),
     "gedaechtnis": ({"memory_save", "memory_forget", "history_search"}, MEMORY_WORDS),
@@ -404,7 +397,7 @@ REFERS = re.compile(r"(?i)\b(davon|dazu|daran|darin|drin|daraus|darauf|darüber|
 
 
 # Normalisierung (P4, review D-9): ONE step before every rule of the Weiche (classify) and of the must words
-# (chat.needed). A word written without umlauts or with „ss“ („Strassenbahn“, „Kueche“, „Haustuer“) gets the spelling
+# (chat.needed). A word written without umlauts or with „ss“ („Paeckchen“, „Kueche“, „Haustuer“) gets the spelling
 # of the word lists (both folded with homeassistant._norm, the one helper for it); a device word glued to a room or a
 # thing („Wohnzimmerlampe“, „Deckenlicht“, „Heizlüfter“) is set apart; a few English phrases get the German words the
 # rules know. Fixed lists, never the model; the person's sentence itself is kept as it was for everything else.
@@ -527,7 +520,7 @@ def classify(text, extra_words="", group_words="", not_words=""):
         if m:
             why[name] = m.group(0).strip()[:40]
     for name, tool in (("websuche", "web_search"), ("kalender", "calendar_events"), ("mail", "mail_list"),
-                       ("erinnerung", "reminder_list"), ("wetter", "weather"), ("bahn", "transit"),
+                       ("erinnerung", "reminder_list"), ("wetter", "weather"),
                        ("paket", "parcels"), ("liste", "tasks_show")):
         if name not in why and tool in own and own[tool].search(text):
             why[name] = own[tool].search(text).group(0)
@@ -573,11 +566,6 @@ def classify(text, extra_words="", group_words="", not_words=""):
             why["mail"] = m.group(2)
         else:
             why.pop("mail", None)
-    # „Was gibt's Neues auf Reddit?“ and „Nachrichten in meinem Reddit-Posteingang“ are the own feeds, not the web,
-    # the mailbox or messages between the people of this Spark
-    if "feeds" in why:
-        for name in ("websuche", "mail", "nachricht"):
-            why.pop(name, None)
     # „Schick https://… aufs reMarkable“ is the reMarkable's web page (rmplus), never a document of the Spark; a page to
     # keep is not a web search either
     if "doklink" in why:
@@ -657,8 +645,7 @@ def classify(text, extra_words="", group_words="", not_words=""):
         if not why:
             why["finden"] = OWN_PAPER.search(text).group(0)[:40]
     if "websuche" in why and PRICE_NEWS.search(text):
-        for name in ("iphone", "bahn"):
-            why.pop(name, None)
+        why.pop("iphone", None)
     if "erinnerung" in why and CALL_ME.search(text):
         why.pop("iphone", None)
     if "erstellen" in why and LIST_OF.search(text):
@@ -1064,9 +1051,7 @@ GROUP_SAYS = {
     "erinnerung": "Timer oder Erinnerung stellen, ansehen oder löschen",
     "liste": "Einkaufsliste oder Aufgaben ansehen oder ändern",
     "wetter": "Wetter oder Vorhersage",
-    "bahn": "Bus- und Bahnverbindungen, Abfahrten, Verspätungen",
     "paket": "Pakete und Sendungen verfolgen",
-    "feeds": "Neues aus dem eigenen Reddit, Subreddits oder abonnierten Feeds",
     "kontakt": "Telefonnummer, Adresse oder Geburtstag aus den Kontakten",
     "gedaechtnis": "sich etwas merken, vergessen oder an frühere Gespräche erinnern",
     "dokument": "in eigenen Dokumenten, Verträgen oder Unterlagen nachsehen",
@@ -1255,19 +1240,19 @@ def own_route_words(text):
 
 # ---------------------------------------------------------------- the rules in the panel (admin only)
 LABELS = {"smarthome": "Smart Home", "kalender": "Kalender und Briefing", "mail": "E-Mail", "websuche": "Websuche",
-          "erinnerung": "Erinnerungen und Timer", "liste": "Listen", "wetter": "Wetter", "bahn": "Bus und Bahn",
+          "erinnerung": "Erinnerungen und Timer", "liste": "Listen", "wetter": "Wetter",
           "paket": "Pakete", "kontakt": "Kontakte", "gedaechtnis": "Gedächtnis und frühere Gespräche",
           "dokument": "Dokumente", "nachricht": "Nachrichten an andere (Chats)", "agent": "Agenten", "iphone": "iPhone",
           "spark": "Fragen zum Spark", "wikipedia": "Wikipedia", "erstellen": "Dokumente erstellen",
           "bild": "Bilder malen", "musik": "Musik machen", "archiv": "Eigenes Archiv",
-          "feeds": "Reddit und Feeds", "finden": "Finden in allen Daten", "mappe": "Mappen",
+          "finden": "Finden in allen Daten", "mappe": "Mappen",
           "doklink": "Links als Dokument"}
 MAX_TEST = 500
 # "Erklären statt Schweigen" (plan „Bedienung gesamt“ B4, V01.0.286): the function behind each group (features.py)
 FEATURE = {"smarthome": "ha", "kalender": "calendar", "mail": "mail", "websuche": "search", "erinnerung": "reminders",
-           "liste": "tasks", "wetter": "weather", "bahn": "transit", "paket": "parcels", "kontakt": "contacts",
+           "liste": "tasks", "wetter": "weather", "paket": "parcels", "kontakt": "contacts",
            "gedaechtnis": "memory", "dokument": "documents", "nachricht": "chats", "agent": "agent",
-           "iphone": "iphone", "wikipedia": "wiki", "archiv": "kiwix", "bild": "bilder", "musik": "musik", "feeds": "feeds",
+           "iphone": "iphone", "wikipedia": "wiki", "archiv": "kiwix", "bild": "bilder", "musik": "musik",
            "mappe": "mappen", "doklink": "doclink"}
 
 

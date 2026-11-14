@@ -68,7 +68,6 @@ OPEN = {
     "/apple-touch-icon.png": "page files",
     "/favicon.ico": "page files",
     "/pebble/speech-spark.pbw": "the watch app",
-    "/pebble/spark-zifferblatt.pbw": "the Spark watchface (Paket 2), a public app file like the watch app",
     "/fernzugang/anker": "the spark-anker program for curl … | sudo python3 - einrichten; no secret in it, 404 while Fernzugang is off",
     "/static/xterm/{name}": "page files (xterm.js for Fernzugang → Systeme, pinned in fernzugang.XTERM)",
     "/static/geraete/{name}": "page files (own drawings of the computers, only geraetebild.ZEICHNUNGEN)",

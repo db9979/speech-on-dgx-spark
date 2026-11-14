@@ -117,26 +117,21 @@ def _on(request: Request, prof=Depends(browser_profile)):
 @router.get("/api/profile/pebble", dependencies=[Depends(assistant)])
 def profile_get(prof=Depends(own_profile)):
     uid = prof["id"]
+    on = allowed(uid)
     return {"enabled": admin_on(), "on": profile_on(uid), "watches": watches(uid),
             "minutes": CODE_SECONDS // 60, "app": app_version(),
-            # what the watch does besides asking (each its own admin switch): Ich → Pebble-Uhr shows only those
-            "quick_on": features.allowed("pebbleschnell", uid), "quick": quick_of(uid), "remind_on": remind_on(uid), "follow_on": features.allowed("pebblefolge", uid),
-            "max": QUICK_MAX, "len": QUICK_LEN,
-            "face_on": features.allowed("pebblezifferblatt", uid), "day_on": features.allowed("pebbletag", uid),
-            "note_on": features.allowed("pebblemerken", uid), "place_on": features.allowed("pebbleort", uid),
-            "chat_on": _chat_ok(uid), "reply_on": features.allowed("pebbleantwort", uid),
-            "fern_on": features.allowed("pebblefern", uid), "fern": len(remote_of(uid)),
+            # what the watch does besides asking (all with chat.pebble since Ausdünnen 5, each also with the function
+            # it reads: reminders, memory, chats); Ich → Pebble-Uhr shows only those
+            "quick_on": on, "quick": quick_of(uid), "remind_on": remind_on(uid), "follow_on": on,
+            "max": QUICK_MAX, "len": QUICK_LEN, "day_on": on, "note_on": _note_ok(uid), "place_on": _note_ok(uid),
+            "chat_on": _chat_ok(uid), "reply_on": _chat_ok(uid), "fern_on": on, "fern": len(remote_of(uid)),
             "health_on": features.allowed("pebblegesund", uid), "health": len(health(uid))}
 
 
 @router.get("/api/profile/pebble/qr", dependencies=[Depends(assistant)])
-def profile_qr(base: str, app: str = "", prof=Depends(_on)):
-    """QR code of the app file's address, to scan with the phone that is paired with the watch (app=face: the
-    Spark-Zifferblatt, only while the admin released it)."""
-    face = app == "face"
-    if face and not features.allowed("pebblezifferblatt", prof["id"]):
-        raise HTTPException(403, "the Spark watchface is turned off")
-    url = _base({"base": base}) + ("/pebble/spark-zifferblatt.pbw" if face else "/pebble/speech-spark.pbw")
+def profile_qr(base: str, prof=Depends(_on)):
+    """QR code of the app file's address, to scan with the phone that is paired with the watch."""
+    url = _base({"base": base}) + "/pebble/speech-spark.pbw"
     try:
         import mfa
         svg = mfa._qr_svg(url)
@@ -178,10 +173,12 @@ def _remove(did):
 def _clear(uid):
     for x in watches(uid):
         _remove(x["id"])
+    profiles.save_settings(uid, {"peb_cmds": [], "peb_fern": []})
 
 
-# own data for Ich while the admin blocks the Pebble watch for the profile (features.OWN): its paired watches
-features.OWN["pebble"] = (lambda uid: len(watches(uid)), _clear)
+# own data for Ich while the admin blocks the Pebble watch for the profile (features.OWN): its paired watches, its
+# quick commands and the devices picked for the remote
+features.OWN["pebble"] = (lambda uid: len(watches(uid)) + len(quick_of(uid)) + len(remote_of(uid)), _clear)
 
 
 @router.post("/api/pebble/pair")
@@ -218,8 +215,8 @@ _held = {}                # uid -> (time of the sync, ids on the watch); memory 
 
 
 def remind_on(uid):
-    """Reminders on the watch need their own switch and the reminders themselves (also not blocked for the profile)."""
-    return all(features.allowed(k, uid) for k in ("pebbleerinnern", "reminders"))
+    """Reminders on the watch need the watch and the reminders themselves (also not blocked for the profile)."""
+    return all(features.allowed(k, uid) for k in ("pebble", "reminders"))
 
 
 def quick_of(uid):
@@ -266,7 +263,8 @@ def watch_sync(request: Request):
     prof = _watch_prof(request)
     guard.limit(request, "watchsync", prof["id"])
     uid = prof["id"]
-    quick = quick_of(uid) if features.allowed("pebbleschnell", uid) else []
+    on = allowed(uid)
+    quick = quick_of(uid) if on else []
     items = agenda(uid) if remind_on(uid) else None
     if items is not None:
         _hold(uid, items)
@@ -274,12 +272,11 @@ def watch_sync(request: Request):
         _held.pop(uid, None)
     print(f"watch: sync | {len(quick)} Schnellbefehle · {len(items) if items is not None else 'aus'} Erinnerungen"
           f" | {profiles.log_name(prof)}", flush=True)
-    return {"quick": quick, "agenda": items, "follow": features.allowed("pebblefolge", uid),
+    return {"quick": quick, "agenda": items, "follow": on,
             # the fixed entries of the list (Mein Tag, Meine Woche, Merken) and whether the phone may add the place
-            "day": features.allowed("pebbletag", uid), "note": features.allowed("pebblemerken", uid),
-            "place": features.allowed("pebbleort", uid),
+            "day": on, "note": _note_ok(uid), "place": _note_ok(uid),
             # Paket 3: Nachrichten and Fernbedienung in the list, the watch sends its health numbers with the sync
-            "chat": _chat_ok(uid), "fern": features.allowed("pebblefern", uid), "health": features.allowed("pebblegesund", uid)}
+            "chat": _chat_ok(uid), "fern": on, "health": features.allowed("pebblegesund", uid)}
 
 
 @router.post("/api/watch/reminder", dependencies=[Depends(assistant)])
@@ -333,7 +330,7 @@ async def watch_reminder(request: Request):
 async def profile_quick(request: Request, prof=Depends(_on)):
     """The profile's own quick commands for the watch (Ich → Pebble-Uhr), one line each."""
     guard.limit(request, "watchsync", prof["id"])
-    if not features.allowed("pebbleschnell", prof["id"]):
+    if not allowed(prof["id"]):
         print(f"watch: quick commands refused | why off | {profiles.log_name(prof)}", flush=True)
         raise HTTPException(403, "quick commands for the watch are turned off")
     body = await core.json_body(request, 4096, lenient=True)
@@ -355,20 +352,17 @@ async def profile_quick(request: Request, prof=Depends(_on)):
 
 
 # ---------------------------------------------------------------- Paket 2 (plan pebble-ideen/plan.md)
-# Spark-Zifferblatt: a watchface of its own fetches GET /api/watch/blick every 15 minutes (next appointment, next
-# reminder, weather, a hint, for admins an outage). Mein Tag / Meine Woche: GET /api/watch/brief, fixed sentences from
-# the profile's own data, never the model. Schnell merken: POST /api/watch/merken keeps a fact like "merk dir".
+# Mein Tag / Meine Woche: GET /api/watch/brief, fixed sentences from the profile's own data, never the model. Schnell merken: POST /api/watch/merken keeps a fact like "merk dir".
 # Everything only from functions the profile may use; fixed words, own titles, never mail or message text.
-BLICK_TITLE = 32          # an appointment's title on the face
 BRIEF_LINES = 12
 NOTE_LEN = 200            # profiles.MAX_FACT_LEN is the hard limit
 WEEK_DAYS = 7
 WEEKDAYS = ("Mo", "Di", "Mi", "Do", "Fr", "Sa", "So")
-_wx = {}                  # uid -> (time, weather for the face); the weather service has its own 15-minute cache
+_wx = {}                  # uid -> (time, weather for Mein Tag); the weather service has its own 15-minute cache
 
 
 async def _weather(uid):
-    """Temperature and the weather word for the face, or None (switch off, no place, service not reachable)."""
+    """Temperature and the weather word for Mein Tag, or None (switch off, no place, service not reachable)."""
     import weather
     if not weather.usable(uid):
         return None
@@ -381,8 +375,8 @@ async def _weather(uid):
         cur = d.get("current") or {}
         out = {"temp": int(round(float(cur["temperature_2m"]))),
                "word": weather.CODES.get(int(cur.get("weather_code") or 0), "wechselhaft")}
-    except Exception as e:   # the face shows the rest without the weather
-        print("watch: blick Wetter nicht erreicht |", type(e).__name__, flush=True)
+    except Exception as e:   # the day shows the rest without the weather
+        print("watch: tag Wetter nicht erreicht |", type(e).__name__, flush=True)
         out = None
     if len(_wx) > 500:
         _wx.clear()
@@ -390,52 +384,9 @@ async def _weather(uid):
     return out
 
 
-def _alert(uid):
-    """For an admin who gets the outage notes: the first open outage as fixed words, else None."""
-    if not features.allowed("pebblemeldung", uid):
-        return None
-    import dienstwacht
-    if uid not in dienstwacht.recipients():
-        return None
-    first = next(iter(dienstwacht.alerts()), None)
-    return _short(re.sub(r"^Gerade eingeschränkt: ", "", first["text"]), 60) if first else None
-
-
-def _tip(uid):
-    if not features.allowed("tipps", uid):
-        return None
-    import tipps
-    first = next(iter(tipps.listing(uid)), None)
-    return _short("Tipp: " + first["name"][0], 40) if first else None
-
-
 def _zone(tz):
     from chat import user_zone
     return user_zone(str(tz or "")[:64])
-
-
-@router.get("/api/watch/blick", dependencies=[Depends(assistant)])
-async def watch_blick(request: Request, tz: str = ""):
-    """What the Spark watchface shows (Spark-Zifferblatt): small, without the model."""
-    prof = _watch_prof(request)
-    uid = prof["id"]
-    guard.limit(request, "watchsync", uid)
-    if not features.allowed("pebblezifferblatt", uid):
-        print(f"watch: blick refused | why off | {profiles.log_name(prof)}", flush=True)
-        raise HTTPException(403, "the Spark watchface is turned off")
-    out = {"next": None, "rem": None, "wx": None, "alert": _alert(uid), "tip": _tip(uid)}
-    if features.allowed("calendar", uid):
-        import today
-        ev = next(iter((await today._events(uid, _zone(tz))).get("next") or []), None)
-        if ev:
-            out["next"] = {"start": ev["start"], "allday": ev["allday"], "title": _short(ev["title"], BLICK_TITLE)}
-    if features.allowed("reminders", uid):
-        rem = agenda(uid)
-        if rem:
-            out["rem"] = {"due": rem[0]["due"], "text": _short(rem[0]["text"], BLICK_TITLE)}
-    out["wx"] = await _weather(uid)
-    print(f"watch: blick | {sum(1 for v in out.values() if v)} Teile | {profiles.log_name(prof)}", flush=True)
-    return out
 
 
 def _clock(ts, zone):
@@ -513,7 +464,7 @@ async def watch_brief(request: Request, art: str = "tag", tz: str = ""):
     if art not in ("tag", "woche"):
         print(f"watch: brief refused | why invalid | {profiles.log_name(prof)}", flush=True)
         raise HTTPException(400, "art: tag or woche")
-    if not features.allowed("pebbletag", uid):
+    if not allowed(uid):
         print(f"watch: brief refused | why off | {profiles.log_name(prof)}", flush=True)
         raise HTTPException(403, "day and week on the watch are turned off")
     zone = _zone(tz)
@@ -524,12 +475,12 @@ async def watch_brief(request: Request, art: str = "tag", tz: str = ""):
 
 @router.post("/api/watch/merken", dependencies=[Depends(assistant)])
 async def watch_note(request: Request):
-    """Schnell merken: one sentence (dictated on the watch) into the profile's memory, optionally with the place the
-    phone gave (its own switch, coarse to about 100 m)."""
+    """Schnell merken: one sentence (dictated on the watch) into the profile's memory, with the place the phone gave
+    when the person allowed it there (coarse to about 100 m)."""
     prof = _watch_prof(request)
     uid = prof["id"]
     guard.limit(request, "watchrem", uid)
-    if not (features.allowed("pebblemerken", uid) and features.allowed("memory", uid)):
+    if not _note_ok(uid):
         print(f"watch: merken refused | why off | {profiles.log_name(prof)}", flush=True)
         raise HTTPException(403, "quick notes from the watch are turned off")
     body = await core.json_body(request, MAX_BODY, lenient=True)
@@ -538,13 +489,12 @@ async def watch_note(request: Request):
         print(f"watch: merken refused | why invalid | {profiles.log_name(prof)}", flush=True)
         raise HTTPException(400, "text is required")
     place = ""
-    if features.allowed("pebbleort", uid):
-        try:
-            lat, lon = float(body.get("lat")), float(body.get("lon"))
-            if -90 <= lat <= 90 and -180 <= lon <= 180:
-                place = f" (Ort {lat:.3f}, {lon:.3f})"
-        except (TypeError, ValueError):
-            pass
+    try:   # the place only when the person allowed it on the phone (the phone sends none otherwise)
+        lat, lon = float(body.get("lat")), float(body.get("lon"))
+        if -90 <= lat <= 90 and -180 <= lon <= 180:
+            place = f" (Ort {lat:.3f}, {lon:.3f})"
+    except (TypeError, ValueError):
+        pass
     kept = profiles.remember(uid, text + place, src="said")
     print(f"watch: merken | {'ok' if kept else 'voll' if kept is profiles.FULL else 'nothing to do'}"
           f"{' · mit Ort' if place else ''} | "
@@ -555,8 +505,8 @@ async def watch_note(request: Request):
 
 
 # ---------------------------------------------------------------- Paket 3 (plan pebble-ideen/plan.md)
-# Nachrichten: the profile's chats (chats.py) on the watch, read and answered with fixed replies, dictation or (own
-# switch) up to three suggestions of the model. Private chats stay out: they only take boxes the device sealed.
+# Nachrichten: the profile's chats (chats.py) on the watch, read and answered with fixed replies, dictation or
+# up to three suggestions of the model. Private chats stay out: they only take boxes the device sealed.
 # Fernbedienung: up to REMOTE_MAX devices the person picked under Ich → Pebble-Uhr (Home Assistant, own speakers),
 # each with fixed actions; the watch only names the device and the action, the panel checks both again.
 # Schritte, Puls, Schlaf: the watch's own numbers, sealed in the profile, seen and deleted under Ich → Pebble-Uhr,
@@ -591,7 +541,12 @@ HEALTH_DAYS = 30
 
 def _chat_ok(uid):
     import chats
-    return features.allowed("pebblechat", uid) and chats.usable(uid)
+    return allowed(uid) and chats.usable(uid)
+
+
+def _note_ok(uid):
+    """Schnell merken (with the place the phone may add): the watch and the memory."""
+    return allowed(uid) and features.allowed("memory", uid)
 
 
 def _chat_line(x):
@@ -675,7 +630,7 @@ async def watch_chat(request: Request, id: str = ""):
              for x in page["items"] if x.get("kind") != "sys"][-CHAT_ITEMS:]
     chats.read(uid, page["id"])
     ideas = []
-    if features.allowed("pebbleantwort", uid) and shown and not shown[-1]["mine"]:
+    if shown and not shown[-1]["mine"]:
         ideas = await reply_ideas(shown, (load_config().get("chat") or {}))
     print(f"watch: chat | {len(shown)} Nachrichten · {len(ideas)} Vorschläge | {profiles.log_name(prof)}", flush=True)
     return {"id": page["id"], "title": _short(page["title"], 30), "items": shown,
@@ -751,7 +706,7 @@ async def watch_remote(request: Request):
     prof = _watch_prof(request)
     uid = prof["id"]
     guard.limit(request, "watchsync", uid)
-    if not features.allowed("pebblefern", uid):
+    if not allowed(uid):
         print(f"watch: fern refused | why off | {profiles.log_name(prof)}", flush=True)
         raise HTTPException(403, "the remote on the watch is turned off")
     items = await remote_list(uid)
@@ -768,7 +723,7 @@ async def watch_remote_act(request: Request):
     prof = _watch_prof(request)
     uid = prof["id"]
     guard.limit(request, "watchrem", uid)
-    if not features.allowed("pebblefern", uid):
+    if not allowed(uid):
         print(f"watch: fern refused | why off | {profiles.log_name(prof)}", flush=True)
         raise HTTPException(403, "the remote on the watch is turned off")
     body = await core.json_body(request, MAX_BODY, lenient=True)
@@ -816,7 +771,7 @@ async def profile_remote(prof=Depends(_on)):
     """Ich → Pebble-Uhr: the devices to pick from (the profile's Home Assistant, without a code word) and the picked."""
     import homeassistant
     uid = prof["id"]
-    if not features.allowed("pebblefern", uid):
+    if not allowed(uid):
         raise HTTPException(403, "the remote on the watch is turned off")
     item = _ha_item(uid)
     choices = await homeassistant.targets_for(uid) if item else []
@@ -828,7 +783,7 @@ async def profile_remote(prof=Depends(_on)):
 async def profile_remote_save(request: Request, prof=Depends(_on)):
     uid = prof["id"]
     guard.limit(request, "watchsync", uid)
-    if not features.allowed("pebblefern", uid):
+    if not allowed(uid):
         print(f"watch: fern list refused | why off | {profiles.log_name(prof)}", flush=True)
         raise HTTPException(403, "the remote on the watch is turned off")
     body = await core.json_body(request, 8192, lenient=True)
@@ -917,8 +872,6 @@ def profile_health_delete(prof=Depends(browser_profile)):
 
 
 # own data while blocked (features.OWN): the quick commands of the profile
-features.OWN["pebbleschnell"] = (lambda uid: len(quick_of(uid)), lambda uid: profiles.save_settings(uid, {"peb_cmds": []}))
-features.OWN["pebblefern"] = (lambda uid: len(remote_of(uid)), lambda uid: profiles.save_settings(uid, {"peb_fern": []}))
 features.OWN["pebblegesund"] = (lambda uid: len(health(uid)), lambda uid: _health_save(uid, []))
 
 

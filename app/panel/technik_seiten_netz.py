@@ -4,13 +4,13 @@ from technik_seiten import S
 
 SEITEN = {
     "aussen": {
-        "stand": "8dd286e3c3",
+        "stand": "349e3855e6",
         "bezug": {
             "dienstwacht.TIMEOUT": ["s5"], "notaus.locked_tools": ["s3"], "dienstwacht.tool_down": ["s5"],
             "netguard.client": ["s8", "s9", "s10"], "netguard.IMAP4_SSL": ["s9"],
             "homeassistant._client": ["s7", "s9"], "mcp._client": ["s7", "s9", "s10"],
             "chat.web_search": ["s6", "s9"], "chat.web_search_own": ["s6"], "regeln": ["s7", "s8"], "regel:SearXNG": ["s6"],
-            "regel:Wetter, Fahrplan, Wikipedia": ["s6"], "regel:Sprachmodell": ["s6"],
+            "regel:Wetter, Wikipedia": ["s6"], "regel:Sprachmodell": ["s6"],
         },
         "kurz": ("Dienste im Heimnetz sind, was der Spark im eigenen Netz fragt: Home Assistant, NAS, Kiwix, SearXNG und "
                  "MCP-Dienste, auf Wunsch auch Kalender, Kontakte und Mail. Adressen aus Einstellungen gehen über den "
@@ -43,11 +43,11 @@ SEITEN = {
                "from stage {notaus.STAGE.internet} internet, from {notaus.STAGE.aktion} acting"),
               ("Der Notaus wird bei jedem Aufruf neu gelesen. Ab Stufe {notaus.STAGE.internet} sind die "
                "{notaus.INTERNET_TOOLS|anzahl} Werkzeuge gesperrt, die selbst ins Internet gehen (Websuche, Wetter, "
-               "Fahrplan, Wikipedia, Pakete, Seiten lesen); ab Stufe {notaus.STAGE.aktion} oder mit „Mein Notaus“ "
+               "Wikipedia, Pakete, Seiten lesen); ab Stufe {notaus.STAGE.aktion} oder mit „Mein Notaus“ "
                "jedes Werkzeug, das etwas ändert.",
                "The kill switch is read again for every call. From stage {notaus.STAGE.internet} the "
                "{notaus.INTERNET_TOOLS|anzahl} tools that go to the internet by themselves are locked (web search, "
-               "weather, transit, Wikipedia, parcels, reading pages); from stage {notaus.STAGE.aktion} or with „My "
+               "weather, Wikipedia, parcels, reading pages); from stage {notaus.STAGE.aktion} or with „My "
                "kill switch“ every tool that changes something."),
               ("stop", "ja", ("Gesperrt (Notaus)", "Blocked (kill switch)"))),
             S("s4", "frage", ("Schon Text von außen gelesen?", "Outside text read already?"),
@@ -70,7 +70,7 @@ SEITEN = {
               ("stop", "ja", ("Fester Satz: gerade nicht erreichbar", "Fixed sentence: not reachable right now"))),
             S("s6", "frage", ("Fester eigener Weg?", "Fixed own way?"),
               ("netguard.DIRECT_OK", "netguard.DIRECT_OK"),
-              ("Das Sprachmodell, SearXNG an der eingetragenen Adresse, Wetter, Fahrplan, Wikipedia und feste Dienste "
+              ("Das Sprachmodell, SearXNG an der eingetragenen Adresse, Wetter, Wikipedia und feste Dienste "
                "wie Apple-Push laufen direkt, ohne Wächter. Welche Module das dürfen und warum, steht in "
                "netguard.DIRECT_OK; ein Selbsttest meldet jedes Modul, das direkt verbindet und dort fehlt. Fragt die "
                "Person nach Heutigem oder den letzten Tagen (feste Wörter, frisch.zeitraum), sucht SearXNG nur in diesem "
@@ -78,7 +78,7 @@ SEITEN = {
                "Ein Thema der Morgenrunde ohne Treffer von heute nimmt dieselben Treffer der letzten Tage mit ihrem Tag. "
                "Die eigene Websuche des Panels bei „beides“ (Erst lokal) geht denselben Weg (chat.web_search_own), nur "
                "mit den eigenen Worten der Frage und nie bei Notaus oder ausgefallenem Dienst.",
-               "The language model, SearXNG at the entered address, weather, transit, Wikipedia and fixed services "
+               "The language model, SearXNG at the entered address, weather, Wikipedia and fixed services "
                "like Apple push go directly, without the guard. Which modules may do that and why is listed in "
                "netguard.DIRECT_OK; a self-test reports every module that connects directly and is missing there. When "
                "the person asks for today or the last days (fixed words, frisch.zeitraum), SearXNG searches only that "
@@ -155,7 +155,7 @@ SEITEN = {
             [("MCP-Dienste", "MCP services"), ("netguard.client", "netguard.client"), ("Nutzer", "user")],
             [("reMarkable", "reMarkable"), ("netguard.client, nur erlaubte Hosts", "netguard.client, allowed hosts only"), ("nur Internet", "internet only")],
             [("SearXNG", "SearXNG"), ("direkt (netguard.DIRECT_OK)", "direct (netguard.DIRECT_OK)"), ""],
-            [("Wetter, Fahrplan, Wikipedia", "Weather, transit, Wikipedia"), ("direkt, feste Adresse", "direct, fixed address"), ""],
+            [("Wetter, Wikipedia", "Weather, Wikipedia"), ("direkt, feste Adresse", "direct, fixed address"), ""],
             [("Sprachmodell", "Language model"), ("direkt (eigener Dienst)", "direct (own service)"), ""],
         ],
         "zahlen": [
@@ -199,17 +199,17 @@ SEITEN = {
         "heute": [("guard_ok", ("verbunden", "connected")), ("guard_bad", ("gesperrt", "blocked"))],
     },
     "internet": {
-        "stand": "2a7b242c2d",
+        "stand": "5419b5ef09",
         "bezug": {
             "regeln": ["s3", "s4"], "regel:Seiten aus der Suche": ["s4", "s5"], "regel:Mail, Kalender, Kontakte": ["s4", "s5"],
-            "regel:reMarkable": ["s4", "s5"], "regel:Wetter, Fahrplan, Wikipedia": ["s3"], "regel:Telegram": ["s7"],
+            "regel:reMarkable": ["s4", "s5"], "regel:Wetter, Wikipedia": ["s3"], "regel:Telegram": ["s7"],
             "regel:Update-Prüfung": ["s7"], "regel:Apple-Push": ["s7"],
         },
         "kurz": ("Dienste im Internet sind alles, was der Spark außerhalb des Hauses fragt: Mail und Kalender beim Anbieter, "
-                 "Seiten aus der Suche, Wetter, Fahrplan, Wikipedia, reMarkable, dazu Telegram, Apple-Push und die "
+                 "Seiten aus der Suche, Wetter, Wikipedia, reMarkable, dazu Telegram, Apple-Push und die "
                  "Update-Prüfung. Werkzeuge gehen über den Wächter oder eine feste Adresse; der Notaus schaltet sie ab.",
                  "Internet services are everything the Spark asks outside the house: mail and calendars at the provider, "
-                 "pages from search, weather, transit, Wikipedia, reMarkable, plus Telegram, Apple push and the update "
+                 "pages from search, weather, Wikipedia, reMarkable, plus Telegram, Apple push and the update "
                  "check. Tools go through the guard or a fixed address; the kill switch turns them off."),
         "warum": ("Was ins Internet geht, verlässt das Haus. Deshalb nur mit festen Regeln, nur an geprüfte Adressen, mit "
                   "begrenzter Antwort, und ein Notaus, der alles Internet auf einmal anhält.",
@@ -231,9 +231,9 @@ SEITEN = {
               ("stop", "ja", ("Gesperrt (Notaus)", "Blocked (kill switch)"))),
             S("s3", "frage", ("Feste Adresse?", "Fixed address?"),
               ("netguard.DIRECT_OK", "netguard.DIRECT_OK"),
-              ("Wetter, Fahrplan und Wikipedia fragen eine feste Adresse aus dem Code oder den Admin-Einstellungen, nie "
+              ("Wetter und Wikipedia fragen eine feste Adresse aus dem Code oder den Admin-Einstellungen, nie "
                "eine aus fremdem Text. Welche Module direkt verbinden dürfen und warum, steht in netguard.DIRECT_OK.",
-               "Weather, transit and Wikipedia ask a fixed address from the code or the admin settings, never one from "
+               "Weather and Wikipedia ask a fixed address from the code or the admin settings, never one from "
                "outside text. Which modules may connect directly and why is listed in netguard.DIRECT_OK."),
               ("ok", "ja", "s6")),
             S("s4", "schritt", ("Über den Wächter", "Through the guard"),
@@ -281,7 +281,7 @@ SEITEN = {
             [("YouTube-Links abschreiben (yt-dlp)", "Transcribe YouTube links (yt-dlp)"), ("netguard-Proxy, feste Host-Liste, Port 443", "netguard proxy, fixed host list, port 443")],
             [("Mail, Kalender, Kontakte", "Mail, calendars, contacts"), ("Wächter, Stufe Nutzer", "guard, level user")],
             [("reMarkable", "reMarkable"), ("Wächter, nur erlaubte Hosts", "guard, allowed hosts only")],
-            [("Wetter, Fahrplan, Wikipedia", "Weather, transit, Wikipedia"), ("feste Adresse", "fixed address")],
+            [("Wetter, Wikipedia", "Weather, Wikipedia"), ("feste Adresse", "fixed address")],
             [("Telegram", "Telegram"), ("feste Adresse, Bot-API", "fixed address, bot API")],
             [("Update-Prüfung", "Update check"), ("GitHub, fest", "GitHub, fixed")],
             [("Apple-Push", "Apple push"), ("fest", "fixed")],

@@ -196,7 +196,6 @@ struct ProfileView: View {
                 }
                 service("Pakete", "pro_parcel", "par_on")
                 service("Geburtstage", "pro_bday", "con_on")
-                service("Bus und Bahn", "pro_transit", "transit_on")
                 Toggle("Begrüßung", isOn: m.bool("pro_greet"))
                 Toggle("Mails", isOn: m.bool("pro_mail"))
                 if m.s["pro_mail"] as? Bool != false {

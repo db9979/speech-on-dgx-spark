@@ -449,7 +449,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ zugang (guard, core, profiles, features)
     "zugang": {
-        "stand": "6403fba5a6",
+        "stand": "04e73bb48f",
         "bezug": {
             "guard.MAX_FAILS": ["s2", "s3"], "guard.MAX_NAME_FAILS": ["s2", "s3"], "guard.LOCK_FIRST": ["s2"],
             "guard.DAY_FAILS": ["s2", "s3"], "guard.failed": ["s3"], "guard.succeeded": ["s5"],
@@ -794,7 +794,7 @@ SEITEN = {
                "tut das für jede Nachricht noch einmal, llm_tor.entschaerft). Ab da sind "
                "{chat.LOCKED_OUTSIDE|anzahl} handelnde Werkzeuge gesperrt, auch im nächsten Zug, und nichts davon wird ins "
                "Gedächtnis gelernt; nach einer Mail sind es {chat.LOCKED_AFTER_MAIL|anzahl}, dazu gehört alles, was ins Internet "
-               "fragt (Websuche, Wikipedia, Wetter, Fahrplan), damit kein Suchwort Mail-Inhalt hinausträgt. Nach jedem anderen Text von außen geht ein Werkzeug ins Internet nur noch mit Wörtern aus der eigenen Nachricht der Person oder aus dem, was eine Suche derselben Antwort schon gebracht hat; ein Wort aus Kalender, Gedächtnis oder Dokument wird so nie zum Suchwort (ausleiten.fremd, dieselbe Regel wie bei den Aufträgen). Ob das hält, "
+               "fragt (Websuche, Wikipedia, Wetter), damit kein Suchwort Mail-Inhalt hinausträgt. Nach jedem anderen Text von außen geht ein Werkzeug ins Internet nur noch mit Wörtern aus der eigenen Nachricht der Person oder aus dem, was eine Suche derselben Antwort schon gebracht hat; ein Wort aus Kalender, Gedächtnis oder Dokument wird so nie zum Suchwort (ausleiten.fremd, dieselbe Regel wie bei den Aufträgen). Ob das hält, "
                "prüft der Angriffs-Selbsttest mit einem Modell, das jedem Befehl gehorcht (panel/angriffe.json). Verbindungen nach außen laufen nur über den Wächter (netguard.allowed); "
                "eine Seite oder Datei holt nur netguard.hole_oeffentlich (Notaus zuerst, nur öffentlich auch nach jeder "
                "Weiterleitung, Größe, Zeit, Inhaltstyp), Links als Dokument nimmt eine Adresse nur aus den eigenen "
@@ -813,7 +813,7 @@ SEITEN = {
                "once more for every message, llm_tor.entschaerft). From then on "
                "{chat.LOCKED_OUTSIDE|anzahl} acting tools are locked, in the next turn too, and nothing of it is learned into "
                "memory; after a mail it is {chat.LOCKED_AFTER_MAIL|anzahl}, everything that asks the internet among them (web search, "
-               "Wikipedia, weather, transit), so no search word carries mail content out. After any other outside text a tool goes to the internet only with words from the person's own message or from what a search of the same answer already brought in; a word from the calendar, the memory or a document never becomes a search word (ausleiten.fremd, the same rule as for background jobs). Whether this holds is checked by "
+               "Wikipedia, weather), so no search word carries mail content out. After any other outside text a tool goes to the internet only with words from the person's own message or from what a search of the same answer already brought in; a word from the calendar, the memory or a document never becomes a search word (ausleiten.fremd, the same rule as for background jobs). Whether this holds is checked by "
                "the attack self-test with a model that obeys every order (panel/angriffe.json). Connections to the outside go only through the guard (netguard.allowed); "
                "a page or file is fetched only by netguard.hole_oeffentlich (kill switch first, public only also after "
                "every redirect, size, time, content type), links as documents take an address only from the person's "

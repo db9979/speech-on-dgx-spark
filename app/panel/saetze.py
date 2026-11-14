@@ -55,7 +55,7 @@ router = APIRouter()
 # the areas of „Was kannst du?“ and Ich → Was ich kann; every tool of SENTENCES in exactly one (test_saetze)
 AREAS = (
     ("alltag", "Alltag", "Everyday", ("reminder_set", "reminder_list", "reminder_cancel", "anruf_planen", "weather",
-                                      "transit", "tasks_show", "tasks_add", "tasks_change", "parcels", "feeds_news")),
+                                      "tasks_show", "tasks_add", "tasks_change", "parcels")),
     ("termine", "Kalender und Mail", "Calendar and mail", ("daily_briefing", "calendar_events", "calendar_add",
                                                            "calendar_change", "mail_list", "mail_read",
                                                            "mail_tidy_overview", "contacts_search",
@@ -83,7 +83,6 @@ FOLLOW = {
                 ("daily_briefing", "Was hab ich morgen vor?", "What am I up to tomorrow?")),
     "calendar_events": (("anruf_planen", "Ruf mich zehn Minuten vorher an", "Call me ten minutes before"),
                         ("reminder_set", "Erinnere mich eine Stunde vorher daran", "Remind me an hour before"),
-                        ("transit", "Wann fährt die nächste S-Bahn?", "When does the next S-Bahn leave?"),
                         ("weather", "Wie wird das Wetter morgen?", "What will the weather be like tomorrow?")),
     "mail_list": (("mail_draft", "Schreib Anna eine Antwort auf ihre Mail", "Write Anna a reply to her mail"),
                   ("parcels", "Wann kommt mein Paket?", "When does my parcel arrive?"),
@@ -102,7 +101,6 @@ FOLLOW = {
     "bild_malen": (("document_plan", "Mach mir dazu eine Präsentation", "Make me a presentation about it"),),
     "contacts_search": (("message_send", "Schick Anna eine Nachricht, dass ich später komme", "Send Anna a message that I will be late"),),
     "message_read": (("message_announce", "Durchsage im Wohnzimmer: Essen ist fertig", "Announcement in the living room: dinner is ready"),),
-    "transit": (("reminder_set", "Erinnere mich zehn Minuten vorher an die Bahn", "Remind me about the train ten minutes before"),),
     "memory_save": (("history_search", "Haben wir schon mal darüber gesprochen?", "Did we talk about this before?"),),
 }
 # the same follow-ups for the tools of the same kind
@@ -131,7 +129,7 @@ NEAR = (
 # a tool only some channels can use
 ONLY = {"iphone_action": {"iphone"}}
 # what a spoken channel can do without a screen (plan 7)
-VOICE = {"reminder_set", "reminder_list", "anruf_planen", "weather", "transit", "tasks_show", "tasks_add", "parcels", "feeds_news",
+VOICE = {"reminder_set", "reminder_list", "anruf_planen", "weather", "tasks_show", "tasks_add", "parcels",
          "daily_briefing", "calendar_events", "calendar_add", "mail_list", "mail_read", "contacts_search",
          "message_send", "message_read", "message_announce", "home_assistant", "home_assistant_states",
          "home_assistant_history", "web_search", "wikipedia", "document_search", "history_search", "memory_save",
