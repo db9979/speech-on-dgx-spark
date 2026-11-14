@@ -292,6 +292,7 @@
     "mail": false,
     "mail_tidy": false,
     "mail_manage": false,
+    "mail_later": false,
     "mail_idle": false,
     "mail_code": false,
     "mail_delete": false,

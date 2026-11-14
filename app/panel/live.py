@@ -1598,6 +1598,7 @@ def snapshot(view="admin", now=None):
         post_older = mail.older_today()
         post_threads = mail.threads_today()
         post_shown = mail.shown_today()
+        post_later = mail.LIVE["spaeter"]() if "spaeter" in mail.LIVE else {}
         import mailansicht
         post_view = mailansicht.counts()
         import fuerdich
@@ -1615,6 +1616,7 @@ def snapshot(view="admin", now=None):
         post_shown = {}
         post_later = 0
         post_code = {}
+        post_later = {}
         post_sort = {}
         post_fd = {}
         post_imp = {"cards": 0, "out": 0}
@@ -1874,6 +1876,8 @@ def snapshot(view="admin", now=None):
             x["sub"] += f" · heute {post_shown['zustand']}× Postfach-Fehler gezeigt"
         if x["id"] == "mail" and post_shown.get("pakete"):   # Sendungen über der Liste: strips shown today (a number)
             x["sub"] += f" · heute {post_shown['pakete']}× Sendungen gezeigt"
+        if x["id"] == "mail" and post_later.get("on"):    # Zurückstellen: mails waiting, back today (numbers only)
+            x["sub"] += f" · Später: {post_later['wait']} warten, heute {post_later['back']} zurück"
         if x["id"] == "mail" and post_fd.get("answers"):   # Für dich: mailboxes answered from its kept reading today (a number)
             x["sub"] += f" · Für dich heute {post_fd['answers']}× aus der letzten Lesung"
         if x["id"] == "mail" and (post_imp["cards"] or post_imp["out"]):   # Wichtige Mail: cards, sorted out (numbers)

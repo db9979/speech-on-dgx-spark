@@ -374,6 +374,19 @@ class Page(Fake):
                     self.assertIn("GMX", note)
                     self.assertIn("Anmeldung abgelehnt", note)
                     await b.until(pg, "!!document.querySelector('#postview .postzst a')")   # the way is a link (way.js)
+                    # Zurückstellen (pl_mail-Ideen 2): „Später …“ with key H, four fixed times and one's own; in a folder
+                    # a waiting mail says until when, with „Jetzt zurückholen“
+                    await pg.evaluate("SNOOZE_ON=true;POST.sel=POST.data.items[0].id;POST.msg={id:POST.sel,mid:'<w1@x>',from:'Shop <shop@example.de>',subject:'Rechnung',date:1773000000,text:'Danke',files:[]};postDraw()")
+                    self.assertTrue(await pg.evaluate("!!document.querySelector('#postview .postbar [data-o=snooze]')"))
+                    await pg.evaluate("document.activeElement&&document.activeElement.blur()")
+                    await pg.keyboard.press("h")
+                    await b.until(pg, "!!document.querySelector('#postview .postsnooze')")
+                    self.assertEqual(await pg.evaluate("[...document.querySelectorAll('#postview .postsnooze [data-sz]')].map(x=>x.dataset.sz)"),
+                                     ["abend", "morgen", "wochenende", "woche", "at"])
+                    await pg.evaluate("POST.menu='';POST.snooze={'<w1@x>':1773100000};POST.box={account:'m0a1b2c3d',folder:'Spark/Später',role:'folder',name:'Spark/Später'};postDraw()")
+                    self.assertIn("Zurückgestellt bis", await pg.inner_text("#postview .postdet"))
+                    self.assertTrue(await pg.evaluate("!!document.querySelector('#postview [data-szback]')"))
+                    self.assertFalse(await pg.evaluate("!!document.querySelector('#postview .postbar [data-o=snooze]')"))   # only from the inbox
                     self.assertEqual(errors, [])
                 finally:
                     await br.close()

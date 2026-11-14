@@ -37,6 +37,7 @@ OHNE = {
     "maildelete": "legt nur Mails im eigenen Postfach in dessen Papierkorb (endgültig nur dort), speichert nichts im Spark",
     "maillearn": "die Korrekturen, Ausnahmen und Pausen liegen in mail-regeln.json und gehen mit den Daten von Mails ordnen (mailregeln.forget)",
     "mailsend": "gesendete Mails liegen im Postfach unter Gesendet; im Spark bleibt nur die Vorschau höchstens 10 Minuten, ein Vorschlag per Sprache 5 Minuten; geplante Mails (Später senden) versiegelt bis zum Senden, sie gehen mit den Daten von E-Mail lesen",
+    "mailspaeter": "die Liste wartender Mails (versiegelt, mail-zurueck.bin) zeigt die Seite E-Mail im Ordner Später; löschen hieße, Mails blieben weg, darum holt „Jetzt zurückholen“ jede zurück, und sie geht mit den Daten von E-Mail lesen (mail.ON_FORGET)",
     "mailcode": "keine eigenen Daten: ein Code lebt nur mit seiner Mitteilung im Speicher, nie auf der Platte",
     "bildaendern": "geänderte und hochgeladene Bilder liegen bei den Bildern (features.OWN bilder, Ich → Bilder)",
     "musikbearbeiten": "Fassungen und hochgeladene Dateien liegen bei den Liedern (features.OWN musik, Ich → Musik)",

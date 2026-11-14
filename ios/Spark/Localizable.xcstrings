@@ -21670,6 +21670,96 @@
           }
         }
       }
+    },
+    "Zurückgestellt bis ": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Snoozed until "
+          }
+        }
+      }
+    },
+    "Jetzt zurückholen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bring back now"
+          }
+        }
+      }
+    },
+    "Bis": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Until"
+          }
+        }
+      }
+    },
+    "Bis dahin": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Until then"
+          }
+        }
+      }
+    },
+    "Heute Abend": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This evening"
+          }
+        }
+      }
+    },
+    "Morgen früh": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tomorrow morning"
+          }
+        }
+      }
+    },
+    "Am Wochenende": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At the weekend"
+          }
+        }
+      }
+    },
+    "Nächste Woche": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next week"
+          }
+        }
+      }
+    },
+    "Eigene Zeit …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Own time …"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

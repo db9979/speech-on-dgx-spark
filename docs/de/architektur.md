@@ -430,6 +430,7 @@ Die eigenen Seiten E-Mail, Kalender und Kontakte, der Abruf beim Anbieter, der v
 | `app/panel/mailvorrat.py` | Mail-Vorrat: neueste Kopfzeilen und Texte versiegelt im Profil, Antwort mit Stand bei Ausfall |
 | `app/panel/postfach.py` | Mails ordnen auf der Seite E-Mail: gelesen, markieren, Archiv, Ordner, Mehrfachauswahl, Löschen in den Papierkorb |
 | `app/panel/senden.py` | Mails senden auf der Seite E-Mail: Vorschau-Blatt, SMTP über TLS, Kopie in Gesendet, Später senden versiegelt |
+| `app/panel/spaeter.py` | Zurückstellen: Mail in „Später“ und zur gewählten Zeit ungelesen zurück in den Posteingang |
 | `app/panel/sparkkalender.py` | Spark-Kalender ohne Konto: Termine nur auf dem Spark, verschlüsselt im Profil, beantwortet CalDAV im Panel selbst |
 | `app/panel/tidy.py` | Posteingang aufräumen |
 
@@ -700,6 +701,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `users/ID/mail-vorrat.bin` | Mail-Vorrat: die neuesten Kopfzeilen (300 je Postfach, 30 Tage) und bis zu 40 Mailtexte ohne Anhänge | Mails | versiegelt | ja | – |
 | `users/ID/wetter-vorrat.bin` | Wetter-Vorrat: die letzte Vorhersage für den eigenen Ort | Zustand | versiegelt | ja | – |
 | `users/ID/pakete-vorrat.bin` | Paket-Vorrat: die zuletzt aus den Mails gelesenen Sendungen | Mails | versiegelt | ja | – |
+| `users/ID/mail-zurueck.bin` | Zurückstellen: wartende Mails (Message-ID, Postfach, Zeit, Absender, Betreff) | Mails | versiegelt | ja | – |
 | `users/ID/mail-tidy.json` | Posteingang aufräumen | Einstellungen | – | ja | – |
 | `users/ID/fuerdich-vorrat.bin` | Für dich: die letzte Lesung je Postfach (gefundene Einträge mit Absender, Betreff und Zeit, kein Mailtext) | Mails | versiegelt | ja | – |
 | `users/ID/fuerdich.json` | Für dich: was du als erledigt oder uninteressant markiert hast (nur Prüfsummen) | Einstellungen | – | ja | – |

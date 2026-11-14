@@ -779,6 +779,30 @@ class Box:
                 self.boxes[p] = {"raw": _utf7(p), "flags": ""}
         return name
 
+    def own(self, path):
+        """One fixed folder of the Spark under its main folder ("Spark/Falsch sortiert", "Spark/Später"), made with its
+        main folder when missing; its server name, or ValueError. Never a folder of the mail program; the name is the
+        Spark's, never from a mail."""
+        name = self.name(path)
+        if name in self.boxes:
+            if self.is_special(name):
+                raise ValueError("a folder of the mail program")
+            return name
+        for p in ([self.name(path.rsplit("/", 1)[0])] if "/" in path else []) + [name]:
+            if p in self.boxes:
+                continue
+            if self.is_special(p):
+                raise ValueError("a folder of the mail program")
+            typ, _ = self.c.create(_q(_utf7(p)))
+            if typ != "OK" and p == name:
+                raise ValueError(f"folder '{path}' could not be created")
+            try:
+                self.c.subscribe(_q(_utf7(p)))
+            except Exception:
+                pass
+            self.boxes[p] = {"raw": _utf7(p), "flags": ""}
+        return name
+
     def rename_tree(self, old_root, new_root, pairs):
         """Renames our folders: the main folder as a whole when both names have one, else each folder.
         Never touches the inbox or a special folder, never renames onto an existing folder.

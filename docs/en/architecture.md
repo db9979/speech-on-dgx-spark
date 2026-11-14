@@ -430,6 +430,7 @@ The own pages E-mail, Calendar and Contacts, fetching from the provider, the sea
 | `app/panel/mailvorrat.py` | Mail-Vorrat: the newest of each profile's mailboxes kept on the Spark, so the page, the assistant, the deadlines and „Für dich“ answer at once after a restar … |
 | `app/panel/postfach.py` | Mails ordnen auf der Seite E-Mail: the profile marks a message of its inbox as read or unread, archives it or moves it into one of its own folders, and takes … |
 | `app/panel/senden.py` | Mails senden auf der Seite E-Mail: a profile writes a new mail or answers one of its inbox, sees the finished mail on a preview sheet and only its „Senden“ t … |
+| `app/panel/spaeter.py` | Zurückstellen: a mail goes out of the inbox into the folder „<KI folder>/Später“ of its own mailbox and comes back into the inbox at the time picked, unread, … |
 | `app/panel/sparkkalender.py` | Spark-Kalender, Stufe 3: a calendar that lives only on the Spark, without iCloud, Google or Nextcloud. |
 | `app/panel/tidy.py` | Tidying the inbox per profile: obvious advertising, newsletters and the like are moved into folders under a main folder ("Spark/" unless the profile names an … |
 
@@ -700,6 +701,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `users/ID/mail-vorrat.bin` | Mail supply: the newest headers (300 per mailbox, 30 days) and up to 40 mail texts without attachments | Mails | sealed | yes | – |
 | `users/ID/wetter-vorrat.bin` | Weather supply: the last forecast for the own place | State | sealed | yes | – |
 | `users/ID/pakete-vorrat.bin` | Parcel supply: the parcels last read from the mails | Mails | sealed | yes | – |
+| `users/ID/mail-zurueck.bin` | Snooze mail: waiting mails (Message-ID, mailbox, time, sender, subject) | Mails | sealed | yes | – |
 | `users/ID/mail-tidy.json` | Inbox tidy | Settings | – | yes | – |
 | `users/ID/fuerdich-vorrat.bin` | For you: the last reading per mailbox (found entries with sender, subject and time, no mail text) | Mails | sealed | yes | – |
 | `users/ID/fuerdich.json` | For you: what you marked as done or not interesting (only checksums) | Settings | – | yes | – |

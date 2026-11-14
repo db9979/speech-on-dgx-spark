@@ -6006,6 +6006,21 @@
 "text": "Pi updaten. Admin: Funktionen → Zugang, unter „Probleme melden“ „Erfundenes automatisch melden“ an. Nach einer als nicht belegt markierten Antwort liegt unter Ich → Probleme melden ein Bericht mit Frage, Antwort und Weg (oder mit „Antwort-Meldungen direkt an GitHub“ gleich ein Issue in spark-meldungen). Höchstens 3 am Tag.",
 "thread": "Fehler und Wünsche als Issue melden",
 "test": "test_systemone.AntwortPruefen.test_unbelegt_marks_tells_and_reports"
+},
+{
+"id": "P879",
+"v": 1433,
+"titel": "Mail zurückstellen",
+"text": "Pi updaten. Unter Funktionen → E-Mail lesen → Mails ordnen → „Zurückstellen“ einschalten. E-Mail öffnen, eine Mail im Posteingang öffnen, „Später …“ (oder Taste H) und eine eigene Zeit in etwa 10 Minuten wählen: die Mail verschwindet aus dem Posteingang und liegt im Ordner „Später“ unter dem KI-Ordner. Dort steht über ihr „Zurückgestellt bis …“. Nach der Zeit (spätestens eine Minute danach) steht sie wieder ungelesen oben im Posteingang. Eine zweite Mail mit „Morgen früh“ weglegen und im Ordner „Später“ mit „Jetzt zurückholen“ sofort zurückholen.",
+"thread": "Mail mit Ideen aus pl_mail verbessern",
+"test": "test_spaeter.Ablauf.test_b_put_due_back_unread_and_back_now"
+},
+{
+"id": "P880",
+"v": 1433,
+"titel": "Zurückstellen am iPhone",
+"text": "Nach dem nächsten TestFlight: In der iPhone-App eine Mail des Posteingangs öffnen, unten „Später“ → „Eigene Zeit …“ in 10 Minuten. Die Mail ist weg und kommt zur Zeit ungelesen zurück. Im Ordner „Später“ steht „Zurückgestellt bis …“ mit „Jetzt zurückholen“. Dazu: über dem Posteingang eine Sendung mit ✕ ausblenden, sie bleibt weg.",
+"thread": "Mail mit Ideen aus pl_mail verbessern"
 }
 ]
 }

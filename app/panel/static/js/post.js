@@ -16,6 +16,8 @@ const POST={menu:'',menuAt:null,data:null,sel:null,msg:null,q:'',chips:{},unread
 let ORD_ON=false;
 // Mails löschen (postfach.py, admin switch chat.mail_delete): into the trash and back, for good only there after a question
 let DEL_ON=false;
+// Zurückstellen (spaeter.py, admin switch chat.mail_later, start.js): a mail into „Später“ and back at a fixed time
+let SNOOZE_ON=false;
 // Mails senden (senden.py, admin switch chat.mail_send): a new mail or an answer in its window, „Senden“ with „Rückgängig“
 let SEND_ON=false;
 // the menu entry only for a signed-in profile that may read mail (start.js, like Kalender)
@@ -110,7 +112,7 @@ function postOpen(){if(!PROFILE)return;const root=$('postroot');for(const b of P
     {k:'set',label:t('Einstellungen','Settings'),body:()=>{const b=$('mailbox');b.hidden=false;$('parwrap').hidden=!PAR_ON;
       lzb(b,async()=>{await showMail();await Promise.all([showMailTidy().catch(()=>{}),showMailStil().catch(()=>{})])},{auth:true}).catch(()=>{});
       proIn('promail').catch(()=>{});if(PAR_ON)lzb($('parbox'),showPar,{auth:true}).catch(()=>{});return b}}]));
-  postLoad(false,!!POST.data)}
+  postLoad(false,!!POST.data);if(SNOOZE_ON)postSnoozeLoad().then(()=>{if($('postview')&&POST.box)postDetail($('postview'))})}
 // the tab „Posteingang“: search, the list, the message tapped
 // Suche erweitern (pl_mail-Ideen 5, Dominik 2026-11-13 „1-7“): the search words the server knows (mail.OPS) offered while
 // typing, the senders of the list after von:/an:, the folders after ordner:, days after vor:/nach:; the list sits over
@@ -254,6 +256,7 @@ function postBar(m){const menu=POST.menuAt===POST.sel?POST.menu:'',x=postItems()
   const read=ord?postIb('read',`data-o="${x&&x.unread?'read':'unread'}"`,...(x&&x.unread?['Als gelesen markieren','Mark as read']:['Als ungelesen markieren','Mark as unread']),'U'):'';
   const star=ord?postIb('star',`data-o="${x&&x.flagged?'unflag':'flag'}"`,...(x&&x.flagged?['Markierung weg','Unflag']:['Markieren','Flag']),'S',x&&x.flagged):'';
   const rule=ord?postIb('rule','data-w="rule"','Regel daraus …','Rule from this …','G'):'';
+  const later=ord&&SNOOZE_ON&&!POST.box?postIb('clock','data-o="snooze" aria-expanded="'+(menu==='snooze')+'"','Später …','Later …','H'):'';
   const del=ord&&postDeletable()?postIb('trash','data-o="delete"','Löschen (in den Papierkorb)','Delete (into the trash)','Entf')
     :ord&&postInTrash()?postIb('trash','data-o="erase"','Endgültig löschen','Delete for good',''):'';
   if(NARROW()){   // a phone: back, the star and ⋯ on top, the five most used at the thumb below
@@ -264,16 +267,33 @@ function postBar(m){const menu=POST.menuAt===POST.sel?POST.menu:'',x=postItems()
     const more=ord||top.length?`<button type="button" class="pib" data-o="more" aria-label="${esc(t('Mehr','More'))}" aria-expanded="${menu==='more'}">${postIc('more')}</button>`:'';
     return [`<div class="postbar" role="toolbar" aria-label="${esc(t('Mail','Mail'))}">${close}<span class="pgap"></span>`+
       (SEND_ON?`<button type="button" class="pib" data-w="new" aria-label="${esc(t('Neue Mail','New mail'))}">${postIc('pen')}</button>`:'')+star+more+`</div>`+
-      (menu==='more'?`<div class="postmenu">${top.map(b=>`<button type="button" ${b[1]}>${postIc(b[0])}${esc(t(b[2],b[3]))}</button>`).join('')}${ord?`<button type="button" ${read.match(/data-o="\w+"/)[0]}>${postIc('read')}${esc(x&&x.unread?t('Als gelesen markieren','Mark as read'):t('Als ungelesen markieren','Mark as unread'))}</button><button type="button" data-w="rule">${postIc('rule')}${esc(t('Regel daraus …','Rule from this …'))}</button>`:''}</div>`:'')+
-      (menu==='pick'?postMoveMenu(f,src):''),
+      (menu==='more'?`<div class="postmenu">${top.map(b=>`<button type="button" ${b[1]}>${postIc(b[0])}${esc(t(b[2],b[3]))}</button>`).join('')}${ord?`<button type="button" ${read.match(/data-o="\w+"/)[0]}>${postIc('read')}${esc(x&&x.unread?t('Als gelesen markieren','Mark as read'):t('Als ungelesen markieren','Mark as unread'))}</button><button type="button" data-w="rule">${postIc('rule')}${esc(t('Regel daraus …','Rule from this …'))}</button>`:''}${later?`<button type="button" data-o="snooze">${postIc('clock')}${esc(t('Später …','Later …'))}</button>`:''}</div>`:'')+
+      (menu==='pick'?postMoveMenu(f,src):'')+(menu==='snooze'?postSnoozeMenu():''),
       // the thumb bar goes last, below the mail (V01.0.865 drew it first, over the subject)
       foot.length?`<div class="postfoot" role="toolbar">${foot.slice(0,5).map(b=>`<button type="button" ${b[1]}>${postIc(b[0])}<span>${esc(t(b[2],b[3]))}</span></button>`).join('')}</div>`:'']}
   const g1=(send?`<button type="button" class="b p postpri" data-w="reply" data-tip="${esc(t('Antworten · R','Reply · R'))}">${postIc('reply')}${esc(t('Antworten','Reply'))}</button>`+postIb('fwd','data-w="fwd"','Weiterleiten','Forward','F'):'')+
     (cal?postIb('cal','data-w="cal"','Als Termin','As appointment','T'):'');
   const g2=read+star+(arch?postIb('arch','data-o="archive"','Archivieren','Archive','E'):'')+
-    (mv?postIb('move','data-o="pick" aria-expanded="'+(menu==='pick')+'"','Verschieben nach …','Move to …','V'):'')+del;
+    (mv?postIb('move','data-o="pick" aria-expanded="'+(menu==='pick')+'"','Verschieben nach …','Move to …','V'):'')+later+del;
   return [`<div class="postbar" role="toolbar" aria-label="${esc(t('Mail','Mail'))}">${close}<span class="psep"></span>${[g1,g2,rule].filter(Boolean).join('<span class="psep"></span>')}</div>`+
-    (menu==='pick'?postMoveMenu(f,src):''),'']}
+    (menu==='pick'?postMoveMenu(f,src):'')+(menu==='snooze'?postSnoozeMenu():''),'']}
+// Zurückstellen (pl_mail-Ideen 2): the fixed times and one of your own; the Spark computes them in your zone (spaeter.when)
+const POST_SNOOZE=[['abend','Heute Abend','This evening'],['morgen','Morgen früh','Tomorrow morning'],['wochenende','Am Wochenende','At the weekend'],['woche','Nächste Woche','Next week']];
+function postSnoozeMenu(){return `<div class="postmenu postsnooze">${POST_SNOOZE.map(x=>`<button type="button" data-sz="${x[0]}">${postIc('clock')}${esc(t(x[1],x[2]))}</button>`).join('')}`+
+  `<span class="row"><input type="datetime-local" data-szat aria-label="${esc(t('Eigene Zeit','Own time'))}"><button type="button" class="b" data-sz="at">${esc(t('Bis dahin','Until then'))}</button></span></div>`}
+async function postSnooze(when,msg,at){const id=POST.sel;if(!id)return;if(msg){msg.className='postordmsg fh';msg.textContent=t('Einen Moment …','One moment …')}
+  const back=postGone([id],'move');
+  const {r,d}=await apiTry('/api/profile/mail/snooze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,when,at:at||0})});
+  if(!r.ok){postBack(back);const e=errSay(r.status,d.detail,'');if(msg&&msg.isConnected){msg.className='postordmsg err';msg.textContent=e}else{POST.err=e;postDraw()}return}
+  POST.menu='';POST.note=t('Zurückgestellt bis ','Snoozed until ')+new Date(d.until*1000).toLocaleString(kalLoc(),{weekday:'short',day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'})+'.';
+  postSnoozeLoad();postDraw()}
+// the list of what waits ({mid: until}); in the folder „Später“ an open mail says until when, with „Jetzt zurückholen“
+async function postSnoozeLoad(){if(!SNOOZE_ON)return;const {r,d}=await apiTry('/api/profile/mail/snooze');if(r.ok)POST.snooze=Object.fromEntries((d.items||[]).map(x=>[x.mid,x.until]))}
+function postSnoozeLine(m){const u=SNOOZE_ON&&POST.box&&m&&m.mid&&POST.snooze&&POST.snooze[m.mid];if(!u)return '';
+  return `<div class="postwhy"><span>${esc(t('Zurückgestellt bis ','Snoozed until ')+new Date(u*1000).toLocaleString(kalLoc(),{weekday:'short',day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'}))}</span><button type="button" class="lnk" data-szback>${esc(t('Jetzt zurückholen','Bring back now'))}</button></div>`}
+async function postSnoozeBack(m,msg){const {r,d}=await apiTry('/api/profile/mail/snooze/back',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mid:m.mid})});
+  if(!r.ok){if(msg){msg.className='postordmsg err';msg.textContent=errSay(r.status,d.detail,'')}return}
+  if(POST.snooze)delete POST.snooze[m.mid];postGone([POST.sel],'move');POST.note=t('Wieder im Posteingang.','Back in the inbox.');postDraw()}
 // „Verschieben nach …“: the folders of the message's mailbox as a short menu (the inbox first when in a folder)
 function postMoveMenu(f,src){const into=(f&&f.folders||[]).filter(n=>n!==src);if(POST.box)into.unshift('INBOX');
   return `<div class="postmenu postmv">${into.length?into.map(n=>`<button type="button" data-mv="${esc(n)}">${postIc('move')}${esc(n==='INBOX'?t('Posteingang','Inbox'):n)}</button>`).join('')
@@ -297,7 +317,7 @@ function postDetail(w){const box=w.querySelector('.postdet'),m=POST.msg;if(!box)
           :t('Bilder von außen sind aus, damit der Absender nicht sieht, dass du die Mail liest.','Pictures from outside stay off, so the sender does not learn that you read the mail.'))}</span>${POST.pics===POST.sel?'':`<button class="b" type="button" data-k="pics">${esc(t('Bilder laden','Load pictures'))}</button>`}</div>`:'')+
         `<iframe class="postframe" title="${esc(t('Inhalt der Mail','Content of the mail'))}" sandbox="allow-same-origin" referrerpolicy="no-referrer" src="/api/profile/mail/view?${esc(new URLSearchParams({id:POST.sel,...(POST.box?{folder:POST.box.folder}:{}),...(POST.pics===POST.sel?{bilder:'true'}:{})}).toString())}"></iframe>`
         :`<div class="posttext">${esc(m.text||t('(kein Text)','(no text)'))}</div>`)+`</div>`],
-      ['link:'+sel,`<div class="postlink" hidden></div>`],['thr:'+sel,`<div class="postthr">${postThrInner()}</div>`],
+      ['sz:'+sel+':'+(POST.snooze&&m.mid&&POST.snooze[m.mid]||''),postSnoozeLine(m)],['link:'+sel,`<div class="postlink" hidden></div>`],['thr:'+sel,`<div class="postthr">${postThrInner()}</div>`],
       ['tail',(SEND_ON?'':`<div class="fh">${esc(t('Antworten geht mit dem Assistenten: „Antworte Anna …“.','Reply with the assistant: "Reply to Anna …".'))}</div>`)+`<div class="postordmsg fh"></div>`])}
   parts.push(['foot',foot]);
   const fresh=keyFill(box,parts),mn=box.querySelector('.postmain');
@@ -312,8 +332,11 @@ function postDetail(w){const box=w.querySelector('.postdet'),m=POST.msg;if(!box)
   const on=(q,f)=>box.querySelectorAll(q).forEach(b=>b.onclick=f);
   on('[data-w=reply]',()=>postWrite(m));on('[data-w=fwd]',()=>postWrite(m,true));on('[data-w=new]',()=>postWrite(null));
   on('[data-w=cal]',()=>postAsEvent(m));on('[data-w=rule]',()=>{postRuleFrom(m)});
-  on('[data-o=pick]',()=>postMenu('pick'));on('[data-o=more]',()=>postMenu('more'));
-  box.querySelectorAll('[data-o]:not([data-o=pick]):not([data-o=more]):not([data-o=erase])').forEach(b=>b.onclick=()=>{postAct(b.dataset.o,'',msg)});
+  on('[data-o=pick]',()=>postMenu('pick'));on('[data-o=more]',()=>postMenu('more'));on('[data-o=snooze]',()=>postMenu('snooze'));
+  on('[data-sz]',e=>{const k=e.currentTarget.dataset.sz,i=box.querySelector('[data-szat]');if(k!=='at')return postSnooze(k,msg);
+    const at=i&&i.value?Math.floor(new Date(i.value).getTime()/1000):0;if(!at){msg.className='postordmsg err';msg.textContent=t('Bitte eine Zeit wählen.','Please pick a time.');return}postSnooze('at',msg,at)});
+  on('[data-szback]',()=>postSnoozeBack(m,msg));
+  box.querySelectorAll('[data-o]:not([data-o=pick]):not([data-o=more]):not([data-o=erase]):not([data-o=snooze])').forEach(b=>b.onclick=()=>{postAct(b.dataset.o,'',msg)});
   on('[data-o=erase]',()=>postErase(m,msg));
   // a mail dragged from the list onto the archive or the trash symbol of the open one
   box.querySelectorAll('[data-o=archive],[data-o=delete]').forEach(b=>{if([...fresh].some(n=>n.contains(b)))postDropOn(b,()=>b.dataset.o,()=>'')});
@@ -753,6 +776,7 @@ document.addEventListener('keydown',e=>{if(!$('post')||!$('post').classList.cont
   else if(k==='u'){if(x){e.preventDefault();postAct(x.unread?'read':'unread','',null)}}
   else if(k==='s'){if(x){e.preventDefault();postAct(x.flagged?'unflag':'flag','',null)}}
   else if(k==='v'&&postMovable()){e.preventDefault();postMenu('pick')}
+  else if(k==='h'&&SNOOZE_ON&&ORD_ON&&!POST.box){e.preventDefault();postMenu('snooze')}
   else if(k==='g'){e.preventDefault();postRuleFrom(m)}
   else if((e.key==='Delete'||e.key==='Backspace')&&postDeletable()){e.preventDefault();postAct('delete','',null)}});
 // a phone: swipe a row left to archive, right for read or unread (only with Mails ordnen)

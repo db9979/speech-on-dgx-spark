@@ -1021,7 +1021,7 @@ final class PostModel: ObservableObject {
 
     func laterLoad() async {
         guard let api = SparkAPI.current, Conversation.shared.allowed.areas.contains("mailsend") else { later = []; return }
-        if let d = try? await api.object("GET", "api/profile/mail/later") {
+        if let d = try? await api.object("GET", "api/profile/mail/snooze") {
             later = (d["items"] as? [[String: Any]] ?? []).prefix(40).compactMap(MailLater.init)
         }
     }
@@ -1030,7 +1030,7 @@ final class PostModel: ObservableObject {
     func laterDrop(_ x: MailLater) async {
         guard let api = SparkAPI.current else { return }
         do {
-            let d = try await api.object("DELETE", "api/profile/mail/later/\(x.id)")
+            let d = try await api.object("DELETE", "api/profile/mail/snooze/\(x.id)")
             later = (d["items"] as? [[String: Any]] ?? []).prefix(40).compactMap(MailLater.init)
             error = nil
         } catch {
@@ -2363,6 +2363,10 @@ struct MailView: View {
     @State private var file: URL?
     @State private var fetching: Int?
     @State private var erasing = false
+    /// Zurückstellen (spaeter.py): until when this mail waits in „Später“ (nil: it does not wait), a time of one's own
+    @State private var laterUntil: Date?
+    @State private var laterPick = false
+    @State private var laterAt = Date().addingTimeInterval(3600)
     @State private var page: String?
     @State private var pageHeight: CGFloat = 120
     @State private var thread: [MailThreadItem] = []
@@ -2394,6 +2398,14 @@ struct MailView: View {
                     if m.echt == "ok" { Label("Absender bestätigt", systemImage: "checkmark.seal").font(.caption).foregroundStyle(Theme.okText) }
                     if m.echt == "falsch" { Label("Absender passt nicht: der Mailserver konnte die Domain nicht bestätigen", systemImage: "exclamationmark.triangle").font(.caption).foregroundStyle(Theme.badText) }
                     if !m.why.isEmpty { Text(verbatim: SparkAPI.satz(m.why)).font(.caption).foregroundStyle(.secondary) }
+                    if let u = laterUntil {
+                        HStack {
+                            Text(verbatim: String(localized: "Zurückgestellt bis ") + u.formatted(.dateTime.weekday().day().month().hour().minute()))
+                                .font(.caption).foregroundStyle(.secondary)
+                            Spacer()
+                            Button("Jetzt zurückholen") { Task { await laterBack() } }.font(.caption).buttonStyle(.borderless).disabled(busy)
+                        }
+                    }
                     if !box.isEmpty { LabeledContent("Postfach") { Text(verbatim: box) } }
                     if !m.files.isEmpty && (m.parts.isEmpty || !talk.allowed.areas.contains("mailmanage")) {
                         LabeledContent("Anhänge") { Text(verbatim: m.files.joined(separator: ", ")) }
@@ -2464,8 +2476,21 @@ struct MailView: View {
         .navigationTitle("Mail")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { bars }
-        .task { await load() }
+        .task { await load(); await laterLoad() }
         .sheet(item: $writing) { d in MailWrite(draft: d) }
+        .sheet(isPresented: $laterPick) {
+            NavigationStack {
+                Form { DatePicker("Bis", selection: $laterAt, in: Date().addingTimeInterval(300)...Date().addingTimeInterval(365 * 86400)) }
+                    .navigationTitle("Später")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) { Button("Abbrechen") { laterPick = false } }
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("Bis dahin") { laterPick = false; Task { await later("at", laterAt) } }
+                        }
+                    }
+            }
+        }
         .sheet(item: $ruleFrom) { r in MailRules(start: r) }
         .sheet(isPresented: Binding(get: { file != nil }, set: { if !$0 { if let file { try? FileManager.default.removeItem(at: file) }; file = nil } })) {
             if let file { NavigationStack { QuickLookView(url: file).ignoresSafeArea() } }
@@ -2540,6 +2565,17 @@ struct MailView: View {
                     Button { reply() } label: { Label("Antworten", systemImage: "arrowshape.turn.up.left") }
                     Spacer()
                     Button { forward() } label: { Label("Weiterleiten", systemImage: "arrowshape.turn.up.right") }
+                    Spacer()
+                }
+                if a.contains("mailspaeter") && folder == nil {
+                    Menu {
+                        Button("Heute Abend") { Task { await later("abend") } }
+                        Button("Morgen früh") { Task { await later("morgen") } }
+                        Button("Am Wochenende") { Task { await later("wochenende") } }
+                        Button("Nächste Woche") { Task { await later("woche") } }
+                        Button("Eigene Zeit …") { laterPick = true }
+                    } label: { Label("Später", systemImage: "clock") }
+                    .disabled(busy)
                     Spacer()
                 }
                 if a.contains("mailmanage") && canMove {
@@ -2648,6 +2684,44 @@ struct MailView: View {
            let f = try? await api.object("GET", "api/profile/mail/folders", query: ["account": String(item.id.prefix(9))]) {
             folders = (f["folders"] as? [String] ?? []).prefix(100).map { String($0) }
             archive = f["archive"] as? String
+        }
+    }
+
+    /// Zurückstellen: into „Später“ until a fixed time (the Spark computes it in the profile's zone) or one's own
+    private func later(_ when: String, _ at: Date? = nil) async {
+        guard let api = SparkAPI.current else { return }
+        busy = true
+        defer { busy = false }
+        do {
+            _ = try await api.object("POST", "api/profile/mail/snooze",
+                                     body: ["id": item.id, "when": when, "at": Int(at?.timeIntervalSince1970 ?? 0)])
+            if post.gone([item.id], "move").isEmpty { Task { await post.load(true) } }
+            dismiss()
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
+
+    /// in the folder „Später“: until when this mail waits
+    private func laterLoad() async {
+        guard folder != nil, talk.allowed.areas.contains("mailspaeter"), let api = SparkAPI.current,
+              let mid = m?.mid, !mid.isEmpty,
+              let d = try? await api.object("GET", "api/profile/mail/snooze") else { return }
+        let hit = (d["items"] as? [[String: Any]] ?? []).first { ($0["mid"] as? String) == mid }
+        laterUntil = (hit?["until"] as? Int).map { Date(timeIntervalSince1970: TimeInterval($0)) }
+    }
+
+    /// „Jetzt zurückholen“: back into the inbox at once
+    private func laterBack() async {
+        guard let api = SparkAPI.current, let mid = m?.mid else { return }
+        busy = true
+        defer { busy = false }
+        do {
+            _ = try await api.object("POST", "api/profile/mail/snooze/back", body: ["mid": mid])
+            if post.gone([item.id], "move").isEmpty { Task { await post.load(true) } }
+            dismiss()
+        } catch {
+            self.error = error.localizedDescription
         }
     }
 

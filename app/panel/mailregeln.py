@@ -514,20 +514,11 @@ def ensure_wrong(uid, box, st=None):
     name = box.name(wrong_path(st))
     if name in box.boxes:
         return name
-    for p in ([box.name(st["root"])] if st.get("root") else []) + [name]:
-        if p in box.boxes:
-            continue
-        if box.is_special(p):
-            raise ValueError("a folder of the mail program")
-        typ, _ = box.c.create(tidy._q(tidy._utf7(p)))
-        if typ != "OK" and p == name:
-            print(f"mail: rule wrong folder | refused | {profiles.log_name(profiles.by_id(uid))}", flush=True)
-            raise ValueError("the folder for wrongly sorted mail could not be made")
-        try:
-            box.c.subscribe(tidy._q(tidy._utf7(p)))
-        except Exception:
-            pass
-        box.boxes[p] = {"raw": tidy._utf7(p), "flags": ""}
+    try:
+        name = box.own(wrong_path(st))
+    except ValueError:
+        print(f"mail: rule wrong folder | refused | {profiles.log_name(profiles.by_id(uid))}", flush=True)
+        raise ValueError("the folder for wrongly sorted mail could not be made")
     print(f"mail: rule wrong folder | made | {profiles.log_name(profiles.by_id(uid))}", flush=True)
     return name
 

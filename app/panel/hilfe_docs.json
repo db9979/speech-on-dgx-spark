@@ -10149,6 +10149,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "Zurückstellen (Funktionen → E-Mail lesen → Mails ordnen → „Zurückstellen“, chat.mail_later, aus; Idee aus pl_mail): In einer Mail des Posteingangs legt „Später …“ (Taste H) sie weg: heute Abend (18 Uhr, nach 17:55 morgen Abend), morgen früh (8 Uhr), am Wochenende (Samstag 9 Uhr), nächste Woche (Montag 8 Uhr) oder zu einer eigenen Zeit (5 Minuten bis 1 Jahr voraus); die festen Zeiten rechnet der Spark in der Zeitzone des Profils (spaeter.when). Die Mail wandert in den Ordner „Später“ unter dem KI-Ordner ihres Postfachs (wie „Falsch sortiert“, gemacht beim ersten Mal; tidy.Box.own), die Liste (Message-ID, Postfach, Zeit, Absender, Betreff, höchstens 200) liegt versiegelt in mail-zurueck.bin. Jede Minute bringt spaeter.due Fälliges zurück in den Posteingang und nimmt \\Seen weg, damit sie oben ungelesen steht; das läuft auch, wenn der Schalter inzwischen aus ist, damit keine Mail wegbleibt. Hat jemand die Mail selbst verschoben, fällt sie aus der Liste (mail: later gone); antwortet das Postfach nicht, versucht der Spark es jede Minute wieder (eine Logzeile höchstens alle 30 Minuten). Im Ordner „Später“ steht über der Mail „Zurückgestellt bis …“ mit „Jetzt zurückholen“. Kein Werkzeug fü"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "rs Modell. Endpunkte GET|POST /api/profile/mail/snooze und POST /api/profile/mail/snooze/back (eigenes Profil, Rate-Limit postordnen, 1 KB); Notaus hält beides an. Live (Knoten E-Mail): wie viele warten, wie viele heute zurück. Log mail: later put | <Stunden> h, mail: later back | <Anzahl>, mail: later refused, …, nie Absender oder Betreff. iPhone: „Später“ unten in der Mail, „Jetzt zurückholen“ im Ordner „Später“."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "E-Mail wie ein volles Mailprogramm, Stufe A: Ordner (gehört zu „Mails ordnen“, aus): Über der Liste steht „📁 Posteingang ▾“; es öffnet an Stelle der Liste alle Ordner aller Postfächer: Posteingang, Entwürfe, Gesendet, Archiv, eigene Ordner eingerückt, Spam und Papierkorb, je mit Zahl ungelesener Mails. Ein Tipp öffnet den Ordner (nur lesen: EXAMINE, BODY.PEEK, die neuesten 50; Suche und „Nur ungelesen“ wirken darauf). „+ Neuer Ordner“ legt einen Ordner oben im Postfach an, „⋯“ an einem eigenen Ordner bietet „Umbenennen“, „Ordner darin“ und „Entfernen (nur leer)“. Ordner des Mailprogramms (Posteingang, Gesendet, Entwürfe, Papierkorb, Spam, Archiv) und die von „Mails aufräumen“ werden nie umbenannt oder entfernt; ein Ordner mit Mails oder Unterordnern bleibt stehen. Umbenennen und Entfernen fragen nach dem Code (stufen.LIST, Bestätigen). An jeder Mail: „★ Markieren“ (Flag \\Flagged, ★ in der Liste), aus einem Ordner auch „Verschieben nach … Posteingang“; verschoben wird nur aus Posteingang, eigenen Ordnern und Archiv, nie aus Gesendet, Entwürfen, Papierkorb oder Spam. Mehrfachauswahl: Häkchen je Zeile, darüber „N gewählt“ mit Gelesen, Ungelesen, Markieren, Archivieren, Verschieben (in"
 },
 {
@@ -13997,6 +14013,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Post und Kontakte",
 "title": "Post und Kontakte",
+"text": "- Zurückstellen (Funktionen → Post und Kontakte → „Zurückstellen“; baut auf „Mails ordnen“; E-Mail → Einstellungen): Eine Mail, die du jetzt nicht brauchst, legst du mit „Später“ weg: heute Abend, morgen früh, am Wochenende, nächste Woche oder zu einer eigenen Zeit."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Post und Kontakte",
+"title": "Post und Kontakte",
 "text": "- Mails senden (Funktionen → Post und Kontakte → „Mails senden“; baut auf „E-Mail lesen“; E-Mail → Einstellungen): Auf der Seite E-Mail schreibst du eine neue Mail, antwortest auf eine oder leitest sie weiter (auf Wunsch mit ihren Anhängen)."
 },
 {
@@ -15517,7 +15541,7 @@
 "file": "iPhone-App „Spark“",
 "head": "Meine Sachen",
 "title": "Suchen, Anhänge und Weiterleiten in der E-Mail",
-"text": "Suchen, Anhänge und Weiterleiten in der E-Mail (Mailclient Stufe C): Das Suchfeld über der Liste kennt auch von:, an:, betreff:, vor:, nach:, hat:anhang, ist:markiert (als Vorschläge zum Antippen). In einer Mail steht, warum sie in ihrem Ordner liegt und ob dein Mailserver den Absender bestätigt; sagt ein Postfach länger nein, steht es unter der Liste. Mit „Pakete“ stehen über dem Posteingang bis zu 3 Sendungen mit „Verfolgen“ und ✕. Anhänge einer Mail öffnen sich per Tipp in der Vorschau, von dort teilen oder sichern (mit „Mails ordnen“). „Weiterleiten“ setzt die Mail unter deine Zeilen, die Anhänge auf Wunsch; gesendet wird nur aus der Vorschau."
+"text": "Suchen, Anhänge und Weiterleiten in der E-Mail (Mailclient Stufe C): Das Suchfeld über der Liste kennt auch von:, an:, betreff:, vor:, nach:, hat:anhang, ist:markiert (als Vorschläge zum Antippen). In einer Mail steht, warum sie in ihrem Ordner liegt und ob dein Mailserver den Absender bestätigt; sagt ein Postfach länger nein, steht es unter der Liste. Mit „Pakete“ stehen über dem Posteingang bis zu 3 Sendungen mit „Verfolgen“ und ✕. Mit „Zurückstellen“ legt „Später“ unten in der Mail sie bis heute Abend, morgen früh, zum Wochenende, nächste Woche oder zu einer eigenen Zeit weg. Anhänge einer Mail öffnen sich per Tipp in der Vorschau, von dort teilen oder sichern (mit „Mails ordnen“). „Weiterleiten“ setzt die Mail unter deine Zeilen, die Anhänge auf Wunsch; gesendet wird nur aus der Vorschau."
 },
 {
 "lang": "de",
@@ -27612,6 +27636,22 @@
 "src": "assistant",
 "file": "Assistant and panel",
 "head": "Voice chat",
+"title": "Voice chat",
+"text": "Snooze mail (Features → Reading e-mail → Order mail → \"Zurückstellen\", chat.mail_later, off; idea from pl_mail): in a mail of the inbox \"Later …\" (key H) puts it away: this evening (18:00, after 17:55 tomorrow evening), tomorrow morning (8:00), at the weekend (Saturday 9:00), next week (Monday 8:00) or at a time of one's own (5 minutes to 1 year ahead); the Spark computes the fixed times in the profile's time zone (spaeter.when). The mail moves into the folder \"Später\" below the KI folder of its mailbox (like \"Falsch sortiert\", made the first time; tidy.Box.own), the list (Message-ID, mailbox, time, sender, subject, at most 200) is kept sealed in mail-zurueck.bin. Every minute spaeter.due brings what is due back into the inbox and removes \\Seen, so it stands on top unread; that also runs when the switch is off by then, so no mail stays away. If someone moved the mail themselves it leaves the list (mail: later gone); if the mailbox does not answer, the Spark tries again every minute (a log line at most every 30 minutes). In the folder \"Später\" the mail shows \"Snoozed until …\" with \"Bring back now\". No tool for the model. Endpoints GET|POST /api/profile/mail/snooze and POST /api/prof"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "ile/mail/snooze/back (own profile, rate limit postordnen, 1 KB); Notaus holds both off. Live (node e-mail): how many wait, how many came back today. Log mail: later put | <hours> h, mail: later back | <count>, mail: later refused, …, never sender or subject. iPhone: \"Later\" at the bottom of the mail, \"Bring back now\" in the folder \"Später\"."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
 "title": "E-mail as a full mail client, stage A: folders (part of \"Mails ordnen\", off)",
 "text": "E-mail as a full mail client, stage A: folders (part of \"Mails ordnen\", off): above the list stands \"📁 Inbox ▾\"; it opens, in the list's place, every folder of every mailbox: inbox, drafts, sent, archive, own folders indented, junk and trash, each with its number of unread mails. A tap opens the folder (reading only: EXAMINE, BODY.PEEK, the newest 50; search and \"Unread only\" work on it). \"+ New folder\" makes a folder at the top of the mailbox, \"⋯\" on an own folder offers \"Rename\", \"Folder inside\" and \"Remove (empty only)\". Folders of the mail program (inbox, sent, drafts, trash, junk, archive) and those of \"Tidy mails\" are never renamed or removed; a folder holding mails or folders stays. Rename and remove ask for the code (stufen.LIST, confirm). On every mail: \"★ Flag\" (flag \\Flagged, ★ in the list), from a folder also \"Move to … Inbox\"; mails are moved only out of the inbox, own folders and the archive, never out of sent, drafts, trash or junk. Multiple selection: a tick per row, above it \"N selected\" with Read, Unread, Flag, Archive, Move (into a folder of one mailbox) and \"Clear selection\", at most 50 at a time, \"Undo\" brings moved ones back. Endpoints GET /api/profile/mail/tr"
 },
@@ -31405,6 +31445,14 @@
 "file": "Assistant and panel",
 "head": "Mail and contacts",
 "title": "Mail and contacts",
+"text": "- Snooze mail (Features → Mail and contacts → \"Snooze mail\"; builds on \"Order mail\"; E-mail → Settings): A mail you do not need now you put away with \"Later\": this evening, tomorrow morning, at the weekend, next week or at a time of your own."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Mail and contacts",
+"title": "Mail and contacts",
 "text": "- Send mail (Features → Mail and contacts → \"Send mail\"; builds on \"Reading e-mail\"; E-mail → Settings): On the E-mail page you write a new mail, answer one or forward it (with its attachments if wanted)."
 },
 {
@@ -32869,7 +32917,7 @@
 "file": "iPhone app \"Spark\"",
 "head": "My things",
 "title": "Search, attachments and forwarding in e-mail",
-"text": "Search, attachments and forwarding in e-mail (mail client stage C): the search field above the list also knows von:, an:, betreff:, vor:, nach:, hat:anhang, ist:markiert (as suggestions to tap). A mail shows why it is in its folder and whether your mail server confirms the sender; if a mailbox says no for longer, it stands below the list. With \"Parcels\" up to 3 parcels stand above the inbox with \"Track\" and ✕. A mail's attachments open by a tap in the preview, from there share or save them (with \"Mails ordnen\"). \"Forward\" puts the mail below your lines, the attachments if wanted; it is sent only from the preview."
+"text": "Search, attachments and forwarding in e-mail (mail client stage C): the search field above the list also knows von:, an:, betreff:, vor:, nach:, hat:anhang, ist:markiert (as suggestions to tap). A mail shows why it is in its folder and whether your mail server confirms the sender; if a mailbox says no for longer, it stands below the list. With \"Parcels\" up to 3 parcels stand above the inbox with \"Track\" and ✕. With \"Snooze mail\" \"Later\" at the bottom of a mail puts it away until this evening, tomorrow morning, the weekend, next week or a time of one's own. A mail's attachments open by a tap in the preview, from there share or save them (with \"Mails ordnen\"). \"Forward\" puts the mail below your lines, the attachments if wanted; it is sent only from the preview."
 },
 {
 "lang": "en",

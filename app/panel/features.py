@@ -285,6 +285,7 @@ FEATURES = (
     F(**steckbrief.feature("mail")),
     F(**steckbrief.feature("tidy")),
     F(**steckbrief.feature("mailmanage")),
+    F(**steckbrief.feature("mailspaeter")),
     F(**steckbrief.feature("mailsend")),
     F(**steckbrief.feature("maildelete")),
     F(**steckbrief.feature("maillearn")),

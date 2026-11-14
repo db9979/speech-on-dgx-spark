@@ -564,6 +564,14 @@ STECKBRIEFE = {
         anleitung="mailmanage", parent="mail", me="mailbox",
         ohne_werkzeug=("ohne", "nur Knöpfe auf der Seite E-Mail (gelesen, Archiv, Verschieben); per Stimme ordnet "
                                "Postfach aufräumen")),
+    # spaeter.py (pl_mail-Ideen 2, Dominik 2026-11-13 „1-7“): a mail out of the inbox into „<KI folder>/Später“ and back,
+    # unread, at a fixed time; buttons only, never the model
+    "mailspaeter": Steckbrief(de="Zurückstellen", en="Snooze mail", gruppe="post",
+        schalter=("mail_later", "mail_manage", "mail"), anleitung="mailspaeter", parent="mailmanage", me="mailbox",
+        ohne_werkzeug=("ohne", "nur Knöpfe auf der Seite E-Mail und in den Apps (Später, Jetzt zurückholen); die "
+                               "Mail kommt zu einer festen Zeit von selbst zurück"),
+        modul=("spaeter", "post", "Zurückstellen: Mail in „Später“ und zur gewählten Zeit ungelesen zurück in den "
+                                  "Posteingang")),
     "mailsend": Steckbrief(de="Mails senden", en="Send mail", gruppe="post", schalter=("mail_send", "mail"),
         anleitung="mailsend", parent="mail", me="mailbox",
         ohne_werkzeug=("ohne", "kein Werkzeug fürs Modell: Vorschau-Blatt auf der Seite, per Sprache feste Sätze des "

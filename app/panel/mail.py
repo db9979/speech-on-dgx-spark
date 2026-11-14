@@ -157,6 +157,10 @@ def remove(uid, aid):
     return public(uid)
 
 
+LIVE = {}        # name -> for_live() of a mail module that imports mail (spaeter.py), read by live.py
+ON_FORGET = []   # f(uid) when the profile's last mailbox goes; a module that imports mail adds itself
+
+
 def forget(uid):
     with _lock:
         try:
@@ -171,6 +175,8 @@ def forget(uid):
     senden.later_forget(uid)   # and the planned mails (Später senden)
     import einordnen   # einordnen.py imports this module
     einordnen.forget(uid)   # and the run of „Alle Mails hier einordnen“ with its „Rückgängig“
+    for f in ON_FORGET:      # modules that hook themselves (spaeter.py)
+        f(uid)
 
 
 def _drop(uid):

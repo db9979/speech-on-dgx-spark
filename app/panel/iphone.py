@@ -78,7 +78,7 @@ AREAS = {
     # Von selbst: weather place, parcels, bus and train, the profile's jobs (look, stop), room mode longer
     "app_auto": ((("GET", "PUT"), r"/api/profile/weather"), (("POST",), r"/api/profile/weather/test"),
                  (("GET", "PUT"), r"/api/profile/transit"), (("POST",), r"/api/profile/transit/(?:find|test)"),
-                 (("GET",), r"/api/profile/parcels"), (("GET",), r"/api/profile/agent"),
+                 (("GET",), r"/api/profile/parcels"), (("POST",), r"/api/profile/parcels/hide"), (("GET",), r"/api/profile/agent"),
                  # Reddit und Feeds (feeds.py): look, add a subreddit or feed, keywords, fetch now, remove
                  (("GET", "DELETE"), r"/api/profile/feeds"), (("POST",), r"/api/profile/feeds/(?:source|now)"),
                  (("PUT",), r"/api/profile/feeds/words"), (("DELETE",), r"/api/profile/feeds/source/[0-9a-f]{8}"),
@@ -190,6 +190,8 @@ THINGS = {
                    (("GET", "POST"), r"/api/profile/mail/rules(?:/test|/order)?"), (("POST",), r"/api/profile/mail/rules/never"),
                    (("POST",), r"/api/profile/mail/rules/[0-9a-f]{8}/apply"), (("DELETE",), r"/api/profile/mail/rules/[0-9a-f]{8}")),
     "mailsend": ((("POST",), r"/api/profile/mail/(?:send(?:/preview)?|suggest|rewrite)"),),
+    # Zurückstellen (spaeter.py): the list, put a mail off, bring it back now
+    "mailspaeter": ((("GET", "POST"), r"/api/profile/mail/snooze"), (("POST",), r"/api/profile/mail/snooze/back")),
     # Für dich (fuerdich.py): the cards, a mark, a button (reminder, the draft of a cancelling mail), forget the marks;
     # sending stays with "mailsend"
     "fuerdich": ((("GET", "DELETE"), r"/api/profile/fuerdich"), (("POST",), r"/api/profile/fuerdich/(?:mark|act)")),

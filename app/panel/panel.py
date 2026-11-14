@@ -57,6 +57,7 @@ import mailstil  # noqa: E402
 import weather  # noqa: E402
 import contacts  # noqa: E402
 import parcels  # noqa: E402
+import spaeter  # noqa: E402  (Zurückstellen: mails come back into the inbox, due() every minute)
 import fuerdich  # noqa: E402
 import vorgaenge  # noqa: E402
 import gemerkt  # noqa: E402  (Gemerkt-Hinweis: Rückgängig under an answer, the card of what was learned by itself)
@@ -213,7 +214,7 @@ import ferngross  # noqa: E402
 
 # no /docs, /redoc or /openapi.json: a map of every path for guests, and Swagger from a CDN
 app = FastAPI(title="Speech on DGX Spark", docs_url=None, redoc_url=None, openapi_url=None)
-for _module in (account, admin, chat, chats, chatsec, verbund, anrufe, update, system, proactive, room, roomlive, tidy, mailstil, fuerdich, ichweiss, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, terminal, android, appupdate, appmerken, pruefzugang, apns, transit, feeds, logfilter, agent, auftragsplan, images, messages, intent, wissen, tracelog, lokal, features, remarkable, rmplus, rmpapier, join, onboard, hintergrund, stufe, today, offsite, doclingdienst, suchpruefung, wissensmessung, wissensbuch, fund, mappen, auswertung, hoerstueck, stimmdesign, abschrift, doklink, gemerkt, meinedaten, siegel, dungeon_dingbild, dungeon_musik, dungeon_echt, dungeon_lied, dungeon_knapp, dungeon_fluestern, dungeon_wunsch, dungeon_rast, dungeon_chronik, dungeon_buch, dungeon_regelseite, dungeon_pruefstand, dungeon_erzaehlstand, dungeon_import, dungeon_geschichten, dungeon, dungeon_karte, dungeon_gesicht, dungeon_wappen, wissenskarte, wissensdoppelt, mcpserver, llmapi, openwebui, meinmcp, live, hamelden, notaus, hilfe, tipps, saetze, spickzettel, schreib, begleiter, fernsicht, systemone, geraeteupdate, meldung, ghtoken, docmake, weiche, weiche_abstimmen, weiche_unklar, dienstwacht, offline, wartung, faelle, berater, speicher, nashilfe, nas, nasquelle, auslassen, nasablage, naszustand, gehaeuse, systemupdates, schwachstellen, geraetebild, schirm, verlauf, klaeren, technik, bilder, musik, verbrauch, modellseite, werkstattseite, entwickelnseite, praxistest, telefon, telefon_ich, kalenderserver, kontaktserver, einladung, zustellung, geteilt, vorgaenge, mailansicht, mitschreiblink, mitteilungen, fernzugang, spontanhilfe, spontansteuern, ferndateien, fernbild, fernweb, fernanker, fernnotiz, fernordner, fernals, fernsshtermy, ferngross):
+for _module in (account, admin, chat, chats, chatsec, verbund, anrufe, update, system, proactive, room, roomlive, tidy, mailstil, fuerdich, ichweiss, weather, contacts, parcels, spaeter, telegram, tasks, esp32, iphone, pebblewatch, terminal, android, appupdate, appmerken, pruefzugang, apns, transit, feeds, logfilter, agent, auftragsplan, images, messages, intent, wissen, tracelog, lokal, features, remarkable, rmplus, rmpapier, join, onboard, hintergrund, stufe, today, offsite, doclingdienst, suchpruefung, wissensmessung, wissensbuch, fund, mappen, auswertung, hoerstueck, stimmdesign, abschrift, doklink, gemerkt, meinedaten, siegel, dungeon_dingbild, dungeon_musik, dungeon_echt, dungeon_lied, dungeon_knapp, dungeon_fluestern, dungeon_wunsch, dungeon_rast, dungeon_chronik, dungeon_buch, dungeon_regelseite, dungeon_pruefstand, dungeon_erzaehlstand, dungeon_import, dungeon_geschichten, dungeon, dungeon_karte, dungeon_gesicht, dungeon_wappen, wissenskarte, wissensdoppelt, mcpserver, llmapi, openwebui, meinmcp, live, hamelden, notaus, hilfe, tipps, saetze, spickzettel, schreib, begleiter, fernsicht, systemone, geraeteupdate, meldung, ghtoken, docmake, weiche, weiche_abstimmen, weiche_unklar, dienstwacht, offline, wartung, faelle, berater, speicher, nashilfe, nas, nasquelle, auslassen, nasablage, naszustand, gehaeuse, systemupdates, schwachstellen, geraetebild, schirm, verlauf, klaeren, technik, bilder, musik, verbrauch, modellseite, werkstattseite, entwickelnseite, praxistest, telefon, telefon_ich, kalenderserver, kontaktserver, einladung, zustellung, geteilt, vorgaenge, mailansicht, mitschreiblink, mitteilungen, fernzugang, spontanhilfe, spontansteuern, ferndateien, fernbild, fernweb, fernanker, fernnotiz, fernordner, fernals, fernsshtermy, ferngross):
     app.include_router(_module.router)
 app.middleware("http")(update_lock)
 
@@ -473,6 +474,10 @@ async def stability():
                     await zustellung.follow()
                 except Exception as e:
                     print("push: nachfassen", type(e).__name__, flush=True)
+                try:   # Zurückstellen: mails whose time came go back into the inbox, unread (spaeter.py)
+                    await asyncio.to_thread(spaeter.due)
+                except Exception as e:
+                    print("mail: later due", type(e).__name__, flush=True)
                 try:   # Offen: „Später“ is over → the card comes back (vorgaenge.py)
                     await vorgaenge.due()
                 except Exception as e:
