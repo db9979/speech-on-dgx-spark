@@ -1336,6 +1336,8 @@ Jede Funktion des Spark mit ihrem Schalter, worauf sie aufbaut, wo man sie einri
 
 - **Tipps beim Sprechen** (Funktionen → Gespräch → „Tipps beim Sprechen“; baut auf „Das kannst du auch sagen“; Ich → Gespräch): Am Lautsprecher, am Telefon, im Auto und an der Uhr gibt es keine Knöpfe.
 
+- **Natürliches Gespräch** (Funktionen → Gespräch → „Natürliches Gespräch“; Ich → Gespräch): Im Sprachmodus soll ein Gespräch nicht nur Frage und Antwort sein.
+
 - **Vorrang für Personen** (Funktionen → Gespräch → „Vorrang für Personen“): Reden mehrere Personen gleichzeitig mit dem Spark, bekommen ausgewählte Profile ihre Antwort zuerst.
 
 - **Hinweis, wenn ein Dienst fehlt** (Funktionen → Gespräch → „Hinweis, wenn ein Dienst fehlt“; baut auf „Dienst-Wächter“; Ich → Gespräch): Sieht der Dienst-Wächter einen Dienst als weg, sagt der Assistent das sofort, wenn jemand ihn braucht, z.

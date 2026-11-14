@@ -35,6 +35,8 @@ import tidy  # noqa: E402
 import wissen  # noqa: E402
 import chat  # noqa: E402  (constants and helpers; imported fully before any call)
 import features  # noqa: E402
+import gespraech  # noqa: E402  (Natürliches Gespräch, bottom layer)
+import saetze  # noqa: E402
 import wartung  # noqa: E402  (Wartungspause)
 
 
@@ -261,6 +263,15 @@ async def _weg(z):
         z.weiche = weiche
         z.weiche.learn_choice(z.weg["route"], z.g)
     else:
+        # Natürliches Gespräch (gespraech.py): a „Ja“ to the panel's hint of this conversation becomes the fixed question
+        # of its kind, which goes through the Weiche like the person's own words; only the own login or voice, never MCP
+        z.gh = None
+        if z.ask0 and z.me0 and not z.guest and not z.web_tap and not z.request.scope.get("speech_mcp") \
+                and z.heard_id in (None, z.me0["id"]):
+            z.gh = gespraech.answer(z.me0["id"], z.src0, z.ask0, features.allowed(gespraech.KEY, z.me0["id"], z.ccfg))
+        if z.gh:
+            z.messages[-1] = dict(z.messages[-1], content=z.gh[0])
+            z.ask0 = z.gh[0]
         z.route = z.intent.classify_cfg(z.ask0, z.ccfg)
     # how long ago the person's own message before came in this conversation (P4, review D-8: a follow-up only while
     # it is fresh); the clock is read here, intent only gets the number
@@ -1252,6 +1263,13 @@ async def _prompt(z):
         if z.messages[-1]["role"] == "user" and not z.pics and not z.role_cmd and not z.room_far else None
     if z.explain:
         print("weiche: erklärt", z.explain["key"], "-", z.explain["why"], flush=True)
+    # Natürliches Gespräch (gespraech.py, Vorschlag 3): a spoken small-talk turn gets the panel's fixed note on the tone
+    if z.who and z.own_browser and z.messages[-1]["role"] == "user":
+        z.ton = gespraech.ton(gespraech.talk(z.route) and not z.carry and not z.mcp
+                              and gespraech.spoken(z.body, saetze.channel(z)) and features.allowed(gespraech.KEY, z.who["id"], z.ccfg),
+                              chat.guess_language(z.messages[-1]["content"]) == "English")
+        if z.ton:
+            z.system = z.per_turn(z.system, z.ton)
     # "Funktionen vorschlagen" (tipps.py): fixed rules decide whether the hint above gets a card; only the kind of
     # question is counted, never its words; only for the profile's own login or device, never another voice
     z.tip_kind = None
@@ -1260,7 +1278,6 @@ async def _prompt(z):
         z.tipps = tipps
         z.tipps.record(z.who["id"], z.route.names, z.body.get("spoken") is True or z.hilfe_origin in z.hilfe.SPOKEN)
         if z.body.get("more"):   # a suggested sentence was sent (saetze.py): only the tool's name is counted
-            import saetze
             z.saetze = saetze
             z.saetze.tapped(z.who["id"], z.body.get("more"))
         if z.explain:

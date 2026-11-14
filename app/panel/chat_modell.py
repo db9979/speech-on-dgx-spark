@@ -8,14 +8,19 @@ import calendars
 import chat
 import features
 import fixes
+import datetime
 import frisch
 import gedaechtnis
+import gespraech
 import homeassistant
 import httpx
 import images
 import json
 import llm
+import live
+import notaus
 import notbetrieb
+import parcels
 import profiles
 import quellenangabe
 import re
@@ -23,11 +28,13 @@ import saetze
 import stufe
 import systemone
 import taten
+import tasks
 import tidy
 import time
 import verbrauch
 import vorab
 import wartung
+import weather
 
 
 async def llm_start_satz(en):
@@ -93,7 +100,6 @@ async def herkunft_und_chip(turn, found, st, searches, trace, out, who, src, mes
     released (quellenangabe.py) its line takes the Herkunft line's place under every answer that wants to know
     something, with or without the quick look."""
     import lokal
-    import notaus
     import quellen
     web = bool(searches or (found or {}).get("web"))
     line = lokal.herkunft(found, web) if found is not None else None
@@ -118,6 +124,51 @@ async def herkunft_und_chip(turn, found, st, searches, trace, out, who, src, mes
     if line or chip:
         await out.put(dict({"type": "herkunft", "de": line["de"] if line else "", "en": line["en"] if line else ""},
                            **({"web": list(lokal.WEB_CHIP)} if chip else {})))
+
+
+async def gespraechshinweis(turn, calls, en=False, now=None):
+    """Natürliches Gespräch (gespraech.py, Vorschlag 1): one fixed sentence at the end of a spoken answer without a tool,
+    or "". The panel picks the kind by fixed rules (gespraech.pick) and reads only numbers and times of the profile's
+    own data without the network; a „Ja“ to it waits in gespraech (answer)."""
+    who = getattr(turn, "who", None)
+    uid = who and who.get("id")
+    body = getattr(turn, "body", None)
+    channel = saetze.channel(turn)
+    if not uid or calls or not getattr(turn, "own_browser", False) or getattr(turn, "carry", None) \
+            or getattr(turn, "mcp", None) or not gespraech.talk(getattr(turn, "route", None)) \
+            or not gespraech.spoken(body, channel) or not features.allowed(gespraech.KEY, uid) \
+            or notaus.refuse("aktion", uid):
+        return ""
+    now = time.time() if now is None else now
+    may = {k for k, (f, _) in gespraech.THEMEN.items() if features.allowed(f, uid)}
+    texts = [m["content"] for m in getattr(turn, "messages", None) or ()
+             if isinstance(m, dict) and m.get("role") == "user" and isinstance(m.get("content"), str)]
+    got = gespraech.pick(uid, texts, may, channel == "car", now)
+    if not got:
+        return ""
+    kind, urgent = got
+    zone = chat.user_zone(str(body.get("tz") or "")[:64] if isinstance(body, dict) else "")
+    now_dt = datetime.datetime.fromtimestamp(now, zone)
+    try:
+        if kind == "termine":
+            data = await calendars.heute_noch(uid, now_dt, zone, gespraech.CAL_WAIT)
+        elif kind == "wetter":
+            data = weather.regen_ab(uid, now, gespraech.WEATHER_FRESH)
+        elif kind == "pakete":
+            data = parcels.heute_zahl(uid, now_dt.date())
+        else:
+            data = tasks.card(uid).get("shopping") or 0
+    except Exception as e:   # a hint is never worth a failed answer
+        print("gespraech: kein hinweis", kind, "fehler", type(e).__name__, flush=True)
+        return ""
+    made = gespraech.satz(kind, data, now_dt, en, urgent)
+    if not made:
+        if not urgent:
+            print("gespraech: kein hinweis", kind, "nichts da", flush=True)
+        return ""
+    gespraech.keep(uid, kind, getattr(turn, "src0", ""), en, made[1], urgent, now)
+    live.event("Natürliches Gespräch", "Hinweis · " + gespraech.LABEL[kind])
+    return made[0]
 
 
 async def model_turn(*, acked, body, c, came_from, carry, ccfg, cfg, check_on, ex, fix_fix, fix_prev, fixed=None, ha, ha_direct, ha_read, known,
@@ -605,9 +656,18 @@ async def model_turn(*, acked, body, c, came_from, carry, ccfg, cfg, check_on, e
         # "Vorab holen bei Rückfrage" (vorab.py): the answer asks back, the panel already fetches by fixed rules
         # what the next answer will most likely read, while the question is being spoken
         vorab.after(turn, trace["said"], st, trace["calls"], tr)
-        # „Tipps beim Sprechen“ (saetze.py): at a speaker, phone or in the car one fixed sentence a day at the end
+        # Natürliches Gespräch (gespraech.py): after a spoken answer without a tool the panel may add one fixed hint
+        # about what it knows that fits the conversation; then no example sentence in the same answer
+        tip = ""
         if trace["said"].strip() and not st["mail"] and not st["outside"]:
-            import saetze
+            tip = await gespraechshinweis(turn, trace["calls"], chat.guess_language(messages[-1]["content"]) == "English")
+            if tip:
+                trace["calls"].append({"name": "Gesprächshinweis (Panel)", "args": "", "result": "gesagt"})
+                await out.put({"type": "text", "delta": " " + tip})
+                trace["said"] += " " + tip
+                await sentences.put(tip)
+        # „Tipps beim Sprechen“ (saetze.py): at a speaker, phone or in the car one fixed sentence a day at the end
+        if trace["said"].strip() and not st["mail"] and not st["outside"] and not tip:
             tip = saetze.spoken(turn, trace["calls"], chat.guess_language(messages[-1]["content"]) == "English")
             if tip:
                 trace["calls"].append({"name": "Beispielsatz (Panel)", "args": "", "result": "gesagt"})

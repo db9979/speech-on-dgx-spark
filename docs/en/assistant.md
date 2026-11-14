@@ -1336,6 +1336,8 @@ Every function of the Spark with its switch, what it builds on, where you set it
 
 - **Tips while talking** (Features → Conversation → "Tips while talking"; builds on "You can also say"; Me → Conversation): At a speaker, on the phone, in the car and at the watch there are no buttons.
 
+- **Natural conversation** (Features → Conversation → "Natural conversation"; Me → Conversation): In voice mode a conversation should not be just question and answer.
+
 - **Priority for people** (Features → Conversation → "Priority for people"): When several people talk to the Spark at once, chosen profiles get their answer first.
 
 - **Note when a service is missing** (Features → Conversation → "Note when a service is missing"; builds on "Service watch"; Me → Conversation): When the service watch sees a service gone, the assistant says so at once when somebody needs it, e.g.

@@ -6021,6 +6021,14 @@
 "titel": "Zurückstellen am iPhone",
 "text": "Nach dem nächsten TestFlight: In der iPhone-App eine Mail des Posteingangs öffnen, unten „Später“ → „Eigene Zeit …“ in 10 Minuten. Die Mail ist weg und kommt zur Zeit ungelesen zurück. Im Ordner „Später“ steht „Zurückgestellt bis …“ mit „Jetzt zurückholen“. Dazu: über dem Posteingang eine Sendung mit ✕ ausblenden, sie bleibt weg.",
 "thread": "Mail mit Ideen aus pl_mail verbessern"
+},
+{
+"id": "P881",
+"v": 1434,
+"titel": "Natürliches Gespräch im Sprachmodus",
+"text": "Als Admin Funktionen → Natürliches Gespräch einschalten. Im Panel mit dem Mikrofon (oder in der iPhone-App) sagen: „Puh, heute ist echt viel los.“ Die Antwort klingt wie ein Gespräch, ohne „Kann ich sonst noch helfen?“, und endet mit z. B. „Übrigens stehen heute noch 2 Termine an, der nächste um 14:30 Uhr. Soll ich sie dir sagen?“ (nie ein Termintitel). „Ja“ sagen: jetzt kommen die Termine. Zwei weitere Plaudersätze bringen keinen Hinweis; „Ich will nachher noch joggen“ als dritter bringt den Wetter-Hinweis, „Nein“ darauf lässt ihn einen Tag ruhen. Getippt im Panel kommt kein Hinweis. Unter Ich → Gespräch lässt sich „Natürliches Gespräch“ ausschalten.",
+"thread": "Natürlichere Gespräche im Sprachmodus",
+"test": "test_gespraech.Hint.test_a_topic_word_gives_one_fixed_sentence_and_a_yes_becomes_the_question"
 }
 ]
 }

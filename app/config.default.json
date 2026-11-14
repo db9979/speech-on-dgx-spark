@@ -172,6 +172,7 @@
     "feature_sentences": true,
     "show_steps": false,
     "feature_sentences_voice": false,
+    "gespraech": false,
     "route_words": "",
     "route_not": "",
     "route_extra": "",

@@ -793,6 +793,21 @@ async def events(uid, start, end, zone, shared=False, stale=False):
     return evs, errors
 
 
+async def heute_noch(uid, now_dt, zone, wait):
+    """Natürliches Gespräch (gespraech.py): the start times of today's timed appointments still to come, sorted, from
+    the calendars' own cache (stale: an older block at once) within wait seconds; None when no calendar is connected,
+    one could not be read or it took longer. Only times, never a title."""
+    end = now_dt.replace(hour=23, minute=59, second=0, microsecond=0)
+    try:
+        r = await asyncio.wait_for(events(uid, now_dt, end, zone, stale=True), wait)
+    except (asyncio.TimeoutError, OSError, ValueError):
+        print("gespraech: kein hinweis kalender zu langsam", flush=True)
+        return None
+    if r is None or r[1]:
+        return None
+    return sorted(x["start"] for x in r[0] if not x["allday"] and x["start"] > now_dt)
+
+
 async def keep_fresh(now=None):
     """Background refresh (Dominik 2026-10-19 „caching für einträge und hintergrund aktualisierung“): the blocks of
     this and the next month of every profile that read its calendars in the last WARM_SECONDS are fetched anew when

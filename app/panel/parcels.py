@@ -366,6 +366,18 @@ def strip(uid, today=None, now=None):
     return out[:STRIP]
 
 
+def heute_zahl(uid, today):
+    """Natürliches Gespräch (gespraech.py): how many parcels come today after the last reading (memory or the sealed
+    Vorrat), None without one. Never reads a mailbox for it."""
+    if not usable(uid):
+        return None
+    hit = _cache.get(uid) or _kept(uid)
+    if not hit:
+        return None
+    return sum(1 for x in hit[1][0] if x.get("status") == "today"
+               or (x.get("status") == "date" and x.get("day") == today.isoformat()))
+
+
 def hide(uid, k):
     """✕ on the strip: the parcel stays away until it has a new state (key)."""
     d = SUPPLY.load(uid)

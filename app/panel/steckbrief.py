@@ -225,6 +225,13 @@ STECKBRIEFE = {
     "tippsstimme": Steckbrief(de="Tipps beim Sprechen", en="Tips while talking", gruppe="talk",
         schalter=("feature_sentences_voice",), anleitung="tippsstimme", pref="voice_tips", parent="tippssaetze",
         me="setbox", ohne_werkzeug=("ohne", "ein Satz am Ende einer gesprochenen Antwort, kein Werkzeug")),
+    # gespraech.py (plan gespraechshinweise, Dominik 2026-11-14): the tone of spoken small talk and one fixed hint
+    "gespraech": Steckbrief(de="Natürliches Gespräch", en="Natural conversation", gruppe="talk", schalter=("gespraech",),
+        anleitung="gespraech", pref="talk_hints", me="setbox",
+        ohne_werkzeug=("regel", "gespraech.py: ein fester Hinweis am Ende einer gesprochenen Antwort ohne Werkzeug; "
+                                "ein „Ja“ wird eine feste Frage"),
+        log=("chat", "gespraech"), begleiter="voice",
+        modul=("gespraech", "gespraech", "Natürliches Gespräch: Ton beim Plaudern, ein fester Hinweis aus eigenen Daten")),
     "vorrang": Steckbrief(de="Vorrang für Personen", en="Priority for people", gruppe="talk",
         schalter=("person_priority",), anleitung="vorrang", ohne_werkzeug=("ohne", "Schutzregel für Personen"),
         begleiter="spark", modul=("vorrang", "sprache", "Sprache zuerst: Hintergrundarbeit wartet")),

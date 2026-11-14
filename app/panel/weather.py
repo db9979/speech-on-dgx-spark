@@ -249,6 +249,26 @@ def rain_hours(d, now_iso, hours=12):
     return ""
 
 
+def regen_ab(uid, now, fresh):
+    """Natürliches Gespräch (gespraech.py): the hour rain is likely from in the next hours at the profile's own place
+    (rain_hours), -1 for none, from a reading at most fresh seconds old in memory or the sealed Vorrat; None without
+    a place or such a reading. Never fetches anything."""
+    if not usable(uid):
+        return None
+    w = get(uid)
+    key = (round(w["lat"], 3), round(w["lon"], 3))
+    hit = _cache.get(key)
+    if not hit:
+        d = SUPPLY.load(uid)
+        if d.get("k") == list(key) and isinstance(d.get("t"), (int, float)) and isinstance(d.get("v"), dict):
+            hit = (d["t"], d["v"])
+    if not hit or now - hit[0] > fresh:
+        print("gespraech: kein hinweis wetter nicht frisch", flush=True)
+        return None
+    m = re.search(r"ab (\d+) Uhr", rain_hours(hit[1], place_now(hit[1], now).isoformat()))
+    return int(m.group(1)) if m else -1
+
+
 def _label(day, today):
     k = (day - today).days
     return "Heute" if k == 0 else "Morgen" if k == 1 else "Übermorgen" if k == 2 else \

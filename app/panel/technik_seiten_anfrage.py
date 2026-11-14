@@ -786,7 +786,7 @@ SEITEN = {
         "heute": [],
     },
     "antwort": {
-        "stand": "a34c96e6b3",
+        "stand": "fe17e201ae",
         "bezug": {
             "chat.MAX_SAVES": ["s11"], "chat.LOOP_SAME": ["s11"], "chat._answer": ["s4", "s5", "s11"], "chat_modell.model_turn": ["s4", "s11"], "chat_modell.herkunft_und_chip": ["s3"], "chat_modell.quellenangabe_zeile": ["s3"], "chat_ton.speech_out": ["s8"],
             "chat.split_sentences": ["s5"], "chat.said_key": ["s8"], "chat.no_code": ["s8"],
@@ -984,13 +984,21 @@ SEITEN = {
                "gewünscht; bietet die Antwort selbst an, sich dort hinzulegen, wartet sie auf ein „Ja“ "
                "(remarkable.propose). Es holt bei einer Rückfrage schon vorab. Ist „Das kannst du auch sagen“ an, hängt das Panel "
                "feste Beispielsätze an (saetze.row, am Bildschirm als Zeile vor dem Ende; saetze.spoken, beim Sprechen "
-               "höchstens ein Satz am Tag). Das Werkzeug-Log des Profils wird geschrieben.",
+               "höchstens ein Satz am Tag). Ist „Natürliches Gespräch“ an, kann davor nach einer gesprochenen Antwort ohne "
+               "Werkzeug ein fester Hinweis aus eigenen Daten kommen (chat_modell.gespraechshinweis: die Art nach festen "
+               "Wörtern der eigenen Sätze, gespraech.pick; nur Zahlen und Uhrzeiten ohne Netz, gespraech.satz; ein „Ja“ "
+               "darauf wird eine feste Frage, gespraech.answer); dann kein Beispielsatz. Das Werkzeug-Log des Profils "
+               "wird geschrieben.",
                "Only when nothing from outside was read: offer to remember a learned correction or ask about a fact in "
                "memory (by fixed rules). Then the panel puts the answer on the reMarkable when asked; when the answer itself offers to "
                "go there, it waits for a „yes“ (remarkable.propose). It fetches ahead "
                "for a question back. When „You can also say“ is on, the panel adds fixed example sentences (saetze.row, "
-               "on a screen as a row before the end; saetze.spoken, while talking at most one sentence a day). The "
-               "profile's tool log is written.")),
+               "on a screen as a row before the end; saetze.spoken, while talking at most one sentence a day). When "
+               "„Natural conversation“ is on, a spoken answer without a tool may get one fixed hint from the profile's "
+               "own data before that (chat_modell.gespraechshinweis: the kind by fixed words of the person's own "
+               "sentences, gespraech.pick; only numbers and times without the network, gespraech.satz; a „yes“ to it "
+               "becomes a fixed question, gespraech.answer); then no example sentence. The profile's tool log is "
+               "written.")),
             S("s14", "ende", ("Strom endet", "Stream ends"),
               ("Anfrage-Verlauf, Fälle, „done“", "request trace, cases, „done“"),
               ("Der Anfrage-Verlauf wird abgeschlossen, Fälle und die Prüfung im Hintergrund laufen erst nach dem "
@@ -1085,7 +1093,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Werkzeuge (chat_tools.run)
     "werkzeuge": {
-        "stand": "2db675c03a",
+        "stand": "b1b794d0b2",
         "bezug": {
             "chat.LOCKED_OUTSIDE": ["s4"], "notaus.INTERNET_TOOLS": ["s3"], "werkzeuge.NAMES": ["s11"],
             "chat_tools.run": ["s2", "s7"], "chat.wrap_outside": ["s9"], "chat.LOCKED_AFTER_MAIL": ["s4"],

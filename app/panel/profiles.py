@@ -1217,6 +1217,7 @@ SETTINGS = {
     "pro_feeds": (True, lambda v: isinstance(v, bool)),     # replies and keyword hits from Reddit und Feeds (feeds.py)
     "pro_tips": (True, lambda v: isinstance(v, bool)),     # one hint on a function a week (tipps.py, chat.feature_tips_push)
     "voice_tips": (True, lambda v: isinstance(v, bool)),   # one example sentence a day at speakers (saetze.py, chat.feature_sentences_voice)
+    "talk_hints": (True, lambda v: isinstance(v, bool)),   # Natürliches Gespräch: tone and hints while talking (gespraech.py, chat.gespraech)
     "list_note": (True, lambda v: isinstance(v, bool)),    # a note when others put something on a shared list (tasks.py)
     "share_note": (True, lambda v: isinstance(v, bool)),   # a note when another profile shares something (geteilt.py)
     # Telegram (see telegram.py): what this profile allows over Telegram, all off until it says so

@@ -12717,6 +12717,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Alle Funktionen",
 "title": "Alle Funktionen",
+"text": "- Natürliches Gespräch (Funktionen → Gespräch → „Natürliches Gespräch“; Ich → Gespräch): Im Sprachmodus soll ein Gespräch nicht nur Frage und Antwort sein."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Alle Funktionen",
+"title": "Alle Funktionen",
 "text": "- Vorrang für Personen (Funktionen → Gespräch → „Vorrang für Personen“): Reden mehrere Personen gleichzeitig mit dem Spark, bekommen ausgewählte Profile ihre Antwort zuerst."
 },
 {
@@ -30142,6 +30150,14 @@
 "head": "All functions",
 "title": "All functions",
 "text": "- Tips while talking (Features → Conversation → \"Tips while talking\"; builds on \"You can also say\"; Me → Conversation): At a speaker, on the phone, in the car and at the watch there are no buttons."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "All functions",
+"title": "All functions",
+"text": "- Natural conversation (Features → Conversation → \"Natural conversation\"; Me → Conversation): In voice mode a conversation should not be just question and answer."
 },
 {
 "lang": "en",

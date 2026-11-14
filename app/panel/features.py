@@ -161,6 +161,7 @@ FEATURES = (
     F(**steckbrief.feature("tippspush")),
     F(**steckbrief.feature("tippssaetze")),
     F(**steckbrief.feature("tippsstimme")),
+    F(**steckbrief.feature("gespraech")),
     F(**steckbrief.feature("einordnung")),
     F(**steckbrief.feature("einordnungpost")),
     F(**steckbrief.feature("einordnungtest")),
