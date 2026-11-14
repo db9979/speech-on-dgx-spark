@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.451** Spark koppeln (E4c): am Pi unter Einstellungen → Spark → Spark koppeln Name und Code aus der Spark-Konsole eintragen statt `sudo speech-spark teilen koppeln`; root koppelt über den festen Dienst `speech-spark-koppeln`; in der Spark-Konsole Modelle laden, messen und eigene hinzufügen, der Überblick zeigt nur Hinweise zum Spark selbst
 - **V01.1.450** ROT-FIX: der Browser-Test der Käfer-Schaltfläche zählt die Fehler der Seite so, wie die Seite sie notiert hat, statt eine feste Zahl zu erwarten
 - **V01.1.449** Fix Meldung 4: ein „Ja“ auf die Rückfrage-Karte nach einer Antwort aus Mail (Tagesüberblick) behält diese Antwort samt Frage im Gespräch, gesperrt wie jede Mail-Folgefrage
 - **V01.1.448** Schwachstellen behoben: brotli, certifi, filelock, nltk und Pillow auf tars angehoben, pip 26.3 in allen Umgebungen aus der Sperrdatei
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.444** Lesende Werkzeuge gleichzeitig: mehrere lesende Werkzeuge eines Schritts (Wetter, Kalender, Websuche …) laufen zusammen, die Antwort kommt schneller; Lange Gespräche zusammenfassen: der Anfang eines langen Gesprächs fällt nicht mehr einfach weg (beide aus)
 - **V01.1.443** ROT-FIX: iPhone-Gesprächszeilen ohne neuen Import in einer Funktion
 - **V01.1.442** iPhone-App: Gespräch komplett und Eigene Stimme direkt in der App
-- **V01.1.441** Spark-Clients, Vorrang auf dem Spark (E3): ein Client der Klasse „Hintergrund“ rückt an den Toren nie auf und wartet, solange auf dem Spark jemand spricht, höchstens 60 Sekunden
 
 
 

@@ -269,7 +269,8 @@ cmd_panel() {
 # The work runs as the panel's service user, so every file keeps its owner (app/panel/notzugang.py).
 cmd_notzugang() {
   need_root notzugang "$@"
-  [ "$(mode)" = full ] || die "no web panel installed"
+  # the Spark-Konsole is the panel's code with its password and second step: locked out there too (mode api)
+  [ "$(mode)" = full ] || [ "$(cfg '.konsole.an // false')" = true ] || die "no web panel installed"
   if [ "${1:-}" != --yes ]; then
     [ -t 0 ] || die "notzugang asks first; run it in a terminal (or add --yes)"
     echo "Das setzt ein neues Panel-Passwort, schaltet den zweiten Schritt des Notzugangs aus (die Datei bleibt"
@@ -717,6 +718,24 @@ tuer_oeffnen() {
   cmd_teilen firewall || true
 }
 
+# E4c (plan spark-entkoppeln): Einstellungen → Spark → Mit einem Spark koppeln. teilen.py (as the service user) hands
+# over the wish once; root checks host and code again and pairs exactly as `teilen koppeln <host>` with that code
+teilen_koppeln_wunsch() {
+  local w host code
+  w=$(as_panel_user ../teilen.py wunsch-nehmen | tail -n 1) || true
+  read -r host code <<<"${w:-}"
+  if ! [[ "${host:-}" =~ ^[A-Za-z0-9.:-]{1,253}$ && "${code:-}" =~ ^[A-HJ-NP-Z2-9]{6}$ ]]; then
+    as_panel_user ../teilen.py stand fehler || true
+    echo "teilen: kopplung abgelehnt wunsch"; return 1
+  fi
+  if SPEECH_SPARK_CODE="$code" teilen_koppeln "$host"; then
+    as_panel_user ../teilen.py stand gekoppelt || true
+  else
+    as_panel_user ../teilen.py stand fehler || true
+    echo "teilen: kopplung fehler"; return 1
+  fi
+}
+
 # B6a: the model computer shows a pairing code and waits; on a fit the door opens for exactly that panel computer
 # --konsole (unit speech-spark-koppelcode, the Spark-Konsole's "Assistent koppeln"): the code also goes to the console
 teilen_code() {
@@ -887,6 +906,8 @@ cmd_teilen() {  # Spark teilen (plan raspberry-split B3): the TLS-Tor's state an
     umzug-einspielen) umzug_einspielen "${2:-}" ;;
     rundlauf) as_panel_user steuer.py rundlauf ;;
     koppeln) teilen_koppeln "${2:-}" ;;
+    koppeln-wunsch-intern)   # only inside speech-spark-koppeln: the admin's wish from Einstellungen → Spark, checked again
+      [ "${INVOCATION_ID:-}" ] || die "only inside its own unit"; teilen_koppeln_wunsch ;;
     modelle-update)   # B5: the model computer updates itself (its own rules) and this one waits for it
       [ "$(mode)" = full ] || die "no web panel installed"
       as_panel_user steuer.py update ;;

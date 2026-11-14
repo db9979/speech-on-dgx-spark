@@ -1038,6 +1038,7 @@ fi
   printf ', /usr/bin/systemctl start --no-block speech-spark-gpu-takt'   # GPU-Taktgrenze: root reads the setting itself
   printf ', /usr/bin/systemctl start --no-block speech-spark-clients-fw'   # Spark-Clients: root builds the firewall from the config
   printf ', /usr/bin/systemctl start --no-block speech-spark-koppelcode'   # Spark-Konsole → Assistent koppeln: root shows the code
+  printf ', /usr/bin/systemctl start --no-block speech-spark-koppeln'   # Einstellungen → Spark: root takes the checked wish
   printf ', /usr/bin/systemctl enable --now speech-spark-schirm, /usr/bin/systemctl disable --now speech-spark-schirm, /usr/bin/systemctl start getty@tty1.service'   # B9
   printf ', /usr/bin/systemctl start --no-block speech-spark-wechsel'   # stage E4: takes the panel's checked wish
   printf ', /usr/bin/systemctl start --no-block speech-spark-werkstatt'   # Funktionen → Werkstatt: takes the checked wish
@@ -1594,6 +1595,21 @@ TimeoutStartSec=5h
 TimeoutStopSec=60
 EOF
 fi
+
+# Einstellungen → Spark → Mit einem Spark koppeln (plan spark-entkoppeln E4c): root takes the admin's wish once
+# (teilen.py checks it, root again) and pairs exactly as `speech-spark teilen koppeln <host>` with that code
+cat >/etc/systemd/system/speech-spark-koppeln.service <<UNIT
+[Unit]
+Description=Speech on DGX Spark: pair with a Spark (Einstellungen → Spark)
+
+[Service]
+LogNamespace=speech-spark
+Type=oneshot
+PrivateTmp=yes
+Environment=SPEECH_SPARK_PREFIX=$PREFIX SPEECH_SPARK_ETC=$ETC SPEECH_SPARK_VAR=$VAR
+ExecStart=/bin/bash $PREFIX/app/speech-spark.sh teilen koppeln-wunsch-intern
+TimeoutStartSec=40min
+UNIT
 
 # Plan raspberry-split B7: sets up or removes the case of the panel computer (Funktionen → Gehäuse). It takes only the
 # wish gehaeuse.py checked and writes the config.txt block itself from two numbers; nothing else can be passed in.

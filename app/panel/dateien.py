@@ -296,6 +296,11 @@ DATEIEN = [
           lokal="Kopie der Kalender, holt sie nach einem Umzug neu vom Server", schutz=("versiegelt", "sealed")),  # kalenderspiegel.py
     state("rundlauf.json", "Probeläufe des Rundlauf-Wächters (Zeiten in ms, feste Wörter)", "Test runs of the round-trip check (times in ms, fixed words)",
           lokal="Messwerte dieses Geräts, ein neuer Rechner misst neu"),
+    state("koppel-wunsch.json", "Spark koppeln: Name und Code für den Kopplungsdienst, höchstens 5 Minuten",
+          "Pair a Spark: name and code for the pairing service, at most 5 minutes",
+          lokal="Wunsch von höchstens 5 Minuten", schutz=("einmal genommen", "taken once"), sonst=True),  # teilen.wunsch_schreiben/wunsch_nehmen
+    state("koppel-stand.json", "Spark koppeln: wie die letzte Kopplung ausging (feste Wörter)",
+          "Pair a Spark: how the last pairing went (fixed words)", lokal="Ergebnis der letzten Kopplung", sonst=True),  # teilen.stand_setzen
     state("koppelcode.json", "Spark-Konsole: Kopplungscode für einen Assistenten, solange er gilt, danach nur das Ergebnis",
           "Spark-Konsole: pairing code for an assistant while it lives, then only the outcome",
           lokal="Code von 10 Minuten, nur auf diesem Rechner", schutz=("lebt 10 Minuten", "lives 10 minutes"),

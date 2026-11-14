@@ -37,6 +37,7 @@ import core  # noqa: E402
 import features  # noqa: E402
 import netguard  # noqa: E402
 import guard  # noqa: E402
+import konsole  # noqa: E402
 import llmstart  # noqa: E402
 import modelle  # noqa: E402
 import steuer  # noqa: E402
@@ -81,13 +82,14 @@ EIGEN_BODY = 512
 
 
 def _eigen_an(cfg=None):
-    """Funktionen → Modelle wechseln → Eigene Modelle (stage E5)."""
-    return features.admin_on("modelleeigen", None if cfg is None else cfg.get("chat", {}))
+    """Funktionen → Modelle wechseln → Eigene Modelle (stage E5); in the Spark-Konsole (konsole.py) always: that page is
+    the Spark's own, its admin decides there."""
+    return konsole.aktiv() or features.admin_on("modelleeigen", None if cfg is None else cfg.get("chat", {}))
 
 
 def _an(cfg=None):
-    """Funktionen → Modelle wechseln (cfg: the whole configuration, None reads it)."""
-    return features.admin_on("modellwechsel", None if cfg is None else cfg.get("chat", {}))
+    """Funktionen → Modelle wechseln (cfg: the whole configuration, None reads it); always in the Spark-Konsole."""
+    return konsole.aktiv() or features.admin_on("modellwechsel", None if cfg is None else cfg.get("chat", {}))
 
 
 def _im_gang(*units):

@@ -149,6 +149,32 @@ class Seite(Base):
             self.assertIn(name, core.LOG_UNITS)
 
 
+    def test_models_switch_measure_and_own_models_are_open_in_the_console(self):
+        import modellseite
+        with mock.patch.object(modellseite.features, "admin_on", lambda k, c=None: False):
+            self.assertFalse(modellseite._an())
+            self.assertFalse(modellseite._eigen_an())
+            with mock.patch.dict(os.environ, {konsole.ENV: "1"}):
+                self.assertTrue(modellseite._an())
+                self.assertTrue(modellseite._eigen_an())
+
+    def test_overview_shows_only_hints_about_the_spark_itself(self):
+        static = os.path.join(os.path.dirname(panel.__file__), "static")
+        with open(os.path.join(static, "js", "konsole.js"), encoding="utf-8") as f:
+            js = f.read()
+        kinds = re.search(r"const HINWEISE=\[([^\]]*)\]", js).group(1).replace("'", "").split(",")
+        src = ""
+        for name in ("health.py", "systemupdates.py"):
+            with open(os.path.join(os.path.dirname(panel.__file__), name), encoding="utf-8") as f:
+                src += f.read()
+        known = set(re.findall(r'"kind": *"([a-z_]+)"', src))
+        for k in kinds:
+            self.assertIn(k, known)
+        for k in ("latency", "livecheck", "quality"):   # the assistant's own hints stay on the Pi
+            self.assertNotIn(k, kinds)
+        self.assertIn("HINWEISE.includes(a.kind)", js)
+
+
 class Koppeln(Base):
     """Assistent koppeln (E4b): root's unit shows the code; the console reads it only while it lives."""
     def test_code_only_while_it_lives_and_only_checked_shapes(self):
@@ -187,6 +213,55 @@ class Koppeln(Base):
         self.assertIn("konsole: koppeln fehler", out.getvalue())
 
 
+class SparkKoppeln(Base):
+    """Einstellungen → Spark → Spark koppeln (E4c): the panel writes a checked wish of 5 minutes; root takes it once."""
+    def setUp(self):
+        super().setUp()
+        self.d = tempfile.TemporaryDirectory()
+        self.addCleanup(self.d.cleanup)
+        for k, v in (("WUNSCH", "w.json"), ("KOPPEL_STAND", "s.json")):
+            p = mock.patch.object(teilen, k, os.path.join(self.d.name, v))
+            p.start()
+            self.addCleanup(p.stop)
+
+    def test_the_wish_is_checked_taken_once_and_lives_five_minutes(self):
+        for host, code in (("192.168.178.171", "abc def"), ("tars.lan", "ABC-DEF")):
+            self.assertEqual(teilen.wunsch_schreiben(host, code, now=1000), host)
+            self.assertEqual(teilen.stand_lesen(1000)["stand"], "laeuft")
+            self.assertEqual(teilen.wunsch_nehmen(1001), (host, "ABCDEF"))
+            self.assertIsNone(teilen.wunsch_nehmen(1002))            # once
+        teilen.wunsch_schreiben("tars", "ABCDEF", now=1000)
+        with redirect_stdout(io.StringIO()):
+            self.assertIsNone(teilen.wunsch_nehmen(1000 + teilen.WUNSCH_SECS))
+        for host, code in (("tars; rm -rf /", "ABCDEF"), ("", "ABCDEF"), ("tars", "ABCDE0"), ("tars", "ABC")):
+            with self.assertRaises(teilen.Fehler):
+                teilen.wunsch_schreiben(host, code)
+        teilen.stand_setzen("unsinn", 1000)
+        self.assertEqual(teilen.stand_lesen(1000)["stand"], "laeuft")
+        self.assertEqual(teilen.stand_lesen(1000 + 3601)["stand"], "fehler")   # a pairing never runs this long
+
+    def test_endpoint_needs_login_and_root_takes_only_the_checked_wish(self):
+        c = TestClient(panel.app)
+        self.assertEqual(c.post("/api/admin/spark/koppeln", json={"host": "tars", "code": "ABCDEF"}).status_code, 401)
+        with mock.patch.object(panel, "KONSOLE", True), mock.patch.object(panel.konsole, "erlaubt", lambda h, cfg=None: True):
+            self.assertEqual(c.get("/api/admin/spark/koppeln").status_code, 404)   # not a path of the console
+        with open(os.path.join(os.path.dirname(konsole.__file__), "speech-spark.sh"), encoding="utf-8") as f:
+            cli = f.read()
+        fn = cli[cli.index("teilen_koppeln_wunsch() {"):]
+        fn = fn[:fn.index("\n}\n")]
+        self.assertIn("as_panel_user ../teilen.py wunsch-nehmen", fn)
+        self.assertIn('"${code:-}" =~ ^[A-HJ-NP-Z2-9]{6}$', fn)
+        self.assertIn('SPEECH_SPARK_CODE="$code" teilen_koppeln "$host"', fn)
+        self.assertIn('[ "${INVOCATION_ID:-}" ] || die "only inside its own unit"; teilen_koppeln_wunsch', cli)
+        self.assertEqual(set(teilen.CODE_ABC), set("ABCDEFGHJKLMNPQRSTUVWXYZ23456789"))
+        try:
+            sh = helpers.repo_file("install.sh")
+        except unittest.SkipTest:
+            return
+        self.assertIn("ExecStart=/bin/bash $PREFIX/app/speech-spark.sh teilen koppeln-wunsch-intern", sh)
+        self.assertIn("/usr/bin/systemctl start --no-block speech-spark-koppeln'", sh)
+
+
 class Firewall(Base):
     def test_door_rules_let_the_console_in_only_from_its_networks(self):
         with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
@@ -214,6 +289,7 @@ class Firewall(Base):
             cli = f.read()
         self.assertIn('konsole) shift; need_root konsole "$@"; cmd_konsole "$@" ;;', cli)
         self.assertIn('--konsole) k=1 ;;', cli)
+        self.assertIn("""[ "$(mode)" = full ] || [ "$(cfg '.konsole.an // false')" = true ] || die "no web panel""", cli)
         self.assertIn('TEILEN_KONSOLE="${TEILEN_KONSOLE:-0}"', cli)
 
 

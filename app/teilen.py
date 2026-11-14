@@ -43,7 +43,7 @@ import time
 
 import konsole
 import mandanten
-from common import TLS_DIR, TOR_CERT, TOR_KEY, load_config, write_json
+from common import STATE, TLS_DIR, TOR_CERT, TOR_KEY, load_config, write_json
 
 TABLE = "speech_spark_teilen"
 MAX_FROM = 4           # panel computers that may use the door (one, plus room for a move)
@@ -59,6 +59,13 @@ UMZUG_SECS = 1800      # the other side restores the move backup at most this lo
 MAX_UMZUG = 8 * 1024 ** 3
 SCRYPT = {"n": 2 ** 15, "r": 8, "p": 1, "maxmem": 64 * 1024 * 1024, "dklen": 32}
 SALT = b"speech-spark-koppeln-1"
+# Einstellungen → Spark → Mit einem Spark koppeln (plan spark-entkoppeln E4c): the panel writes the admin's wish (host
+# and code, 5 minutes), the fixed root unit speech-spark-koppeln takes it once (wunsch_nehmen) and pairs as the CLI
+# does; the outcome lands in KOPPEL_STAND (fixed words only)
+WUNSCH = os.path.join(STATE, "koppel-wunsch.json")
+WUNSCH_SECS = 300
+KOPPEL_STAND = os.path.join(STATE, "koppel-stand.json")
+STAENDE = ("laeuft", "gekoppelt", "fehler")
 HOST_RE = re.compile(r"[A-Za-z0-9](?:[A-Za-z0-9.-]{0,251}[A-Za-z0-9])?|[0-9A-Fa-f:.]{2,45}")
 
 
@@ -408,6 +415,62 @@ class _Ctx:
         return self.ctx.wrap_socket(*a, **kw)
 
 
+def host_pruefen(host):
+    host = str(host or "").strip()
+    if not HOST_RE.fullmatch(host) or len(host) > 253:
+        raise Fehler("adresse")
+    return host
+
+
+def wunsch_schreiben(host, code, now=None):
+    """The panel (admin, fresh code): host and code for the root unit; checked here and again by root."""
+    d = {"host": host_pruefen(host), "code": code_lesen(code), "t": int(time.time() if now is None else now)}
+    write_json(WUNSCH, d, mode=0o600)
+    stand_setzen("laeuft", now)
+    return d["host"]
+
+
+def wunsch_nehmen(now=None):
+    """root's unit (as the service user): the wish once, (host, code) or None when there is none, it is too old or
+    it does not fit; the file is gone afterwards in every case."""
+    now = time.time() if now is None else now
+    try:
+        with open(WUNSCH) as f:
+            d = json.load(f)
+    except (OSError, ValueError):
+        d = None
+    try:
+        os.remove(WUNSCH)
+    except OSError:
+        pass
+    try:
+        if not isinstance(d, dict) or not 0 <= now - int(d.get("t") or 0) < WUNSCH_SECS:
+            raise Fehler("wunsch")
+        return host_pruefen(d.get("host")), code_lesen(d.get("code"))
+    except (Fehler, TypeError, ValueError):
+        _log("wunsch abgelehnt")
+        return None
+
+
+def stand_setzen(wort, now=None):
+    if wort in STAENDE:
+        write_json(KOPPEL_STAND, {"stand": wort, "t": int(time.time() if now is None else now)}, mode=0o600)
+
+
+def stand_lesen(now=None):
+    """{stand, t} for the page, a pairing still "laeuft" after an hour counts as "fehler" (the unit ended)."""
+    now = time.time() if now is None else now
+    try:
+        with open(KOPPEL_STAND) as f:
+            d = json.load(f)
+        w, t = d.get("stand"), int(d.get("t") or 0)
+    except (OSError, ValueError, AttributeError, TypeError):
+        return {}
+    if w not in STAENDE or not 0 <= now - t < 86400:
+        return {}
+    return {"stand": "fehler" if w == "laeuft" and now - t > 3600 else w, "t": t}
+
+
 def konsole_schreiben(daten, pfad=None):
     """The code (or only the outcome) for the Spark-Konsole: 0600, owned like the state folder (the console runs as
     the service user, this as root). Never fails the pairing."""
@@ -460,6 +523,14 @@ def main(argv):
                     raise
                 if fuer_konsole:
                     konsole_schreiben({"stand": "gekoppelt", "t": int(time.time())})
+        elif cmd == "wunsch-nehmen" and len(argv) == 1:
+            w = wunsch_nehmen()
+            if not w:
+                return 1
+            print(f"{w[0]} {w[1]}")
+        elif cmd == "stand" and len(argv) == 2 and argv[1] in STAENDE:
+            stand_setzen(argv[1])
+            _log(f"stand {argv[1]}")
         elif cmd == "koppeln" and (len(argv) == 3 or (len(argv) > 5 and argv[4] == "--")):
             code = os.environ.get("SPEECH_SPARK_CODE") or input("Kopplungscode vom anderen Rechner: ")
             ordner, befehl = (argv[3], argv[5:]) if len(argv) > 3 else (None, None)
@@ -473,7 +544,7 @@ def main(argv):
             _log("ok")
             write_json(argv[2], res, mode=0o600)
         else:
-            print("teilen.py regeln|fingerabdruck|warten <datei> [<umzug-ordner>]|"
+            print("teilen.py regeln|fingerabdruck|wunsch-nehmen|stand <wort>|warten <datei> [<umzug-ordner>]|"
                   "koppeln <host> <datei> [<umzug-ordner> -- <einspielen …>]", file=sys.stderr)
             return 2
     except Fehler as e:

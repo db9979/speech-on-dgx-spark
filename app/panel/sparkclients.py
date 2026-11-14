@@ -15,10 +15,13 @@ Admins only, never guests, no tool for the model; off until the admin switches F
     POST /api/admin/spark-clients/weg       {"id"} (code)
     GET  /api/konsole/koppeln               only in the Spark-Konsole: the pairing code while it lives, else the outcome
     POST /api/konsole/koppeln               only in the Spark-Konsole: show a new pairing code (fresh code; root unit)
+    GET  /api/admin/spark/koppeln           the panel: with which Spark, and how the last pairing went
+    POST /api/admin/spark/koppeln           {"host", "code"}: pair with a Spark (fresh code; root unit speech-spark-koppeln)
 Journal lines: "sparkclient: panel …" with fixed words and counts, never a name or key.
 """
 import asyncio
 import os
+import subprocess
 import sys
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -29,6 +32,8 @@ import guard  # noqa: E402
 import konsole  # noqa: E402
 import mandanten  # noqa: E402
 import steuer  # noqa: E402
+import teilen  # noqa: E402
+from common import load_config  # noqa: E402
 from core import admin_code, admin_code_fresh, auth, json_body  # noqa: E402
 
 router = APIRouter()
@@ -41,7 +46,13 @@ WARUM = {"aus": "Spark-Clients sind aus (Funktionen → Spark-Clients).",
          "unbekannt": "Diesen Client gibt es nicht mehr.",
          "netz": "Nur Netze im Heimnetz, z. B. 192.168.178.0/24.",
          "laeuft": "Es gibt schon einen gültigen Code.",
-         "start": "Der Kopplungsdienst startet nicht. Ist die Tür eingerichtet (sudo ./install.sh --mode api --teilen)?"}
+         "start": "Der Kopplungsdienst startet nicht. Ist die Tür eingerichtet (sudo ./install.sh --mode api --teilen)?",
+         "adresse": "Name oder IP-Adresse des Spark, z. B. 192.168.178.171.",
+         "code": "Der Code hat 6 Zeichen, wie ihn die Spark-Konsole zeigt.",
+         "koppelt": "Eine Kopplung läuft schon.",
+         "dienst": "Der Kopplungsdienst startet nicht. Bitte sudo ./install.sh einmal laufen lassen."}
+KOPPEL_UNIT = "speech-spark-koppeln"
+MAX_KOPPEL = 1024
 
 
 def admin_on(c=None):
@@ -154,4 +165,44 @@ async def konsole_koppeln(request: Request):
     if not await asyncio.to_thread(konsole.koppeln_starten):
         raise HTTPException(503, WARUM["start"])
     guard.log("spark_koppeln", detail="Code gezeigt")
+    return {"ok": True}
+
+
+@router.get("/api/admin/spark/koppeln", dependencies=[Depends(auth)])
+async def spark_koppeln_get(request: Request):
+    """Einstellungen → Spark → Mit einem Spark koppeln: the Spark this panel uses (host only) and the last outcome."""
+    guard.limit(request, "sparkclients", admin=True)
+    if konsole.aktiv():
+        raise HTTPException(404, "Not Found")
+    cfg = load_config()
+    return {"host": str((cfg.get("models") or {}).get("host") or "") if steuer.remote(cfg) else "",
+            **await asyncio.to_thread(teilen.stand_lesen)}
+
+
+@router.post("/api/admin/spark/koppeln", dependencies=[Depends(auth), Depends(admin_code_fresh)])
+async def spark_koppeln(request: Request):
+    guard.limit(request, "sparkclients", admin=True)
+    if konsole.aktiv():
+        raise HTTPException(404, "Not Found")
+    b = await json_body(request, MAX_KOPPEL)
+    if (await asyncio.to_thread(teilen.stand_lesen)).get("stand") == "laeuft":
+        print("teilen: kopplung abgelehnt laeuft", flush=True)
+        raise HTTPException(409, WARUM["koppelt"])
+    try:
+        await asyncio.to_thread(teilen.wunsch_schreiben, b.get("host"), b.get("code"))
+    except teilen.Fehler as e:
+        word = "adresse" if str(e) == "adresse" else "code"
+        print(f"teilen: kopplung abgelehnt {word}", flush=True)
+        raise HTTPException(400, WARUM[word])
+    try:
+        ok = (await asyncio.to_thread(subprocess.run, ["sudo", "-n", "/usr/bin/systemctl", "start", "--no-block", KOPPEL_UNIT],
+                                      timeout=20, capture_output=True, check=False)).returncode == 0
+    except (OSError, subprocess.SubprocessError):
+        ok = False
+    if not ok:
+        await asyncio.to_thread(teilen.stand_setzen, "fehler")
+        print("teilen: kopplung fehler dienst", flush=True)
+        raise HTTPException(503, WARUM["dienst"])
+    print("teilen: kopplung gestartet panel", flush=True)
+    guard.log("spark_koppeln_pi", detail="gestartet")
     return {"ok": True}

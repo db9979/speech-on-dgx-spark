@@ -346,11 +346,14 @@ SEITEN = {
               ("Der DGX zeigt einen Code und wartet auf Port {teilen.KOPPEL_PORT}, nur solange der Code gilt; nach "
                "{teilen.CODE_TRIES} falschen Versuchen ist er weg. Root zeigt ihn im Terminal (speech-spark teilen code) oder, "
                "auf Knopfdruck in der Spark-Konsole, über den festen Dienst {konsole.KOPPEL_UNIT} auf deren Seite "
-               "Assistent; die Konsole liest ihn nur, solange er gilt.",
+               "Assistent; die Konsole liest ihn nur, solange er gilt. Am Panel-Rechner trägt der Admin Name und Code unter "
+               "Einstellungen → Spark ein; der feste root-Dienst {sparkclients.KOPPEL_UNIT} nimmt diesen Wunsch einmal und "
+               "koppelt wie im Terminal.",
                "The DGX shows a code and waits on port {teilen.KOPPEL_PORT}, only while the code lives; after "
                "{teilen.CODE_TRIES} wrong tries it is gone. Root shows it in the terminal (speech-spark teilen code) or, "
                "at a click in the Spark-Konsole, through the fixed service {konsole.KOPPEL_UNIT} on its page Assistant; "
-               "the console reads it only while it lives.")),
+               "the console reads it only while it lives. On the panel computer the admin enters name and code under Einstellungen → "
+               "Spark; the fixed root service {sparkclients.KOPPEL_UNIT} takes that wish once and pairs as the terminal does.")),
             S("s3", "frage", ("Beweis passt zum Zertifikat?", "Proof fits the certificate?"),
               ("scrypt(Code, Fingerabdruck)", "scrypt(code, fingerprint)"),
               ("Der Panel-Rechner beweist den Code mit einem Schlüssel aus Code und dem Fingerabdruck des Zertifikats, das "

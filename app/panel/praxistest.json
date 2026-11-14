@@ -6126,6 +6126,30 @@
 "text": "Funktionen → Ablauf und Freigabe zeigen ist an, ein Postfach ist verbunden. „Was steht heute an?“ fragen; endet die Antwort mit einer Frage („Soll ich …?“), auf der Karte „Ja“ tippen: die Antwort geht auf genau diese Frage ein statt etwas Beliebiges zu sagen. In Zustand → Logs steht „chat: answer from mail before; this message answers its question - that answer is kept, search locked“.",
 "thread": "Fehler per Assistent als Issue melden",
 "test": "test_search.Search.test_yes_to_the_question_of_a_mail_answer_keeps_it_locked"
+},
+{
+"id": "P894",
+"v": 1451,
+"titel": "Spark koppeln im Panel des Pi",
+"text": "Beide updaten, Spark-Konsole an (P891). In der Konsole unter Assistent „Code zeigen“. Am Pi im Panel Einstellungen → Spark → Spark koppeln: die Adresse des Spark (192.168.178.171) und den Code eintragen, „Koppeln“, Code aus der Authenticator-App. Es steht „Kopplung läuft …“, die Dienste des Pi starten kurz neu, danach steht „Gekoppelt.“ und „Dieser Rechner nutzt den Spark 192.168.178.171.“; die Konsole zeigt „Gekoppelt“. Ein Gespräch mit dem Assistenten klappt wie vorher. Ein falscher Code: „Die Kopplung ging nicht …“.",
+"thread": "Spark und Assistent entkoppeln",
+"test": "test_konsole.SparkKoppeln.test_the_wish_is_checked_taken_once_and_lives_five_minutes"
+},
+{
+"id": "P895",
+"v": 1451,
+"titel": "Vorrang der Sprache auf dem Spark (E3, Nachtrag zu V01.1.441)",
+"text": "Spark-Clients an (P884), einen Client der Klasse „Hintergrund“ mit Recht Sprachmodell anlegen und mit ihm eine lange Anfrage an https://192.168.178.171:31006/v1/chat/completions schicken (z. B. aus Open WebUI). Währenddessen mit dem Assistenten sprechen: die Antwort kommt so schnell wie sonst. Unter Zustand → Logs (Bereich System) steht „sparkclient: gehalten sprache …“, nie ein Text.",
+"thread": "Spark und Assistent entkoppeln",
+"test": "test_mandanten.Vorrang.test_background_waits_for_silence_and_never_moves_up"
+},
+{
+"id": "P896",
+"v": 1451,
+"titel": "Modelle in der Spark-Konsole laden, messen und hinzufügen",
+"text": "Spark-Konsole öffnen (P891). Überblick: unter Hinweise steht nur noch, was den Spark selbst betrifft (Speicher, Dienst-Wächter, System-Updates), keine Vorschläge oder Praxistests mehr. Modelle: bei einem Sprachmodell „Messen“, Code aus der App; oben steht der Fortschritt, danach das Tempo in der Spalte Tempo. Bei einem anderen Modell „Laden“: der Wechsel läuft (die Seite zeigt den Start), danach steht es auf „läuft“. Unter „Eigenes Modell von Hugging Face“ nach qwen3 suchen, einen Treffer antippen (er wird gleich geprüft), dann „Hinzufügen“: es steht danach in der Liste mit „Löschen“. Unter Zustand → Logs (Bereich System) stehen „modelle: messen angefragt“ und „modelle: wechsel llm angefragt“.",
+"thread": "Spark und Assistent entkoppeln",
+"test": "test_konsole.Seite.test_models_switch_measure_and_own_models_are_open_in_the_console"
 }
 ]
 }

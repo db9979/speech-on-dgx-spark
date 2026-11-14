@@ -43,3 +43,23 @@ async function spcAct(a,b){const m=x=>{const el=$('spcmsg');if(el)el.textContent
 document.addEventListener('click',e=>{const b=e.target.closest('[data-spc]');if(!b||!$('spcbox')||!$('spcbox').contains(b))return;
   const a=b.dataset.spc;if(a==='neu'||a==='schalten'||a==='sperren'||a==='weg')spcAct(a,b)});
 // loaded when Einstellungen → Spark → Betrieb opens (admin.js cfgnav), never for a profile without the admin pages
+
+// Einstellungen → Spark → Mit einem Spark koppeln (sparkclients.py, plan spark-entkoppeln E4c): name and code from the
+// Spark's console; root pairs as `speech-spark teilen koppeln` does. Fresh code; the page shows only fixed words.
+const SPK_STAND={laeuft:['Kopplung läuft …','Pairing …'],gekoppelt:['Gekoppelt.','Paired.'],fehler:['Die Kopplung ging nicht. Code abgelaufen oder falsch?','The pairing did not work. Code expired or wrong?']};
+let SPK_T=null;
+async function spkLoad(msg){const sec=$('spksec'),box=$('spkbox');if(!sec||!box)return;clearTimeout(SPK_T);
+  let d;try{d=await (await api('/api/admin/spark/koppeln',{cache:'no-store'})).json()}catch{sec.hidden=true;return}
+  sec.hidden=false;const st=SPK_STAND[d.stand];
+  box.innerHTML=`<div class="fh">${esc(d.host?t('Dieser Rechner nutzt den Spark ','This computer uses the Spark ')+d.host+'.':t('Noch mit keinem Spark gekoppelt.','Not paired with a Spark yet.'))}</div>
+    ${st?`<div class="fh">${esc(t(st[0],st[1]))}</div>`:''}
+    <div class="ctl full"><input class="wide" id="spkhost" maxlength="253" placeholder="192.168.178.171" autocomplete="off" aria-label="${esc(t('Name oder Adresse des Spark','Name or address of the Spark'))}">
+      <input id="spkcode" maxlength="7" placeholder="ABC-DEF" autocomplete="off" aria-label="${esc(t('Code aus der Spark-Konsole','Code from the Spark-Konsole'))}">
+      <button class="b p" type="button" data-spk="koppeln"${d.stand==='laeuft'?' disabled':''}>${esc(t('Koppeln','Pair'))}</button></div>
+    <div class="row"><span id="spkmsg" class="fh">${esc(msg||'')}</span></div>`;
+  codeLock(box.querySelector('[data-spk="koppeln"]'),'protect');
+  if(d.stand==='laeuft')SPK_T=setTimeout(()=>spkLoad(),5000)}
+async function spkAct(){const m=x=>{const el=$('spkmsg');if(el)el.textContent=x};
+  try{await spcPost('/api/admin/spark/koppeln',{host:$('spkhost').value.trim(),code:$('spkcode').value.trim()});spkLoad(t('Kopplung läuft …','Pairing …'))}
+  catch(e){m(e.message)}}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-spk]');if(b)spkAct()});

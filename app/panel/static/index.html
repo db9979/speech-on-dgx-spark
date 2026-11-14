@@ -831,6 +831,12 @@
       <div class="fh more" hidden>Jeder Client bekommt einen eigenen Schlüssel, nur einmal sichtbar, mit Rechten je Dienst, einer Vorrangklasse und Grenzen. „Sprache“ geht vor wie die Stimme des Assistenten, „Dialog“ normal, „Hintergrund“ immer zuletzt. Erlaubt sind nur Netze im Heimnetz. Der Spark speichert keine Fragen und Antworten, nur Zähler. Der Assistent selbst braucht keinen Client.</div>
       <div id="spcbox" class="full rowtail"></div>
       </div>
+      <div data-nodirty="1" id="spksec" hidden>
+      <h3 class="sec">Spark koppeln <span>wirkt sofort, mit Code</span></h3>
+      <div class="setrow"><div class="lbl"><b>Mit einem Spark koppeln</b><span>Name oder Adresse des Spark und der Code aus seiner Spark-Konsole (Assistent).<button class="mlink" type="button">Mehr</button></span></div></div>
+      <div class="fh more" hidden>In der Spark-Konsole (https, Port 31010 des Spark) → Assistent → „Code zeigen“. Der Code gilt 10 Minuten und nur einmal. Der Pi prüft dabei den Fingerabdruck des Spark, der Code selbst geht nie über das Netz. Danach starten die Dienste dieses Rechners kurz neu und nutzen Sprache und Modelle des Spark.</div>
+      <div id="spkbox" class="full rowtail"></div>
+      </div>
       <h3 class="sec">Logs</h3>
       <div class="setrow"><div class="lbl"><b>Höchstens so viel Platz</b><span>Ältere Einträge werden automatisch gelöscht.</span></div><div class="ctl"><input class="num" id="logs.max_mb" type="number"><span class="unit">MB</span></div></div>
       <div class="setrow"><div class="lbl"><b>Aufbewahren</b><span>Wirkt nach dem nächsten Update oder sudo ./install.sh.</span></div><div class="ctl"><input class="num" id="logs.keep_days" type="number"><span class="unit">Tage</span></div></div>
