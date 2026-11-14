@@ -235,5 +235,52 @@ class Tone(Base):
         self.assertEqual(ton(Turn(None, "Wie geht es dir heute?")), "")
 
 
+class Anschluss(Base):
+    def test_after_the_weather_the_calendar_is_offered_once(self):
+        t = Turn(self.uid, "Wie wird das Wetter morgen?")
+        s = hint(t, calls=[{"name": "weather"}])
+        self.assertEqual(s, gespraech.ANGEBOT["termine"][0])
+        self.assertEqual(gespraech.answer(self.uid, "speaker:c1:abc", "Ja", now=T0 + 30),
+                         ("Was steht heute noch in meinem Kalender?", "termine"))
+        for i in range(gespraech.EVERY):   # the same kind not again before KIND_GAP
+            self.assertEqual(hint(t, calls=[{"name": "weather"}], now=T0 + 60 + i), "")
+
+    def test_never_what_the_answer_read_itself_or_unknown_tools(self):
+        t = Turn(self.uid, "Wie wird das Wetter und was steht im Kalender?")
+        self.assertEqual(hint(t, calls=[{"name": "weather"}, {"name": "calendar_events"}]), "")
+        gespraech._st.clear()
+        self.assertEqual(hint(t, calls=[{"name": "mail_list"}]), "")
+        gespraech._st.clear()
+        helpers.set_config(calendar=False)
+        self.assertEqual(hint(t, calls=[{"name": "weather"}]), "")
+
+
+class Ueberblick(Base):
+    def over(self, text, **kw):
+        return asyncio.run(chat_modell.gespraech_ueberblick(Turn(self.uid, text, **kw), text, now=T0))
+
+    def test_fixed_overview_and_a_word_picks_the_kind(self):
+        with events(30, 90), shopping(2):
+            s = self.over("Was gibt's Neues?")
+        self.assertIn("Heute stehen noch 2 Termine an", s)
+        self.assertIn("Auf der Einkaufsliste stehen 2 Sachen.", s)
+        self.assertTrue(s.endswith("Worüber soll ich mehr erzählen?"))
+        self.assertNotIn("Geheim", s)
+        self.assertEqual(gespraech.answer(self.uid, "speaker:c1:abc", "Die Einkaufsliste bitte", now=T0 + 20),
+                         ("Was steht auf meiner Einkaufsliste?", "einkauf"))
+
+    def test_only_whole_questions_spoken_and_released(self):
+        with shopping(2):
+            self.assertIsNone(self.over("Was gibt es Neues in der Welt?"))
+            self.assertIsNone(self.over("Was gibt's Neues?", org="panel"))
+            helpers.set_config(gespraech=False)
+            self.assertIsNone(self.over("Was gibt's Neues?"))
+
+    def test_nothing_to_say(self):
+        with shopping(0), mock.patch.object(features, "allowed", lambda k, u, *a: k in (gespraech.KEY, "tasks")):
+            self.assertEqual(self.over("Was gibt's Neues?"), "Gerade liegt bei dir nichts Neues an.")
+        self.assertIsNone(gespraech.answer(self.uid, "speaker:c1:abc", "Ja", now=T0 + 5))
+
+
 if __name__ == "__main__":
     unittest.main()

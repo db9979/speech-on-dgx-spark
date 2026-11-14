@@ -6053,6 +6053,14 @@
 "text": "Pi und Spark updaten. Funktionen → Spark-Clients einschalten. Einstellungen → Spark → Betrieb → Spark-Clients: „Für Clients geöffnet“ an, Netz 192.168.178.0/24, Übernehmen. Einen Client „Test“ mit Recht Sprachmodell anlegen (Code), den Schlüssel kopieren. Von einem anderen Rechner im LAN: curl -k -H \"Authorization: Bearer <Schlüssel>\" https://192.168.178.171:31006/v1/spark/faehigkeiten zeigt Dienste und Rechte; eine Frage an /v1/chat/completions mit model sprachmodell antwortet. /v1/audio/speech (Port 31002) antwortet 403 „recht“. Sperren: sofort 401. Der Assistent spricht währenddessen normal. Zustand → Live zeigt beim Modell-Rechner „1 Spark-Clients“. Danach Funktionen → Spark-Clients aus: alles geschlossen.",
 "thread": "Spark und Assistent entkoppeln",
 "test": "test_mandanten.Services.test_right_and_limit"
+},
+{
+"id": "P885",
+"v": 1438,
+"titel": "Natürliches Gespräch: Anschluss und „Was gibt’s Neues?“",
+"text": "Funktionen → Natürliches Gespräch ist an. Mit dem Mikrofon fragen: „Wie wird das Wetter heute?“ Am Ende der Antwort kommt „Soll ich dir auch sagen, was heute noch im Kalender steht?“; „Ja“ sagt die Termine. Dann „Was gibt’s Neues?“ sagen: sofort (ohne Denkpause des Modells) kommen zwei bis vier kurze Sätze zu Terminen, Wetter, Paketen und Einkaufsliste und „Worüber soll ich mehr erzählen?“; „Das Wetter“ sagt das Wetter. „Was gibt es Neues in der Welt?“ geht weiter an die Websuche. Getippt kommt kein Überblick.",
+"thread": "Natürlichere Gespräche im Sprachmodus",
+"test": "test_gespraech.Ueberblick.test_fixed_overview_and_a_word_picks_the_kind"
 }
 ]
 }

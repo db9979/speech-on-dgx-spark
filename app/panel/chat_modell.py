@@ -126,38 +126,73 @@ async def herkunft_und_chip(turn, found, st, searches, trace, out, who, src, mes
                            **({"web": list(lokal.WEB_CHIP)} if chip else {})))
 
 
-async def gespraechshinweis(turn, calls, en=False, now=None):
-    """Natürliches Gespräch (gespraech.py, Vorschlag 1): one fixed sentence at the end of a spoken answer without a tool,
-    or "". The panel picks the kind by fixed rules (gespraech.pick) and reads only numbers and times of the profile's
-    own data without the network; a „Ja“ to it waits in gespraech (answer)."""
+def _gespraech_ok(turn):
+    """Natürliches Gespräch (gespraech.py): the profile's uid when this turn may get a hint, an offer or the overview:
+    the own login or voice, nothing from outside, no MCP, spoken, released and not under the Notaus; else None."""
     who = getattr(turn, "who", None)
     uid = who and who.get("id")
+    if not uid or not getattr(turn, "own_browser", False) or getattr(turn, "carry", None) or getattr(turn, "mcp", None) \
+            or not gespraech.spoken(getattr(turn, "body", None), saetze.channel(turn)) \
+            or not features.allowed(gespraech.KEY, uid):
+        return None
+    if notaus.refuse("aktion", uid):
+        print("gespraech: kein hinweis notaus", flush=True)
+        return None
+    return uid
+
+
+async def _gespraech_daten(uid, kind, now, now_dt, zone):
+    """The numbers and times of one kind from the profile's own data, without the network (None: nothing to say)."""
+    if kind == "termine":
+        return await calendars.heute_noch(uid, now_dt, zone, gespraech.CAL_WAIT)
+    if kind == "wetter":
+        return weather.regen_ab(uid, now, gespraech.WEATHER_FRESH)
+    if kind == "pakete":
+        return parcels.heute_zahl(uid, now_dt.date())
+    return tasks.card(uid).get("shopping") or 0
+
+
+def _gespraech_zeit(turn, now):
     body = getattr(turn, "body", None)
-    channel = saetze.channel(turn)
-    if not uid or calls or not getattr(turn, "own_browser", False) or getattr(turn, "carry", None) \
-            or getattr(turn, "mcp", None) or not gespraech.talk(getattr(turn, "route", None)) \
-            or not gespraech.spoken(body, channel) or not features.allowed(gespraech.KEY, uid) \
-            or notaus.refuse("aktion", uid):
+    zone = chat.user_zone(str(body.get("tz") or "")[:64] if isinstance(body, dict) else "")
+    return zone, datetime.datetime.fromtimestamp(now, zone)
+
+
+def _gespraech_darf(uid, car):
+    return {k for k, (f, _) in gespraech.THEMEN.items() if features.allowed(f, uid) and not (car and k in gespraech.NOT_IN_CAR)}
+
+
+async def gespraechshinweis(turn, calls, en=False, now=None):
+    """Natürliches Gespräch (gespraech.py): one fixed sentence at the end of a spoken answer, or "". Without a tool
+    (Vorschlag 1) a hint whose kind the panel picks by fixed rules (gespraech.pick), read only from numbers and times
+    of the profile's own data without the network; after a tool of gespraech.ANSCHLUSS (Vorschlag 2) the fixed offer
+    of the kind that goes with it. A „Ja“ to either waits in gespraech (answer)."""
+    uid = _gespraech_ok(turn)
+    if not uid:
         return ""
     now = time.time() if now is None else now
-    may = {k for k, (f, _) in gespraech.THEMEN.items() if features.allowed(f, uid)}
+    car = saetze.channel(turn) == "car"
+    may = _gespraech_darf(uid, car)
+    src = getattr(turn, "src0", "")
+    if calls:
+        kind = gespraech.anschluss(uid, [str(x.get("name") or "").removesuffix(" (Panel)") for x in calls
+                                         if isinstance(x, dict)], may, now)
+        if not kind:
+            return ""
+        gespraech.keep(uid, kind, src, en, True, now=now, how="anschluss")
+        live.event("Natürliches Gespräch", "Anschluss · " + gespraech.LABEL[kind])
+        return gespraech.angebot(kind, en)
+    if not gespraech.talk(getattr(turn, "route", None)):
+        return ""
     texts = [m["content"] for m in getattr(turn, "messages", None) or ()
              if isinstance(m, dict) and m.get("role") == "user" and isinstance(m.get("content"), str)]
-    got = gespraech.pick(uid, texts, may, channel == "car", now)
+    got = gespraech.pick(uid, texts, may, car, now)
     if not got:
         return ""
     kind, urgent = got
-    zone = chat.user_zone(str(body.get("tz") or "")[:64] if isinstance(body, dict) else "")
-    now_dt = datetime.datetime.fromtimestamp(now, zone)
+    zone, now_dt = _gespraech_zeit(turn, now)
     try:
-        if kind == "termine":
-            data = await calendars.heute_noch(uid, now_dt, zone, gespraech.CAL_WAIT)
-        elif kind == "wetter":
-            data = weather.regen_ab(uid, now, gespraech.WEATHER_FRESH)
-        elif kind == "pakete":
-            data = parcels.heute_zahl(uid, now_dt.date())
-        else:
-            data = tasks.card(uid).get("shopping") or 0
+        data = await _gespraech_daten(uid, kind, now, now_dt, zone)
     except Exception as e:   # a hint is never worth a failed answer
         print("gespraech: kein hinweis", kind, "fehler", type(e).__name__, flush=True)
         return ""
@@ -166,9 +201,36 @@ async def gespraechshinweis(turn, calls, en=False, now=None):
         if not urgent:
             print("gespraech: kein hinweis", kind, "nichts da", flush=True)
         return ""
-    gespraech.keep(uid, kind, getattr(turn, "src0", ""), en, made[1], urgent, now)
+    gespraech.keep(uid, kind, src, en, made[1], urgent, now)
     live.event("Natürliches Gespräch", "Hinweis · " + gespraech.LABEL[kind])
     return made[0]
+
+
+async def gespraech_ueberblick(turn, text, en=False, now=None):
+    """„Was gibt's Neues?“ (gespraech.py, Vorschlag 4): the panel's fixed short overview of the profile's own data,
+    without the model and the network, or None when this turn may not have it; a kind's word or „Ja“ after it waits in
+    gespraech (answer)."""
+    if not gespraech.neues(text):
+        return None
+    uid = _gespraech_ok(turn)
+    if not uid:
+        return None
+    now = time.time() if now is None else now
+    zone, now_dt = _gespraech_zeit(turn, now)
+    teile = []
+    for kind in gespraech.FRAGE:
+        if kind not in _gespraech_darf(uid, saetze.channel(turn) == "car"):
+            continue
+        try:
+            data = await _gespraech_daten(uid, kind, now, now_dt, zone)
+        except Exception as e:
+            print("gespraech: ueberblick", kind, "fehler", type(e).__name__, flush=True)
+            data = None
+        teile.append((kind, gespraech.teil(kind, data, en)))
+    said, kinds = gespraech.ueberblick(teile, en)
+    gespraech.keep(uid, "ueberblick", getattr(turn, "src0", ""), en, bool(kinds), now=now, how="ueberblick", kinds=kinds)
+    live.event("Natürliches Gespräch", "Überblick")
+    return said
 
 
 async def model_turn(*, acked, body, c, came_from, carry, ccfg, cfg, check_on, ex, fix_fix, fix_prev, fixed=None, ha, ha_direct, ha_read, known,

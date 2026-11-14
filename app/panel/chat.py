@@ -2192,6 +2192,13 @@ async def _answer(request, turn):
             out.put_nowait({"type": "outside"})
         quellenangabe.note("frage")
         print("quelle: Nachfrage beantwortet", flush=True)
+    # „Was gibt's Neues?“ (Natürliches Gespräch, gespraech.py): spoken, the panel's fixed short overview of the profile's
+    # own data, without the model; „Was gibt es Neues in der Welt?“ stays a question for the search
+    if not fixed and messages and messages[-1]["role"] == "user" and not turn.pics and not carry:
+        said = await chat_modell.gespraech_ueberblick(turn, messages[-1]["content"],
+                                                      guess_language(messages[-1]["content"]) == "English")
+        if said:
+            fixed = ("ueberblick", said)
     # "Sofortige Rückmeldung" (ack.py): right away a ready-made sentence of what the Spark does now, chosen by fixed
     # rules (Weiche group, "Erst lokal", a direct fetch) and played from a recording (no GPU); never small talk
     ack_lang, acked = None, False

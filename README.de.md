@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.438** Natürliches Gespräch, Paket B: nach einer gesprochenen Antwort zum Wetter bietet der Assistent die Termine an und umgekehrt; „Was gibt’s Neues?“ bekommt einen festen kurzen Überblick ohne Modell und „Worüber soll ich mehr erzählen?“
 - **V01.1.437** Spark-Clients (Spark und Assistent entkoppeln, E1+E2): Funktionen → Spark-Clients öffnet die Dienste des Modell-Rechners für andere Programme im Heimnetz, je Client ein eigener Schlüssel mit Rechten, Vorrangklasse und Grenzen; /v1/spark/faehigkeiten mit Spark-API-Version; das TLS-Tor zählt nicht mehr als „dieser Rechner“
 - **V01.1.436** Fix: kein leerer weißer Balken mehr unter der Mail-Suche
 - **V01.1.435** iPhone-App: eigene Lautsprecher direkt in der App einstellen und prüfen
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.431** iPhone-App: „Im Panel öffnen“ führt bei Seiten, die die App selbst kann (Kalender, E-Mail, Listen, Gedächtnis, Sicherheit und mehr), direkt zur App-Ansicht; dazu Schwachstellen unter Spark verwalten
 - **V01.1.430** Morgenrunde: Themen werden wirklich recherchiert, „meine Interessen“ je Interesse, ohne Treffer von heute die der letzten Tage statt „nichts gefunden“
 - **V01.1.429** Webseiten und HTML-Dateien als Markdown lesen: nur der Hauptteil ohne Menüs und Cookie-Hinweise, Überschriften, Listen und Tabellen bleiben (Idee aus get-md, Nano Collective)
-- **V01.1.428** Alles auch im Hochformat: am Handy unter Heute → Meine Seiten stehen Kalender, E-Mail, Listen, Offen, Kontakte, Wissensbuch, Finden, Mappen, Dungeon-Master und Open WebUI (vorher nur im Querformat erreichbar); das Menü der Rechner-Ansicht am Handy zeigt auch Profilen ihre Seiten
 
 
 

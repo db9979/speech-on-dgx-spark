@@ -786,7 +786,7 @@ SEITEN = {
         "heute": [],
     },
     "antwort": {
-        "stand": "fe17e201ae",
+        "stand": "5aa8d04ac1",
         "bezug": {
             "chat.MAX_SAVES": ["s11"], "chat.LOOP_SAME": ["s11"], "chat._answer": ["s4", "s5", "s11"], "chat_modell.model_turn": ["s4", "s11"], "chat_modell.herkunft_und_chip": ["s3"], "chat_modell.quellenangabe_zeile": ["s3"], "chat_ton.speech_out": ["s8"],
             "chat.split_sentences": ["s5"], "chat.said_key": ["s8"], "chat.no_code": ["s8"],
@@ -819,7 +819,9 @@ SEITEN = {
                "festen Satz des Panels, ohne Modell und ohne Sofort-Satz davor (sofort.answer, höchstens "
                "{sofort.MAX_CHARS} Zeichen). Ebenso kommt die Rückfrage zum Weg nur als feste Frage des Panels mit "
                "ihren Knöpfen, ohne Modell und ohne Werkzeug, und „Woher weißt du das?“ als feste Antwort des Panels "
-               "aus der gemerkten Quelle der letzten Antwort (quellenangabe.antwort).",
+               "aus der gemerkten Quelle der letzten Antwort (quellenangabe.antwort). Gesprochen bekommt „Was gibt’s "
+               "Neues?“ mit „Natürliches Gespräch“ einen festen kurzen Überblick aus eigenen Zahlen und Uhrzeiten "
+               "(chat_modell.gespraech_ueberblick, gespraech.teil).",
                "chat() checks the rate limit, sets the mark „speech is running“ (background work waits) and shows the "
                "profile's other devices „answering“. Then chat_turn.prepare works out rights, locks, system prompt and "
                "the offered tools; _answer takes over. When the language model pauses (maintenance pause, emergency "
@@ -829,7 +831,9 @@ SEITEN = {
                "sentence, without a model and without an instant sentence before it (sofort.answer, at most "
                "{sofort.MAX_CHARS} characters). The question which way likewise comes only as the panel's fixed "
                "question with its buttons, without a model and without a tool, and „Where did you get that?“ as the "
-               "panel's fixed answer from the kept source of the last answer (quellenangabe.antwort).")),
+               "panel's fixed answer from the kept source of the last answer (quellenangabe.antwort). Spoken, „What's "
+               "new?“ gets a fixed short overview from the profile's own numbers and times with „Natural conversation“ "
+               "(chat_modell.gespraech_ueberblick, gespraech.teil).")),
             S("s2", "schritt", ("Strom öffnen, Sofort-Satz", "Open the stream, instant sentence"),
               ("drei Aufgaben: Modell, Sprachausgabe, Brücke", "three tasks: model, speech output, bridge"),
               ("Zwei Warteschlangen verbinden alles: eine für die Ereignisse ans Gerät, eine für Sätze an die "
@@ -987,7 +991,8 @@ SEITEN = {
                "höchstens ein Satz am Tag). Ist „Natürliches Gespräch“ an, kann davor nach einer gesprochenen Antwort ohne "
                "Werkzeug ein fester Hinweis aus eigenen Daten kommen (chat_modell.gespraechshinweis: die Art nach festen "
                "Wörtern der eigenen Sätze, gespraech.pick; nur Zahlen und Uhrzeiten ohne Netz, gespraech.satz; ein „Ja“ "
-               "darauf wird eine feste Frage, gespraech.answer); dann kein Beispielsatz. Das Werkzeug-Log des Profils "
+               "darauf wird eine feste Frage, gespraech.answer), nach dem Wetter oder dem Kalender "
+               "ein festes Angebot der passenden anderen Art (gespraech.anschluss); dann kein Beispielsatz. Das Werkzeug-Log des Profils "
                "wird geschrieben.",
                "Only when nothing from outside was read: offer to remember a learned correction or ask about a fact in "
                "memory (by fixed rules). Then the panel puts the answer on the reMarkable when asked; when the answer itself offers to "
@@ -997,7 +1002,8 @@ SEITEN = {
                "„Natural conversation“ is on, a spoken answer without a tool may get one fixed hint from the profile's "
                "own data before that (chat_modell.gespraechshinweis: the kind by fixed words of the person's own "
                "sentences, gespraech.pick; only numbers and times without the network, gespraech.satz; a „yes“ to it "
-               "becomes a fixed question, gespraech.answer); then no example sentence. The profile's tool log is "
+               "becomes a fixed question, gespraech.answer), after the weather or the calendar a fixed "
+               "offer of the other fitting kind (gespraech.anschluss); then no example sentence. The profile's tool log is "
                "written.")),
             S("s14", "ende", ("Strom endet", "Stream ends"),
               ("Anfrage-Verlauf, Fälle, „done“", "request trace, cases, „done“"),

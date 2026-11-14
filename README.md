@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.438** Natural conversation, package B: after a spoken answer about the weather the assistant offers the appointments and the other way round; "What's new?" gets a fixed short overview without the model and "What shall I tell you more about?"
 - **V01.1.437** Spark clients (decouple Spark and assistant, E1+E2): Features → Spark clients opens the model computer's services to other programs in the home network, each client with its own key, rights, priority class and limits; /v1/spark/faehigkeiten with the Spark API version; the TLS door no longer counts as "this machine"
 - **V01.1.436** Fix: no empty white bar under the mail search any more
 - **V01.1.435** iPhone app: own speakers right in the app, settings and checks
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.431** iPhone app: "Open in the panel" leads straight to the app's own view for pages the app can show itself (calendar, mail, lists, memory, security and more); plus vulnerabilities under Manage the Spark
 - **V01.1.430** Morning briefing: topics are really researched, "my interests" per interest, without a hit of today those of the last days instead of "nothing found"
 - **V01.1.429** Web pages and HTML files read as Markdown: only the main part without menus and cookie notes, headings, lists and tables stay (idea from get-md, Nano Collective)
-- **V01.1.428** Everything in portrait too: on a phone Today → My pages lists Calendar, E-mail, Lists, Open, Contacts, Knowledge book, Find, Collections, Dungeon Master and Open WebUI (before reachable in landscape only); the computer layout's menu on a phone shows profiles their pages too
 
 
 
