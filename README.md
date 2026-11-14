@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.452** Spark clients: box "Connect a program" in the panel and the Spark-Konsole with address, ports, model names, key, certificate download, check command and error list; step-by-step guide in the docs; limits per client adjustable when making it and later, also "No limits"
 - **V01.1.451** Pair a Spark (E4c): on the Pi under Einstellungen → Spark → Spark koppeln enter name and code from the Spark-Konsole instead of `sudo speech-spark teilen koppeln`; root pairs through the fixed service `speech-spark-koppeln`; the Spark-Konsole loads, measures and adds own models, its overview shows only notes about the Spark itself
 - **V01.1.450** Red fix: the browser test of the bug button counts the page errors as the page noted them, instead of expecting a fixed number
 - **V01.1.449** Fix report 4: a "yes" on the question card after an answer from mail (daily briefing) keeps that answer and its question in the conversation, locked like any mail follow-up
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.445** Natural conversation, package C: a spoken "Hello" after a few hours gets the one most important point (appointments today, rain, a parcel), otherwise nothing
 - **V01.1.444** Reading tools at the same time: several reading tools of one step (weather, calendar, web search …) run together, the answer comes faster; Summarize long conversations: the start of a long conversation no longer simply drops away (both off)
 - **V01.1.443** RED-FIX: iPhone conversation rows without a new import inside a function
-- **V01.1.442** iPhone app: the whole conversation page and own voices right in the app
 
 
 

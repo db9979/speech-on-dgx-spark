@@ -33,7 +33,7 @@ import konsole  # noqa: E402
 import mandanten  # noqa: E402
 import steuer  # noqa: E402
 import teilen  # noqa: E402
-from common import load_config  # noqa: E402
+from common import load_config, model_host  # noqa: E402
 from core import admin_code, admin_code_fresh, auth, json_body  # noqa: E402
 
 router = APIRouter()
@@ -103,7 +103,9 @@ async def admin_get(request: Request):
     guard.limit(request, "sparkclients", admin=True)
     if not admin_on():
         raise HTTPException(409, WARUM["aus"])
-    return await asyncio.to_thread(_tun, "clients")
+    d = await asyncio.to_thread(_tun, "clients")
+    cfg = load_config()                       # the address the program enters: the model computer, or this one
+    return dict(d, host=model_host(cfg) if steuer.remote(cfg) else "")
 
 
 @router.post("/api/admin/spark-clients/schalten", dependencies=[Depends(auth), Depends(admin_code)])

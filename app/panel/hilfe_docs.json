@@ -16197,7 +16197,7 @@
 "file": "Sicherheit und Betrieb",
 "head": "Spark-Clients (seit V01.1.437)",
 "title": "Spark-Clients (seit V01.1.437)",
-"text": "Sprachmarke von Hören und Sprechen, 3 Sekunden), höchstens 60 Sekunden, dann als Letzter in der Reihe (Paket E3, Zeile sparkclient: gehalten sprache …). Ein Client wählt seine Stufe nie selbst; nur „Sprache“ zählt als jemand, der spricht. - Grenzen: Anfragen pro Minute je Dienst, gleichzeitig am Sprachmodell und Tokens pro Tag (aus der Zählung der Engine, auch beim Streamen). Darüber 429 „limit“, „parallel“ oder „tokens“. Die Zähler leben im Speicher des Dienstes. - Fähigkeiten (Paket E2): GET /v1/spark/faehigkeiten am Sprachmodell, an Hören und an Sprechen sagt mit Schlüssel, welche Dienste der Spark anbietet, unter welchem festen Modellnamen, was der Schlüssel darf, und die Spark-API-Version (common.SPARK_API). Danach richten sich Clients, nicht nach der Versionsnummer; Zustand → Live zeigt sie beim Modell-Rechner, wenn sie abweicht. - Log und Daten: Zeilen sparkclient: … mit Client-Kennung, festen Wörtern und Zahlen, eine Ablehnung derselben Art höchstens einmal pro Minute; nie Namen, Schlüssel oder Inhalte. Das Änderungsprotokoll nennt Öffnen, Schließen, Anlegen, Ändern und Löschen. - Durch das TLS-Tor: Es verbindet sich von 127.0.0.2 mit den Diensten. „Nur dieser Rechner“ (kei"
+"text": "Sprachmarke von Hören und Sprechen, 3 Sekunden), höchstens 60 Sekunden, dann als Letzter in der Reihe (Paket E3, Zeile sparkclient: gehalten sprache …). Ein Client wählt seine Stufe nie selbst; nur „Sprache“ zählt als jemand, der spricht. - Grenzen: Anfragen pro Minute je Dienst, gleichzeitig am Sprachmodell und Tokens pro Tag (aus der Zählung der Engine, auch beim Streamen); vorgegeben 20/min, 2 gleichzeitig, 300 000 Tokens/Tag. Beim Anlegen und später mit „Grenzen“ je Client einstellbar; leer oder 0 heißt keine Grenze, „Keine Grenzen“ hebt alle drei auf (dann bremst nur der Vorrang). Darüber 429 „limit“, „parallel“ oder „tokens“. Die Zähler leben im Speicher des Dienstes. - Fähigkeiten (Paket E2): GET /v1/spark/faehigkeiten am Sprachmodell, an Hören und an Sprechen sagt mit Schlüssel, welche Dienste der Spark anbietet, unter welchem festen Modellnamen, was der Schlüssel darf, und die Spark-API-Version (common.SPARK_API). Danach richten sich Clients, nicht nach der Versionsnummer; Zustand → Live zeigt sie beim Modell-Rechner, wenn sie abweicht. - Log und Daten: Zeilen sparkclient: … mit Client-Kennung, festen Wörtern und Zahlen, eine Ablehnung derselben Art höchstens einmal pro Mi"
 },
 {
 "lang": "de",
@@ -16205,7 +16205,47 @@
 "file": "Sicherheit und Betrieb",
 "head": "Spark-Clients (seit V01.1.437)",
 "title": "Spark-Clients (seit V01.1.437)",
-"text": "n Schlüssel gesetzt, Einzelheiten unter /health) gilt dafür nicht mehr; vorher sah jeder Anrufer durch die Tür aus wie der Rechner selbst."
+"text": "nute; nie Namen, Schlüssel oder Inhalte. Das Änderungsprotokoll nennt Öffnen, Schließen, Anlegen, Ändern und Löschen. - Durch das TLS-Tor: Es verbindet sich von 127.0.0.2 mit den Diensten. „Nur dieser Rechner“ (kein Schlüssel gesetzt, Einzelheiten unter /health) gilt dafür nicht mehr; vorher sah jeder Anrufer durch die Tür aus wie der Rechner selbst."
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Ein Programm verbinden (Schritt für Schritt)",
+"title": "Ein Programm verbinden (Schritt für Schritt)",
+"text": "Die Seite zeigt unter *Einstellungen → Spark → Betrieb → Spark-Clients* (und in der Spark-Konsole unter *Clients*) den Kasten „Ein Programm verbinden“, schon mit der Adresse dieses Spark, den Ports, den Modellnamen und nach „Schlüssel erzeugen“ mit dem Schlüssel. Dasselbe von Hand:"
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Ein Programm verbinden (Schritt für Schritt)",
+"title": "Ein Programm verbinden (Schritt für Schritt)",
+"text": "1. Öffnen: „Für Clients geöffnet“ einschalten, das Netz des Programms eintragen (z. B. 192.168.178.0/24) und „Übernehmen“. Bei getrennten Rechnern lässt die Tür erst danach Verbindungen aus diesem Netz herein. 2. Schlüssel: Name (z. B. „Open WebUI“), Vorrangklasse (für einen Chat „Dialog“, für Stapelarbeit „Hintergrund“) und Rechte wählen, „Schlüssel erzeugen“, Code aus der App. Den Schlüssel sk-spark-… sofort kopieren: er ist nur jetzt sichtbar. Verloren: Client löschen und neu anlegen. 3. Im Programm eintragen (<spark> = IP oder Name des Spark, z. B. 192.168.178.171; https bei getrennten Rechnern mit Tür, sonst http):"
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Ein Programm verbinden (Schritt für Schritt)",
+"title": "Ein Programm verbinden (Schritt für Schritt)",
+"text": "4. Zertifikat (nur bei https): Der Spark hat ein eigenes, selbst signiertes Zertifikat. Im Kasten „Zertifikat laden“ (Datei spark-zertifikat.pem) und den Fingerabdruck mit dem auf der Seite vergleichen. Im Programm als vertrauenswürdig eintragen (oft „CA-Zertifikat“ oder „Zertifikat-Datei“). Für Python-Programme wie Open WebUI: cat /etc/ssl/certs/ca-certificates.crt spark-zertifikat.pem > ca-mit-spark.pem und SSL_CERT_FILE sowie REQUESTS_CA_BUNDLE auf diese Datei setzen (in Docker die Datei einbinden). Die Prüfung nie abschalten. 5. Prüfen: curl --cacert spark-zertifikat.pem -H \"Authorization: Bearer sk-spark-…\" https://<spark>:31006/v1/spark/faehigkeiten nennt die Dienste, den Modellnamen und die Rechte des Schlüssels."
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Ein Programm verbinden (Schritt für Schritt)",
+"title": "Ein Programm verbinden (Schritt für Schritt)",
+"text": "Beispiel Open WebUI: im Admin-Bereich unter *Verbindungen*, Abschnitt *OpenAI-API*, „+“, URL https://<spark>:31006/v1, Schlüssel sk-spark-…, speichern; das Modell heißt danach sprachmodell."
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Ein Programm verbinden (Schritt für Schritt)",
+"title": "Ein Programm verbinden (Schritt für Schritt)",
+"text": "Wenn es nicht klappt: 401 = Schlüssel falsch, gesperrt oder gelöscht; 403 „netz“ = das Netz des Programms fehlt; 403 „recht“ = dem Client fehlt das Recht für diesen Dienst; 429 = eine Grenze ist erreicht; keine Verbindung = „Für Clients geöffnet“ ist aus oder das Netz fehlt (die Tür antwortet dann gar nicht); Zertifikatfehler = Zertifikat nicht eingetragen oder eine andere Adresse als die im Zertifikat (IP oder Name des Spark verwenden)."
 },
 {
 "lang": "de",
@@ -33509,7 +33549,7 @@
 "file": "Security and operation",
 "head": "Spark clients (since V01.1.437)",
 "title": "Spark clients (since V01.1.437)",
-"text": "rk of listening and speaking, 3 seconds), at most 60 seconds, then last in line (package E3, line sparkclient: gehalten sprache …). A client never picks its stage itself; only \"Sprache\" counts as somebody speaking. - Limits: requests per minute per service, at once at the language model and tokens per day (from the engine's count, also when streaming). Above them 429 \"limit\", \"parallel\" or \"tokens\". The counts live in the service's memory. - Capabilities (package E2): GET /v1/spark/faehigkeiten at the language model, listening and speaking says with a key which services the Spark offers, under which fixed model name, what the key may, and the Spark API version (common.SPARK_API). Clients go by it, not by the version number; Status → Live shows it at the model computer when it differs. - Log and data: lines sparkclient: … with the client's id, fixed words and numbers, a refusal of the same kind at most once a minute; never names, keys or contents. The change log names opening, closing, making, changing and deleting. - Through the TLS door: it connects to the services from 127.0.0.2. \"Only this machine\" (no key set, details under /health) no longer holds for it; before, every caller "
+"text": "rk of listening and speaking, 3 seconds), at most 60 seconds, then last in line (package E3, line sparkclient: gehalten sprache …). A client never picks its stage itself; only \"Sprache\" counts as somebody speaking. - Limits: requests per minute per service, at once at the language model and tokens per day (from the engine's count, also when streaming); preset 20/min, 2 at once, 300 000 tokens/day. Adjustable per client when making it and later with \"Limits\"; empty or 0 means no limit, \"No limits\" lifts all three (then only the priority holds back). Above them 429 \"limit\", \"parallel\" or \"tokens\". The counts live in the service's memory. - Capabilities (package E2): GET /v1/spark/faehigkeiten at the language model, listening and speaking says with a key which services the Spark offers, under which fixed model name, what the key may, and the Spark API version (common.SPARK_API). Clients go by it, not by the version number; Status → Live shows it at the model computer when it differs. - Log and data: lines sparkclient: … with the client's id, fixed words and numbers, a refusal of the same kind at most once a minute; never names, keys or contents. The change log names opening, closing, "
 },
 {
 "lang": "en",
@@ -33517,7 +33557,47 @@
 "file": "Security and operation",
 "head": "Spark clients (since V01.1.437)",
 "title": "Spark clients (since V01.1.437)",
-"text": "through the door looked like the machine itself."
+"text": "making, changing and deleting. - Through the TLS door: it connects to the services from 127.0.0.2. \"Only this machine\" (no key set, details under /health) no longer holds for it; before, every caller through the door looked like the machine itself."
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Connect a program (step by step)",
+"title": "Connect a program (step by step)",
+"text": "Under *Settings → Spark → Operation → Spark clients* (and in the Spark-Konsole under *Clients*) the page shows the box \"Connect a program\", already filled with this Spark's address, the ports, the model names and, after \"Make key\", the key. The same by hand:"
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Connect a program (step by step)",
+"title": "Connect a program (step by step)",
+"text": "1. Open: switch on \"Open for clients\", enter the program's network (e.g. 192.168.178.0/24) and \"Apply\". With split computers the door lets connections from this network in only after that. 2. Key: choose a name (e.g. \"Open WebUI\"), a priority class (\"Dialogue\" for a chat, \"Background\" for batch work) and rights, \"Make key\", code from the app. Copy the key sk-spark-… right away: it is visible only now. Lost: delete the client and make a new one. 3. Enter in the program (<spark> = IP or name of the Spark, e.g. 192.168.178.171; https for split computers with the door, else http):"
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Connect a program (step by step)",
+"title": "Connect a program (step by step)",
+"text": "4. Certificate (only with https): the Spark has a self-signed certificate of its own. In the box \"Download certificate\" (file spark-zertifikat.pem) and compare the fingerprint with the one on the page. Enter it in the program as trusted (often \"CA certificate\" or \"certificate file\"). For Python programs such as Open WebUI: cat /etc/ssl/certs/ca-certificates.crt spark-zertifikat.pem > ca-mit-spark.pem and point SSL_CERT_FILE and REQUESTS_CA_BUNDLE at that file (in Docker mount the file). Never switch the check off. 5. Check: curl --cacert spark-zertifikat.pem -H \"Authorization: Bearer sk-spark-…\" https://<spark>:31006/v1/spark/faehigkeiten lists the services, the model name and the key's rights."
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Connect a program (step by step)",
+"title": "Connect a program (step by step)",
+"text": "Example Open WebUI: in the admin area under *Connections*, section *OpenAI API*, \"+\", URL https://<spark>:31006/v1, key sk-spark-…, save; the model is then called sprachmodell."
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Connect a program (step by step)",
+"title": "Connect a program (step by step)",
+"text": "If it fails: 401 = key wrong, blocked or deleted; 403 \"netz\" = the program's network is missing; 403 \"recht\" = the client lacks the right for this service; 429 = a limit is reached; no connection = \"Open for clients\" is off or the network is missing (the door then does not answer at all); certificate error = certificate not entered, or another address than the one in the certificate (use the Spark's IP or name)."
 },
 {
 "lang": "en",

@@ -77,27 +77,33 @@ async function clients(msg){const el=$('tab-clients');
   try{SPC=await (await api('/api/admin/spark-clients')).json()}catch(e){el.innerHTML=`<p class="k">${esc(e.message)}</p>`;return}
   const d=SPC,rows=d.clients.map(c=>`<tr><td><b>${esc(c.name)}</b><div class="k">${esc(c.rechte.map(x=>RECHT[x]||x).join(', '))}</div></td>
     <td><span class="pill ${c.klasse==='sprache'?'ok':'grey'}">${esc(KLASSE[c.klasse]||c.klasse)}</span></td>
-    <td class="k">${esc(`${c.minute}/min · ${c.parallel} ${t('gleichzeitig','at once')} · ${c.tokens_tag} ${t('Tokens/Tag','tokens/day')}`)}${c.gesperrt?' · '+esc(t('gesperrt','blocked')):''}</td>
-    <td><button class="btn sec" type="button" data-k="sperren" data-id="${esc(c.id)}">${esc(c.gesperrt?t('Entsperren','Unblock'):t('Sperren','Block'))}</button>
+    <td class="k">${esc(spgText(c))}${c.gesperrt?' · '+esc(t('gesperrt','blocked')):''}</td>
+    <td><button class="btn sec" type="button" data-k="grenzen" data-id="${esc(c.id)}">${esc(t('Grenzen','Limits'))}</button>
+      <button class="btn sec" type="button" data-k="sperren" data-id="${esc(c.id)}">${esc(c.gesperrt?t('Entsperren','Unblock'):t('Sperren','Block'))}</button>
       <button class="btn bad" type="button" data-k="weg" data-id="${esc(c.id)}">${esc(t('Löschen','Delete'))}</button></td></tr>`).join('');
   el.innerHTML=`<h1>Clients</h1><div class="k">${esc(t('Andere Programme im Heimnetz mit eigenem Schlüssel, Rechten, Vorrangklasse und Grenzen. Der Schlüssel ist nur einmal sichtbar.','Other programs in the home network with a key of their own, rights, priority class and limits. The key is visible only once.'))}</div>
     <div class="card" style="margin-top:14px"><div class="row"><label><input type="checkbox" id="kcan"${d.an?' checked':''}> ${esc(t('Für Clients geöffnet','Open for clients'))}</label>
       <input id="kcnetze" style="flex:1" value="${esc(d.netze.join(', '))}" placeholder="192.168.178.0/24" aria-label="${esc(t('Netze im Heimnetz','Home networks'))}">
       <button class="btn sec" type="button" data-k="schalten">${esc(t('Übernehmen','Apply'))}</button></div></div>
-    <div class="card" style="margin-top:14px"><table><tr><th>Client</th><th>${esc(t('Klasse','Class'))}</th><th>${esc(t('Grenzen','Limits'))}</th><th></th></tr>${rows||`<tr><td class="k" colspan="4">${esc(t('Noch kein Client.','No client yet.'))}</td></tr>`}</table></div>
+    <div class="card" style="margin-top:14px"><table><tr><th>Client</th><th>${esc(t('Klasse','Class'))}</th><th>${esc(t('Grenzen','Limits'))}</th><th></th></tr>${rows||`<tr><td class="k" colspan="4">${esc(t('Noch kein Client.','No client yet.'))}</td></tr>`}</table><div id="kcedit"></div></div>
     <div class="card" style="margin-top:14px"><h2>${esc(t('Neuer Client','New client'))}</h2>
       <div class="row"><input id="kcname" maxlength="40" placeholder="${esc(t('Name, z. B. Open WebUI','Name, e.g. Open WebUI'))}" aria-label="Name">
         <select id="kcklasse" aria-label="${esc(t('Vorrangklasse','Priority class'))}">${d.klassen.map(k=>`<option value="${esc(k)}"${k===d.vorgabe.klasse?' selected':''}>${esc(KLASSE[k]||k)}</option>`).join('')}</select></div>
       <div class="row">${d.rechte.map(x=>`<label><input type="checkbox" data-recht="${esc(x)}"${d.vorgabe.rechte.includes(x)?' checked':''}> ${esc(RECHT[x]||x)}</label>`).join('')}</div>
+      ${spgFelder('kcneu',d.vorgabe,'k')}
       <div class="row"><button class="btn" type="button" data-k="neu"${d.clients.length>=d.max?' disabled':''}>${esc(t('Schlüssel erzeugen','Make key'))}</button><span class="k" id="kcmsg">${esc(msg||'')}</span></div>
-      <div id="kckey" hidden><div class="k">${esc(t('Nur jetzt sichtbar. Im Programm als API-Schlüssel eintragen (Bearer).','Visible only now. Enter it in the program as the API key (Bearer).'))}</div><div class="key mono" id="kckeyv"></div></div></div>`}
+      <div id="kckey" hidden><div class="k">${esc(t('Nur jetzt sichtbar. Im Programm als API-Schlüssel eintragen (Bearer).','Visible only now. Enter it in the program as the API key (Bearer).'))}</div><div class="key mono" id="kckeyv"></div></div></div>
+    <div class="card spv-box" style="margin-top:14px" id="kcverb">${sparkVerbinden(d,d.host,'','k')}</div>`}
 async function clientAct(a,b){const m=x=>{const el=$('kcmsg');if(el)el.textContent=x};
   try{if(a==='schalten'){const netze=$('kcnetze').value.split(',').map(x=>x.trim()).filter(Boolean);
       const d=await post('/api/admin/spark-clients/schalten',{an:$('kcan').checked,netze});return clients(d.an?t('Geöffnet.','Open.'):t('Geschlossen.','Closed.'))}
     if(a==='neu'){const rechte=[...document.querySelectorAll('[data-recht]')].filter(x=>x.checked).map(x=>x.dataset.recht);
-      const d=await post('/api/admin/spark-clients/neu',{name:$('kcname').value,rechte,klasse:$('kcklasse').value});
-      await clients();$('kckeyv').textContent=d.key;$('kckey').hidden=false;return}
+      const d=await post('/api/admin/spark-clients/neu',{name:$('kcname').value,rechte,klasse:$('kcklasse').value,...spgLesen('kcneu')});
+      await clients();$('kckeyv').textContent=d.key;$('kckey').hidden=false;$('kcverb').innerHTML=sparkVerbinden(SPC,SPC.host,d.key,'k');return}
     const c=(SPC.clients||[]).find(x=>x.id===b.dataset.id);if(!c)return;
+    if(a==='grenzen'){$('kcedit').innerHTML=`<h2>${esc(t('Grenzen von','Limits of'))} ${esc(c.name)}</h2>${spgFelder('kced',c,'k')}
+      <div class="row"><button class="btn" type="button" data-k="grenzen_ok" data-id="${esc(c.id)}">${esc(t('Speichern','Save'))}</button></div>`;return}
+    if(a==='grenzen_ok'){await post('/api/admin/spark-clients/aendern',{id:c.id,felder:spgLesen('kced')});return clients(t('Grenzen gespeichert.','Limits saved.'))}
     if(a==='sperren')await post('/api/admin/spark-clients/aendern',{id:c.id,felder:{gesperrt:!c.gesperrt}});
     if(a==='weg')await post('/api/admin/spark-clients/weg',{id:c.id});
     await clients()}

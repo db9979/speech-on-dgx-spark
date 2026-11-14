@@ -43,7 +43,7 @@ import time
 
 import konsole
 import mandanten
-from common import STATE, TLS_DIR, TOR_CERT, TOR_KEY, load_config, write_json
+from common import STATE, TLS_DIR, TOR_CERT, TOR_KEY, load_config, tor_fingerabdruck, write_json
 
 TABLE = "speech_spark_teilen"
 MAX_FROM = 4           # panel computers that may use the door (one, plus room for a move)
@@ -124,17 +124,6 @@ def regeln(cfg):
         out.append(f"    tcp dport {kp} drop")
     out += [f"    tcp dport {{ {p} }} drop", "  }", "}", ""]
     return "\n".join(out)
-
-
-def fingerabdruck(path=None):
-    """SHA-256 of the certificate like browsers show it (AB:CD:…), or "" without one."""
-    import hashlib
-    try:
-        with open(path or TOR_CERT) as f:
-            der = ssl.PEM_cert_to_DER_cert(f.read())
-    except (OSError, ValueError):
-        return ""
-    return ":".join(f"{b:02X}" for b in hashlib.sha256(der).digest())
 
 
 # ---------------------------------------------------------------- pairing (B6a)
@@ -497,7 +486,7 @@ def main(argv):
         if cmd == "regeln":
             sys.stdout.write(regeln(cfg))
         elif cmd == "fingerabdruck":
-            print(fingerabdruck())
+            print(tor_fingerabdruck())
         elif cmd == "warten" and len(argv) in (2, 3):
             # the door's certificate; a panel computer that gives the panel back has only the panel's own
             cert, key = (TOR_CERT, TOR_KEY) if os.path.exists(TOR_CERT) else (PANEL_CERT, PANEL_KEY)
@@ -510,11 +499,11 @@ def main(argv):
             fuer_konsole = os.environ.get("TEILEN_KONSOLE") == "1"
             with lauschen() as sock:
                 print(f"Kopplungscode: {zeigen(code)}  (10 Minuten gültig, einmal nutzbar)", flush=True)
-                print(f"Fingerabdruck: {fingerabdruck(cert)}", flush=True)
+                print(f"Fingerabdruck: {tor_fingerabdruck(cert)}", flush=True)
                 _log("code gezeigt")
                 if fuer_konsole:
                     konsole_schreiben({"code": zeigen(code), "bis": int(time.time()) + CODE_SECS,
-                                       "fingerabdruck": fingerabdruck(cert)})
+                                       "fingerabdruck": tor_fingerabdruck(cert)})
                 try:
                     write_json(argv[1], warten(cfg, code, ctx, sock, umzug=umzug), mode=0o600)
                 except (Fehler, OSError) as e:

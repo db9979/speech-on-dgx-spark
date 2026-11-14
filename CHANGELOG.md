@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older versions (V01.0.000 to V01.0.999 and the lines before version numbers): [CHANGELOG-V01.0.md](CHANGELOG-V01.0.md).
 
+- **V01.1.452** · 2026-11-14 · Spark-Clients: Kasten „Ein Programm verbinden“ im Panel und in der Spark-Konsole mit Adresse, Ports, Modellnamen, Schlüssel, Zertifikat zum Laden, Prüfbefehl und Fehlerliste; Schritt-für-Schritt-Anleitung in der Doku; Grenzen je Client beim Anlegen und später einstellbar, auch „Keine Grenzen“ (P897)
 - **V01.1.451** · 2026-11-14 · Spark koppeln (E4c): am Pi unter Einstellungen → Spark → Spark koppeln Name und Code aus der Spark-Konsole eintragen statt `sudo speech-spark teilen koppeln`; root koppelt über den festen Dienst `speech-spark-koppeln`; in der Spark-Konsole Modelle laden, messen und eigene hinzufügen, der Überblick zeigt nur Hinweise zum Spark selbst; Praxistest für E3 nachgetragen (P894, P895, P896)
 - **V01.1.450** · 2026-11-14 · ROT-FIX: Browser-Test der Käfer-Schaltfläche zählt die Fehler der Seite so, wie die Seite sie notiert hat (auf einem vollen Runner kamen eigene Fehler der Seite dazu), statt eine feste Zahl zu erwarten
 - **V01.1.449** · 2026-11-14 · Fix Meldung 4: ein „Ja“ auf die Rückfrage-Karte nach einer Antwort aus Mail (Tagesüberblick) behält diese Antwort samt Frage im Gespräch, gesperrt wie jede Mail-Folgefrage; vorher sah das Modell nur „Ja“ (P893)

@@ -18,7 +18,7 @@ Fixed rules (the Spark decides, never the client):
   picks its stage with headers (only the panel signs a stage, common._stage)
 - limits per client: requests per minute per service (minute), at once at the LLM-Tor (parallel), tokens per day at
   the LLM-Tor (tokens_tag, counted from the engine's usage; the day is the local calendar day). Counts live in each
-  service's memory and start new with the service
+  service's memory and start new with the service; 0 (OHNE) is no limit, each limit on its own
 - the door (tlstor.py, nftables of teilen.py) lets other clients in only from the networks in api.clients_from and only
   while api.clients is on; the panel computer (api.tls_from) as before
 - nothing of a request is kept: the journal ("sparkclient: …") holds the client's id, fixed words and numbers
@@ -28,6 +28,7 @@ Fixed rules (the Spark decides, never the client):
     aendern(cid, felder)           rights, class, limits, gesperrt
     weg(cid)                       removes a client
     faehigkeiten(client, cfg)      GET /v1/spark/faehigkeiten (E2): what this Spark offers and what the key may
+    verbinden(cfg)                 what a program enters to connect: http/https, ports, model name, certificate
     finden(authorization, cfg)     the client of a "Bearer …" header, None for no client or api.clients off
     darf(client, recht)            whether the client holds the right
     stufe(client)                  its stage (common.STAGE_*)
@@ -43,7 +44,7 @@ import secrets
 import threading
 import time
 
-from common import CONFIG_PATH, LLM_ALIAS as LLM_NAME, MODEL_ARTS, SPARK_API, SPEECH_MARK, STATE, STAGE_HIGH, STAGE_LOW, STAGE_NORMAL, load_config, model_side, read_json, run, write_json
+from common import CONFIG_PATH, LLM_ALIAS as LLM_NAME, MODEL_ARTS, SPARK_API, SPEECH_MARK, STATE, STAGE_HIGH, STAGE_LOW, STAGE_NORMAL, load_config, model_side, read_json, tor_fingerabdruck, tor_zertifikat, run, write_json
 
 PATH = os.path.join(STATE, "spark-clients.json")
 KEY_PREFIX = "sk-spark-"
@@ -52,6 +53,7 @@ RECHTE = ("llm", "sehen", "helfer", "systemone", "asr", "tts", "bild", "musik")
 KLASSEN = {"sprache": STAGE_HIGH, "dialog": STAGE_NORMAL, "hintergrund": STAGE_LOW}
 VORGABE = {"rechte": ["llm"], "klasse": "dialog", "minute": 20, "parallel": 2, "tokens_tag": 300000}
 GRENZEN = {"minute": (1, 600), "parallel": (1, 8), "tokens_tag": (1000, 50000000)}
+OHNE = 0          # a limit of 0 is no limit (Dominik 2026-11-14 „keine Grenzen oder einstellbar“), per limit and client
 MAX_NETZE = 8
 NAME_RE = re.compile(r"[A-Za-zÄÖÜäöüß0-9 ._()-]{1,40}")
 ID_RE = re.compile(r"c_[0-9a-f]{10}")
@@ -112,9 +114,16 @@ def _rechte(rechte):
 
 def _zahl(feld, v):
     lo, hi = GRENZEN[feld]
-    if isinstance(v, bool) or not isinstance(v, int) or not lo <= v <= hi:
+    if isinstance(v, bool) or not isinstance(v, int) or not (v == OHNE or lo <= v <= hi):
         raise Fehler("wert")
     return v
+
+
+def grenze(client, feld):
+    """The client's limit feld, None for no limit (OHNE); an entry without the field keeps VORGABE."""
+    v = client.get(feld)
+    v = VORGABE[feld] if v is None or isinstance(v, bool) or not isinstance(v, int) else v
+    return None if v == OHNE else v
 
 
 def _felder(f, alt):
@@ -230,7 +239,27 @@ def uebersicht(cfg=None):
     api = cfg.get("api") or {}
     return {"an": an(cfg), "netze": [str(n) for n in (api.get("clients_from") or [])][:MAX_NETZE],
             "clients": clients(), "max": MAX_CLIENTS, "rechte": list(RECHTE), "klassen": list(KLASSEN),
-            "vorgabe": VORGABE, "grenzen": {k: list(v) for k, v in GRENZEN.items()}}
+            "vorgabe": VORGABE, "grenzen": {k: list(v) for k, v in GRENZEN.items()}, "verbinden": verbinden(cfg)}
+
+
+def ports(cfg):
+    """{art: port} of the services that run here (Hören and Sprechen unless switched off, the others when on)."""
+    out = {}
+    for art, sec in MODEL_ARTS.items():
+        c = cfg.get(sec) or {}
+        if c.get("enabled", art in ("asr", "tts")) is True and c.get("port"):
+            out[art] = int(c["port"])
+    return out
+
+
+def verbinden(cfg=None):
+    """What a program needs to connect (Ein Programm verbinden): https through the door with its self-signed
+    certificate on the model computer of a split install, else http straight to the services; the port of each service
+    that runs, the fixed model names. The certificate is public; never a key."""
+    cfg = load_config() if cfg is None else cfg
+    tls = model_side(cfg)
+    return {"https": tls, "dienste": ports(cfg), "modell": LLM_NAME, "zertifikat": tor_zertifikat() if tls else "",
+            "fingerabdruck": tor_fingerabdruck() if tls else ""}
 
 
 def im_netz(host, cfg=None):
@@ -338,7 +367,8 @@ def minute_ok(client, dienst, now=None):
     now = time.monotonic() if now is None else now
     with _lock:
         t = [x for x in _minute.get((client["id"], dienst), []) if now - x < 60]
-        if len(t) >= int(client.get("minute") or VORGABE["minute"]):
+        g = grenze(client, "minute")
+        if g is not None and len(t) >= g:
             _minute[(client["id"], dienst)] = t
             return False
         t.append(now)
@@ -352,7 +382,8 @@ def _tag(now):
 
 def tokens_ok(client, now=None):
     tag, n = _tage.get(client["id"], ("", 0))
-    return tag != _tag(time.time() if now is None else now) or n < int(client.get("tokens_tag") or VORGABE["tokens_tag"])
+    g = grenze(client, "tokens_tag")
+    return g is None or tag != _tag(time.time() if now is None else now) or n < g
 
 
 def tokens_zaehlen(client, n, now=None):
@@ -371,7 +402,8 @@ def herein(client):
     """One request more at the LLM-Tor if the client's parallel limit allows (raus() when it ends)."""
     with _lock:
         n = _offen.get(client["id"], 0)
-        if n >= int(client.get("parallel") or VORGABE["parallel"]):
+        g = grenze(client, "parallel")
+        if g is not None and n >= g:
             return False
         _offen[client["id"]] = n + 1
     return True
@@ -398,11 +430,8 @@ def faehigkeiten(client, cfg=None):
     words, ports and numbers; never a model's path, never another client."""
     cfg = load_config() if cfg is None else cfg
     llm = cfg.get("llm") or {}
-    dienste = {}
-    for art, sec in MODEL_ARTS.items():
-        c = cfg.get(sec) or {}
-        an_ = c.get("enabled", art in ("asr", "tts")) is True and bool(c.get("port"))
-        dienste[art] = {"an": an_, "port": int(c.get("port") or 0) if an_ else 0}
+    laufen = ports(cfg)
+    dienste = {art: {"an": art in laufen, "port": laufen.get(art, 0)} for art in MODEL_ARTS}
     dienste["llm"].update(modell=LLM_NAME, sehen=bool(llm.get("sehen_modell")), helfer=bool(llm.get("helfer_modell")),
                           systemone=True)
     rechte = list(RECHTE) if client is None else [r for r in RECHTE if darf(client, r)]

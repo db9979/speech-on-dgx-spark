@@ -1,9 +1,11 @@
 """Shared helpers for the ASR and TTS services: config, model state, request stats."""
 import asyncio
 import functools
+import hashlib
 import json
 import os
 import re
+import ssl
 import threading
 import time
 import traceback
@@ -861,7 +863,6 @@ def entwickler_hash(cfg):
 
 def entwickler_ok(authorization, cfg):
     """True when the Authorization header carries the developer key (its SHA-256 compared in constant time)."""
-    import hashlib
     import hmac
     h = entwickler_hash(cfg)
     got = authorization.decode("latin-1") if isinstance(authorization, bytes) else str(authorization or "")
@@ -1020,6 +1021,26 @@ def _pin_models():
             _init(self, *args, **kw)
         __init__.pinned = True
         cls.__init__ = __init__
+
+
+def tor_zertifikat(path=None):
+    """The door's certificate (TOR_CERT, public) as PEM text, or "" without one; Spark-Clients download it to trust
+    the self-signed door (Einstellungen → Spark → Betrieb → Spark-Clients → Ein Programm verbinden)."""
+    try:
+        with open(path or TOR_CERT, encoding="ascii") as f:
+            pem = f.read(16384)
+        ssl.PEM_cert_to_DER_cert(pem)
+    except (OSError, ValueError):
+        return ""
+    return pem.strip() + "\n"
+
+
+def tor_fingerabdruck(path=None):
+    """SHA-256 of the door's certificate like browsers show it (AB:CD:…), or "" without one."""
+    pem = tor_zertifikat(path)
+    if not pem:
+        return ""
+    return ":".join(f"{b:02X}" for b in hashlib.sha256(ssl.PEM_cert_to_DER_cert(pem)).digest())
 
 
 def model_side(cfg=None):

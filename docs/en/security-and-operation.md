@@ -223,10 +223,34 @@ The red "Notaus" button (bottom of the sidebar, on phones at the top of Manage) 
 - **Keys**: `sk-spark-` and 256 random bits, shown once (fresh code), stored only as SHA-256 in `spark-clients.json`, compared in constant time. At most 20 clients; blocking and deleting take effect at once.
 - **Rights per service**: language model, understanding pictures, helper model, classifying (System One), listening, speaking, pictures, music. Without the right the service answers 403 "recht". No client can manage the Spark (Wärter) or stop pictures and music.
 - **Priority class**: "Sprache" waits at the services' gates in front like the assistant's voice, "Dialog" normal, "Hintergrund" always last: it never moves up while waiting and waits while somebody speaks on the Spark (speech mark of listening and speaking, 3 seconds), at most 60 seconds, then last in line (package E3, line `sparkclient: gehalten sprache …`). A client never picks its stage itself; only "Sprache" counts as somebody speaking.
-- **Limits**: requests per minute per service, at once at the language model and tokens per day (from the engine's count, also when streaming). Above them 429 "limit", "parallel" or "tokens". The counts live in the service's memory.
+- **Limits**: requests per minute per service, at once at the language model and tokens per day (from the engine's count, also when streaming); preset 20/min, 2 at once, 300 000 tokens/day. Adjustable per client when making it and later with "Limits"; empty or 0 means no limit, "No limits" lifts all three (then only the priority holds back). Above them 429 "limit", "parallel" or "tokens". The counts live in the service's memory.
 - **Capabilities** (package E2): `GET /v1/spark/faehigkeiten` at the language model, listening and speaking says with a key which services the Spark offers, under which fixed model name, what the key may, and the Spark API version (`common.SPARK_API`). Clients go by it, not by the version number; Status → Live shows it at the model computer when it differs.
 - **Log and data**: lines `sparkclient: …` with the client's id, fixed words and numbers, a refusal of the same kind at most once a minute; never names, keys or contents. The change log names opening, closing, making, changing and deleting.
 - **Through the TLS door**: it connects to the services from 127.0.0.2. "Only this machine" (no key set, details under `/health`) no longer holds for it; before, every caller through the door looked like the machine itself.
+
+#### Connect a program (step by step)
+
+Under *Settings → Spark → Operation → Spark clients* (and in the Spark-Konsole under *Clients*) the page shows the box "Connect a program", already filled with this Spark's address, the ports, the model names and, after "Make key", the key. The same by hand:
+
+1. **Open**: switch on "Open for clients", enter the program's network (e.g. `192.168.178.0/24`) and "Apply". With split computers the door lets connections from this network in only after that.
+2. **Key**: choose a name (e.g. "Open WebUI"), a priority class ("Dialogue" for a chat, "Background" for batch work) and rights, "Make key", code from the app. Copy the key `sk-spark-…` right away: it is visible only now. Lost: delete the client and make a new one.
+3. **Enter in the program** (`<spark>` = IP or name of the Spark, e.g. `192.168.178.171`; `https` for split computers with the door, else `http`):
+
+| What | Entry |
+|---|---|
+| Language model, OpenAI compatible ("Base URL", "API base") | `https://<spark>:31006/v1` |
+| Model name | `sprachmodell`; understand pictures `sehen`, helper model `helfer` |
+| Listening (speech recognition) | `https://<spark>:31001/v1/audio/transcriptions` |
+| Speaking (speech output) | `https://<spark>:31002/v1/audio/speech` |
+| Painting pictures, making music | `https://<spark>:31005/v1/bild`, `https://<spark>:31004/v1/musik` |
+| API key | `sk-spark-…`, as the header `Authorization: Bearer sk-spark-…` |
+
+4. **Certificate** (only with `https`): the Spark has a self-signed certificate of its own. In the box "Download certificate" (file `spark-zertifikat.pem`) and compare the fingerprint with the one on the page. Enter it in the program as trusted (often "CA certificate" or "certificate file"). For Python programs such as Open WebUI: `cat /etc/ssl/certs/ca-certificates.crt spark-zertifikat.pem > ca-mit-spark.pem` and point `SSL_CERT_FILE` and `REQUESTS_CA_BUNDLE` at that file (in Docker mount the file). Never switch the check off.
+5. **Check**: `curl --cacert spark-zertifikat.pem -H "Authorization: Bearer sk-spark-…" https://<spark>:31006/v1/spark/faehigkeiten` lists the services, the model name and the key's rights.
+
+Example Open WebUI: in the admin area under *Connections*, section *OpenAI API*, "+", URL `https://<spark>:31006/v1`, key `sk-spark-…`, save; the model is then called `sprachmodell`.
+
+If it fails: 401 = key wrong, blocked or deleted; 403 "netz" = the program's network is missing; 403 "recht" = the client lacks the right for this service; 429 = a limit is reached; no connection = "Open for clients" is off or the network is missing (the door then does not answer at all); certificate error = certificate not entered, or another address than the one in the certificate (use the Spark's IP or name).
 
 ### Other ways to the emergency stop (since V01.0.360)
 

@@ -32,3 +32,5 @@ input,select{background:var(--bg);color:var(--fg);border:1px solid var(--line);b
 .modal[hidden],[hidden]{display:none!important}.modal .card{max-width:380px;width:100%}
 .key{background:var(--bg);border:1px dashed var(--acc);border-radius:10px;padding:10px;word-break:break-all;margin-top:8px}
 @media (max-width:900px){.g4{grid-template-columns:repeat(2,minmax(0,1fr))}.g2{grid-template-columns:1fr}main{padding:14px}.top{padding:12px 14px;gap:12px}}
+.spv{padding-left:20px;line-height:1.6}.spv li{margin:6px 0}.spvt{margin-top:6px;border-collapse:collapse}.spvt td{vertical-align:top;padding:4px 8px}.spv-box code{font-family:var(--mono);font-size:12.5px;word-break:break-all}
+.spg input[type=number]{width:140px}

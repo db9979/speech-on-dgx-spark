@@ -3677,3 +3677,6 @@ body.appview .ffilt button{flex:0 0 auto;overflow:visible}
 main{position:relative}#rpbug{position:absolute;top:14px;right:14px;z-index:4;padding:8px;min-width:40px;min-height:40px;color:var(--mut);background:none;border:0}#rpbug svg{width:18px;height:18px}#rpbug:hover{color:var(--fg)}
 .rpkind{display:flex;gap:6px;margin-bottom:8px}.rpkind .b.on{background:var(--acc);color:var(--on-acc);border-color:var(--acc)}
 body.appview:not(.prof):not(.guest):not(.inchat) #aptrail [data-ap=bug]{margin-right:42px}   /* neben dem Mikrofon (#fab) */
+/* Ein Programm verbinden (sparkverbinden.js) */
+.spv{padding-left:20px;line-height:1.6}.spv li{margin:6px 0}.spvt{margin-top:6px;border-collapse:collapse}.spvt td{vertical-align:top;padding:4px 8px}.spv-box code{font-family:var(--mono);font-size:12.5px;word-break:break-all}
+.spg input[type=number]{width:140px}

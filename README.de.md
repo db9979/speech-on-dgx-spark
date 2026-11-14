@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.452** Spark-Clients: Kasten „Ein Programm verbinden“ im Panel und in der Spark-Konsole mit Adresse, Ports, Modellnamen, Schlüssel, Zertifikat zum Laden, Prüfbefehl und Fehlerliste; Schritt-für-Schritt-Anleitung in der Doku; Grenzen je Client beim Anlegen und später einstellbar, auch „Keine Grenzen“
 - **V01.1.451** Spark koppeln (E4c): am Pi unter Einstellungen → Spark → Spark koppeln Name und Code aus der Spark-Konsole eintragen statt `sudo speech-spark teilen koppeln`; root koppelt über den festen Dienst `speech-spark-koppeln`; in der Spark-Konsole Modelle laden, messen und eigene hinzufügen, der Überblick zeigt nur Hinweise zum Spark selbst
 - **V01.1.450** ROT-FIX: der Browser-Test der Käfer-Schaltfläche zählt die Fehler der Seite so, wie die Seite sie notiert hat, statt eine feste Zahl zu erwarten
 - **V01.1.449** Fix Meldung 4: ein „Ja“ auf die Rückfrage-Karte nach einer Antwort aus Mail (Tagesüberblick) behält diese Antwort samt Frage im Gespräch, gesperrt wie jede Mail-Folgefrage
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.445** Natürliches Gespräch, Paket C: ein gesprochenes „Hallo“ nach ein paar Stunden bekommt den einen wichtigsten Punkt (Termine heute, Regen, ein Paket), sonst nichts
 - **V01.1.444** Lesende Werkzeuge gleichzeitig: mehrere lesende Werkzeuge eines Schritts (Wetter, Kalender, Websuche …) laufen zusammen, die Antwort kommt schneller; Lange Gespräche zusammenfassen: der Anfang eines langen Gesprächs fällt nicht mehr einfach weg (beide aus)
 - **V01.1.443** ROT-FIX: iPhone-Gesprächszeilen ohne neuen Import in einer Funktion
-- **V01.1.442** iPhone-App: Gespräch komplett und Eigene Stimme direkt in der App
 
 
 

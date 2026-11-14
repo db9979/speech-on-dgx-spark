@@ -11,7 +11,8 @@ async function spcLoad(){const sec=$('spcsec'),box=$('spcbox');if(!sec||!box)ret
   sec.hidden=false;SPC=await r.json();spcDraw()}
 function spcDraw(msg){const d=SPC,box=$('spcbox');if(!d||!box)return;
   const rows=d.clients.map(c=>`<li><span><b>${esc(c.name)}</b> <span class="mut">${esc(c.rechte.map(x=>spcT(SPC_RECHT[x])).join(', '))}</span></span>
-    <span class="mut">${esc(spcT(SPC_KLASSE[c.klasse]))} · ${esc(t(`${c.minute}/min, ${c.parallel} gleichzeitig, ${c.tokens_tag} Tokens/Tag`,`${c.minute}/min, ${c.parallel} at once, ${c.tokens_tag} tokens/day`))}${c.gesperrt?' · '+esc(t('gesperrt','blocked')):''}</span>
+    <span class="mut">${esc(spcT(SPC_KLASSE[c.klasse]))} · ${esc(spgText(c))}${c.gesperrt?' · '+esc(t('gesperrt','blocked')):''}</span>
+    <button class="b" type="button" data-spc="grenzen" data-id="${esc(c.id)}">${esc(t('Grenzen','Limits'))}</button>
     <button class="b" type="button" data-spc="sperren" data-id="${esc(c.id)}">${esc(c.gesperrt?t('Entsperren','Unblock'):t('Sperren','Block'))}</button>
     <button class="b" type="button" data-spc="weg" data-id="${esc(c.id)}">${esc(t('Löschen','Delete'))}</button></li>`).join('');
   box.innerHTML=`<div class="row"><label class="tgl"><input type="checkbox" id="spcan"${d.an?' checked':''}><i></i></label>
@@ -20,11 +21,14 @@ function spcDraw(msg){const d=SPC,box=$('spcbox');if(!d||!box)return;
     <div class="ctl full"><input class="wide" id="spcnetze" value="${esc(d.netze.join(', '))}" placeholder="192.168.178.0/24" autocomplete="off">
       <button class="b" type="button" data-spc="schalten">${esc(t('Übernehmen','Apply'))}</button></div>
     <ul class="facts">${rows||`<li class="mut">${esc(t('Noch kein Client.','No client yet.'))}</li>`}</ul>
+    <div class="full" id="spcedit"></div>
     <div class="ctl full"><input class="wide" id="spcname" maxlength="40" placeholder="${esc(t('Name, z. B. Open WebUI','Name, e.g. Open WebUI'))}" aria-label="${esc(t('Name des Clients','Name of the client'))}">
       <select id="spcklasse" aria-label="${esc(t('Vorrangklasse','Priority class'))}">${d.klassen.map(k=>`<option value="${esc(k)}"${k===d.vorgabe.klasse?' selected':''}>${esc(spcT(SPC_KLASSE[k]))}</option>`).join('')}</select></div>
     <div class="row">${d.rechte.map(x=>`<label><input type="checkbox" data-spcrecht="${esc(x)}"${d.vorgabe.rechte.includes(x)?' checked':''}> ${esc(spcT(SPC_RECHT[x]))}</label>`).join(' ')}</div>
+    <div class="full">${spgFelder('spcng',d.vorgabe,'fh')}</div>
     <div class="row"><button class="b p" type="button" data-spc="neu"${d.clients.length>=d.max?' disabled':''}>${esc(t('Schlüssel erzeugen','Make key'))}</button><span id="spcmsg" class="fh">${esc(msg||'')}</span></div>
-    <div class="full rowtail" id="spcneu" hidden><div class="fh">${esc(t('Nur jetzt sichtbar. Im Programm als API-Schlüssel eintragen (Bearer).','Visible only now. Enter it in the program as the API key (Bearer).'))}</div><pre id="spckey"></pre></div>`;
+    <div class="full rowtail" id="spcneu" hidden><div class="fh">${esc(t('Nur jetzt sichtbar. Im Programm als API-Schlüssel eintragen (Bearer).','Visible only now. Enter it in the program as the API key (Bearer).'))}</div><pre id="spckey"></pre></div>
+    <div class="full spv-box" id="spcverb">${sparkVerbinden(d,d.host,'','fh')}</div>`;
   for(const id of ['spcan'])$(id).addEventListener('change',()=>spcAct('schalten'));
   codeLock(box.querySelector('[data-spc="neu"]'),'protect')}
 async function spcPost(path,body){const r=await api(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});return r.json()}
@@ -33,9 +37,13 @@ async function spcAct(a,b){const m=x=>{const el=$('spcmsg');if(el)el.textContent
     if(a==='schalten'){const netze=$('spcnetze').value.split(',').map(x=>x.trim()).filter(Boolean);
       const d=await spcPost('/api/admin/spark-clients/schalten',{an:$('spcan').checked,netze});SPC=Object.assign(SPC,d);spcDraw(d.an?t('Geöffnet.','Open.'):t('Geschlossen.','Closed.'));return}
     if(a==='neu'){const rechte=[...document.querySelectorAll('[data-spcrecht]')].filter(x=>x.checked).map(x=>x.dataset.spcrecht);
-      const d=await spcPost('/api/admin/spark-clients/neu',{name:$('spcname').value,rechte,klasse:$('spcklasse').value});
-      await spcLoad();$('spckey').textContent=d.key;$('spcneu').hidden=false;return}
+      const d=await spcPost('/api/admin/spark-clients/neu',{name:$('spcname').value,rechte,klasse:$('spcklasse').value,...spgLesen('spcng')});
+      await spcLoad();$('spckey').textContent=d.key;$('spcneu').hidden=false;$('spcverb').innerHTML=sparkVerbinden(SPC,SPC.host,d.key,'fh');return}
     const c=SPC.clients.find(x=>x.id===b.dataset.id);if(!c)return;
+    if(a==='grenzen'){$('spcedit').innerHTML=`<div class="fh"><b>${esc(t('Grenzen von','Limits of'))} ${esc(c.name)}</b></div>${spgFelder('spced',c,'fh')}
+      <div class="row"><button class="b p" type="button" data-spc="grenzen_ok" data-id="${esc(c.id)}">${esc(t('Speichern','Save'))}</button></div>`;
+      codeLock($('spcedit').querySelector('[data-spc="grenzen_ok"]'),'confirm');return}
+    if(a==='grenzen_ok'){await spcPost('/api/admin/spark-clients/aendern',{id:c.id,felder:spgLesen('spced')});await spcLoad();m(t('Grenzen gespeichert.','Limits saved.'));return}
     if(a==='sperren')await spcPost('/api/admin/spark-clients/aendern',{id:c.id,felder:{gesperrt:!c.gesperrt}});
     if(a==='weg')await spcPost('/api/admin/spark-clients/weg',{id:c.id});
     await spcLoad()}

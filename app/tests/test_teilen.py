@@ -221,10 +221,10 @@ class Firewall(unittest.TestCase):
                 teilen.regeln(self.cfg(listen, von))
 
     def test_fingerprint(self):
-        fp = teilen.fingerabdruck(CERT)
+        fp = common.tor_fingerabdruck(CERT)
         self.assertRegex(fp, r"^([0-9A-F]{2}:){31}[0-9A-F]{2}$")
-        self.assertNotEqual(fp, teilen.fingerabdruck(OTHER))
-        self.assertEqual(teilen.fingerabdruck(os.path.join(DIR, "fehlt.pem")), "")
+        self.assertNotEqual(fp, common.tor_fingerabdruck(OTHER))
+        self.assertEqual(common.tor_fingerabdruck(os.path.join(DIR, "fehlt.pem")), "")
 
 
 class Ports(unittest.TestCase):

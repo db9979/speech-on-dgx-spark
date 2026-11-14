@@ -110,7 +110,7 @@ class Keys(Base):
                 ("", ["llm"], "dialog", {}, "name"), ("x" * 41, ["llm"], "dialog", {}, "name"),
                 ("<b>", ["llm"], "dialog", {}, "name"), ("A", [], "dialog", {}, "recht"),
                 ("A", ["verwalten"], "dialog", {}, "recht"), ("A", ["llm"], "admin", {}, "klasse"),
-                ("A", ["llm"], "dialog", {"minute": 0}, "wert"), ("A", ["llm"], "dialog", {"parallel": 99}, "wert"),
+                ("A", ["llm"], "dialog", {"minute": -1}, "wert"), ("A", ["llm"], "dialog", {"parallel": 99}, "wert"),
                 ("A", ["llm"], "dialog", {"tokens_tag": True}, "wert")):
             with self.assertRaises(mandanten.Fehler) as e, redirect_stdout(io.StringIO()):
                 mandanten.neu(name, rechte, klasse, **grenzen)
@@ -306,7 +306,7 @@ class Door(Base):
         if sh:
             self.assertIn("ExecStart=/bin/bash $PREFIX/app/speech-spark.sh teilen firewall", sh)
             self.assertIn("/usr/bin/systemctl start --no-block speech-spark-clients-fw", sh)
-        with mock.patch.object(mandanten, "model_side", lambda: True), \
+        with mock.patch.object(mandanten, "model_side", lambda cfg=None: True), \
                 mock.patch.object(mandanten, "run", return_value=(0, "")) as r, redirect_stdout(io.StringIO()) as out:
             mandanten.schalten(False, [])
         self.assertEqual(r.call_args[0][0], ["sudo", "-n", "/usr/bin/systemctl", "start", "--no-block", mandanten.FW_UNIT])
@@ -331,6 +331,63 @@ class Faehigkeiten(Base):
             self.assertIn('@app.get("/v1/spark/faehigkeiten")', open(os.path.join(APP, f)).read(), f)
 
 
+    def test_connect_box_names_address_parts_never_a_key(self):
+        """Ein Programm verbinden (Dominik 2026-11-14): http straight to the services on the Spark alone, https with the
+        door's public certificate on the model computer of a split install; only ports of services that run."""
+        api(clients=True, tls_listen="")
+        c, key = self.neu()
+        v = mandanten.uebersicht()["verbinden"]
+        self.assertFalse(v["https"])
+        self.assertEqual((v["zertifikat"], v["fingerabdruck"]), ("", ""))
+        self.assertEqual(v["modell"], common.LLM_ALIAS)
+        self.assertEqual(v["dienste"], mandanten.ports(common.load_config()))
+        self.assertEqual({a: d["port"] for a, d in mandanten.faehigkeiten(None)["dienste"].items() if d["an"]}, v["dienste"])
+        self.assertNotIn(key, json.dumps(mandanten.uebersicht()))
+        pem = "-----BEGIN CERTIFICATE-----\nAAAA\n-----END CERTIFICATE-----\n"
+        api(tls_listen="0.0.0.0")
+        with mock.patch.object(mandanten, "tor_zertifikat", lambda: pem), \
+                mock.patch.object(mandanten, "tor_fingerabdruck", lambda: "AB:CD"):
+            v = mandanten.verbinden()
+        self.assertTrue(v["https"])
+        self.assertEqual((v["zertifikat"], v["fingerabdruck"]), (pem, "AB:CD"))
+        js = open(os.path.join(APP, "panel", "static", "js", "sparkverbinden.js"), encoding="utf-8").read()
+        for path in ("/v1/audio/transcriptions", "/v1/audio/speech", "/v1/spark/faehigkeiten", "'sehen'", "'helfer'"):
+            self.assertIn(path, js)
+        for page in ("index.html", "konsole.html"):
+            html = open(os.path.join(APP, "panel", "static", page), encoding="utf-8").read()
+            self.assertIn("/static/js/sparkverbinden.js", html, page)
+            self.assertLess(html.index("sparkverbinden.js"), html.index("sparkclients.js" if page == "index.html" else "konsole.js"))
+        self.assertEqual(common.tor_zertifikat(os.path.join(APP, "fehlt.pem")), "")
+
+    def test_no_limit_is_zero_per_limit_and_client(self):
+        """keine Grenzen oder einstellbar (Dominik 2026-11-14): 0 lifts one limit, never a value outside the ranges;
+        an entry without a field keeps VORGABE."""
+        api(clients=True)
+        c, key = self.neu(minute=0, parallel=0, tokens_tag=0)
+        k = mandanten.finden("Bearer " + key)
+        for _ in range(700):
+            self.assertTrue(mandanten.minute_ok(k, "llm", now=100.0))
+        for _ in range(20):
+            self.assertTrue(mandanten.herein(k))
+        mandanten.tokens_zaehlen(k, 10 ** 9, now=T0)
+        self.assertTrue(mandanten.tokens_ok(k, now=T0))
+        with redirect_stdout(io.StringIO()):
+            k = mandanten.aendern(c["id"], {"minute": 2})
+        k = mandanten.finden("Bearer " + key)
+        self.assertTrue(mandanten.minute_ok(k, "asr", now=5.0))
+        self.assertTrue(mandanten.minute_ok(k, "asr", now=5.0))
+        self.assertFalse(mandanten.minute_ok(k, "asr", now=5.0))
+        for falsch in (-1, 601, True, "0", 1.5):
+            with self.assertRaises(mandanten.Fehler):
+                mandanten.aendern(c["id"], {"minute": falsch})
+        with self.assertRaises(mandanten.Fehler):
+            mandanten.aendern(c["id"], {"tokens_tag": 999})       # 0 or at least 1000
+        self.assertEqual(mandanten.grenze({}, "parallel"), mandanten.VORGABE["parallel"])
+        self.assertIsNone(mandanten.grenze({"parallel": 0}, "parallel"))
+        js = open(os.path.join(APP, "panel", "static", "js", "sparkverbinden.js"), encoding="utf-8").read()
+        for f in mandanten.GRENZEN:
+            self.assertIn(f"['{f}',", js)
+
 class Panel(Base):
     def test_off_409_and_admin_only(self):
         helpers.keep_chat(self, "spark_clients")
@@ -352,6 +409,9 @@ class Panel(Base):
             key, cid = r.json()["key"], r.json()["client"]["id"]
             self.assertIsNotNone(mandanten.finden("Bearer " + key))
             self.assertNotIn(key, json.dumps(ADMIN.get("/api/admin/spark-clients").json()))
+            d = ADMIN.get("/api/admin/spark-clients").json()
+            self.assertEqual(d["host"], "")          # all on one computer: the page takes its own address
+            self.assertIn("verbinden", d)
             r = ADMIN.post("/api/admin/spark-clients/neu", json={"name": "<x>", "rechte": ["llm"]})
             self.assertEqual(r.status_code, 400)
             self.assertEqual(ADMIN.post("/api/admin/spark-clients/aendern", json={"id": cid, "felder": {"gesperrt": True}}).status_code, 200)

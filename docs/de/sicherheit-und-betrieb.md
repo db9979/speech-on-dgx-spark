@@ -223,10 +223,34 @@ Der rote Knopf „Notaus“ (unten in der Seitenleiste, auf dem Handy oben unter
 - **Schlüssel**: `sk-spark-` und 256 Bit Zufall, nur einmal gezeigt (frischer Code), gespeichert nur als SHA-256 in `spark-clients.json`, in konstanter Zeit verglichen. Höchstens 20 Clients; Sperren und Löschen wirken sofort.
 - **Rechte je Dienst**: Sprachmodell, Bilder verstehen, Hilfsmodell, Einordnen (System One), Hören, Sprechen, Bilder, Musik. Ohne Recht antwortet der Dienst 403 „recht“. Den Spark verwalten (Wärter) kann kein Client, Bilder und Musik anhalten auch nicht.
 - **Vorrangklasse**: „Sprache“ wartet an den Toren der Dienste wie die Stimme des Assistenten vorn, „Dialog“ normal, „Hintergrund“ immer zuletzt: es rückt beim Warten nie auf und wartet, solange auf dem Spark jemand spricht (Sprachmarke von Hören und Sprechen, 3 Sekunden), höchstens 60 Sekunden, dann als Letzter in der Reihe (Paket E3, Zeile `sparkclient: gehalten sprache …`). Ein Client wählt seine Stufe nie selbst; nur „Sprache“ zählt als jemand, der spricht.
-- **Grenzen**: Anfragen pro Minute je Dienst, gleichzeitig am Sprachmodell und Tokens pro Tag (aus der Zählung der Engine, auch beim Streamen). Darüber 429 „limit“, „parallel“ oder „tokens“. Die Zähler leben im Speicher des Dienstes.
+- **Grenzen**: Anfragen pro Minute je Dienst, gleichzeitig am Sprachmodell und Tokens pro Tag (aus der Zählung der Engine, auch beim Streamen); vorgegeben 20/min, 2 gleichzeitig, 300 000 Tokens/Tag. Beim Anlegen und später mit „Grenzen“ je Client einstellbar; leer oder 0 heißt keine Grenze, „Keine Grenzen“ hebt alle drei auf (dann bremst nur der Vorrang). Darüber 429 „limit“, „parallel“ oder „tokens“. Die Zähler leben im Speicher des Dienstes.
 - **Fähigkeiten** (Paket E2): `GET /v1/spark/faehigkeiten` am Sprachmodell, an Hören und an Sprechen sagt mit Schlüssel, welche Dienste der Spark anbietet, unter welchem festen Modellnamen, was der Schlüssel darf, und die Spark-API-Version (`common.SPARK_API`). Danach richten sich Clients, nicht nach der Versionsnummer; Zustand → Live zeigt sie beim Modell-Rechner, wenn sie abweicht.
 - **Log und Daten**: Zeilen `sparkclient: …` mit Client-Kennung, festen Wörtern und Zahlen, eine Ablehnung derselben Art höchstens einmal pro Minute; nie Namen, Schlüssel oder Inhalte. Das Änderungsprotokoll nennt Öffnen, Schließen, Anlegen, Ändern und Löschen.
 - **Durch das TLS-Tor**: Es verbindet sich von 127.0.0.2 mit den Diensten. „Nur dieser Rechner“ (kein Schlüssel gesetzt, Einzelheiten unter `/health`) gilt dafür nicht mehr; vorher sah jeder Anrufer durch die Tür aus wie der Rechner selbst.
+
+#### Ein Programm verbinden (Schritt für Schritt)
+
+Die Seite zeigt unter *Einstellungen → Spark → Betrieb → Spark-Clients* (und in der Spark-Konsole unter *Clients*) den Kasten „Ein Programm verbinden“, schon mit der Adresse dieses Spark, den Ports, den Modellnamen und nach „Schlüssel erzeugen“ mit dem Schlüssel. Dasselbe von Hand:
+
+1. **Öffnen**: „Für Clients geöffnet“ einschalten, das Netz des Programms eintragen (z. B. `192.168.178.0/24`) und „Übernehmen“. Bei getrennten Rechnern lässt die Tür erst danach Verbindungen aus diesem Netz herein.
+2. **Schlüssel**: Name (z. B. „Open WebUI“), Vorrangklasse (für einen Chat „Dialog“, für Stapelarbeit „Hintergrund“) und Rechte wählen, „Schlüssel erzeugen“, Code aus der App. Den Schlüssel `sk-spark-…` sofort kopieren: er ist nur jetzt sichtbar. Verloren: Client löschen und neu anlegen.
+3. **Im Programm eintragen** (`<spark>` = IP oder Name des Spark, z. B. `192.168.178.171`; `https` bei getrennten Rechnern mit Tür, sonst `http`):
+
+| Was | Eintrag |
+|---|---|
+| Sprachmodell, OpenAI-kompatibel („Base URL“, „API-Basis“) | `https://<spark>:31006/v1` |
+| Modellname | `sprachmodell`; Bilder verstehen `sehen`, Hilfsmodell `helfer` |
+| Hören (Spracherkennung) | `https://<spark>:31001/v1/audio/transcriptions` |
+| Sprechen (Sprachausgabe) | `https://<spark>:31002/v1/audio/speech` |
+| Bilder malen, Musik machen | `https://<spark>:31005/v1/bild`, `https://<spark>:31004/v1/musik` |
+| API-Schlüssel | `sk-spark-…`, als Kopfzeile `Authorization: Bearer sk-spark-…` |
+
+4. **Zertifikat** (nur bei `https`): Der Spark hat ein eigenes, selbst signiertes Zertifikat. Im Kasten „Zertifikat laden“ (Datei `spark-zertifikat.pem`) und den Fingerabdruck mit dem auf der Seite vergleichen. Im Programm als vertrauenswürdig eintragen (oft „CA-Zertifikat“ oder „Zertifikat-Datei“). Für Python-Programme wie Open WebUI: `cat /etc/ssl/certs/ca-certificates.crt spark-zertifikat.pem > ca-mit-spark.pem` und `SSL_CERT_FILE` sowie `REQUESTS_CA_BUNDLE` auf diese Datei setzen (in Docker die Datei einbinden). Die Prüfung nie abschalten.
+5. **Prüfen**: `curl --cacert spark-zertifikat.pem -H "Authorization: Bearer sk-spark-…" https://<spark>:31006/v1/spark/faehigkeiten` nennt die Dienste, den Modellnamen und die Rechte des Schlüssels.
+
+Beispiel Open WebUI: im Admin-Bereich unter *Verbindungen*, Abschnitt *OpenAI-API*, „+“, URL `https://<spark>:31006/v1`, Schlüssel `sk-spark-…`, speichern; das Modell heißt danach `sprachmodell`.
+
+Wenn es nicht klappt: 401 = Schlüssel falsch, gesperrt oder gelöscht; 403 „netz“ = das Netz des Programms fehlt; 403 „recht“ = dem Client fehlt das Recht für diesen Dienst; 429 = eine Grenze ist erreicht; keine Verbindung = „Für Clients geöffnet“ ist aus oder das Netz fehlt (die Tür antwortet dann gar nicht); Zertifikatfehler = Zertifikat nicht eingetragen oder eine andere Adresse als die im Zertifikat (IP oder Name des Spark verwenden).
 
 ### Andere Wege zum Notaus (seit V01.0.360)
 
