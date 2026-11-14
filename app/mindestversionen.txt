@@ -1,0 +1,11 @@
+# Security floors for the model computer's own Python environments (venv-asr, venv-tts, venv-engine), which have no
+# lock file: install.sh hands this file to pip and uv as constraints (-c), so a package an environment already has
+# (often as a dependency of a dependency) is raised to at least this version, and nothing new is added. The SHA-256 of
+# this file is part of each environment's .pkgs mark: a changed floor runs pip again on the next update.
+# Add a line here when Zustand → Schwachstellen reports a package on tars (Richtlinie Teil 10); the panel's own
+# environment takes its floors in requirements-panel.in instead.
+brotli>=1.2.1
+certifi>=2026.10.18
+filelock>=4.2.1
+nltk>=3.10.4
+pillow>=13.0.0

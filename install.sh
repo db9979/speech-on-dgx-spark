@@ -537,20 +537,27 @@ same_pkgs() {  # $1 = venv folder, $2 = package list; true when an update finds 
   [ "$FROM_UPDATE" = 1 ] && [ -x "$1/bin/python" ] && [ -f "$1/.pkgs" ] && [ ! -L "$1/.pkgs" ] \
     && [ "$(cat "$1/.pkgs")" = "$2" ]
 }
-make_venv() {  # $1 = name, rest = pip packages
-  local v="$PREFIX/venv-$1" sig="pkgs-r1 $*"; shift
+# app/mindestversionen.txt: security floors for the environments without a lock file (venv-asr, venv-tts, venv-engine),
+# given to pip / uv as constraints; its SHA-256 is part of the .pkgs mark, so a new floor runs pip again (V01.1.448)
+FLOORS="$INSTALL_FROM/app/mindestversionen.txt"
+[ -f "$FLOORS" ] || die "app/mindestversionen.txt is missing"
+FLOORS_SUM=$(sha256sum "$FLOORS" | cut -c1-16)
+make_venv() {  # $1 = name, rest = pip packages; VENV_MADE=1 when pip ran
+  local v="$PREFIX/venv-$1" sig="pkgs-r2 $* $FLOORS_SUM"; shift
+  VENV_MADE=0
   if same_pkgs "$v" "$sig"; then echo "   venv-${v##*/venv-}: packages unchanged, pip skipped"; return 0; fi
   [ -x "$v/bin/python" ] || "$PY" -m venv "$v"
   "$v/bin/pip" install -q pip wheel setuptools
   if [ "$1" = "--torch" ]; then
     shift
     # PyPI's aarch64 torch has no CUDA; the cu130 build supports Blackwell (GB10).
-    "$v/bin/pip" install -q torch torchaudio --index-url "$TORCH_INDEX"
-    PIP_EXTRA_INDEX_URL="$TORCH_INDEX" "$v/bin/pip" install -q "$@"
+    "$v/bin/pip" install -q torch torchaudio --index-url "$TORCH_INDEX" -c "$FLOORS"
+    PIP_EXTRA_INDEX_URL="$TORCH_INDEX" "$v/bin/pip" install -q "$@" -c "$FLOORS"
   else
-    "$v/bin/pip" install -q "$@"   # only PyPI: a second index could hand out a package of the same name
+    "$v/bin/pip" install -q "$@" -c "$FLOORS"   # only PyPI: a second index could hand out a package of the same name
   fi
   rm -f -- "$v/.pkgs"; printf '%s\n' "$sig" >"$v/.pkgs"
+  VENV_MADE=1
 }
 
 check_cuda() {
@@ -567,15 +574,13 @@ USE_ENGINE=0
 
 if [ "$WITH_ASR" = 1 ] && [ "$ASR_BACKEND" = transformers ]; then
   say "Python env for Qwen3-ASR (transformers backend, several GB of wheels)"
-  same_pkgs "$PREFIX/venv-asr" "pkgs-r1 asr --torch qwen-asr fastapi uvicorn[standard] python-multipart sherpa-onnx" && asr_same=1 || asr_same=0
   make_venv asr --torch qwen-asr fastapi "uvicorn[standard]" python-multipart sherpa-onnx
-  [ "$asr_same" = 1 ] || check_cuda asr
+  [ "$VENV_MADE" = 0 ] || check_cuda asr
 fi
 if [ "$WITH_TTS" = 1 ] && [ "$BACKEND" = transformers ]; then
   say "Python env for Qwen3-TTS (transformers backend)"
-  same_pkgs "$PREFIX/venv-tts" "pkgs-r1 tts --torch qwen-tts fastapi uvicorn[standard] python-multipart num2words" && tts_same=1 || tts_same=0
   make_venv tts --torch qwen-tts fastapi "uvicorn[standard]" python-multipart num2words
-  [ "$tts_same" = 1 ] || check_cuda tts
+  [ "$VENV_MADE" = 0 ] || check_cuda tts
 fi
 say "Python env for the panel and the ASR / TTS front ends"
 # sherpa-onnx + huggingface_hub: the Parakeet recognizer (CPU) that asr_proxy.py runs when chosen
@@ -620,7 +625,7 @@ fi
 if [ "$USE_ENGINE" = 1 ]; then
   say "Python env for the engines: vllm $VLLM_VERSION + vllm-omni $VLLM_OMNI_VERSION (large, takes a while the first time)"
   v="$PREFIX/venv-engine"
-  if same_pkgs "$v" "engine $VLLM_VERSION $VLLM_OMNI_VERSION"; then
+  if same_pkgs "$v" "engine $VLLM_VERSION $VLLM_OMNI_VERSION $FLOORS_SUM"; then
     echo "   venv-engine: same versions, nothing to install"
   else
   [ -x "$v/bin/python" ] || "$PY" -m venv "$v"
@@ -628,10 +633,11 @@ if [ "$USE_ENGINE" = 1 ]; then
   # uv resolves this large dependency set much faster than pip; torch comes from PyPI,
   # whose aarch64 wheels for this vLLM release are CUDA 13 builds.
   # vllm[audio] brings the decoders for webm / mp4 / ogg uploads.
-  "$v/bin/uv" pip install -q --python "$v/bin/python" "vllm[audio]==$VLLM_VERSION" "vllm-omni==$VLLM_OMNI_VERSION"
+  "$v/bin/uv" pip install -q --python "$v/bin/python" "vllm[audio]==$VLLM_VERSION" "vllm-omni==$VLLM_OMNI_VERSION" \
+    -c "$FLOORS"
   check_cuda engine
   "$v/bin/vllm" --help >/dev/null 2>&1 || die "vllm in venv-engine does not start; see the output above"
-  rm -f -- "$v/.pkgs"; printf '%s\n' "engine $VLLM_VERSION $VLLM_OMNI_VERSION" >"$v/.pkgs"
+  rm -f -- "$v/.pkgs"; printf '%s\n' "engine $VLLM_VERSION $VLLM_OMNI_VERSION $FLOORS_SUM" >"$v/.pkgs"
   fi
 fi
 

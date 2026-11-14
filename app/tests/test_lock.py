@@ -50,3 +50,34 @@ class Lock(unittest.TestCase):
                          ["requirements-panel.lock", "requirements-ytdlp.lock"])
         with open(os.path.join(ROOT, ".github", "workflows", "tests.yml")) as f:
             self.assertIn("--no-deps --require-hashes -r app/requirements-panel.lock", f.read())
+
+
+class Mindestversionen(unittest.TestCase):
+    """app/mindestversionen.txt (spark-meldungen #5-#10, V01.1.448): security floors for the environments on tars that
+    have no lock file, handed to pip and uv as constraints; its checksum is part of each .pkgs mark."""
+
+    def test_file_only_floors(self):
+        with open(os.path.join(APP, "mindestversionen.txt")) as f:
+            lines = [x.strip() for x in f if x.strip() and not x.startswith("#")]
+        self.assertTrue(lines)
+        for x in lines:
+            self.assertRegex(x, r"^[a-z0-9][a-z0-9._\-]*>=[0-9][0-9.]*$", x)
+        self.assertEqual(len({x.split(">=")[0] for x in lines}), len(lines))
+
+    def test_install_uses_them(self):
+        sh = os.path.join(ROOT, "install.sh")
+        if not os.path.exists(sh):
+            self.skipTest("install.sh is not in an app/-only copy")
+        with open(sh) as f:
+            text = f.read()
+        self.assertIn('FLOORS="$INSTALL_FROM/app/mindestversionen.txt"', text)
+        self.assertIn('sig="pkgs-r2 $* $FLOORS_SUM"', text)
+        self.assertEqual(text.count('-c "$FLOORS"'), 4)   # torch, torch extras, plain pip, uv for venv-engine
+        self.assertEqual(text.count("engine $VLLM_VERSION $VLLM_OMNI_VERSION $FLOORS_SUM"), 2)
+        self.assertNotIn("pkgs-r1", text)
+
+    def test_pip_in_panel_lock(self):
+        with open(os.path.join(APP, "requirements-panel.lock")) as f:
+            m = re.search(r"^pip==([0-9.]+) \\$", f.read(), re.M)
+        self.assertIsNotNone(m)
+        self.assertGreaterEqual(tuple(int(x) for x in m.group(1).split(".")[:2]), (26, 3))

@@ -6111,6 +6111,13 @@
 "text": "Spark updaten. Auf dem Spark: sudo speech-spark konsole an 192.168.178.0/24 (läuft kurz die Installation, am Ende steht die Adresse). Am Rechner im Heimnetz https://192.168.178.171:31010 öffnen, Zertifikat annehmen, mit dem Panel-Passwort des Spark anmelden (Passwort: sudo cat /etc/speech-spark/panel.env). Überblick zeigt GPU, Speicher, CPU und Dienste und aktualisiert sich; Modelle zeigt, was läuft (grün) und wie viel Speicher; Clients: einen Client anlegen, der Schlüssel steht einmal da; Assistent: „Code zeigen“, Code aus der Authenticator-App, dann stehen ein Code und der Fingerabdruck da (nicht am Pi eingeben, wenn der Pi schon gekoppelt ist; nach 10 Minuten steht „abgelaufen“); Updates zeigt die Version; Logs zeigt Sprachmodell und Konsole. Ein Weg des Assistenten wie https://…:31010/api/chat/history gibt 404. Von einem Gerät außerhalb des Netzes kommt keine Seite. sudo speech-spark konsole aus: die Seite ist weg. Der Assistent am Pi läuft währenddessen normal.",
 "thread": "Spark und Assistent entkoppeln",
 "test": "test_konsole.Seite.test_the_console_process_answers_only_its_paths_and_networks"
+},
+{
+"id": "P892",
+"v": 1448,
+"titel": "Schwachstellen auf tars behoben",
+"text": "Erst tars, dann den Pi auf V01.1.448 aktualisieren (das Update lässt pip in venv-asr, venv-tts und venv-engine einmal neu laufen und baut die Panel-Umgebung mit pip 26.3 neu). Danach Zustand → Schwachstellen öffnen und neu prüfen: brotli, certifi, Pillow, filelock, nltk und pip stehen nicht mehr in der Liste; transformers (tars · asr) bleibt, bis über #8 entschieden ist. ASR und Sprachausgabe antworten wie vorher.",
+"thread": "Schwachstellen gegen OSV prüfen"
 }
 ]
 }

@@ -20,6 +20,8 @@ huggingface_hub
 # security floors (Prüfbitte System-Updates 2026-11-04), so an environment made before the lock file gets them too
 certifi>=2026.10.18
 filelock>=4.2.1
+# pip itself (spark-meldungen #11, V01.1.448): every environment built from this lock gets a pip without the known holes
+pip>=26.3
 pillow==13.0.0
 onnxruntime==1.22.1
 tokenizers==0.22.1
