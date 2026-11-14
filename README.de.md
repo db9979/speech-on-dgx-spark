@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.445** Natürliches Gespräch, Paket C: ein gesprochenes „Hallo“ nach ein paar Stunden bekommt den einen wichtigsten Punkt (Termine heute, Regen, ein Paket), sonst nichts
 - **V01.1.444** Lesende Werkzeuge gleichzeitig: mehrere lesende Werkzeuge eines Schritts (Wetter, Kalender, Websuche …) laufen zusammen, die Antwort kommt schneller; Lange Gespräche zusammenfassen: der Anfang eines langen Gesprächs fällt nicht mehr einfach weg (beide aus)
 - **V01.1.443** ROT-FIX: iPhone-Gesprächszeilen ohne neuen Import in einer Funktion
 - **V01.1.442** iPhone-App: Gespräch komplett und Eigene Stimme direkt in der App
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.438** Natürliches Gespräch, Paket B: nach einer gesprochenen Antwort zum Wetter bietet der Assistent die Termine an und umgekehrt; „Was gibt’s Neues?“ bekommt einen festen kurzen Überblick ohne Modell und „Worüber soll ich mehr erzählen?“
 - **V01.1.437** Spark-Clients (Spark und Assistent entkoppeln, E1+E2): Funktionen → Spark-Clients öffnet die Dienste des Modell-Rechners für andere Programme im Heimnetz, je Client ein eigener Schlüssel mit Rechten, Vorrangklasse und Grenzen; /v1/spark/faehigkeiten mit Spark-API-Version; das TLS-Tor zählt nicht mehr als „dieser Rechner“
 - **V01.1.436** Fix: kein leerer weißer Balken mehr unter der Mail-Suche
-- **V01.1.435** iPhone-App: eigene Lautsprecher direkt in der App einstellen und prüfen
 
 
 

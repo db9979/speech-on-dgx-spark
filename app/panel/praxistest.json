@@ -6095,6 +6095,14 @@
 "text": "Funktionen → Lange Gespräche zusammenfassen an. Im Chat ein langes Gespräch führen (viele Fragen mit langen Antworten) und am Anfang etwas Besonderes nennen, z. B. „Mein Nachbar heißt Herr Kranich.“ Viel später fragen: „Wie hieß mein Nachbar noch?“ Der Assistent weiß es. Unter Zustand → Logs (Bereich Gespräch) stehen Zeilen „chat: zusammenfassung: …“ mit Zahlen, nie ein Text.",
 "thread": "Ideen aus OmniBot prüfen",
 "test": "test_verlaufkurz.Chat.test_on_the_summary_comes_along_and_the_rest_is_started"
+},
+{
+"id": "P890",
+"v": 1445,
+"titel": "Natürliches Gespräch: Begrüßung",
+"text": "Funktionen → Natürliches Gespräch ist an, heute stehen noch Termine im Kalender. Nach mindestens 3 Stunden ohne Gespräch mit dem Mikrofon „Hallo“ sagen: nach der kurzen Begrüßung kommt „Übrigens stehen heute noch … Termine an, der nächste um … Uhr. Soll ich sie dir sagen?“ (nie ein Titel); „Ja“ sagt die Termine. Ein zweites „Hallo“ gleich danach bringt keinen Punkt mehr. „Guten Morgen“ bleibt das Morgen-Briefing.",
+"thread": "Natürlichere Gespräche im Sprachmodus",
+"test": "test_gespraech.Begruessung.test_a_greeting_gets_the_one_most_important_point_once"
 }
 ]
 }

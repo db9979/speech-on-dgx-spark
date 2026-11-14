@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older versions (V01.0.000 to V01.0.999 and the lines before version numbers): [CHANGELOG-V01.0.md](CHANGELOG-V01.0.md).
 
+- **V01.1.445** · 2026-11-14 · Natürliches Gespräch, Paket C: ein gesprochenes „Hallo“ nach ein paar Stunden bekommt den einen wichtigsten Punkt (Termine heute, Regen, ein Paket), sonst nichts (P890)
 - **V01.1.444** · 2026-11-14 · Ideen aus OmniBot: Lesende Werkzeuge gleichzeitig (ruft das Sprachmodell in einem Schritt mehrere Werkzeuge auf, die nur lesen, starten sie zusammen; feste Regeln) und Lange Gespräche zusammenfassen (was die Kürzung weglässt, kommt als kurze Zusammenfassung wieder, im Hintergrund geschrieben); beide Admin-Schalter aus (P888, P889)
 - **V01.1.443** · 2026-11-14 · ROT-FIX zu V01.1.442: iphone._talk holt account._allow oben im Modul statt mit einem neuen Import in der Funktion (test_schichten: höchstens 2917 Importe in Funktionen)
 - **V01.1.442** · 2026-11-14 · iPhone-App: Mein Profil → Gespräch mit allen freigegebenen Zeilen aus Ich → Gespräch (Zuhören, Antwort, Chats, Weiteres) und Eigene Stimme (fertige und eigene Stimmen hören und wählen, neue gestalten, löschen); Im Panel öffnen → Gespräch springt zu Mein Profil (P887)

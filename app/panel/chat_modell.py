@@ -185,13 +185,25 @@ async def gespraechshinweis(turn, calls, en=False, now=None):
         return gespraech.angebot(kind, en)
     if not gespraech.talk(getattr(turn, "route", None)):
         return ""
+    zone, now_dt = _gespraech_zeit(turn, now)
+    last = next((m["content"] for m in reversed(getattr(turn, "messages", None) or ())
+                 if isinstance(m, dict) and m.get("role") == "user" and isinstance(m.get("content"), str)), "")
+    for kind in gespraech.gruss(uid, last, may, now):   # Begrüßung (Vorschlag 5): the one most important point
+        try:
+            made = gespraech.gruss_satz(kind, await _gespraech_daten(uid, kind, now, now_dt, zone), now_dt, en)
+        except Exception as e:
+            print("gespraech: begruessung", kind, "fehler", type(e).__name__, flush=True)
+            continue
+        if made:
+            gespraech.keep(uid, kind, src, en, made[1], now=now, how="begruessung")
+            live.event("Natürliches Gespräch", "Begrüßung · " + gespraech.LABEL[kind])
+            return made[0]
     texts = [m["content"] for m in getattr(turn, "messages", None) or ()
              if isinstance(m, dict) and m.get("role") == "user" and isinstance(m.get("content"), str)]
     got = gespraech.pick(uid, texts, may, car, now)
     if not got:
         return ""
     kind, urgent = got
-    zone, now_dt = _gespraech_zeit(turn, now)
     try:
         data = await _gespraech_daten(uid, kind, now, now_dt, zone)
     except Exception as e:   # a hint is never worth a failed answer

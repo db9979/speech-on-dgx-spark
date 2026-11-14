@@ -282,5 +282,21 @@ class Ueberblick(Base):
         self.assertIsNone(gespraech.answer(self.uid, "speaker:c1:abc", "Ja", now=T0 + 5))
 
 
+class Begruessung(Base):
+    def test_a_greeting_gets_the_one_most_important_point_once(self):
+        with events(45, 200):
+            s = hint(Turn(self.uid, "Hallo Spark!"))   # „Guten Morgen“ is the morning briefing (Weiche kalender)
+            self.assertTrue(s.startswith("Übrigens stehen heute noch 2 Termine an"), s)
+            self.assertNotIn("Geheim", s)
+            gespraech._state(self.uid)["kinds"].clear()
+            self.assertFalse(hint(Turn(self.uid, "Servus"), now=T0 + 60).startswith("Übrigens stehen"))
+
+    def test_nothing_to_say_and_not_for_more_than_a_greeting(self):
+        with events(), shopping(3):
+            self.assertEqual(hint(Turn(self.uid, "Guten Abend")), "")   # no appointment left, no rain, no parcel
+        self.assertEqual(gespraech.gruss(self.uid, "Guten Morgen, wie wird das Wetter?", {"termine"}, T0 + 10 ** 6), [])
+        self.assertEqual(gespraech.gruss(self.uid, "Hallo", {"termine", "einkauf"}, T0 + 10 ** 6), ["termine"])
+
+
 if __name__ == "__main__":
     unittest.main()

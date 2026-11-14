@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.445** Natural conversation, package C: a spoken "Hello" after a few hours gets the one most important point (appointments today, rain, a parcel), otherwise nothing
 - **V01.1.444** Reading tools at the same time: several reading tools of one step (weather, calendar, web search …) run together, the answer comes faster; Summarize long conversations: the start of a long conversation no longer simply drops away (both off)
 - **V01.1.443** RED-FIX: iPhone conversation rows without a new import inside a function
 - **V01.1.442** iPhone app: the whole conversation page and own voices right in the app
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.438** Natural conversation, package B: after a spoken answer about the weather the assistant offers the appointments and the other way round; "What's new?" gets a fixed short overview without the model and "What shall I tell you more about?"
 - **V01.1.437** Spark clients (decouple Spark and assistant, E1+E2): Features → Spark clients opens the model computer's services to other programs in the home network, each client with its own key, rights, priority class and limits; /v1/spark/faehigkeiten with the Spark API version; the TLS door no longer counts as "this machine"
 - **V01.1.436** Fix: no empty white bar under the mail search any more
-- **V01.1.435** iPhone app: own speakers right in the app, settings and checks
 
 
 

@@ -1001,7 +1001,8 @@ SEITEN = {
                "Werkzeug ein fester Hinweis aus eigenen Daten kommen (chat_modell.gespraechshinweis: die Art nach festen "
                "Wörtern der eigenen Sätze, gespraech.pick; nur Zahlen und Uhrzeiten ohne Netz, gespraech.satz; ein „Ja“ "
                "darauf wird eine feste Frage, gespraech.answer), nach dem Wetter oder dem Kalender "
-               "ein festes Angebot der passenden anderen Art (gespraech.anschluss); dann kein Beispielsatz. Das Werkzeug-Log des Profils "
+               "ein festes Angebot der passenden anderen Art (gespraech.anschluss), nach einem „Hallo“ der eine wichtigste "
+               "Punkt (gespraech.gruss); dann kein Beispielsatz. Das Werkzeug-Log des Profils "
                "wird geschrieben.",
                "Only when nothing from outside was read: offer to remember a learned correction or ask about a fact in "
                "memory (by fixed rules). Then the panel puts the answer on the reMarkable when asked; when the answer itself offers to "
@@ -1012,7 +1013,8 @@ SEITEN = {
                "own data before that (chat_modell.gespraechshinweis: the kind by fixed words of the person's own "
                "sentences, gespraech.pick; only numbers and times without the network, gespraech.satz; a „yes“ to it "
                "becomes a fixed question, gespraech.answer), after the weather or the calendar a fixed "
-               "offer of the other fitting kind (gespraech.anschluss); then no example sentence. The profile's tool log is "
+               "offer of the other fitting kind (gespraech.anschluss), after a „hello“ the one most important point "
+               "(gespraech.gruss); then no example sentence. The profile's tool log is "
                "written.")),
             S("s14", "ende", ("Strom endet", "Stream ends"),
               ("Anfrage-Verlauf, Fälle, „done“", "request trace, cases, „done“"),

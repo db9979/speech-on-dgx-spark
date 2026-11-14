@@ -1,8 +1,8 @@
 """Natürliches Gespräch (plan gespraechshinweise/plan.md, Dominik 2026-11-14 „1 ja 2 ja 3 ja 4 ja 5 ja deine
 Reihenfolge“, Paket A: Vorschlag 1 Gesprächshinweise und 3 Gesprächston; Paket B: 2 Anschluss-Angebot und 4 „Was
-gibt's Neues?“).
+gibt's Neues?“; Paket C: 5 Begrüßung).
 
-In the voice mode a conversation should not be plain question and answer. Four parts:
+In the voice mode a conversation should not be plain question and answer. Five parts:
 
     Gesprächston   a spoken turn the Weiche did not give a group (small talk) gets a fixed note with the question
                    (TON, chat_turn): short whole sentences, now and then a real question back, no „Kann ich sonst noch
@@ -18,6 +18,10 @@ In the voice mode a conversation should not be plain question and answer. Four p
     Überblick      „Was gibt's Neues?“, „Gib mir einen Überblick“ (NEUES, whole sentence, spoken) gets the panel's fixed
                    short overview (teil per kind: numbers and times only, without the model) and „Worüber soll ich mehr
                    erzählen?“; a kind's word („das Wetter“) or „Ja“ becomes that kind's fixed question.
+    Begrüßung      a spoken greeting as the whole sentence („Hallo“, GRUSS; „Guten Morgen“ is the Weiche's briefing), at
+                   most once per GRUSS_GAP, gets the
+                   one most important point after the answer (GRUSS_REIHE: today's appointments, rain, a parcel), with
+                   the same fixed sentences as a hint; nothing when there is nothing.
 
 The panel decides, never the model (Richtlinie Teil 0.2): which kind comes is a fixed word list over the person's own
 last sentences (THEMEN), else after EVERY answers only something due soon (an appointment within URGENT_MIN minutes).
@@ -93,6 +97,11 @@ WAHL = {"termine": re.compile(r"(?i)\b(termin\w*|kalender|appointment\w*|calenda
         "wetter": re.compile(r"(?i)\b(wetter|regen|weather|rain)\b"),
         "pakete": re.compile(r"(?i)\b(paket\w*|lieferung\w*|parcel\w*|deliver\w*)\b"),
         "einkauf": re.compile(r"(?i)\b(einkauf\w*|liste|shopping|list)\b")}
+# Begrüßung (Vorschlag 5): a greeting as the whole sentence, and the order of what is worth saying after it
+GRUSS = re.compile(r"(?i)^\W*((hallo|hi|hey|servus|moin|tach|grüß dich|guten (morgen|tag|abend))( spark)?|"
+                   r"(good )?(morning|evening)|hello( spark)?)\W*$")
+GRUSS_GAP = 3 * 3600
+GRUSS_REIHE = ("termine", "wetter", "pakete")
 YES = re.compile(r"(?i)^\W*(ja|jo|jep|jawohl|gern|gerne|klar|na klar|ok|okay|sicher|bitte|erzähl\w*|sag (mal|schon|an|es)|"
                  r"lies vor|yes|yeah|yep|sure|please|go ahead|tell me)\b")
 NO = re.compile(r"(?i)^\W*(nein|nee|nö|ne|lass mal|lass gut sein|nicht jetzt|später|brauch ich nicht|no|nope|not now|"
@@ -200,6 +209,28 @@ def pick(uid, texts, may, car=False, now=None):
         if "termine" in may and _free(st, "termine", now):
             return "termine", True
     return None
+
+
+def gruss(uid, text, may, now=None):
+    """Vorschlag 5: the kinds worth a point after this greeting, in order (GRUSS_REIHE), or [] when the sentence is no
+    greeting or the profile was greeted within GRUSS_GAP."""
+    now = time.time() if now is None else now
+    if not GRUSS.match(str(text or "")[:60]):
+        return []
+    with _lock:
+        st = _state(uid)
+        if now - st.get("gruss", 0) < GRUSS_GAP:
+            return []
+        st["gruss"] = now
+    return [k for k in GRUSS_REIHE if k in may and _free(st, k, now)]
+
+
+def gruss_satz(kind, data, now_dt, en=False):
+    """The point after a greeting: the hint's fixed sentence, only when there is really something (an appointment
+    still today, rain, a parcel)."""
+    if kind == "termine" and not data or kind == "wetter" and (data is None or data < 0):
+        return None
+    return satz(kind, data, now_dt, en)
 
 
 def satz(kind, data, now_dt, en=False, urgent=False):
