@@ -2077,7 +2077,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "/„Nein“ oder ein Knopf der Rückfrage-Karte auf die Frage der Antwort davor (ablauf.was_asked, zehn Minuten, dasselbe Gespräch): „weiche: Antwort auf Rückfrage“. 9. Gezielte Werkzeugwahl an?: Nur mit diesem Schalter grenzt die Weiche ein, und nicht bei einem Bild oder einem direkten Smart-Home-Befehl. Ohne ihn bleibt die Gruppe nur für Journal und Statistik; das Modell sieht alle Werkzeuge, die die Rechte erlauben. 10. Modell ordnet ein?: Hat keine Regel eine Gruppe gefunden und steht „Fragen, die keine Regel erkennt“ auf „Modell“, wählt das Sprachmodell einmal eine Gruppe aus der festen Liste (nur JSON, nur die eigene Nachricht). Die Frage läuft schon ab dem Beginn der Vorbereitung nebenher; gewartet wird höchstens 4 Sekunden, mit „Schneller Antwortbeginn“ nur 300 ms nach der Vorbereitung. Mit der Einordnung mit Wahrscheinlichkeit zählt die Wahl erst ab der Schwelle (Standard 80 %); mit Funktionen → Hilfsmodell fragt sie erst das kleine Hilfsmodell, lädt es noch oder ist es unsicher, sofort das große, die Schwelle bleibt dieselbe. Die Hinweis-Gruppen bleiben neben der Wahl. In einer Wartungspause des Sprachmodells wird es nicht gefragt. 11. Eingrenzen: Bei einer klaren Gruppe bleib"
+"text": "/„Nein“ oder ein Knopf der Rückfrage-Karte auf die Frage der Antwort davor (ablauf.was_asked, zehn Minuten, dasselbe Gespräch): „weiche: Antwort auf Rückfrage“. Kam die Antwort davor aus Mail, bleibt sie dann im Gespräch, gesperrt wie jede Mail-Folgefrage (ablauf.was_asked mit use=False). 9. Gezielte Werkzeugwahl an?: Nur mit diesem Schalter grenzt die Weiche ein, und nicht bei einem Bild oder einem direkten Smart-Home-Befehl. Ohne ihn bleibt die Gruppe nur für Journal und Statistik; das Modell sieht alle Werkzeuge, die die Rechte erlauben. 10. Modell ordnet ein?: Hat keine Regel eine Gruppe gefunden und steht „Fragen, die keine Regel erkennt“ auf „Modell“, wählt das Sprachmodell einmal eine Gruppe aus der festen Liste (nur JSON, nur die eigene Nachricht). Die Frage läuft schon ab dem Beginn der Vorbereitung nebenher; gewartet wird höchstens 4 Sekunden, mit „Schneller Antwortbeginn“ nur 300 ms nach der Vorbereitung. Mit der Einordnung mit Wahrscheinlichkeit zählt die Wahl erst ab der Schwelle (Standard 80 %); mit Funktionen → Hilfsmodell fragt sie erst das kleine Hilfsmodell, lädt es noch oder ist es unsicher, sofort das große, die Schwelle bleibt dieselbe. Die Hinweis-Gruppen blei"
 },
 {
 "lang": "de",
@@ -5285,7 +5285,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Websuche",
-"text": "ere Frage („Was ist heute politisch los?“) lässt die Mail-Antwort weg und sucht."
+"text": "ere Frage („Was ist heute politisch los?“) lässt die Mail-Antwort weg und sucht. Ein „Ja“ oder ein Knopf der Rückfrage-Karte auf eine Frage dieser Antwort (etwa nach dem Tagesüberblick) behält sie immer, gesperrt wie oben (seit V01.1.449, Meldung 4: vorher sah das Modell nur „Ja“); Logzeile „chat: answer from mail before; this message answers its question - that answer is kept, search locked“."
 },
 {
 "lang": "de",
@@ -19733,7 +19733,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "a) comes with too many groups, „dokument“ goes first, since Find searches the documents too. 7. Note hint words: If no rule recognizes a group for sure, the switch looks for weaker hint words: „water the plants“ points to the weather, „Friday“ to the calendar. A hint never narrows; it only makes sure its group's tools stay when something narrows later. 8. Follow-up?: If the message is short (at most 80 characters), really points back („and …“, „again“, „too“, „of it“; never a bare „it“, „there“ or „her“, intent.FOLLOW), the own question before came at most 300 seconds earlier in this conversation (intent.asked_age, memory only; otherwise „weiche: Folgefrage zu alt“) and had a clear group, that group holds again. Only the own question counts, never the answer. The journal says „weiche: Folgefrage“. So does a plain „yes“/„no“ or a button of the question card to the question of the answer before (ablauf.was_asked, ten minutes, same conversation): „weiche: Antwort auf Rückfrage“. 9. Targeted tool choice on?: Only with this switch does the switch narrow, and not with a picture or a direct smart home command. Without it the group only goes to the journal and statistics; the model sees ev"
+"text": "a) comes with too many groups, „dokument“ goes first, since Find searches the documents too. 7. Note hint words: If no rule recognizes a group for sure, the switch looks for weaker hint words: „water the plants“ points to the weather, „Friday“ to the calendar. A hint never narrows; it only makes sure its group's tools stay when something narrows later. 8. Follow-up?: If the message is short (at most 80 characters), really points back („and …“, „again“, „too“, „of it“; never a bare „it“, „there“ or „her“, intent.FOLLOW), the own question before came at most 300 seconds earlier in this conversation (intent.asked_age, memory only; otherwise „weiche: Folgefrage zu alt“) and had a clear group, that group holds again. Only the own question counts, never the answer. The journal says „weiche: Folgefrage“. So does a plain „yes“/„no“ or a button of the question card to the question of the answer before (ablauf.was_asked, ten minutes, same conversation): „weiche: Antwort auf Rückfrage“. When the answer before came from mail, it then stays in the conversation, locked like any mail follow-up (ablauf.was_asked with use=False). 9. Targeted tool choice on?: Only with this switch does the switch na"
 },
 {
 "lang": "en",
@@ -19741,7 +19741,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "ery tool the rights allow. 10. Model sorts?: If no rule found a group and „Questions no rule recognizes“ is set to the model, the language model picks one group from the fixed list once (JSON only, only the own message). The question already runs beside the preparation from its start; the wait is at most 4 seconds, with „Fast answer start“ only 300 ms after the preparation. With classification with probabilities the pick only counts from the threshold (default 80 %); with Features → Helper model it asks the small helper model first, and while that is loading or unsure the big one at once, with the same threshold. The hint groups stay beside the pick. During a maintenance pause of the language model it is not asked. 11. Narrow: With a clear group its tools stay, plus always 3 fixed ones (remembering something, own documents, Find in all own data), the hints' tools, the admin's extra tools for this group (at most 6) and what the own words name explicitly („onto the reMarkable“, the computer only when the own words name it or the question came from the companion). All only as far as already offered. If nothing of the group is offered, the group is set to „do not narrow“ or the sentenc"
+"text": "rrow, and not with a picture or a direct smart home command. Without it the group only goes to the journal and statistics; the model sees every tool the rights allow. 10. Model sorts?: If no rule found a group and „Questions no rule recognizes“ is set to the model, the language model picks one group from the fixed list once (JSON only, only the own message). The question already runs beside the preparation from its start; the wait is at most 4 seconds, with „Fast answer start“ only 300 ms after the preparation. With classification with probabilities the pick only counts from the threshold (default 80 %); with Features → Helper model it asks the small helper model first, and while that is loading or unsure the big one at once, with the same threshold. The hint groups stay beside the pick. During a maintenance pause of the language model it is not asked. 11. Narrow: With a clear group its tools stay, plus always 3 fixed ones (remembering something, own documents, Find in all own data), the hints' tools, the admin's extra tools for this group (at most 6) and what the own words name explicitly („onto the reMarkable“, the computer only when the own words name it or the question came fro"
 },
 {
 "lang": "en",
@@ -22829,7 +22829,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Web search",
-"text": "cs today?\") leaves the mail answer out and searches."
+"text": "cs today?\") leaves the mail answer out and searches. A \"yes\" or a button of the question card to a question of that answer (for example after the daily briefing) always keeps it, locked as above (since V01.1.449, report 4: before, the model only saw \"yes\"); log line \"chat: answer from mail before; this message answers its question - that answer is kept, search locked\"."
 },
 {
 "lang": "en",

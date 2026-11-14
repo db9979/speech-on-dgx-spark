@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.449** Fix report 4: a "yes" on the question card after an answer from mail (daily briefing) keeps that answer and its question in the conversation, locked like any mail follow-up
 - **V01.1.448** Vulnerabilities fixed: brotli, certifi, filelock, nltk and Pillow raised on tars, pip 26.3 in every environment built from the lock file
 - **V01.1.447** Follow-up to V01.1.446: Praxistest P891 (Spark-Konsole) in the list
 - **V01.1.446** Spark-Konsole (E4): with `sudo speech-spark konsole an <net>` the Spark has a web page of its own on port 31010 (overview, models, clients, pair an assistant with a code, updates, logs), the panel's code in a mode of its own, home network only, only its own paths
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.442** iPhone app: the whole conversation page and own voices right in the app
 - **V01.1.441** Spark clients, priority on the Spark (E3): a client of class "Hintergrund" never moves up at the gates and waits while somebody speaks on the Spark, at most 60 seconds
 - **V01.1.440** ROT-FIX: a browser test now switches Telegram off itself before it checks the switch
-- **V01.1.439** Thinner: one Pebble watch switch for everything on the watch (steps, pulse and sleep keep their own); bus and train, Reddit and feeds, the Spark watchface and the XiaoZhi version note are gone
 
 
 

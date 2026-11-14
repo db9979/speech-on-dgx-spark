@@ -455,7 +455,8 @@ SEITEN = {
                "und hatte sie eine klare Gruppe, gilt diese Gruppe wieder. Es zählt nur die "
                "eigene Frage, nie die Antwort. Im Journal steht „weiche: Folgefrage“. Ebenso ein schlichtes „Ja“/„Nein“ "
                "oder ein Knopf der Rückfrage-Karte auf die Frage der Antwort davor (ablauf.was_asked, zehn Minuten, "
-               "dasselbe Gespräch): „weiche: Antwort auf Rückfrage“.",
+               "dasselbe Gespräch): „weiche: Antwort auf Rückfrage“. Kam die Antwort davor aus Mail, bleibt sie dann "
+               "im Gespräch, gesperrt wie jede Mail-Folgefrage (ablauf.was_asked mit use=False).",
                "If the message is short (at most {intent.FOLLOW_MAX} characters), really points back („and …“, "
                "„again“, „too“, „of it“; never a bare „it“, „there“ or „her“, intent.FOLLOW), the own question before "
                "came at most {intent.FOLLOW_SECONDS} seconds earlier in this conversation (intent.asked_age, memory "
@@ -463,7 +464,8 @@ SEITEN = {
                "and had a clear group, that group holds again. Only the own question "
                "counts, never the answer. The journal says „weiche: Folgefrage“. So does a plain „yes“/„no“ or a "
                "button of the question card to the question of the answer before (ablauf.was_asked, ten minutes, same "
-               "conversation): „weiche: Antwort auf Rückfrage“."),
+               "conversation): „weiche: Antwort auf Rückfrage“. When the answer before came from mail, it then stays in "
+               "the conversation, locked like any mail follow-up (ablauf.was_asked with use=False)."),
               ("info", "ja", ("Gruppe der Frage davor", "group of the question before"))),
             S("s9", "frage", ("Gezielte Werkzeugwahl an?", "Targeted tool choice on?"),
               ("Schalter des Admins, Freigabe des Profils", "admin's switch, profile release"),

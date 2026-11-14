@@ -6118,6 +6118,14 @@
 "titel": "Schwachstellen auf tars behoben",
 "text": "Erst tars, dann den Pi auf V01.1.448 aktualisieren (das Update lässt pip in venv-asr, venv-tts und venv-engine einmal neu laufen und baut die Panel-Umgebung mit pip 26.3 neu). Danach Zustand → Schwachstellen öffnen und neu prüfen: brotli, certifi, Pillow, filelock, nltk und pip stehen nicht mehr in der Liste; transformers (tars · asr) bleibt, bis über #8 entschieden ist. ASR und Sprachausgabe antworten wie vorher.",
 "thread": "Schwachstellen gegen OSV prüfen"
+},
+{
+"id": "P893",
+"v": 1449,
+"titel": "Ja auf die Rückfrage nach dem Tagesüberblick",
+"text": "Funktionen → Ablauf und Freigabe zeigen ist an, ein Postfach ist verbunden. „Was steht heute an?“ fragen; endet die Antwort mit einer Frage („Soll ich …?“), auf der Karte „Ja“ tippen: die Antwort geht auf genau diese Frage ein statt etwas Beliebiges zu sagen. In Zustand → Logs steht „chat: answer from mail before; this message answers its question - that answer is kept, search locked“.",
+"thread": "Fehler per Assistent als Issue melden",
+"test": "test_search.Search.test_yes_to_the_question_of_a_mail_answer_keeps_it_locked"
 }
 ]
 }

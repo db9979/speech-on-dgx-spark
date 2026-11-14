@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.449** Fix Meldung 4: ein „Ja“ auf die Rückfrage-Karte nach einer Antwort aus Mail (Tagesüberblick) behält diese Antwort samt Frage im Gespräch, gesperrt wie jede Mail-Folgefrage
 - **V01.1.448** Schwachstellen behoben: brotli, certifi, filelock, nltk und Pillow auf tars angehoben, pip 26.3 in allen Umgebungen aus der Sperrdatei
 - **V01.1.447** Nachtrag zu V01.1.446: Praxistest P891 (Spark-Konsole) in der Liste
 - **V01.1.446** Spark-Konsole (E4): der Spark hat mit `sudo speech-spark konsole an <Netz>` eine eigene Webseite auf Port 31010 (Überblick, Modelle, Clients, Assistent koppeln mit Code, Updates, Logs), derselbe Code wie das Panel in einem eigenen Modus, nur Heimnetz, nur eigene Wege
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.442** iPhone-App: Gespräch komplett und Eigene Stimme direkt in der App
 - **V01.1.441** Spark-Clients, Vorrang auf dem Spark (E3): ein Client der Klasse „Hintergrund“ rückt an den Toren nie auf und wartet, solange auf dem Spark jemand spricht, höchstens 60 Sekunden
 - **V01.1.440** ROT-FIX: ein Browser-Test schaltet Telegram vor der Prüfung selbst aus
-- **V01.1.439** Ausgedünnt: ein Schalter Pebble-Uhr für alles auf der Uhr (Schritte, Puls und Schlaf behalten ihren); Bus und Bahn, Reddit und Feeds, das Spark-Zifferblatt und der Hinweis auf neue XiaoZhi-Versionen sind weg
 
 
 

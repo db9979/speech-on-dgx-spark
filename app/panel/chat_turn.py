@@ -183,10 +183,19 @@ async def _eingang(z):
     # when the new question goes on about it ("Was schreibt sie noch?"); any other question (or one
     # that clearly wants the web) leaves it out, and with no word of the mail in this turn the search
     # and everything else is open again.
+    # An answer to the question that answer asked (Rückfrage-Karte, ablauf.was_asked: „Ja“ or one of its buttons)
+    # always goes on about it: it is kept, locked as before (Issue 4: without it the model only saw „Ja“).
+    import ablauf
+    z.ablauf = ablauf
     if z.carry == "mail" and z.search and z.messages[-1]["role"] == "user":
         z.ask = z.messages[-1]["content"]
         z.wants_web = bool(chat.needed(z.ask, {"web_search"}, z.ccfg.get("tool_words", "")))
-        if z.wants_web or not chat.MAIL_FOLLOW_UP.search(z.ask):
+        z.reply_to = bool(z.me0 and features.allowed("ablauf", z.me0["id"], z.ccfg)
+                          and z.ablauf.was_asked(z.me0["id"], profiles.quelle(z.request, z.body), z.ask, use=False))
+        if z.reply_to:
+            print("chat: answer from mail before; this message answers its question - that answer is kept, search locked",
+                  flush=True)
+        elif z.wants_web or not chat.MAIL_FOLLOW_UP.search(z.ask):
             z.carry = None
             print("chat: answer from mail before; this question", "wants the web" if z.wants_web else "is not about it",
                   "- that answer is left out, search offered", flush=True)
@@ -285,8 +294,6 @@ async def _weg(z):
         z.before0 = next((m["content"] for m in reversed(z.messages[:-1])
                         if m.get("role") == "user" and isinstance(m.get("content"), str)), "")
         # Rückfrage-Karten 3a: the answer before asked the person (ablauf.py, only with „Ablauf und Freigabe zeigen“)
-        import ablauf
-        z.ablauf = ablauf
         z.answered = bool(z.before0 and z.me0 and features.allowed("ablauf", z.me0["id"], z.ccfg)
                         and z.ablauf.was_asked(z.me0["id"], z.src0, z.ask0))
         z.follow = z.intent.follow_up(z.ask0, z.before0, z.ccfg, z.answered, z.age0)

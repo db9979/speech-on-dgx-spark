@@ -161,12 +161,14 @@ def remember_asked(uid, src, ev):
     profiles.pending_set(uid, "rueckfrage", {"options": [o["send"] for o in ev["options"]]}, src)
 
 
-def was_asked(uid, src, text):
+def was_asked(uid, src, text, use=True):
     """The person's message answers the question of the answer before: a plain yes or no, or one of its buttons, in
-    the same conversation within ASKED_SECONDS. The mark is used once."""
+    the same conversation within ASKED_SECONDS. The mark is used once; use=False only looks (Issue 4: the answer
+    with the question stays in the conversation, also when it was made from mail)."""
     p = profiles.pending_get(uid, "rueckfrage", ASKED_SECONDS)
     if not p:
         return False
-    profiles.pending_drop(uid, "rueckfrage")
+    if use:
+        profiles.pending_drop(uid, "rueckfrage")
     words = str(text or "").strip().rstrip(".!").lower()
     return p.get("src", src) == src and (short_reply(text) or words in (str(o).lower() for o in p.get("options") or []))

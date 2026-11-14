@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older versions (V01.0.000 to V01.0.999 and the lines before version numbers): [CHANGELOG-V01.0.md](CHANGELOG-V01.0.md).
 
+- **V01.1.449** · 2026-11-14 · Fix Meldung 4: ein „Ja“ auf die Rückfrage-Karte nach einer Antwort aus Mail (Tagesüberblick) behält diese Antwort samt Frage im Gespräch, gesperrt wie jede Mail-Folgefrage; vorher sah das Modell nur „Ja“ (P893)
 - **V01.1.448** · 2026-11-14 · Schwachstellen-Funde behoben (spark-meldungen #5–#11): app/mindestversionen.txt hebt in den Modell-Umgebungen auf tars brotli 1.2.1, certifi 2026.10.18, filelock 4.2.1, nltk 3.10.4 und Pillow 13.0.0 (pip/uv-Bedingung, Prüfsumme in .pkgs, Update läuft pip einmal neu); pip 26.3 steht in requirements-panel.lock (Panel, Schnelltest auf dem Pi, GitHub); transformers in venv-asr/venv-tts bleibt von qwen-asr/qwen-tts fest gepinnt (#8 offen) (P892)
 - **V01.1.447** · 2026-11-14 · Nachtrag zu V01.1.446: Praxistest P891 (Spark-Konsole) in der Liste
 - **V01.1.446** · 2026-11-14 · Spark-Konsole (E4): der Spark hat mit `sudo speech-spark konsole an <Netz>` eine eigene Webseite auf Port 31010 (Überblick, Modelle, Clients, Assistent koppeln mit Code, Updates, Logs), derselbe Code wie das Panel in einem eigenen Modus, nur Heimnetz, nur eigene Wege (P891)

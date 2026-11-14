@@ -129,6 +129,29 @@ class Search(unittest.TestCase):
         self.assertNotIn("search", [e["type"] for e in evs])
         self.assertTrue(all("web_search" not in offered(c) for c in helpers.LLM_CALLS))
 
+    def test_yes_to_the_question_of_a_mail_answer_keeps_it_locked(self):
+        """Issue 4 (spark-meldungen): the briefing (from mail) asked „Soll ich …?“, the person tapped „Ja“ on the card;
+        the answer with its question was left out, so the model only saw „Ja“ and made something up. An answer to the
+        card keeps the answer before, locked like any other mail follow-up; a „Ja“ without the card stays as before."""
+        import ablauf
+        helpers.keep_chat(self, "show_steps")
+        helpers.set_config(show_steps=True)
+        p = profile("Suchi")
+        uid = next(u["id"] for u in ADMIN.get("/api/admin/profiles").json()["users"] if u["name"] == "Suchi")
+        asked = MAIL_ANSWER + " Soll ich dir die Termine dazu vorlesen?"
+        msgs = [{"role": "user", "content": "Was steht heute an?"},
+                {"role": "assistant", "content": asked, "mail": True}, {"role": "user", "content": "Ja"}]
+        ablauf.remember_asked(uid, helpers.quelle(p, "c4"), ablauf.asks(asked))
+        r = p.post("/api/chat", json={"messages": msgs, "convo": "c4"})
+        self.assertEqual(r.status_code, 200, r.text)
+        first = helpers.LLM_CALLS[0]
+        self.assertIn("Soll ich dir die Termine dazu vorlesen?", json.dumps(first, ensure_ascii=False))
+        self.assertNotIn("web_search", offered(first))                   # still locked: the mail stays data
+        self.assertIn({"type": "mail"}, helpers.events(r))
+        helpers.LLM_CALLS.clear()                                        # no card waiting: left out as before
+        chat_with(p, msgs)
+        self.assertNotIn("4711", json.dumps(helpers.LLM_CALLS[0]))
+
     def test_mail_read_in_this_answer_tells_the_model(self):
         import mail
         mail.IMAP = helpers.FakeIMAP
