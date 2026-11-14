@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.447** Nachtrag zu V01.1.446: Praxistest P891 (Spark-Konsole) in der Liste
 - **V01.1.446** Spark-Konsole (E4): der Spark hat mit `sudo speech-spark konsole an <Netz>` eine eigene Webseite auf Port 31010 (Überblick, Modelle, Clients, Assistent koppeln mit Code, Updates, Logs), derselbe Code wie das Panel in einem eigenen Modus, nur Heimnetz, nur eigene Wege
 - **V01.1.445** Natürliches Gespräch, Paket C: ein gesprochenes „Hallo“ nach ein paar Stunden bekommt den einen wichtigsten Punkt (Termine heute, Regen, ein Paket), sonst nichts
 - **V01.1.444** Lesende Werkzeuge gleichzeitig: mehrere lesende Werkzeuge eines Schritts (Wetter, Kalender, Websuche …) laufen zusammen, die Antwort kommt schneller; Lange Gespräche zusammenfassen: der Anfang eines langen Gesprächs fällt nicht mehr einfach weg (beide aus)
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.440** ROT-FIX: ein Browser-Test schaltet Telegram vor der Prüfung selbst aus
 - **V01.1.439** Ausgedünnt: ein Schalter Pebble-Uhr für alles auf der Uhr (Schritte, Puls und Schlaf behalten ihren); Bus und Bahn, Reddit und Feeds, das Spark-Zifferblatt und der Hinweis auf neue XiaoZhi-Versionen sind weg
 - **V01.1.438** Natürliches Gespräch, Paket B: nach einer gesprochenen Antwort zum Wetter bietet der Assistent die Termine an und umgekehrt; „Was gibt’s Neues?“ bekommt einen festen kurzen Überblick ohne Modell und „Worüber soll ich mehr erzählen?“
-- **V01.1.437** Spark-Clients (Spark und Assistent entkoppeln, E1+E2): Funktionen → Spark-Clients öffnet die Dienste des Modell-Rechners für andere Programme im Heimnetz, je Client ein eigener Schlüssel mit Rechten, Vorrangklasse und Grenzen; /v1/spark/faehigkeiten mit Spark-API-Version; das TLS-Tor zählt nicht mehr als „dieser Rechner“
 
 
 

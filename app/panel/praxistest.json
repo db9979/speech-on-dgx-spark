@@ -6103,6 +6103,14 @@
 "text": "Funktionen → Natürliches Gespräch ist an, heute stehen noch Termine im Kalender. Nach mindestens 3 Stunden ohne Gespräch mit dem Mikrofon „Hallo“ sagen: nach der kurzen Begrüßung kommt „Übrigens stehen heute noch … Termine an, der nächste um … Uhr. Soll ich sie dir sagen?“ (nie ein Titel); „Ja“ sagt die Termine. Ein zweites „Hallo“ gleich danach bringt keinen Punkt mehr. „Guten Morgen“ bleibt das Morgen-Briefing.",
 "thread": "Natürlichere Gespräche im Sprachmodus",
 "test": "test_gespraech.Begruessung.test_a_greeting_gets_the_one_most_important_point_once"
+},
+{
+"id": "P891",
+"v": 1446,
+"titel": "Spark-Konsole: eigene Webseite des Spark, Assistent koppeln",
+"text": "Spark updaten. Auf dem Spark: sudo speech-spark konsole an 192.168.178.0/24 (läuft kurz die Installation, am Ende steht die Adresse). Am Rechner im Heimnetz https://192.168.178.171:31010 öffnen, Zertifikat annehmen, mit dem Panel-Passwort des Spark anmelden (Passwort: sudo cat /etc/speech-spark/panel.env). Überblick zeigt GPU, Speicher, CPU und Dienste und aktualisiert sich; Modelle zeigt, was läuft (grün) und wie viel Speicher; Clients: einen Client anlegen, der Schlüssel steht einmal da; Assistent: „Code zeigen“, Code aus der Authenticator-App, dann stehen ein Code und der Fingerabdruck da (nicht am Pi eingeben, wenn der Pi schon gekoppelt ist; nach 10 Minuten steht „abgelaufen“); Updates zeigt die Version; Logs zeigt Sprachmodell und Konsole. Ein Weg des Assistenten wie https://…:31010/api/chat/history gibt 404. Von einem Gerät außerhalb des Netzes kommt keine Seite. sudo speech-spark konsole aus: die Seite ist weg. Der Assistent am Pi läuft währenddessen normal.",
+"thread": "Spark und Assistent entkoppeln",
+"test": "test_konsole.Seite.test_the_console_process_answers_only_its_paths_and_networks"
 }
 ]
 }

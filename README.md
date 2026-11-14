@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.447** Follow-up to V01.1.446: Praxistest P891 (Spark-Konsole) in the list
 - **V01.1.446** Spark-Konsole (E4): with `sudo speech-spark konsole an <net>` the Spark has a web page of its own on port 31010 (overview, models, clients, pair an assistant with a code, updates, logs), the panel's code in a mode of its own, home network only, only its own paths
 - **V01.1.445** Natural conversation, package C: a spoken "Hello" after a few hours gets the one most important point (appointments today, rain, a parcel), otherwise nothing
 - **V01.1.444** Reading tools at the same time: several reading tools of one step (weather, calendar, web search …) run together, the answer comes faster; Summarize long conversations: the start of a long conversation no longer simply drops away (both off)
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.440** ROT-FIX: a browser test now switches Telegram off itself before it checks the switch
 - **V01.1.439** Thinner: one Pebble watch switch for everything on the watch (steps, pulse and sleep keep their own); bus and train, Reddit and feeds, the Spark watchface and the XiaoZhi version note are gone
 - **V01.1.438** Natural conversation, package B: after a spoken answer about the weather the assistant offers the appointments and the other way round; "What's new?" gets a fixed short overview without the model and "What shall I tell you more about?"
-- **V01.1.437** Spark clients (decouple Spark and assistant, E1+E2): Features → Spark clients opens the model computer's services to other programs in the home network, each client with its own key, rights, priority class and limits; /v1/spark/faehigkeiten with the Spark API version; the TLS door no longer counts as "this machine"
 
 
 

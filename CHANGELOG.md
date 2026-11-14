@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older versions (V01.0.000 to V01.0.999 and the lines before version numbers): [CHANGELOG-V01.0.md](CHANGELOG-V01.0.md).
 
+- **V01.1.447** · 2026-11-14 · Nachtrag zu V01.1.446: Praxistest P891 (Spark-Konsole) in der Liste
 - **V01.1.446** · 2026-11-14 · Spark-Konsole (E4): der Spark hat mit `sudo speech-spark konsole an <Netz>` eine eigene Webseite auf Port 31010 (Überblick, Modelle, Clients, Assistent koppeln mit Code, Updates, Logs), derselbe Code wie das Panel in einem eigenen Modus, nur Heimnetz, nur eigene Wege (P891)
 - **V01.1.445** · 2026-11-14 · Natürliches Gespräch, Paket C: ein gesprochenes „Hallo“ nach ein paar Stunden bekommt den einen wichtigsten Punkt (Termine heute, Regen, ein Paket), sonst nichts (P890)
 - **V01.1.444** · 2026-11-14 · Ideen aus OmniBot: Lesende Werkzeuge gleichzeitig (ruft das Sprachmodell in einem Schritt mehrere Werkzeuge auf, die nur lesen, starten sie zusammen; feste Regeln) und Lange Gespräche zusammenfassen (was die Kürzung weglässt, kommt als kurze Zusammenfassung wieder, im Hintergrund geschrieben); beide Admin-Schalter aus (P888, P889)
