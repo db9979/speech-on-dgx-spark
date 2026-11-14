@@ -35,10 +35,10 @@ jobs:
       matrix:
         part: [1, 2, 3, 4, 5, 6]
     steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.11"
           cache: pip
@@ -50,7 +50,7 @@ jobs:
       - name: Playwright version
         id: pw
         run: echo "v=$(grep -oE 'playwright==[0-9.]+' .github/workflows/tests.yml | head -n 1 | cut -d= -f3)" >> "$GITHUB_OUTPUT"
-      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/ms-playwright
           key: ms-playwright-${{ runner.os }}-${{ env.ImageOS }}-${{ steps.pw.outputs.v }}
@@ -80,7 +80,7 @@ jobs:
         env:
           SELFTEST_REPORT: ${{ runner.temp }}/teil.json
         run: python selftest.py discover -s tests --part ${{ matrix.part }}/6
-      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: teil-${{ matrix.part }}
@@ -102,14 +102,14 @@ jobs:
       issues: write
       actions: read
     steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
           sparse-checkout: |
             app/selftest.py
             app/tests/dauer.json
           sparse-checkout-cone-mode: false
-      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           path: ${{ runner.temp }}/teile
           pattern: teil-*
@@ -170,7 +170,7 @@ jobs:
             else gh issue create -R "$R" -t "Wackelnde Tests" -F wackel.md; fi
           fi
       # this run's wobbly tests, for the next two runs (step "Earlier runs")
-      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: wackler
@@ -178,7 +178,7 @@ jobs:
           retention-days: 30
           if-no-files-found: ignore
       # the durations measured here, for app/tests/dauer.json when one part gets much longer than the others
-      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: dauer
