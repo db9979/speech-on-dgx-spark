@@ -43,6 +43,7 @@
 #   speech-spark systemupdate [status]|pruefen  System-Updates: this computer's apt state, or check now (apt update, simulate)
 #   speech-spark systemupdate einspielen|neustart  the fixed apt run of the panel's „Jetzt einspielen“, or the restart it needs
 #   speech-spark gputakt [status]|setzen  GPU-Taktgrenze: the chosen and the set clock cap, or set it again now
+#   speech-spark clients [liste]|an [netz …]|aus|neu <name> <rechte> [klasse]|sperren|entsperren|weg <id>  Spark-Clients
 set -euo pipefail
 # runuser, nft, systemctl live in /usr/sbin on Debian and Raspberry Pi OS; a caller with PATH=/usr/bin:/bin (teilen.py
 # runs "teilen umzug-einspielen" that way) would not find them
@@ -1205,8 +1206,9 @@ case "${1:-}" in
   wissen) shift; cmd_wissen "$@" ;;
   systemupdate) shift; cmd_systemupdate "$@" ;;
   gputakt) shift; cmd_gputakt "$@" ;;
+  clients) shift; need_root clients "$@"; as_panel_user ../mandanten.py "$@" ;;   # Spark-Clients (mandanten.py): as the service user
   lokal) shift; cmd_lokal "$@" ;;
   entwickeln) shift; cmd_entwickeln "$@" ;;
-  ""|-h|--help|help) sed -n '2,45p' "$0" | sed 's/^# \{0,1\}//' ;;
+  ""|-h|--help|help) sed -n '2,46p' "$0" | sed 's/^# \{0,1\}//' ;;
   *) die "unknown command: $1 (see: speech-spark help)" ;;
 esac

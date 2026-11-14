@@ -46,9 +46,10 @@ from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.responses import JSONResponse, Response, StreamingResponse
 
 import einordnung
+import mandanten
 import modelle
 from textnorm import defuse_marks
-from common import (dauerlauf, STAGE_LOW, BodyLimit, GateFull, KeyedCORS, PrioGate, api_key_dependency, api_key_ok, check_memory,
+from common import (dauerlauf, STAGE_LOW, BodyLimit, GateFull, KeyedCORS, PrioGate, api_key_dependency, client_ok, check_memory,
                     ENTWICKLER_PLAETZE, LLM_ALIAS, entwickler_ok, inside, load_config, outside_view, quiet_access_log, stage_of)
 
 UNIT_ENGINE, UNIT_SEHEN, UNIT_HELFER = "speech-spark-llm", "speech-spark-sehen", "speech-spark-helfer"
@@ -222,18 +223,20 @@ app.add_middleware(KeyedCORS)
 
 
 def schluessel_ok(scope):
-    """BodyLimit's gate: the shared key or the developer key."""
-    return api_key_ok(scope) or entwickler_ok(dict(scope.get("headers") or []).get(b"authorization", b""), load_config())
+    """BodyLimit's gate: the shared key, a Spark-Client's key (mandanten.py) or the developer key."""
+    return client_ok(scope) or entwickler_ok(dict(scope.get("headers") or []).get(b"authorization", b""), load_config())
 
 
 app.add_middleware(BodyLimit, default=lambda: int(cfg().get("max_body_mb", 32)) * 1024**2, gate=schluessel_ok, gated=("/v1/",))
-auth = [Depends(api_key_dependency())]
-_api_key = api_key_dependency()
+auth = [Depends(api_key_dependency("systemone"))]   # only /v1/systemone: api.key or a client with that right
+_api_key = api_key_dependency("llm")
 
 
 def _mit_entwickler(request: Request, authorization: str = Header(None)):
-    """The shared key, or the developer key (marked on the request: last in line, its own gate)."""
+    """The shared key, a Spark-Client with the right "llm" (request.state.client), or the developer key (marked on the
+    request: last in line, its own gate)."""
     request.state.entwickler = entwickler_ok(authorization or "", load_config())
+    request.state.client = None
     if not request.state.entwickler:
         _api_key(request, authorization)
 
@@ -304,11 +307,13 @@ def _systemctl(*args):
         return 1
 
 
-async def _count(data):
+async def _count(data, kunde=None):
     u = data.get("usage") if isinstance(data, dict) else None
     if isinstance(u, dict):
         stats["tokens_in"] += int(u.get("prompt_tokens") or 0)
         stats["tokens_out"] += int(u.get("completion_tokens") or 0)
+        if kunde is not None:
+            mandanten.tokens_zaehlen(kunde, int(u.get("prompt_tokens") or 0) + int(u.get("completion_tokens") or 0))
 
 
 async def _forward(port, body, request):
@@ -318,7 +323,13 @@ async def _forward(port, body, request):
     if gate is None:
         gate = PrioGate(aktiv()[0]["vllm"].get("max_seqs", 8))
     dev = getattr(request.state, "entwickler", False) is True
+    kunde = getattr(request.state, "client", None)
     dgate, dticket = (_entwickler_gate(), None) if dev else (None, None)
+    if kunde is not None and body.get("stream"):   # a client's tokens per day count from the usage piece
+        body = {**body, "stream_options": {"include_usage": True}}
+    if kunde is not None and not mandanten.herein(kunde):
+        mandanten.melden(kunde, "parallel", "llm")
+        raise HTTPException(429, "parallel")
     try:
         if dev:
             dticket = await dgate.enter(STAGE_LOW, fest=True)
@@ -327,6 +338,8 @@ async def _forward(port, body, request):
     except GateFull:
         if dticket:
             dgate.leave(dticket)
+        if kunde is not None:
+            mandanten.raus(kunde)
         if dev:
             stats["entwickler_voll"] += 1
         print("llmtor: abgelehnt voll" + (" entwickler" if dev else ""), flush=True)
@@ -336,6 +349,8 @@ async def _forward(port, body, request):
         gate.leave(ticket)
         if dticket:
             dgate.leave(dticket)
+        if kunde is not None:
+            mandanten.raus(kunde)
     canary["t"] = time.monotonic()
     if not body.get("stream"):
         try:
@@ -347,7 +362,7 @@ async def _forward(port, body, request):
         finally:
             frei()
         try:
-            await _count(r.json())
+            await _count(r.json(), kunde)
         except ValueError:
             pass
         print(f"llmtor: antwort {r.status_code}", flush=True)
@@ -372,7 +387,7 @@ async def _forward(port, body, request):
             async for line in r.aiter_lines():
                 if line.startswith("data: {") and '"usage"' in line:
                     try:
-                        await _count(json.loads(line[6:]))
+                        await _count(json.loads(line[6:]), kunde)
                     except ValueError:
                         pass
                 yield (line + "\n").encode()
@@ -467,8 +482,16 @@ async def chat(request: Request):
     except ValueError:
         raise HTTPException(400, "json")
     c = cfg()
+    kunde = getattr(request.state, "client", None)
+    if kunde is not None and not mandanten.tokens_ok(kunde):
+        mandanten.melden(kunde, "tokens", "llm")
+        raise HTTPException(429, "tokens")
     try:
         m, served, port = await laufend()
+        if kunde is not None and (zum_sehen(body, m, c) and not mandanten.darf(kunde, "sehen")
+                                  or zum_helfer(body, c) and not mandanten.darf(kunde, "helfer")):
+            mandanten.melden(kunde, "recht", "sehen" if zum_sehen(body, m, c) else "helfer")
+            raise HTTPException(403, "recht")
         if zum_sehen(body, m, c):
             m, port = await _sehen_bereit(c)
             sehen["used"] = time.monotonic()
@@ -500,7 +523,8 @@ async def systemone(request: Request):
         print("llmtor: systemone abgelehnt", flush=True)
         raise HTTPException(400, "questions")
     m, served, port = await laufend()
-    wer = HELFER if zum_helfer(body, cfg()) else "sprachmodell"
+    kunde = getattr(request.state, "client", None)   # a Spark-Client without the right "helfer" gets the language model
+    wer = HELFER if zum_helfer(body, cfg()) and (kunde is None or mandanten.darf(kunde, "helfer")) else "sprachmodell"
     if wer == HELFER:
         m, port = await _helfer_bereit(cfg())
         served = m["id"]
@@ -530,14 +554,22 @@ async def systemone(request: Request):
                                                        "x-systemone-branches": str(len(questions)), "x-systemone-modell": wer})
 
 
+@app.get("/v1/spark/faehigkeiten")
+def spark_faehigkeiten(client=Depends(mandanten.faehigkeiten_dep())):
+    """What this Spark offers and what the key may (mandanten.faehigkeiten, plan spark-entkoppeln E2)."""
+    return mandanten.faehigkeiten(client)
+
+
 @app.get("/v1/models", dependencies=auth_entwickler)
-async def models():
-    """LLM_ALIAS first (the language model, whatever runs: its real name in "modell"), then "sehen" and the helper."""
+async def models(request: Request):
+    """LLM_ALIAS first (the language model, whatever runs: its real name in "modell"), then "sehen" and the helper
+    (for a Spark-Client only those it holds the right for)."""
     m, served, _ = await laufend()
+    kunde = getattr(request.state, "client", None)
     data = [{"id": LLM_ALIAS, "object": "model", "owned_by": "speech-spark", "modell": served}]
-    if cfg().get("sehen_modell"):
+    if cfg().get("sehen_modell") and (kunde is None or mandanten.darf(kunde, "sehen")):
         data.append({"id": "sehen", "object": "model", "owned_by": "speech-spark"})
-    if cfg().get("helfer_modell"):
+    if cfg().get("helfer_modell") and (kunde is None or mandanten.darf(kunde, "helfer")):
         data.append({"id": HELFER, "object": "model", "owned_by": "speech-spark"})
     return {"object": "list", "data": data}
 

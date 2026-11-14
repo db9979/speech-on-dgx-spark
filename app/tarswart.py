@@ -40,6 +40,11 @@ a time (at most WINDOW seconds off) and a one-time number (each is taken once).
     stimme_ablegen {name, wav, worte}   one sample of a designed voice (base64 WAV, checked by stimmablage.ablegen),
                                 only on its own path /v1/wart/stimme with the bigger limit STIMME_BODY
     stimme_weg <name>           deletes one designed voice (sd-…, eigen-…)
+    clients                     Spark-Clients (mandanten.uebersicht): the switch, the networks, the clients without hashes
+    client_neu {name, rechte, klasse, minute, parallel, tokens_tag}   a new client; the answer carries its key, once
+    client_aendern {id, felder} rights, class, limits or gesperrt of one client
+    client_weg <id>             removes one client
+    clients_schalten {an, netze}   the admin switch api.clients and the networks api.clients_from (mandanten.schalten)
 
 Every action writes one log line ("waerter:" with the command and the result word, never content); the reads
 status and modelle only when refused.
@@ -57,13 +62,14 @@ from fastapi.responses import JSONResponse
 
 import gputakt
 import installiert
+import mandanten
 import llmstart
 import modelle
 import rechner
 import stimmablage
 import sysupdate
 import werkstatt
-from common import (CONFIG_PATH, MODEL_LOG_UNITS, ON_DEMAND_UNITS, OWN_LLM_UNITS, UNITS, WAERTER_PORT, BodyLimit, gpu_stats, journal, load_config,
+from common import (SPARK_API, CONFIG_PATH, MODEL_LOG_UNITS, ON_DEMAND_UNITS, OWN_LLM_UNITS, UNITS, WAERTER_PORT, BodyLimit, gpu_stats, journal, load_config,
                     WARTUNG_FILE, installed_version, mem_available_gib, model_choice, model_settings_hash, model_settings_take, read_json,
                     UPDATE_PROGRESS, run, shipped, uhr, update_anteil, waerter_key, waerter_sign, write_json)
 
@@ -77,10 +83,12 @@ RATE = (40, 10)        # at most 40 requests in 10 seconds (the panel asks for t
 ACTIONS = ("start", "stop", "restart")
 COMMANDS = ("status", "einheit", "einstellen", "logs", "modelle", "wechseln", "messen", "platz", "eigen_dazu", "eigen_weg",
             "weiter", "update", "werkstatt", "werkstatt_auftrag", "werkstatt_eins", "werkstatt_weg", "systemupdate",
-            "systemupdate_tun", "pakete", "stimmen", "stimme_ablegen", "stimme_weg")
+            "systemupdate_tun", "pakete", "stimmen", "stimme_ablegen", "stimme_weg", "clients", "client_neu",
+            "client_aendern", "client_weg", "clients_schalten")
 UPDATE_UNIT = "speech-spark-update"
 PAUSE_KEYS = ("on", "parts", "since", "until", "channel")   # what the panel needs of the pause (never who)
-WITH_DATA = ("einstellen", "eigen_dazu", "werkstatt_auftrag", "stimme_ablegen")
+WITH_DATA = ("einstellen", "eigen_dazu", "werkstatt_auftrag", "stimme_ablegen", "client_neu", "client_aendern",
+             "clients_schalten")
 # what status reports: the units the panel shows and watches
 WATCHED = dict(UNITS, **OWN_LLM_UNITS, **ON_DEMAND_UNITS)
 
@@ -163,7 +171,8 @@ def status():
     return {"version": version(), "einheiten": _states(list(WATCHED.values())), "gpu": gpu_stats(),
             "mem_avail_gib": mem, "mem_total_gib": total, "einstellungen": model_settings_hash(cfg), "modellwahl": model_choice(cfg), "pause": pause(),
             "commit": str(installed_version().get("commit") or "")[:40], "update": _update_laeuft(), "update_pct": _update_pct(), "rechner": _rechner(),
-            "uhr": uhr()}
+            "uhr": uhr(), "spark_api": SPARK_API,
+            "clients": sum(not c.get("gesperrt") for c in mandanten.clients()) if mandanten.an(cfg) else 0}
 
 
 def _update_pct():
@@ -420,6 +429,32 @@ def stimme_weg(name):
     return {"ok": True, "da": da}
 
 
+def clients_tun(cmd, args, daten):
+    """Spark-Clients (mandanten.py) for the paired panel; {"fehler": word} for anything mandanten refuses."""
+    try:
+        if cmd == "client_neu":
+            if set(daten) - {"name", "rechte", "klasse", *mandanten.GRENZEN}:
+                raise mandanten.Fehler("wert")
+            grenzen = {k: daten[k] for k in mandanten.GRENZEN if k in daten}
+            c, key = mandanten.neu(daten.get("name"), daten.get("rechte"), daten.get("klasse"), **grenzen)
+            print("waerter: client_neu ok", flush=True)
+            return {"client": c, "key": key}
+        if cmd == "client_aendern":
+            c = mandanten.aendern(str(daten.get("id") or ""), daten.get("felder"))
+            print("waerter: client_aendern ok", flush=True)
+            return {"client": c}
+        if cmd == "client_weg":
+            mandanten.weg(args[0] if len(args) == 1 else "")
+            print("waerter: client_weg ok", flush=True)
+            return {"ok": True}
+        out = mandanten.schalten(daten.get("an"), daten.get("netze"), "waerter")
+        print("waerter: clients_schalten ok", flush=True)
+        return out
+    except mandanten.Fehler as e:   # the reason word goes back, so the panel can say what is wrong
+        print(f"waerter: {cmd} abgelehnt {e}", flush=True)
+        return {"fehler": str(e)}
+
+
 def einheit(action, teil):
     if action not in ACTIONS or teil not in UNITS:
         raise ValueError("befehl")
@@ -503,7 +538,11 @@ async def _wart(request, stimme):
         return JSONResponse(systemupdate_daten())
     if cmd == "pakete":
         return JSONResponse(pakete_daten())
+    if cmd == "clients":
+        return JSONResponse(mandanten.uebersicht())
     try:
+        if cmd in ("client_neu", "client_aendern", "client_weg", "clients_schalten"):
+            return JSONResponse(clients_tun(cmd, args, daten))
         if cmd == "einstellen":
             return JSONResponse(einstellen(daten))
         if cmd == "eigen_dazu":

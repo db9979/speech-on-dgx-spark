@@ -1860,6 +1860,8 @@ Jede Funktion des Spark mit ihrem Schalter, worauf sie aufbaut, wo man sie einri
 
 - **Schwachstellen** (Funktionen → Zugang → „Schwachstellen“): Eine Karte unter Zustand → Überblick und die Seite Zustand → Schwachstellen zeigen bekannte Lücken in allem, was der Spark betreibt: die Python-Pakete des Panels, die Modell-Engines (vLLM, vllm-omni), die Docker-Abbilder der Modelle und …
 
+- **Spark-Clients** (Funktionen → Zugang → „Spark-Clients“): Andere Programme im Heimnetz nutzen die Dienste des Modell-Rechners mit einem eigenen Schlüssel: ein zweiter Assistent, Open WebUI, Home Assistant oder eigene Skripte.
+
 - **Steuerzentrale am Bildschirm** (Funktionen → Zugang → „Steuerzentrale am Bildschirm“): Ein Bildschirm am HDMI-Ausgang des Panel-Rechners zeigt die Steuerzentrale: oben Zustand und Tageszahlen, in der Mitte, welche Anfrage gerade durch welche Stufe läuft und auf welchem Rechner (bei Spark teilen tars und Pi mit CPU, GPU, Sp …
 
 - **Modelle wechseln** (Funktionen → Zugang → „Modelle wechseln“): Unter Zustand → Modelle wechselt ein Admin das Modell einer Art: Sprachmodell, Bildverständnis, Spracherkennung, Sprachausgabe oder Bilder malen.

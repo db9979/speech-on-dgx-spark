@@ -449,7 +449,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ zugang (guard, core, profiles, features)
     "zugang": {
-        "stand": "3df7cd22e9",
+        "stand": "6403fba5a6",
         "bezug": {
             "guard.MAX_FAILS": ["s2", "s3"], "guard.MAX_NAME_FAILS": ["s2", "s3"], "guard.LOCK_FIRST": ["s2"],
             "guard.DAY_FAILS": ["s2", "s3"], "guard.failed": ["s3"], "guard.succeeded": ["s5"],
@@ -689,7 +689,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ sicherheit (the model as a whole)
     "sicherheit": {
-        "stand": "eead70646f",
+        "stand": "45c1cb2fe5",
         "bezug": {
             "features.blocked": ["s5"], "geteilt.put": ["s5"], "mitschreiblink.find": ["s3", "s5"], "core.confirm_code": ["s3", "s8"], "core.CONFIRM_WINDOW": ["s3"], "guard.Slot": ["s3"],
             "notaus.STAGE": ["s2"], "vault.seal": ["s10"], "tarswart.check": ["s3"], "tarswart.COMMANDS": ["s3"], "sysupdate.wunsch_nehmen": ["s3"],
@@ -722,12 +722,12 @@ SEITEN = {
               ("Im Heimnetz direkt, von unterwegs nur über den Reverse-Proxy mit TLS. Jedes Gerät hat seinen eigenen "
                "Schlüssel oder meldet sich wie im Browser an. Jeder Weg hinein (Panel, Geräteschlüssel, Kalender- und Kontakte-Apps, "
                "MCP, andere Sparks, Wyoming, Telefon, Telegram, die Anker und das Web-Terminal des Fernzugangs, die Seite der Spontanhilfe, "
-               "der Abhol-Link von „Alle meine Daten herunterladen“) steht mit seinem "
+               "der Abhol-Link von „Alle meine Daten herunterladen“, die Dienste des Modell-Rechners für Spark-Clients) steht mit seinem "
                "Schutz in der Sicherheits-Doku unter „Wege hinein“.",
                "At home directly, on the way only through the reverse proxy with TLS. Every device has its own key or "
                "signs in like the browser. Every way in (panel, device keys, calendar and contacts apps, MCP, other Sparks, Wyoming, "
                "phone, Telegram, the anchors and the web terminal of remote access, the spontaneous help page, the pickup link of "
-               "\"Download all my data\") stands with its protection in the security "
+               "\"Download all my data\", the model computer's services for Spark clients) stands with its protection in the security "
                "docs under \"Ways in\".")),
             S("s2", "frage", ("Lässt der Notaus es zu?", "Does the kill switch allow it?"),
               ("notaus.blocks", "notaus.blocks"),

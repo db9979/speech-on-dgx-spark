@@ -39,7 +39,7 @@ import time
 import httpx
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))   # common.py, also as a script
-from common import (CONFIG_PATH, MODEL_LOG_UNITS, OWN_LLM_UNITS, UNITS, gpu_stats, journal, load_config, model_choice, model_choice_take,
+from common import (CONFIG_PATH, SPARK_API, MODEL_LOG_UNITS, OWN_LLM_UNITS, UNITS, gpu_stats, journal, load_config, model_choice, model_choice_take,
                     model_local, model_settings, model_settings_hash, model_url, run, shipped, waerter_key, waerter_sign,
                     write_json)
 
@@ -224,8 +224,34 @@ def for_live(now=None):
     units = [u for u in (d.get("einheiten") or {}).values()
              if isinstance(u, dict) and u.get("state") != "unknown" and u.get("da") is not False]   # installed ones only
     v = str(d.get("version") or "")
-    return {"on": True, "ok": True, "aktiv": sum(u.get("state") == "active" for u in units), "n": len(units),
-            "version": v if v.startswith("V") and len(v) <= 20 else "", "pause": bool((d.get("pause") or {}).get("on"))}
+    out = {"on": True, "ok": True, "aktiv": sum(u.get("state") == "active" for u in units), "n": len(units),
+           "version": v if v.startswith("V") and len(v) <= 20 else "", "pause": bool((d.get("pause") or {}).get("on"))}
+    # Spark-Clients (mandanten.py): its API version only when it differs from this panel's, the open clients only when any
+    api, cl = d.get("spark_api"), d.get("clients")
+    if isinstance(api, int) and not isinstance(api, bool) and api != SPARK_API:
+        out["api"] = api
+    if isinstance(cl, int) and not isinstance(cl, bool) and cl > 0:
+        out["clients"] = cl
+    return out
+
+
+def clients_zu():
+    """Funktionen → Spark-Clients switched off (admin._save): the model computer's services close for the clients too,
+    here straight or through the Wärter (sparkclients.py shows and changes them)."""
+    import mandanten   # app/, no panel module
+    try:
+        if not remote():
+            d = mandanten.uebersicht()
+            if d.get("an"):
+                mandanten.schalten(False, d.get("netze") or [])
+            return
+        d = call("clients", timeout=15)
+        if isinstance(d, dict) and d.get("an"):
+            d = call("clients_schalten", daten={"an": False, "netze": d.get("netze") or []}, timeout=15)
+        if not isinstance(d, dict) or d.get("fehler"):
+            print("sparkclient: panel zu fehler", flush=True)
+    except (mandanten.Fehler, OSError):
+        print("sparkclient: panel zu fehler", flush=True)
 
 
 def einstellen(cfg=None, why="gespeichert"):

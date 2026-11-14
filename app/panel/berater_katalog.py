@@ -114,12 +114,12 @@ NEVER = (
     ("Mail senden, MCP nach außen, Probleme melden", "Sending mail, MCP to the outside, reporting problems"),
     ("Updates und Sicherungen", "Updates and backups"),
 )
-NEVER_KEYS = {("chat", k) for k in ("llm_url", "llm_key", "public", "mfa", "report", "report_repo", "report_direct", "report_madeup", "mail_send",
+NEVER_KEYS = {("chat", k) for k in ("llm_url", "llm_key", "public", "mfa", "report", "report_repo", "report_direct", "report_madeup", "spark_clients", "mail_send",
                                     "mail_send_voice", "mcp_server_extern", "llm_api", "llm_api_extern", "llm_api_minute", "llm_api_tag_k", "llm_api_assistant", "openwebui", "openwebui_url", "openwebui_link_url", "dev_updates", "system_updates", "system_updates_night_panel", "system_updates_night_models", "schwachstellen", "telegram_api",
                                     "fernzugang", "fernzugang_hilfe", "spontanhilfe", "spontansteuern", "fernbild", "fernals", "fernzugang_sshtermy",
                                     "fernbild_zwischenablage", "fernzugang_notizen",
                                     "fernzugang_ordner", "fernzugang_gross", "fernweb", "fernweb_adresse", "fernzugang_alle", "entwickeln", "entwickeln_github", "entwickeln_terminal", "entwickeln_auftrag")} \
-    | {("entwickeln", "schluessel_sha256"), ("api", "key"), ("api", "tls_listen"), ("api", "tls_from"), ("panel", "port"), ("panel", "https_port"),
+    | {("entwickeln", "schluessel_sha256"), ("api", "key"), ("api", "tls_listen"), ("api", "tls_from"), ("api", "clients"), ("api", "clients_from"), ("panel", "port"), ("panel", "https_port"),
        ("models", "host"), ("models", "cert")}
 
 ARTS = {"weiche", "test", "pflicht", "hinweis", "extra", "pron", "asr", "quality", "value", "switch", "choice", "profile", "umgebung", "issue"}

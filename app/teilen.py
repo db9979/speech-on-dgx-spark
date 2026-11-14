@@ -89,8 +89,11 @@ def pruefen(cfg):
 
 
 def regeln(cfg):
-    """The nftables rules: the door's ports only from the panel computer; loads atomically with nft -f."""
+    """The nftables rules: the door's ports only from the panel computer and, while api.clients is on, from the
+    networks of api.clients_from (Spark-Clients, mandanten.netze); loads atomically with nft -f."""
+    import mandanten
     _, von, ports = pruefen(cfg)
+    von = von + mandanten.netze(cfg)
     p = ", ".join(str(x) for x in ports)
     v4 = ", ".join(str(a) for a in von if a.version == 4)
     v6 = ", ".join(str(a) for a in von if a.version == 6)

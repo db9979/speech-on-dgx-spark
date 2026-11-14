@@ -1090,6 +1090,8 @@ def _save_locked(new, old, by):
     if not steuer.remote(new):   # GPU-Taktgrenze on this computer (with the models apart, the Wärter starts it)
         import gputakt
         gputakt.anwenden(old, new)
+    if (old.get("chat") or {}).get("spark_clients") is True and (new.get("chat") or {}).get("spark_clients") is not True:
+        steuer.clients_zu()   # Funktionen → Spark-Clients off: the services close for the clients too
     # the API key is read per request, so changing it needs no restart
     mem_changed = new["memory"] != old.get("memory")
     actions = {}  # unit name -> start | stop | restart

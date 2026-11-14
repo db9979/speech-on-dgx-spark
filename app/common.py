@@ -236,7 +236,7 @@ class SpeechMark:
     async def __call__(self, scope, receive, send):
         if scope["type"] != "http" or scope.get("method") != "POST" or not scope.get("path", "").startswith(self.paths):
             return await self.app(scope, receive, send)
-        if signed_low(scope):
+        if signed_low(scope) or _kein_sprecher(scope):
             return await self.app(scope, receive, send)
         speech_mark()
 
@@ -295,9 +295,14 @@ def stage_key(create=False):
 
 
 def _stage(get, host):
-    """(stage, signed): the stage a request asks for and whether it came from this machine with the panel's key."""
+    """(stage, signed): the stage a request asks for and whether it came from this machine with the panel's key. A
+    Spark-Client (mandanten.py) never picks its stage: its priority class decides (unsigned)."""
     import hmac
     import ipaddress
+    client = _client_of(get("authorization", ""))
+    if client is not None:
+        import mandanten
+        return mandanten.stufe(client), False
     got = get(STAGE_HEADER, "")
     if got not in ("0", "2"):
         return STAGE_NORMAL, False
@@ -315,6 +320,12 @@ def _stage(get, host):
 def stage_of(request):
     """The stage of a request to a speech service: what the panel says, last for any local caller that asks, else normal."""
     return _stage(request.headers.get, request.client.host if request.client else "")[0]
+
+
+def _kein_sprecher(scope):
+    """A Spark-Client (mandanten.py) outside the class "sprache": its requests never count as somebody speaking."""
+    c = _client_of(dict(scope.get("headers") or []).get(b"authorization", b""))
+    return c is not None and c.get("klasse") != "sprache"
 
 
 def signed_low(scope):
@@ -833,6 +844,10 @@ ENTWICKLER_PLAETZE = 1     # developer requests at once at the LLM-Tor (its own 
 # the language model's fixed name in /v1/models of the LLM-Tor and of the panel's own /v1 (Dominik 2026-11-10 „1“): the same
 # whatever model runs behind it; the real one goes along only as the extra field "modell"
 LLM_ALIAS = "sprachmodell"
+# the Spark's own API version (plan spark-entkoppeln E2, Dominik 2026-11-14 „5a“): GET /v1/spark/faehigkeiten names it;
+# clients and a paired panel go by it, not by the version number. Raised only when a path, field or rule of the services
+# changes in a way an older client would misread
+SPARK_API = 1
 
 
 def entwickler_hash(cfg):
@@ -1034,18 +1049,58 @@ def _loopback(host):
         return False
 
 
-def api_key_dependency():
+# the TLS-Tor (tlstor.py) reaches the services from this address of its own: a caller through the door looks like
+# this machine otherwise, so "only this machine" (no key set, details of /health) counts only for other loopback
+# addresses (_hier); the stage rule (_stage) treats it like this machine, which only ever lowers a stage
+TOR_SOURCE = "127.0.0.2"
+
+
+def _hier(host):
+    """True for a call from this machine itself, not through the TLS-Tor."""
+    return _loopback(host) and str(host or "") != TOR_SOURCE
+
+
+def _client_of(authorization):
+    """The Spark-Client (mandanten.py) of an Authorization header, None without one (cheap: only keys with its prefix)."""
+    got = authorization.decode("latin-1") if isinstance(authorization, bytes) else str(authorization or "")
+    if not got.startswith("Bearer sk-spark-"):
+        return None
+    import mandanten
+    return mandanten.finden(got)
+
+
+def api_key_dependency(recht=None):
     """FastAPI dependency: if config api.key is set, require 'Authorization: Bearer <key>'. Without a key only
     this machine itself may call (an old configuration that never went through the panel's check would
     otherwise leave the speech APIs open to the whole network). Read per request, so a key changed in the
-    panel applies without a model reload."""
+    panel applies without a model reload. With `recht` (a service the TLS-Tor opens: mandanten.RECHTE) a
+    Spark-Client's key passes too while api.clients is on, when it holds that right and is within its requests per
+    minute (403 "recht", 429 "limit"); request.state.client then names it (None for api.key)."""
     from fastapi import Header, HTTPException, Request
 
     def dep(request: Request, authorization: str = Header(None)):
         import hmac
-        key = load_config().get("api", {}).get("key", "")
+        request.state.client = None
+        cfg = load_config()
+        key = cfg.get("api", {}).get("key", "")
+        if recht is not None and str(authorization or "").startswith("Bearer sk-spark-"):
+            import mandanten
+            c = mandanten.finden(authorization, cfg)
+            if c is None:
+                raise HTTPException(401, "invalid or missing API key")
+            if not mandanten.im_netz(request.client.host if request.client else "", cfg):
+                mandanten.melden(c, "netz", recht)
+                raise HTTPException(403, "netz")
+            if not mandanten.darf(c, recht):
+                mandanten.melden(c, "recht", recht)
+                raise HTTPException(403, "recht")
+            if not mandanten.minute_ok(c, recht):
+                mandanten.melden(c, "limit", recht)
+                raise HTTPException(429, "limit")
+            request.state.client = c
+            return
         if not key:
-            if not _loopback(request.client.host if request.client else ""):
+            if not _hier(request.client.host if request.client else ""):
                 raise HTTPException(401, "API key required: none is set, so only this machine may call")
             return
         if not hmac.compare_digest(str(authorization or "").encode(), f"Bearer {key}".encode()):
@@ -1129,11 +1184,8 @@ class BodyLimit:
 def inside(request):
     """The caller may see details (errors, model, voices): this machine itself, or the right API key."""
     import ipaddress
-    try:
-        if ipaddress.ip_address(request.client.host if request.client else "").is_loopback:
-            return True
-    except ValueError:
-        pass
+    if _hier(request.client.host if request.client else ""):
+        return True
     return api_key_ok(request.scope)
 
 
@@ -1144,13 +1196,19 @@ def outside_view(out):
 
 def api_key_ok(scope):
     """For BodyLimit's gate on the speech services: the right Bearer key, or no key configured and a call
-    from this machine itself."""
+    from this machine itself. client_ok lets a Spark-Client through as well (its right is checked after)."""
     import hmac
     key = load_config().get("api", {}).get("key", "")
     if not key:
-        return _loopback((scope.get("client") or ("",))[0])
+        return _hier((scope.get("client") or ("",))[0])
     got = dict(scope.get("headers") or []).get(b"authorization", b"")
     return hmac.compare_digest(got, f"Bearer {key}".encode())
+
+
+def client_ok(scope):
+    """BodyLimit's gate of a service the TLS-Tor opens: api_key_ok or a key of a Spark-Client (mandanten.py) while
+    api.clients is on; its rights and limits are checked by api_key_dependency(recht)."""
+    return api_key_ok(scope) or _client_of(dict(scope.get("headers") or []).get(b"authorization", b"")) is not None
 
 
 _pin_models()

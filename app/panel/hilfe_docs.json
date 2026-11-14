@@ -1701,7 +1701,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "1. Frage oder Auftrag kommt herein: Im Heimnetz direkt, von unterwegs nur über den Reverse-Proxy mit TLS. Jedes Gerät hat seinen eigenen Schlüssel oder meldet sich wie im Browser an. Jeder Weg hinein (Panel, Geräteschlüssel, Kalender- und Kontakte-Apps, MCP, andere Sparks, Wyoming, Telefon, Telegram, die Anker und das Web-Terminal des Fernzugangs, die Seite der Spontanhilfe, der Abhol-Link von „Alle meine Daten herunterladen“) steht mit seinem Schutz in der Sicherheits-Doku unter „Wege hinein“. 2. Lässt der Notaus es zu?: Der Notaus hat drei Stufen von außen nach innen: Stufe 1 sperrt das Internet, Stufe 2 jede Handlung, Stufe 3 jedes Gespräch, und was dann noch spricht (Antworten, Anrufe, Home Assistant), endet sofort (laufend.end_all). Kein Modell, keine Mail und kein Dokument kann ihn auslösen oder aufheben. Ein ganzer Satz aus Stoppwörtern („Stopp“, „Tschüss“) beendet ein Gespräch nach fester Regel ohne Modell (stoppwort.ende). 3. Angemeldet und im Rahmen?: Größenlimit und Herkunftsprüfung (CSRF) vor dem Lesen, dann Rate-Limit pro Profil oder Adresse (ein Weg mit eigenem Sitzungsschlüssel nach dem richtigen Schlüssel je Sitzung, Raten weiter je Adresse) und eine Höchstzahl glei"
+"text": "1. Frage oder Auftrag kommt herein: Im Heimnetz direkt, von unterwegs nur über den Reverse-Proxy mit TLS. Jedes Gerät hat seinen eigenen Schlüssel oder meldet sich wie im Browser an. Jeder Weg hinein (Panel, Geräteschlüssel, Kalender- und Kontakte-Apps, MCP, andere Sparks, Wyoming, Telefon, Telegram, die Anker und das Web-Terminal des Fernzugangs, die Seite der Spontanhilfe, der Abhol-Link von „Alle meine Daten herunterladen“, die Dienste des Modell-Rechners für Spark-Clients) steht mit seinem Schutz in der Sicherheits-Doku unter „Wege hinein“. 2. Lässt der Notaus es zu?: Der Notaus hat drei Stufen von außen nach innen: Stufe 1 sperrt das Internet, Stufe 2 jede Handlung, Stufe 3 jedes Gespräch, und was dann noch spricht (Antworten, Anrufe, Home Assistant), endet sofort (laufend.end_all). Kein Modell, keine Mail und kein Dokument kann ihn auslösen oder aufheben. Ein ganzer Satz aus Stoppwörtern („Stopp“, „Tschüss“) beendet ein Gespräch nach fester Regel ohne Modell (stoppwort.ende). 3. Angemeldet und im Rahmen?: Größenlimit und Herkunftsprüfung (CSRF) vor dem Lesen, dann Rate-Limit pro Profil oder Adresse (ein Weg mit eigenem Sitzungsschlüssel nach dem richtigen Schlüssel je Sitzung"
 },
 {
 "lang": "de",
@@ -1709,7 +1709,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "chzeitiger Anfragen für Modell, Erkennung und Ausgabe (guard.Slot). Geheimnisse, Rollen und Sicherungen brauchen dazu einen frischen Code oder Passkey (core.confirm_code, 10 Minuten). Ein ganzer Bereich lässt sich mit einem zweiten Schritt für eine Weile entsperren (Regel „Bereich entsperren“, zuerst der Fernzugang: 5 bis 120 Minuten, fernzugang.entsperrt_bis): nur diese Anmeldung, nur vom selben Ort, gesperrt bei Sperren, Abmelden und Notaus; Koppeln und Entfernen fragen trotzdem jedes Mal. Zu den Modellen auf tars geht es nur durch das TLS-Tor; Befehle dort prüft der Wärter (tarswart.check: Unterschrift, Zeit, Einmal-Nummer, einer von 22 festen Befehlen). 4. Wer fragt, sicher erkannt?: Das Profil kommt aus Cookie, App-Schlüssel oder verknüpftem Konto. Am geteilten Lautsprecher reicht der Geräteschlüssel nicht: chat_turn.shared_stranger gibt Persönliches nur frei, wenn die Inhaberstimme in derselben Aufnahme sicher erkannt ist. 5. Freigabe und Sperre: Jede Funktion ist aus, bis der Admin sie freigibt; dann gilt sie für jedes Profil, außer der Admin sperrt einzelne (features.blocked). Was nicht erlaubt ist, wird gar nicht erst als Werkzeug angeboten. Was einem Profil gehört, bleibt"
+"text": ", Raten weiter je Adresse) und eine Höchstzahl gleichzeitiger Anfragen für Modell, Erkennung und Ausgabe (guard.Slot). Geheimnisse, Rollen und Sicherungen brauchen dazu einen frischen Code oder Passkey (core.confirm_code, 10 Minuten). Ein ganzer Bereich lässt sich mit einem zweiten Schritt für eine Weile entsperren (Regel „Bereich entsperren“, zuerst der Fernzugang: 5 bis 120 Minuten, fernzugang.entsperrt_bis): nur diese Anmeldung, nur vom selben Ort, gesperrt bei Sperren, Abmelden und Notaus; Koppeln und Entfernen fragen trotzdem jedes Mal. Zu den Modellen auf tars geht es nur durch das TLS-Tor; Befehle dort prüft der Wärter (tarswart.check: Unterschrift, Zeit, Einmal-Nummer, einer von 27 festen Befehlen). 4. Wer fragt, sicher erkannt?: Das Profil kommt aus Cookie, App-Schlüssel oder verknüpftem Konto. Am geteilten Lautsprecher reicht der Geräteschlüssel nicht: chat_turn.shared_stranger gibt Persönliches nur frei, wenn die Inhaberstimme in derselben Aufnahme sicher erkannt ist. 5. Freigabe und Sperre: Jede Funktion ist aus, bis der Admin sie freigibt; dann gilt sie für jedes Profil, außer der Admin sperrt einzelne (features.blocked). Was nicht erlaubt ist, wird gar nicht erst als "
 },
 {
 "lang": "de",
@@ -1717,7 +1717,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": " bei ihm: das Push-Abo eines Browsers gehört genau einem Profil (push.add nimmt es jedem anderen) und endet mit der Anmeldung, die es eingeschaltet hat (push.drop_login); eine Mitteilung geht nie an einen anderen Browser, weil der benutzte keines hat; eine Seite übernimmt keine Antwort, die noch für das Profil davor bestellt war. 6. Fremdes bleibt Daten: Was ein Werkzeug von außen liest, kommt als markierter Datenblock zum Modell (textnorm.defuse: Blockende und die eigenen Marken des Modells wie „<|im_start|>“ oder „<tool_call>“ werden entschärft; das LLM-Tor tut das für jede Nachricht noch einmal, llm_tor.entschaerft). Ab da sind 13 handelnde Werkzeuge gesperrt, auch im nächsten Zug, und nichts davon wird ins Gedächtnis gelernt; nach einer Mail sind es 20, dazu gehört alles, was ins Internet fragt (Websuche, Wikipedia, Wetter, Fahrplan), damit kein Suchwort Mail-Inhalt hinausträgt. Nach jedem anderen Text von außen geht ein Werkzeug ins Internet nur noch mit Wörtern aus der eigenen Nachricht der Person oder aus dem, was eine Suche derselben Antwort schon gebracht hat; ein Wort aus Kalender, Gedächtnis oder Dokument wird so nie zum Suchwort (ausleiten.fremd, dieselbe Regel wie bei "
+"text": "Werkzeug angeboten. Was einem Profil gehört, bleibt bei ihm: das Push-Abo eines Browsers gehört genau einem Profil (push.add nimmt es jedem anderen) und endet mit der Anmeldung, die es eingeschaltet hat (push.drop_login); eine Mitteilung geht nie an einen anderen Browser, weil der benutzte keines hat; eine Seite übernimmt keine Antwort, die noch für das Profil davor bestellt war. 6. Fremdes bleibt Daten: Was ein Werkzeug von außen liest, kommt als markierter Datenblock zum Modell (textnorm.defuse: Blockende und die eigenen Marken des Modells wie „<|im_start|>“ oder „<tool_call>“ werden entschärft; das LLM-Tor tut das für jede Nachricht noch einmal, llm_tor.entschaerft). Ab da sind 13 handelnde Werkzeuge gesperrt, auch im nächsten Zug, und nichts davon wird ins Gedächtnis gelernt; nach einer Mail sind es 20, dazu gehört alles, was ins Internet fragt (Websuche, Wikipedia, Wetter, Fahrplan), damit kein Suchwort Mail-Inhalt hinausträgt. Nach jedem anderen Text von außen geht ein Werkzeug ins Internet nur noch mit Wörtern aus der eigenen Nachricht der Person oder aus dem, was eine Suche derselben Antwort schon gebracht hat; ein Wort aus Kalender, Gedächtnis oder Dokument wird so nie zum"
 },
 {
 "lang": "de",
@@ -1725,7 +1725,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "den Aufträgen). Ob das hält, prüft der Angriffs-Selbsttest mit einem Modell, das jedem Befehl gehorcht (panel/angriffe.json). Verbindungen nach außen laufen nur über den Wächter (netguard.allowed); eine Seite oder Datei holt nur netguard.hole_oeffentlich (Notaus zuerst, nur öffentlich auch nach jeder Weiterleitung, Größe, Zeit, Inhaltstyp), Links als Dokument nimmt eine Adresse nur aus den eigenen Worten der Person (doklink.eigene), und die Seite wird ein Dokument wie jedes: Daten; ein YouTube-Link geht als Adresse aus der Video-Nummer allein an das gepinnte yt-dlp mit festen Optionen (ytquelle.befehl), dessen ganzer Verkehr nur durch den netguard-Proxy läuft (netproxy.Proxy: feste Host-Liste, Port 443, netguard.resolve); ein Tunnel des Fernzugangs nur zu Zielen nach fernweb.ziel_ok: dort 127.0.0.1 und die eigenen Adressen des Systems, die sein Anker selbst meldet. Eine Mail mit HTML zeigt die Seite nur so, wie der Spark sie bereinigt hat (mailansicht.clean: feste Liste erlaubter Tags, kein Skript), in einem Rahmen ohne Skript mit eigener CSP; Bilder von außen erst nach eigenem Klick über den Wächter, ein Link erst nach der Frage mit seiner echten Adresse. Zur Pflicht wird die Webs"
+"text": " Suchwort (ausleiten.fremd, dieselbe Regel wie bei den Aufträgen). Ob das hält, prüft der Angriffs-Selbsttest mit einem Modell, das jedem Befehl gehorcht (panel/angriffe.json). Verbindungen nach außen laufen nur über den Wächter (netguard.allowed); eine Seite oder Datei holt nur netguard.hole_oeffentlich (Notaus zuerst, nur öffentlich auch nach jeder Weiterleitung, Größe, Zeit, Inhaltstyp), Links als Dokument nimmt eine Adresse nur aus den eigenen Worten der Person (doklink.eigene), und die Seite wird ein Dokument wie jedes: Daten; ein YouTube-Link geht als Adresse aus der Video-Nummer allein an das gepinnte yt-dlp mit festen Optionen (ytquelle.befehl), dessen ganzer Verkehr nur durch den netguard-Proxy läuft (netproxy.Proxy: feste Host-Liste, Port 443, netguard.resolve); ein Tunnel des Fernzugangs nur zu Zielen nach fernweb.ziel_ok: dort 127.0.0.1 und die eigenen Adressen des Systems, die sein Anker selbst meldet. Eine Mail mit HTML zeigt die Seite nur so, wie der Spark sie bereinigt hat (mailansicht.clean: feste Liste erlaubter Tags, kein Skript), in einem Rahmen ohne Skript mit eigener CSP; Bilder von außen erst nach eigenem Klick über den Wächter, ein Link erst nach der Frage m"
 },
 {
 "lang": "de",
@@ -1733,7 +1733,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "uche nur aus starken Wörtern („such im Internet“, „Bundesliga“, „Wer hat gewonnen?“) und nie bei einem privaten Satz (chat.PRIVATE_WORDS: mein, Gesundheit, Geld, „Nachrichten von Tom“), damit nichts Privates als Suchanfrage hinausgeht (chat.needed). 7. Sprachmodell schlägt vor: Das Modell formuliert und wählt aus dem, was nach den Schritten davor übrig ist. Ruft es ein Werkzeug, das nicht angeboten war, läuft es nicht. 8. Ändert es etwas?: Lesen geht sofort. Wer etwas ändert (Licht, Mail senden, Termin, Anruf), legt einen Vorschlag ab; er läuft erst nach einem schlichten „Ja“ auf genau diesen Vorschlag, vom selben Gerät, oder dem Ja-Knopf seiner Karte „Wartet auf dein Ja“ (eigenes Profil, dieselbe Funktion wie das getippte Ja). Home Assistant nur aus einer Allowlist. Mail löscht nur die Person selbst (in den Papierkorb, endgültig nur nach Rückfrage), nie das Modell; ebenso führt nur ihr Klick Punkte der Wissenskarte zusammen, benennt sie um oder löscht sie (mit dem Code von „Bestätigen“); von selbst nur eine feste Regel bei gleichem Namen in anderer Schreibweise (wissensdoppelt.aehnlich), nie das Modell, und nie gegen ihr „Verschieden“. Knöpfe auf Karten im Gespräch und auf der Sei"
+"text": "it seiner echten Adresse. Zur Pflicht wird die Websuche nur aus starken Wörtern („such im Internet“, „Bundesliga“, „Wer hat gewonnen?“) und nie bei einem privaten Satz (chat.PRIVATE_WORDS: mein, Gesundheit, Geld, „Nachrichten von Tom“), damit nichts Privates als Suchanfrage hinausgeht (chat.needed). 7. Sprachmodell schlägt vor: Das Modell formuliert und wählt aus dem, was nach den Schritten davor übrig ist. Ruft es ein Werkzeug, das nicht angeboten war, läuft es nicht. 8. Ändert es etwas?: Lesen geht sofort. Wer etwas ändert (Licht, Mail senden, Termin, Anruf), legt einen Vorschlag ab; er läuft erst nach einem schlichten „Ja“ auf genau diesen Vorschlag, vom selben Gerät, oder dem Ja-Knopf seiner Karte „Wartet auf dein Ja“ (eigenes Profil, dieselbe Funktion wie das getippte Ja). Home Assistant nur aus einer Allowlist. Mail löscht nur die Person selbst (in den Papierkorb, endgültig nur nach Rückfrage), nie das Modell; ebenso führt nur ihr Klick Punkte der Wissenskarte zusammen, benennt sie um oder löscht sie (mit dem Code von „Bestätigen“); von selbst nur eine feste Regel bei gleichem Namen in anderer Schreibweise (wissensdoppelt.aehnlich), nie das Modell, und nie gegen ihr „Verschie"
 },
 {
 "lang": "de",
@@ -1781,7 +1781,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 13 Werkzeuge nach Text von außen gesperrt (Schritt 6) - 20 Werkzeuge nach einer Mail gesperrt (Schritt 6) - 10 min zählt ein richtiger Code für „Bestätigen“ (Schritt 3) - 22 feste Befehle des Wärters auf tars (Schritt 3) - 3 Notaus-Stufen, die letzte hält jedes Gespräch an (Schritt 2)"
+"text": "- 13 Werkzeuge nach Text von außen gesperrt (Schritt 6) - 20 Werkzeuge nach einer Mail gesperrt (Schritt 6) - 10 min zählt ein richtiger Code für „Bestätigen“ (Schritt 3) - 27 feste Befehle des Wärters auf tars (Schritt 3) - 3 Notaus-Stufen, die letzte hält jedes Gespräch an (Schritt 2)"
 },
 {
 "lang": "de",
@@ -3693,7 +3693,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "1. Installation geteilt: Der DGX bekommt ein eigenes Zertifikat, das TLS-Tor, den Wärter und die Firewall. Die Dienste hören dann nur noch auf 127.0.0.1. 2. Kopplungscode: Der DGX zeigt einen Code und wartet auf Port 31008, nur solange der Code gilt; nach 3 falschen Versuchen ist er weg. 3. Beweis passt zum Zertifikat?: Der Panel-Rechner beweist den Code mit einem Schlüssel aus Code und dem Fingerabdruck des Zertifikats, das er sieht. Wer sich dazwischenstellt, zeigt ein anderes Zertifikat, und der Beweis passt nicht. 4. Zertifikat angeheftet, Firewall zu: Der Panel-Rechner merkt sich genau dieses Zertifikat und bekommt einen eigenen Wärter-Schlüssel. Die Firewall des DGX (teilen.regeln) lässt die Ports der Tür nur für ihn zu. 5. Verbindung zum TLS-Tor erlaubt?: Jede Anfrage an Spracherkennung, Sprachausgabe, Sprachmodell, Bilder und Wärter geht durch das Tor. Es spricht nur TLS 1.3 und lässt nur den Panel-Rechner herein; den Inhalt liest es nie. 6. Befehl an den Wärter: steuer.call schickt einen Befehl mit Zeitstempel und einer Nummer, die nur einmal gilt, unterschrieben mit dem Wärter-Schlüssel. 7. Unterschrift, Zeit, Nummer, Befehl gültig?: tarswart.check prüft die Unterschrift,"
+"text": "1. Installation geteilt: Der DGX bekommt ein eigenes Zertifikat, das TLS-Tor, den Wärter und die Firewall. Die Dienste hören dann nur noch auf 127.0.0.1. 2. Kopplungscode: Der DGX zeigt einen Code und wartet auf Port 31008, nur solange der Code gilt; nach 3 falschen Versuchen ist er weg. 3. Beweis passt zum Zertifikat?: Der Panel-Rechner beweist den Code mit einem Schlüssel aus Code und dem Fingerabdruck des Zertifikats, das er sieht. Wer sich dazwischenstellt, zeigt ein anderes Zertifikat, und der Beweis passt nicht. 4. Zertifikat angeheftet, Firewall zu: Der Panel-Rechner merkt sich genau dieses Zertifikat und bekommt einen eigenen Wärter-Schlüssel. Die Firewall des DGX (teilen.regeln) lässt die Ports der Tür nur für ihn zu, und solange Funktionen → Spark-Clients offen ist, auch für die eingetragenen Netze im Heimnetz (mandanten.netze). 5. Verbindung zum TLS-Tor erlaubt?: Jede Anfrage an Spracherkennung, Sprachausgabe, Sprachmodell, Bilder und Wärter geht durch das Tor. Es spricht nur TLS 1.3 und lässt nur den Panel-Rechner und, bei offenen Spark-Clients, deren Netze herein (tlstor.allowed); den Inhalt liest es nie. Zu den Diensten verbindet es sich von 127.0.0.2, so zählt nieman"
 },
 {
 "lang": "de",
@@ -3701,7 +3701,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": " eine Zeit höchstens 60 s daneben, die Nummer nur einmal und einen Befehl aus der festen Liste. Keine Shell, keine freien Namen. Nur die Probe einer gestalteten Stimme (stimme_ablegen) geht über den eigenen Pfad /v1/wart/stimme mit größerem Limit; stimmablage prüft dort Name, WAV und Anzahl. 8. Werte beider Rechner: rechner.messen misst CPU, Speicher, Platte, Netz, Temperatur und Strom; der Wärter schickt die Werte des DGX mit seinem Zustand. rechnerblick.warnungen meldet mit festen Regeln: Panel-Rechner ab 80 °C, gedrosselt oder zu wenig Strom, weniger als 0.5 GiB frei; auf jedem Rechner weniger als 10 % Platte frei; der DGX antwortet nicht. „Wer rechnet gerade“: rechner.dienste_cpu nimmt den Anteil jedes Dienstes an der CPU aus den Zählern von systemd, rechenteile.messen die Teile des Panels aus seinen Threads und Hilfsprozessen; rechnerblick.spitze nennt den größten ab 5 %, darunter ist Leerlauf. rechnerblick.wer hält die Liste ruhig: immer 6 Zeilen in fester Reihenfolge, gewählt über 20 Minuten, 0 % statt weg; beide Karten zeigen dieselben Zeilen auf gleicher Höhe (Spiegel-Karten). Dienste, die nur für einen Auftrag starten (rechnerblick.ABRUF: Bildverständnis, Werkstatt, Gehäu"
+"text": "d durch die Tür als dieser Rechner selbst. Schlüssel, Rechte und Grenzen eines Clients prüft jeder Dienst (mandanten.finden). 6. Befehl an den Wärter: steuer.call schickt einen Befehl mit Zeitstempel und einer Nummer, die nur einmal gilt, unterschrieben mit dem Wärter-Schlüssel. 7. Unterschrift, Zeit, Nummer, Befehl gültig?: tarswart.check prüft die Unterschrift, eine Zeit höchstens 60 s daneben, die Nummer nur einmal und einen Befehl aus der festen Liste. Keine Shell, keine freien Namen. Spark-Clients verwaltet er mit festen Befehlen (clients, client_neu, client_aendern, client_weg, clients_schalten); ein Client selbst kommt nie an den Wärter. Nur die Probe einer gestalteten Stimme (stimme_ablegen) geht über den eigenen Pfad /v1/wart/stimme mit größerem Limit; stimmablage prüft dort Name, WAV und Anzahl. 8. Werte beider Rechner: rechner.messen misst CPU, Speicher, Platte, Netz, Temperatur und Strom; der Wärter schickt die Werte des DGX mit seinem Zustand. rechnerblick.warnungen meldet mit festen Regeln: Panel-Rechner ab 80 °C, gedrosselt oder zu wenig Strom, weniger als 0.5 GiB frei; auf jedem Rechner weniger als 10 % Platte frei; der DGX antwortet nicht. „Wer rechnet gerade“: rec"
 },
 {
 "lang": "de",
@@ -3709,7 +3709,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "se), stehen in Ruhe als „bereit“; was auf dem DGX nicht installiert ist, fehlt. Jede Karte zeigt ein Bild ihres Rechners: geraetebild.art wählt nach festen Mustern im Gerätenamen eine eigene Zeichnung (sonst einen neutralen Rechner), oder der Admin lädt ein eigenes Foto hoch; geraetebild.jpeg speichert es neu als JPEG mit höchstens 640 Pixeln Kante und ohne Zusatzdaten. Nichts davon kommt aus dem Internet. 9. Steuerzentrale am Bildschirm: Ist Funktionen → Steuerzentrale am Bildschirm an, startet schirm.abgleich den Dienst und lässt ihn beim Booten von selbst starten, ohne Anmeldung. steuerzentrale.py fragt jede Sekunde schirm.schirm_zustand, nur von 127.0.0.1 und mit dem eigenen Schlüssel, und zeichnet Fluss, beide Rechner, Dienste und Kurven als Text; nur Art, Ort, Zeit und Zahlen. steuerzentrale.schrift wählt die Schrift nach der Auflösung für genug Spalten und Zeilen, schirm.an_jetzt schaltet nach den Zeiten dunkel. Aus geschaltet, startet schirm.anmeldung die Anmeldung auf tty1 wieder; ein Neustart der Anzeige hält ein Update nie an. 10. Notbetrieb, wenn der DGX fehlt: Antwortet der DGX nicht mehr, laufen Chats, Erinnerungen und Logs auf dem Panel-Rechner weiter, und Sprachfrag"
+"text": "hner.dienste_cpu nimmt den Anteil jedes Dienstes an der CPU aus den Zählern von systemd, rechenteile.messen die Teile des Panels aus seinen Threads und Hilfsprozessen; rechnerblick.spitze nennt den größten ab 5 %, darunter ist Leerlauf. rechnerblick.wer hält die Liste ruhig: immer 6 Zeilen in fester Reihenfolge, gewählt über 20 Minuten, 0 % statt weg; beide Karten zeigen dieselben Zeilen auf gleicher Höhe (Spiegel-Karten). Dienste, die nur für einen Auftrag starten (rechnerblick.ABRUF: Bildverständnis, Werkstatt, Gehäuse), stehen in Ruhe als „bereit“; was auf dem DGX nicht installiert ist, fehlt. Jede Karte zeigt ein Bild ihres Rechners: geraetebild.art wählt nach festen Mustern im Gerätenamen eine eigene Zeichnung (sonst einen neutralen Rechner), oder der Admin lädt ein eigenes Foto hoch; geraetebild.jpeg speichert es neu als JPEG mit höchstens 640 Pixeln Kante und ohne Zusatzdaten. Nichts davon kommt aus dem Internet. 9. Steuerzentrale am Bildschirm: Ist Funktionen → Steuerzentrale am Bildschirm an, startet schirm.abgleich den Dienst und lässt ihn beim Booten von selbst starten, ohne Anmeldung. steuerzentrale.py fragt jede Sekunde schirm.schirm_zustand, nur von 127.0.0.1 und mit "
 },
 {
 "lang": "de",
@@ -3717,7 +3717,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "en bekommen einen festen Satz."
+"text": "dem eigenen Schlüssel, und zeichnet Fluss, beide Rechner, Dienste und Kurven als Text; nur Art, Ort, Zeit und Zahlen. steuerzentrale.schrift wählt die Schrift nach der Auflösung für genug Spalten und Zeilen, schirm.an_jetzt schaltet nach den Zeiten dunkel. Aus geschaltet, startet schirm.anmeldung die Anmeldung auf tty1 wieder; ein Neustart der Anzeige hält ein Update nie an. 10. Notbetrieb, wenn der DGX fehlt: Antwortet der DGX nicht mehr, laufen Chats, Erinnerungen und Logs auf dem Panel-Rechner weiter, und Sprachfragen bekommen einen festen Satz."
 },
 {
 "lang": "de",
@@ -3733,7 +3733,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 600 s lebt ein Kopplungscode (Schritt 2) - 60 s darf die Zeit eines Befehls daneben liegen (Schritt 7) - 22 feste Befehle des Wärters (Schritt 7) - 30 s ohne Antwort bis zum Notbetrieb (Schritt 10) - 80 °C Hinweis, der Panel-Rechner ist warm (Schritt 8) - 10 % Platte frei, darunter ein Hinweis (Schritt 8) - 0.5 GiB Arbeitsspeicher frei am Panel-Rechner, darunter ein Hinweis (Schritt 8) - 5 % CPU, ab der der größte Dienst als „rechnet gerade“ gilt (Schritt 8) - 640 Pixel längste Kante des eigenen Fotos eines Rechners (Schritt 8) - 15 s ohne Frage der Steuerzentrale, dann gilt der Bildschirm als dunkel (Schritt 9)"
+"text": "- 600 s lebt ein Kopplungscode (Schritt 2) - 60 s darf die Zeit eines Befehls daneben liegen (Schritt 7) - 27 feste Befehle des Wärters (Schritt 7) - 30 s ohne Antwort bis zum Notbetrieb (Schritt 10) - 80 °C Hinweis, der Panel-Rechner ist warm (Schritt 8) - 10 % Platte frei, darunter ein Hinweis (Schritt 8) - 0.5 GiB Arbeitsspeicher frei am Panel-Rechner, darunter ein Hinweis (Schritt 8) - 5 % CPU, ab der der größte Dienst als „rechnet gerade“ gilt (Schritt 8) - 640 Pixel längste Kante des eigenen Fotos eines Rechners (Schritt 8) - 15 s ohne Frage der Steuerzentrale, dann gilt der Bildschirm als dunkel (Schritt 9)"
 },
 {
 "lang": "de",
@@ -3805,7 +3805,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 51), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 116). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, "
+"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 52), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 116). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, "
 },
 {
 "lang": "de",
@@ -3829,7 +3829,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 51 Dateien in jeder Sicherung (Schritt 7) - 116 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
+"text": "- 52 Dateien in jeder Sicherung (Schritt 7) - 116 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
 },
 {
 "lang": "de",
@@ -14757,6 +14757,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Zugang",
 "title": "Zugang",
+"text": "- Spark-Clients (Funktionen → Zugang → „Spark-Clients“): Andere Programme im Heimnetz nutzen die Dienste des Modell-Rechners mit einem eigenen Schlüssel: ein zweiter Assistent, Open WebUI, Home Assistant oder eigene Skripte."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Zugang",
+"title": "Zugang",
 "text": "- Steuerzentrale am Bildschirm (Funktionen → Zugang → „Steuerzentrale am Bildschirm“): Ein Bildschirm am HDMI-Ausgang des Panel-Rechners zeigt die Steuerzentrale: oben Zustand und Tageszahlen, in der Mitte, welche Anfrage gerade durch welche Stufe läuft und auf welchem Rechner (bei Spark teilen tars und Pi mit CPU, GPU, Sp …"
 },
 {
@@ -16270,6 +16278,30 @@
 "head": "Notaus",
 "title": "Notaus",
 "text": " Notaus“ geht per Diktat. - iPhone-App (seit V01.0.370, mit der nächsten TestFlight-Version): Notaus-Knopf mit Rückfrage und Siri-Kurzbefehl „Spark Notaus“; ohne Admin-Rolle nur *Mein Notaus*, aufheben nie in der App. - Notaus von selbst (seit V01.0.364, Schalter unter *Einstellungen → Sicherheit*, aus; Ändern braucht den Admin-Code): Der Wächter schaltet nach festen Regeln Stufe 1 „Außen zu“ ein, nie höher: 20 falsche Anmeldungen, PINs, Codes oder Notaus-Schlüssel von außen in 10 Minuten; eine MCP-Flut von außen (30 vom Rate-Limit abgewiesene MCP-Anfragen in 10 Minuten); 15 von netguard gesperrte Verbindungen in 10 Minuten (etwa 169.254.x, Heimnetz-Adressen oder die eigenen Dienste, wohin fremder Text den Spark lenken will; Sperren durch den Notaus selbst zählen nicht). Gezählt wird nur im Speicher. Kanal „Wächter“ in Push, Admin-Protokoll und Zustand → Live; aufheben wie immer."
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Spark-Clients (seit V01.1.437)",
+"title": "Spark-Clients (seit V01.1.437)",
+"text": "*Funktionen → Spark-Clients* (aus, nur Admins, nie Gäste, kein Werkzeug für das Sprachmodell; mandanten.py auf dem Rechner mit den Diensten, sparkclients.py im Panel; Plan „Spark und Assistent entkoppeln“, Paket E1) lässt andere Programme im Heimnetz die Dienste des Modell-Rechners nutzen: einen zweiten Assistenten, Open WebUI, Home Assistant oder eigene Skripte. Eingestellt wird unter *Einstellungen → Spark → Betrieb → Spark-Clients* oder auf dem Modell-Rechner mit sudo speech-spark clients. Der eigene Assistent braucht keinen Client: er nutzt weiter den API-Schlüssel der Kopplung und behält alle Rechte."
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Spark-Clients (seit V01.1.437)",
+"title": "Spark-Clients (seit V01.1.437)",
+"text": "- Schalter und Netze: „Für Clients geöffnet“ (api.clients, aus) und die Netze im Heimnetz (api.clients_from, höchstens 8, nur private Netze, nicht weiter als /8). Erst dann öffnet ein Client-Schlüssel etwas. Bei getrennten Rechnern lässt das TLS-Tor nur den Panel-Rechner und diese Netze herein, und root baut die Firewall neu aus der Konfiguration (feste Einheit speech-spark-clients-fw); auf dem Spark allein prüft jeder Dienst die Adresse selbst. Funktionen → Spark-Clients aus schließt die Dienste wieder. - Schlüssel: sk-spark- und 256 Bit Zufall, nur einmal gezeigt (frischer Code), gespeichert nur als SHA-256 in spark-clients.json, in konstanter Zeit verglichen. Höchstens 20 Clients; Sperren und Löschen wirken sofort. - Rechte je Dienst: Sprachmodell, Bilder verstehen, Hilfsmodell, Einordnen (System One), Hören, Sprechen, Bilder, Musik. Ohne Recht antwortet der Dienst 403 „recht“. Den Spark verwalten (Wärter) kann kein Client, Bilder und Musik anhalten auch nicht. - Vorrangklasse: „Sprache“ wartet an den Toren der Dienste wie die Stimme des Assistenten vorn, „Dialog“ normal, „Hintergrund“ immer zuletzt. Ein Client wählt seine Stufe nie selbst; nur „Sprache“ zählt als jemand, der sp"
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Spark-Clients (seit V01.1.437)",
+"title": "Spark-Clients (seit V01.1.437)",
+"text": "richt. - Grenzen: Anfragen pro Minute je Dienst, gleichzeitig am Sprachmodell und Tokens pro Tag (aus der Zählung der Engine, auch beim Streamen). Darüber 429 „limit“, „parallel“ oder „tokens“. Die Zähler leben im Speicher des Dienstes. - Fähigkeiten (Paket E2): GET /v1/spark/faehigkeiten am Sprachmodell, an Hören und an Sprechen sagt mit Schlüssel, welche Dienste der Spark anbietet, unter welchem festen Modellnamen, was der Schlüssel darf, und die Spark-API-Version (common.SPARK_API). Danach richten sich Clients, nicht nach der Versionsnummer; Zustand → Live zeigt sie beim Modell-Rechner, wenn sie abweicht. - Log und Daten: Zeilen sparkclient: … mit Client-Kennung, festen Wörtern und Zahlen, eine Ablehnung derselben Art höchstens einmal pro Minute; nie Namen, Schlüssel oder Inhalte. Das Änderungsprotokoll nennt Öffnen, Schließen, Anlegen, Ändern und Löschen. - Durch das TLS-Tor: Es verbindet sich von 127.0.0.2 mit den Diensten. „Nur dieser Rechner“ (kein Schlüssel gesetzt, Einzelheiten unter /health) gilt dafür nicht mehr; vorher sah jeder Anrufer durch die Tür aus wie der Rechner selbst."
 },
 {
 "lang": "de",
@@ -19429,7 +19461,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "1. A question or order comes in: At home directly, on the way only through the reverse proxy with TLS. Every device has its own key or signs in like the browser. Every way in (panel, device keys, calendar and contacts apps, MCP, other Sparks, Wyoming, phone, Telegram, the anchors and the web terminal of remote access, the spontaneous help page, the pickup link of \"Download all my data\") stands with its protection in the security docs under \"Ways in\". 2. Does the kill switch allow it?: The kill switch has three stages from the outside in: stage 1 closes the internet, stage 2 every action, stage 3 every conversation, and whatever still talks then (answers, calls, Home Assistant) ends at once (laufend.end_all). No model, mail or document can trigger or lift it. A whole sentence of stop words („Stop“, „Bye“) ends a talk by a fixed rule without the model (stoppwort.ende). 3. Signed in and within limits?: Size limit and origin check (CSRF) before reading, then a rate limit per profile or address (a way with its own session key per session after the right key, guessing still per address) and a cap on parallel requests for the model, recognition and output (guard.Slot). Secrets, roles and "
+"text": "1. A question or order comes in: At home directly, on the way only through the reverse proxy with TLS. Every device has its own key or signs in like the browser. Every way in (panel, device keys, calendar and contacts apps, MCP, other Sparks, Wyoming, phone, Telegram, the anchors and the web terminal of remote access, the spontaneous help page, the pickup link of \"Download all my data\", the model computer's services for Spark clients) stands with its protection in the security docs under \"Ways in\". 2. Does the kill switch allow it?: The kill switch has three stages from the outside in: stage 1 closes the internet, stage 2 every action, stage 3 every conversation, and whatever still talks then (answers, calls, Home Assistant) ends at once (laufend.end_all). No model, mail or document can trigger or lift it. A whole sentence of stop words („Stop“, „Bye“) ends a talk by a fixed rule without the model (stoppwort.ende). 3. Signed in and within limits?: Size limit and origin check (CSRF) before reading, then a rate limit per profile or address (a way with its own session key per session after the right key, guessing still per address) and a cap on parallel requests for the model, recogni"
 },
 {
 "lang": "en",
@@ -19437,7 +19469,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "backups also need a fresh code or passkey (core.confirm_code, 10 minutes). A whole area can be unlocked for a while with a second step (rule \"unlocking an area\", first remote access: 5 to 120 minutes, fernzugang.entsperrt_bis): this login only, from the same place only, locked on Lock, logout and the kill switch; pairing and removing still ask every time. The models on tars are reached only through the TLS-Tor; commands there are checked by the Wärter (tarswart.check: signature, time, one-time number, one of 22 fixed commands). 4. Who asks, surely known?: The profile comes from the cookie, the app key or a linked account. At a shared speaker the device key is not enough: chat_turn.shared_stranger allows personal things only when the owner's voice is surely recognised in the same recording. 5. Release and block: Every function is off until the admin releases it; then it counts for every profile, unless the admin blocks single ones (features.blocked). What is not allowed is not even offered as a tool. What belongs to a profile stays with it: a browser's push subscription belongs to exactly one profile (push.add takes it from every other) and ends with the login that switched it on (p"
+"text": "tion and output (guard.Slot). Secrets, roles and backups also need a fresh code or passkey (core.confirm_code, 10 minutes). A whole area can be unlocked for a while with a second step (rule \"unlocking an area\", first remote access: 5 to 120 minutes, fernzugang.entsperrt_bis): this login only, from the same place only, locked on Lock, logout and the kill switch; pairing and removing still ask every time. The models on tars are reached only through the TLS-Tor; commands there are checked by the Wärter (tarswart.check: signature, time, one-time number, one of 27 fixed commands). 4. Who asks, surely known?: The profile comes from the cookie, the app key or a linked account. At a shared speaker the device key is not enough: chat_turn.shared_stranger allows personal things only when the owner's voice is surely recognised in the same recording. 5. Release and block: Every function is off until the admin releases it; then it counts for every profile, unless the admin blocks single ones (features.blocked). What is not allowed is not even offered as a tool. What belongs to a profile stays with it: a browser's push subscription belongs to exactly one profile (push.add takes it from every othe"
 },
 {
 "lang": "en",
@@ -19445,7 +19477,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "ush.drop_login); a note never goes to another browser because the one in use has none; a page takes no answer that was still asked for the profile before. 6. Outside stays data: What a tool reads from outside reaches the model as a marked block of data (textnorm.defuse: the block's end and the model's own markers such as „<|im_start|>“ or „<tool_call>“ are defused; the LLM-Tor does it once more for every message, llm_tor.entschaerft). From then on 13 acting tools are locked, in the next turn too, and nothing of it is learned into memory; after a mail it is 20, everything that asks the internet among them (web search, Wikipedia, weather, transit), so no search word carries mail content out. After any other outside text a tool goes to the internet only with words from the person's own message or from what a search of the same answer already brought in; a word from the calendar, the memory or a document never becomes a search word (ausleiten.fremd, the same rule as for background jobs). Whether this holds is checked by the attack self-test with a model that obeys every order (panel/angriffe.json). Connections to the outside go only through the guard (netguard.allowed); a page or file "
+"text": "r) and ends with the login that switched it on (push.drop_login); a note never goes to another browser because the one in use has none; a page takes no answer that was still asked for the profile before. 6. Outside stays data: What a tool reads from outside reaches the model as a marked block of data (textnorm.defuse: the block's end and the model's own markers such as „<|im_start|>“ or „<tool_call>“ are defused; the LLM-Tor does it once more for every message, llm_tor.entschaerft). From then on 13 acting tools are locked, in the next turn too, and nothing of it is learned into memory; after a mail it is 20, everything that asks the internet among them (web search, Wikipedia, weather, transit), so no search word carries mail content out. After any other outside text a tool goes to the internet only with words from the person's own message or from what a search of the same answer already brought in; a word from the calendar, the memory or a document never becomes a search word (ausleiten.fremd, the same rule as for background jobs). Whether this holds is checked by the attack self-test with a model that obeys every order (panel/angriffe.json). Connections to the outside go only thro"
 },
 {
 "lang": "en",
@@ -19453,7 +19485,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "is fetched only by netguard.hole_oeffentlich (kill switch first, public only also after every redirect, size, time, content type), links as documents take an address only from the person's own words (doklink.eigene), and the page becomes a document like any: data; a YouTube link goes as an address built from the video number alone to the pinned yt-dlp with fixed options (ytquelle.befehl), whose whole traffic runs only through the netguard proxy (netproxy.Proxy: fixed host list, port 443, netguard.resolve); a remote-access tunnel only to targets by fernweb.ziel_ok: 127.0.0.1 there and the system's own addresses its anchor reports itself. A mail with HTML is shown only as the Spark cleaned it (mailansicht.clean: a fixed list of allowed tags, no script), in a frame without script with its own CSP; pictures from outside only after the own click and through the guard, a link only after the question with its real address. The web search becomes a must only from strong words („search the internet“, „Bundesliga“, „Who won?“) and never for a private sentence (chat.PRIVATE_WORDS: my, health, money, „messages from Tom“), so nothing private goes out as a query (chat.needed). 7. The language mo"
+"text": "ugh the guard (netguard.allowed); a page or file is fetched only by netguard.hole_oeffentlich (kill switch first, public only also after every redirect, size, time, content type), links as documents take an address only from the person's own words (doklink.eigene), and the page becomes a document like any: data; a YouTube link goes as an address built from the video number alone to the pinned yt-dlp with fixed options (ytquelle.befehl), whose whole traffic runs only through the netguard proxy (netproxy.Proxy: fixed host list, port 443, netguard.resolve); a remote-access tunnel only to targets by fernweb.ziel_ok: 127.0.0.1 there and the system's own addresses its anchor reports itself. A mail with HTML is shown only as the Spark cleaned it (mailansicht.clean: a fixed list of allowed tags, no script), in a frame without script with its own CSP; pictures from outside only after the own click and through the guard, a link only after the question with its real address. The web search becomes a must only from strong words („search the internet“, „Bundesliga“, „Who won?“) and never for a private sentence (chat.PRIVATE_WORDS: my, health, money, „messages from Tom“), so nothing private goes"
 },
 {
 "lang": "en",
@@ -19461,7 +19493,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "del proposes: The model words the answer and picks from what is left after the steps before. If it calls a tool that was not offered, it does not run. 8. Does it change something?: Reading happens at once. Whatever changes something (light, sending mail, appointment, call) leaves a proposal; it runs only after a plain „yes“ to exactly that proposal, from the same device, or the yes button of its card „Waiting for your yes“ (own profile, the same function as the typed yes). Home Assistant only from an allowlist. Only the person deletes mail (into the trash, for good only after a question), never the model; likewise only their click merges, renames or deletes points of the knowledge map (with the code of „Confirm“); by itself only a fixed rule for the same name in another spelling (wissensdoppelt.aehnlich), never the model, and never against their „Different“. Buttons on cards in the conversation and on the page Open are fixed names (vorgaenge.AKTIONEN); the panel checks every press (owner, kind, state, kill switch, the module's switches), and what would send or enter something without a proposal only opens the page where the person does it. Negation is a fixed rule of the panel (int"
+"text": " out as a query (chat.needed). 7. The language model proposes: The model words the answer and picks from what is left after the steps before. If it calls a tool that was not offered, it does not run. 8. Does it change something?: Reading happens at once. Whatever changes something (light, sending mail, appointment, call) leaves a proposal; it runs only after a plain „yes“ to exactly that proposal, from the same device, or the yes button of its card „Waiting for your yes“ (own profile, the same function as the typed yes). Home Assistant only from an allowlist. Only the person deletes mail (into the trash, for good only after a question), never the model; likewise only their click merges, renames or deletes points of the knowledge map (with the code of „Confirm“); by itself only a fixed rule for the same name in another spelling (wissensdoppelt.aehnlich), never the model, and never against their „Different“. Buttons on cards in the conversation and on the page Open are fixed names (vorgaenge.AKTIONEN); the panel checks every press (owner, kind, state, kill switch, the module's switches), and what would send or enter something without a proposal only opens the page where the person do"
 },
 {
 "lang": "en",
@@ -19509,7 +19541,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 13 tools locked after outside text (step 6) - 20 tools locked after a mail (step 6) - 10 min a right code counts for „Confirm“ (step 3) - 22 fixed commands of the Wärter on tars (step 3) - 3 kill switch stages, the last stops every conversation (step 2)"
+"text": "- 13 tools locked after outside text (step 6) - 20 tools locked after a mail (step 6) - 10 min a right code counts for „Confirm“ (step 3) - 27 fixed commands of the Wärter on tars (step 3) - 3 kill switch stages, the last stops every conversation (step 2)"
 },
 {
 "lang": "en",
@@ -21365,7 +21397,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "1. Shared install: The DGX gets its own certificate, the TLS-Tor, the Wärter and the firewall. The services then listen on 127.0.0.1 only. 2. Pairing code: The DGX shows a code and waits on port 31008, only while the code lives; after 3 wrong tries it is gone. 3. Proof fits the certificate?: The panel computer proves the code with a key from the code and the fingerprint of the certificate it sees. Whoever stands in between shows another certificate, and the proof does not fit. 4. Certificate pinned, firewall shut: The panel computer keeps exactly this certificate and gets its own Wärter key. The DGX's firewall (teilen.regeln) opens the door's ports for it only. 5. Connection to the TLS-Tor allowed?: Every request to speech recognition, speech output, the language model, pictures and the Wärter goes through the door. It speaks TLS 1.3 only and lets only the panel computer in; it never reads the content. 6. Command to the Wärter: steuer.call sends a command with a time stamp and a number that counts only once, signed with the Wärter key. 7. Signature, time, number, command valid?: tarswart.check checks the signature, a time at most 60 s off, the number only once and a command from th"
+"text": "1. Shared install: The DGX gets its own certificate, the TLS-Tor, the Wärter and the firewall. The services then listen on 127.0.0.1 only. 2. Pairing code: The DGX shows a code and waits on port 31008, only while the code lives; after 3 wrong tries it is gone. 3. Proof fits the certificate?: The panel computer proves the code with a key from the code and the fingerprint of the certificate it sees. Whoever stands in between shows another certificate, and the proof does not fit. 4. Certificate pinned, firewall shut: The panel computer keeps exactly this certificate and gets its own Wärter key. The DGX's firewall (teilen.regeln) opens the door's ports for it only, and while Features → Spark clients is open, also for the networks entered in the home network (mandanten.netze). 5. Connection to the TLS-Tor allowed?: Every request to speech recognition, speech output, the language model, pictures and the Wärter goes through the door. It speaks TLS 1.3 only and lets in only the panel computer and, with Spark clients open, their networks (tlstor.allowed); it never reads the content. It connects to the services from 127.0.0.2, so nobody through the door counts as this computer itself. Each s"
 },
 {
 "lang": "en",
@@ -21373,7 +21405,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "e fixed list. No shell, no free names. Only the sample of a designed voice (stimme_ablegen) goes over its own path /v1/wart/stimme with a bigger limit; stimmablage checks the name, the WAV and the number there. 8. Values of both computers: rechner.messen measures CPU, memory, disk, network, temperature and power; the Wärter sends the DGX's values with its status. rechnerblick.warnungen warns by fixed rules: the panel computer from 80 °C, throttled or short of power, less than 0.5 GiB free; on either computer less than 10 % disk free; the DGX not answering. „Who is computing now“: rechner.dienste_cpu takes each service's share of the CPU from systemd's counters, rechenteile.messen the panel's parts from its threads and worker processes; rechnerblick.spitze names the biggest from 5 % on, below that it is idle. rechnerblick.wer keeps the list still: always 6 lines in a fixed order, chosen over 20 minutes, 0 % instead of gone; both cards show the same rows at the same height (mirror cards). Services that start only for a job (rechnerblick.ABRUF: image understanding, Werkstatt, case) rest as „ready“; what is not installed on the DGX is left out. Each card shows a picture of its computer"
+"text": "ervice checks a client's key, rights and limits (mandanten.finden). 6. Command to the Wärter: steuer.call sends a command with a time stamp and a number that counts only once, signed with the Wärter key. 7. Signature, time, number, command valid?: tarswart.check checks the signature, a time at most 60 s off, the number only once and a command from the fixed list. No shell, no free names. Spark clients it manages with fixed commands (clients, client_neu, client_aendern, client_weg, clients_schalten); a client itself never reaches the Wärter. Only the sample of a designed voice (stimme_ablegen) goes over its own path /v1/wart/stimme with a bigger limit; stimmablage checks the name, the WAV and the number there. 8. Values of both computers: rechner.messen measures CPU, memory, disk, network, temperature and power; the Wärter sends the DGX's values with its status. rechnerblick.warnungen warns by fixed rules: the panel computer from 80 °C, throttled or short of power, less than 0.5 GiB free; on either computer less than 10 % disk free; the DGX not answering. „Who is computing now“: rechner.dienste_cpu takes each service's share of the CPU from systemd's counters, rechenteile.messen the"
 },
 {
 "lang": "en",
@@ -21381,7 +21413,15 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": ": geraetebild.art picks an own drawing by fixed patterns in the device name (else a neutral computer), or the admin uploads an own photo; geraetebild.jpeg stores it anew as a JPEG with an edge of at most 640 pixels and without extra data. None of it comes from the internet. 9. Control centre on the screen: When Features → Control centre on the screen is on, schirm.abgleich starts the unit and lets it start at boot by itself, without signing in. steuerzentrale.py asks schirm.schirm_zustand every second, only from 127.0.0.1 and with its own key, and draws the flow, both computers, services and curves as text; only kind, place, time and numbers. steuerzentrale.schrift picks the font by the resolution for at enough columns and rows, schirm.an_jetzt makes it dark by the times. Switched off, schirm.anmeldung starts the sign-in on tty1 again; a restart of the screen never stops an update. 10. Notbetrieb when the DGX is missing: When the DGX no longer answers, chats, reminders and logs go on on the panel computer, and speech questions get a fixed sentence."
+"text": " panel's parts from its threads and worker processes; rechnerblick.spitze names the biggest from 5 % on, below that it is idle. rechnerblick.wer keeps the list still: always 6 lines in a fixed order, chosen over 20 minutes, 0 % instead of gone; both cards show the same rows at the same height (mirror cards). Services that start only for a job (rechnerblick.ABRUF: image understanding, Werkstatt, case) rest as „ready“; what is not installed on the DGX is left out. Each card shows a picture of its computer: geraetebild.art picks an own drawing by fixed patterns in the device name (else a neutral computer), or the admin uploads an own photo; geraetebild.jpeg stores it anew as a JPEG with an edge of at most 640 pixels and without extra data. None of it comes from the internet. 9. Control centre on the screen: When Features → Control centre on the screen is on, schirm.abgleich starts the unit and lets it start at boot by itself, without signing in. steuerzentrale.py asks schirm.schirm_zustand every second, only from 127.0.0.1 and with its own key, and draws the flow, both computers, services and curves as text; only kind, place, time and numbers. steuerzentrale.schrift picks the font by "
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Way",
+"title": "Way",
+"text": "the resolution for at enough columns and rows, schirm.an_jetzt makes it dark by the times. Switched off, schirm.anmeldung starts the sign-in on tty1 again; a restart of the screen never stops an update. 10. Notbetrieb when the DGX is missing: When the DGX no longer answers, chats, reminders and logs go on on the panel computer, and speech questions get a fixed sentence."
 },
 {
 "lang": "en",
@@ -21397,7 +21437,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 600 s a pairing code lives (step 2) - 60 s a command's time may be off (step 7) - 22 fixed commands of the Wärter (step 7) - 30 s without an answer until Notbetrieb (step 10) - 80 °C note, the panel computer is warm (step 8) - 10 % disk free, below it a note (step 8) - 0.5 GiB memory free on the panel computer, below it a note (step 8) - 5 % CPU from which the biggest service counts as „computing now“ (step 8) - 640 Pixel longest edge of a computer's own photo (step 8) - 15 s without a question from the control centre, then the screen counts as dark (step 9)"
+"text": "- 600 s a pairing code lives (step 2) - 60 s a command's time may be off (step 7) - 27 fixed commands of the Wärter (step 7) - 30 s without an answer until Notbetrieb (step 10) - 80 °C note, the panel computer is warm (step 8) - 10 % disk free, below it a note (step 8) - 0.5 GiB memory free on the panel computer, below it a note (step 8) - 5 % CPU from which the biggest service counts as „computing now“ (step 8) - 640 Pixel longest edge of a computer's own photo (step 8) - 15 s without a question from the control centre, then the screen counts as dark (step 9)"
 },
 {
 "lang": "en",
@@ -21469,7 +21509,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 51), otherwise the line gives its reason (dateien.STATE_LOCAL, 116). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe, vorrat) read it again, and profiles forgets what it had opened of the profiles' sealed files."
+"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 52), otherwise the line gives its reason (dateien.STATE_LOCAL, 116). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe, vorrat) read it again, and profiles forgets what it had opened of the profiles' sealed files."
 },
 {
 "lang": "en",
@@ -21485,7 +21525,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 51 files in every backup (step 7) - 116 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
+"text": "- 52 files in every backup (step 7) - 116 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
 },
 {
 "lang": "en",
@@ -32197,6 +32237,14 @@
 "file": "Assistant and panel",
 "head": "Access",
 "title": "Access",
+"text": "- Spark clients (Features → Access → \"Spark clients\"): Other programs in the home network use the model computer's services with a key of their own: a second assistant, Open WebUI, Home Assistant or own scripts."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Access",
+"title": "Access",
 "text": "- Control centre on the screen (Features → Access → \"Control centre on the screen\"): A screen on the panel computer's HDMI output shows the control centre: state and the day's numbers on top, in the middle which request runs through which stage right now and on which computer (with Spark split tars and the Pi with CPU, G …"
 },
 {
@@ -33638,6 +33686,30 @@
 "head": "Kill switch (Notaus)",
 "title": "Kill switch (Notaus)",
 "text": "e next TestFlight build): emergency stop button behind a question and the Siri shortcut \"Spark Notaus\"; without an admin role only *My kill switch*, never lifting in the app. - Emergency stop by itself (since V01.0.364, switch under *Settings → Security*, off; changing it needs the admin code): the guard switches on stage 1 \"Outside closed\" by fixed rules, never higher: 20 wrong sign-ins, PINs, codes or emergency stop keys from outside in 10 minutes; an MCP flood from outside (30 MCP requests turned away by the rate limit in 10 minutes); 15 connections refused by netguard in 10 minutes (such as 169.254.x, home addresses or the Spark's own services, where outside text tries to steer the Spark; refusals by the emergency stop itself do not count). Counted in memory only. Channel \"Wächter\" in the push, the admin log and Status → Live; lifting as always."
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Spark clients (since V01.1.437)",
+"title": "Spark clients (since V01.1.437)",
+"text": "*Features → Spark clients* (off, admins only, never guests, no tool for the language model; mandanten.py on the computer with the services, sparkclients.py in the panel; plan \"Decouple Spark and assistant\", package E1) lets other programs in the home network use the model computer's services: a second assistant, Open WebUI, Home Assistant or own scripts. It is set under *Settings → Spark → Operation → Spark clients* or on the model computer with sudo speech-spark clients. The own assistant needs no client: it keeps using the API key of the pairing and keeps every right."
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Spark clients (since V01.1.437)",
+"title": "Spark clients (since V01.1.437)",
+"text": "- Switch and networks: \"Für Clients geöffnet\" (api.clients, off) and the networks in the home network (api.clients_from, at most 8, private networks only, not wider than /8). Only then does a client key open anything. With separate computers the TLS door lets in only the panel computer and these networks, and root builds the firewall anew from the configuration (fixed unit speech-spark-clients-fw); on a Spark alone every service checks the address itself. Features → Spark clients off closes the services again. - Keys: sk-spark- and 256 random bits, shown once (fresh code), stored only as SHA-256 in spark-clients.json, compared in constant time. At most 20 clients; blocking and deleting take effect at once. - Rights per service: language model, understanding pictures, helper model, classifying (System One), listening, speaking, pictures, music. Without the right the service answers 403 \"recht\". No client can manage the Spark (Wärter) or stop pictures and music. - Priority class: \"Sprache\" waits at the services' gates in front like the assistant's voice, \"Dialog\" normal, \"Hintergrund\" always last. A client never picks its stage itself; only \"Sprache\" counts as somebody speaking. - Li"
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Spark clients (since V01.1.437)",
+"title": "Spark clients (since V01.1.437)",
+"text": "mits: requests per minute per service, at once at the language model and tokens per day (from the engine's count, also when streaming). Above them 429 \"limit\", \"parallel\" or \"tokens\". The counts live in the service's memory. - Capabilities (package E2): GET /v1/spark/faehigkeiten at the language model, listening and speaking says with a key which services the Spark offers, under which fixed model name, what the key may, and the Spark API version (common.SPARK_API). Clients go by it, not by the version number; Status → Live shows it at the model computer when it differs. - Log and data: lines sparkclient: … with the client's id, fixed words and numbers, a refusal of the same kind at most once a minute; never names, keys or contents. The change log names opening, closing, making, changing and deleting. - Through the TLS door: it connects to the services from 127.0.0.2. \"Only this machine\" (no key set, details under /health) no longer holds for it; before, every caller through the door looked like the machine itself."
 },
 {
 "lang": "en",

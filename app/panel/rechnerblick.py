@@ -75,7 +75,7 @@ DIENST_NAMEN = {"asr": ("Spracherkennung", "Speech recognition"), "asr-engine": 
                 "lokaltest": ("Schnelltest lokaler Änderungen", "Quick test of local changes"),
                 "lokaltest-umgebung": ("Testumgebung lokaler Änderungen", "Test environment of local changes"), "github": ("An GitHub geben", "Hand to GitHub"), "auftrag": ("Code-Auftrag (OpenCode)", "Code order (OpenCode)"), "waerter": ("Wärter", "Wärter"), "panel": ("Panel", "Panel"),
                 "turn": ("Anrufe (TURN)", "Calls (TURN)"), "notasr": ("Notbetrieb-Erkennung", "Emergency recognition"),
-                "gehaeuse": ("Gehäuse", "Case"), "systemupdate": ("System-Updates", "System updates"), "gpu-takt": ("GPU-Taktgrenze", "GPU clock cap"), "schirm": ("Steuerzentrale", "Control centre"),
+                "gehaeuse": ("Gehäuse", "Case"), "systemupdate": ("System-Updates", "System updates"), "gpu-takt": ("GPU-Taktgrenze", "GPU clock cap"), "clients-fw": ("Spark-Clients (Firewall)", "Spark clients (firewall)"), "schirm": ("Steuerzentrale", "Control centre"),
                 "guacd": ("Bildschirm (guacd)", "Screen (guacd)"), "tlstor": ("TLS-Tor", "TLS gate"),
                 "watch": ("API-Wächter", "API watchdog"), "update": ("Update", "Update"), "wechsel": ("Modellwechsel", "Model switch"),
                 "messen-wunsch": ("Modelle messen", "Measuring models"),

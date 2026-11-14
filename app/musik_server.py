@@ -50,7 +50,7 @@ from fastapi import Depends, FastAPI, HTTPException, Request
 
 import musikmodell
 from bedarf import Belegt, OnDemand, idle_loop
-from common import BodyLimit, api_key_dependency, api_key_ok, check_memory, load_config, mem_available_gib, quiet_access_log
+from common import BodyLimit, api_key_dependency, api_key_ok, client_ok, check_memory, load_config, mem_available_gib, quiet_access_log
 
 MAX_BODY = 64 * 1024
 MAX_CAPTION = 600
@@ -92,10 +92,10 @@ MAX_NEGATIVE = 200
 NEGATIVE = re.compile(r"[a-z][a-z ,-]*")   # the panel's own fixed English words only, never a text from elsewhere
 
 app = FastAPI(title="Musik machen (ACE-Step 1.5 via acestep.cpp)")
-app.add_middleware(BodyLimit, default=MAX_BODY, gate=api_key_ok, gated=("/v1/",), limits=[
+app.add_middleware(BodyLimit, default=MAX_BODY, gate=client_ok, gated=("/v1/",), limits=[
     ("/v1/musik/quelle", MAX_UPLOAD + 4096), ("/v1/musik/bearbeiten", EDIT_BODY), ("/v1/musik/ton", EDIT_BODY),
     ("/v1/musik/erkennen", EDIT_BODY)])
-auth = [Depends(api_key_dependency())]
+auth = [Depends(api_key_dependency("musik"))]   # api.key or a Spark-Client with the right "musik" (mandanten.py)
 started = time.time()
 stats = {"songs": 0, "edits": 0, "uploads": 0, "tones": 0, "heard": 0, "failures": 0, "refused_memory": 0, "refused_place": 0, "starts": 0, "last_s": None, "last_lm_s": None,
          "last_synth_s": None, "last_len_s": None, "peak_gib": None}
@@ -756,7 +756,9 @@ async def erkennen(request: Request):
 
 
 @app.post("/v1/musik/stop", dependencies=auth)
-async def stop():
+async def stop(request: Request):
+    if getattr(request.state, "client", None) is not None:   # only the panel stops a run, never a Spark-Client
+        raise HTTPException(403, "recht")
     async with engine.lock:
         engine.stop("auf wunsch")
     return {"ok": True}

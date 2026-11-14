@@ -22,7 +22,8 @@ import os
 import ssl
 import sys
 
-from common import TOR_CERT, TOR_KEY, WAERTER_PORT, load_config
+import mandanten
+from common import TOR_CERT, TOR_KEY, TOR_SOURCE, WAERTER_PORT, load_config
 
 MAX_CONN = 64          # open connections at once; one more is closed at once
 IDLE = 900             # seconds without a byte in either direction before a connection is closed
@@ -45,12 +46,15 @@ def ports(cfg):
 
 
 def allowed(peer, cfg):
-    """True when the address is one of api.tls_from (the panel computer)."""
+    """True when the address is one of api.tls_from (the panel computer), or lies in a network of api.clients_from while
+    the admin switch api.clients is on (Spark-Clients, mandanten.netze; their key and rights are checked behind)."""
     try:
         ip = ipaddress.ip_address(str(peer).split("%")[0])
         if ip.version == 6 and ip.ipv4_mapped:
             ip = ip.ipv4_mapped
-        return any(ip == ipaddress.ip_address(str(a)) for a in (cfg.get("api") or {}).get("tls_from") or [])
+        if any(ip == ipaddress.ip_address(str(a)) for a in (cfg.get("api") or {}).get("tls_from") or []):
+            return True
+        return any(ip.version == n.version and ip in n for n in mandanten.netze(cfg))
     except ValueError:
         return False
 
@@ -126,7 +130,7 @@ async def handle(port, reader, writer, cfg=None):
         print(f"tlstor: zu viele verbindungen port {port} ({MAX_CONN})", flush=True)
         return _shut(writer)
     try:
-        lr, lw = await asyncio.wait_for(asyncio.open_connection("127.0.0.1", port), CONNECT)
+        lr, lw = await asyncio.wait_for(asyncio.open_connection("127.0.0.1", port, local_addr=(TOR_SOURCE, 0)), CONNECT)
     except (OSError, asyncio.TimeoutError):
         print(f"tlstor: dienst nicht erreichbar port {port}", flush=True)
         return _shut(writer)

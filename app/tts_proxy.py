@@ -27,8 +27,9 @@ from fastapi.responses import Response, StreamingResponse
 
 import kurzref
 
+import mandanten
 from common import (dauerlauf, FOLGE_HEADER, BodyLimit, GateFull, KeyedCORS, PrioGate, inside, outside_view, api_key_dependency,
-                    api_key_ok, engine_crash_reason, klon_noetig, load_config, quiet_access_log, SpeechMark, stage_of, STATE)
+                    client_ok, engine_crash_reason, klon_noetig, load_config, quiet_access_log, SpeechMark, stage_of, STATE)
 from textnorm import (MAX_INPUT, apply_pronunciations, clean_text, guess_language, hide_secrets, parse_pronunciations,
                       speak_abbreviations, speak_numbers, speech_markdown)
 
@@ -44,8 +45,8 @@ app = FastAPI(title="Qwen3-TTS via vllm-omni (DGX Spark)")
 app.add_middleware(SpeechMark)
 app.add_middleware(KeyedCORS)
 # bodies are refused before they are read when too large or without the API key
-app.add_middleware(BodyLimit, default=20 * 1024**2, gate=api_key_ok, gated=("/v1/",))
-auth = [Depends(api_key_dependency())]
+app.add_middleware(BodyLimit, default=20 * 1024**2, gate=client_ok, gated=("/v1/",))
+auth = [Depends(api_key_dependency("tts"))]   # api.key or a Spark-Client with the right "tts" (mandanten.py)
 client = httpx.AsyncClient(timeout=httpx.Timeout(600, connect=5))
 started = time.time()
 stats = {"requests": 0, "failures": 0, "streams": 0, "last_error": None, "active": 0}
@@ -418,6 +419,12 @@ async def health(request: Request):
         out["klon"] = dict(zip(("status", "error"), await engine_status("klon")))
     out["queue"] = gate("main").view()
     return out
+
+
+@app.get("/v1/spark/faehigkeiten")
+def spark_faehigkeiten(client=Depends(mandanten.faehigkeiten_dep())):
+    """What this Spark offers and what the key may (mandanten.faehigkeiten, plan spark-entkoppeln E2)."""
+    return mandanten.faehigkeiten(client)
 
 
 @app.get("/v1/models", dependencies=auth)

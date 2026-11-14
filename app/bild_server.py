@@ -29,7 +29,7 @@ from fastapi import Depends, FastAPI, HTTPException, Request
 
 import bildmodell
 from bedarf import Belegt, OnDemand, idle_loop
-from common import BodyLimit, api_key_dependency, api_key_ok, check_memory, load_config, mem_available_gib, quiet_access_log
+from common import BodyLimit, api_key_dependency, api_key_ok, client_ok, check_memory, load_config, mem_available_gib, quiet_access_log
 
 MAX_BODY = 16 * 1024**2
 MAX_PROMPT = 2000
@@ -49,8 +49,8 @@ XMP = ('<x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF xmlns:rdf="http://www.w3.or
        '</rdf:RDF></x:xmpmeta>')
 
 app = FastAPI(title="Bilder malen (FLUX.2 klein via stable-diffusion.cpp)")
-app.add_middleware(BodyLimit, default=MAX_BODY, gate=api_key_ok, gated=("/v1/",))
-auth = [Depends(api_key_dependency())]
+app.add_middleware(BodyLimit, default=MAX_BODY, gate=client_ok, gated=("/v1/",))
+auth = [Depends(api_key_dependency("bild"))]   # api.key or a Spark-Client with the right "bild" (mandanten.py)
 started = time.time()
 stats = {"pictures": 0, "failures": 0, "refused_memory": 0, "refused_place": 0, "starts": 0, "last_s": None, "load_s": None,
          "engine_gib": None, "peak_gib": None}
@@ -290,7 +290,9 @@ async def bild(request: Request):
 
 
 @app.post("/v1/bild/stop", dependencies=auth)
-async def stop():
+async def stop(request: Request):
+    if getattr(request.state, "client", None) is not None:   # only the panel stops a run, never a Spark-Client
+        raise HTTPException(403, "recht")
     async with engine.lock:
         engine.stop("auf wunsch")
     return {"ok": True}

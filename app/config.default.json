@@ -91,7 +91,9 @@
   "api": {
     "key": "",
     "tls_listen": "",
-    "tls_from": []
+    "tls_from": [],
+    "clients": false,
+    "clients_from": []
   },
   "models": {
     "host": "127.0.0.1",
@@ -346,6 +348,7 @@
     "notbetrieb_asr": false,
     "gehaeuse": false,
     "system_updates": false,
+    "spark_clients": false,
     "system_updates_night_panel": false,
     "system_updates_night_models": false,
     "schwachstellen": false,

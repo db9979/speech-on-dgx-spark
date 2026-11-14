@@ -305,6 +305,7 @@
       <div class="setrow" data-show="chat.system_updates" style="margin-left:18px"><div class="lbl"><b>System-Updates nachts auf dem Panel-Rechner</b><span>Nur Betriebssystem-Updates zwischen 03 und 05 Uhr, nie Firmware; neu gestartet wird erst nach deiner Freigabe.</span></div><label class="tgl"><input type="checkbox" id="chat.system_updates_night_panel"><i></i></label></div>
       <div class="setrow" data-show="chat.system_updates" style="margin-left:18px"><div class="lbl"><b>System-Updates nachts auf dem Modell-Rechner</b><span>Bei Spark teilen: nur Betriebssystem-Updates zwischen 03 und 05 Uhr, nie Treiber; neu gestartet wird erst nach deiner Freigabe.</span></div><label class="tgl"><input type="checkbox" id="chat.system_updates_night_models"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Schwachstellen</b><span>Prüft alle 6 Stunden gegen OSV, was der Spark betreibt; nach außen gehen nur Paketnamen und Versionen.</span></div><label class="tgl"><input type="checkbox" id="chat.schwachstellen"><i></i></label></div>
+      <div class="setrow"><div class="lbl"><b>Spark-Clients</b><span>Andere Programme im Heimnetz nutzen die Dienste des Modell-Rechners mit eigenem Schlüssel, Rechten und Grenzen.</span></div><label class="tgl"><input type="checkbox" id="chat.spark_clients"><i></i></label></div>
       <div class="setrow" data-teilen="1"><div class="lbl"><b>Steuerzentrale am Bildschirm</b><span>Alles auf einer Textanzeige am HDMI-Ausgang des Panel-Rechners; startet beim Booten ohne Anmeldung, nur Art, Ort, Zeit und Zahlen.</span></div><label class="tgl"><input type="checkbox" id="chat.schirm"><i></i></label></div>
       <div data-show="chat.schirm" style="margin-left:36px">
         <label for="chat.schirm_an">Anzeige an ab (Uhr)</label><input class="num" id="chat.schirm_an" type="number" min="0" max="23">
@@ -837,6 +838,12 @@
       <div class="setrow"><div class="lbl"><b>GPU-Taktgrenze</b><span>Weniger Strom und Wärme auf dem Modell-Rechner, fast gleich schnell.<button class="mlink" type="button">Mehr</button></span></div><select id="watch.gpu_takt" data-noseg><option value="aus">Aus</option><option value="2400">2400 MHz</option><option value="2200">2200 MHz</option><option value="2000">2000 MHz</option></select></div>
       <div class="fh more" hidden>Eine Obergrenze für den Takt der GPU, wirkt sofort und nach jedem Neustart wieder. Gemessen an einem GB10 mit einem Sprachmodell: 2400 MHz gleich schnell bei etwa 11 W weniger, 2000 MHz etwa 2 % langsamer bei halber Leistung der GPU und etwa 8 °C kühler; Bilder brauchen dann etwa 8 % länger. Aus heißt: der Takt, den NVIDIA vorgibt. Was gerade gilt, steht unter Zustand → Überblick bei der GPU.</div>
       <div id="gputakt" class="full rowtail"></div>
+      <div data-nodirty="1" id="spcsec" hidden>
+      <h3 class="sec">Spark-Clients <span>wirkt sofort, mit Code</span></h3>
+      <div class="setrow"><div class="lbl"><b>Dienste für andere Clients</b><span>Andere Programme im Heimnetz nutzen Sprachmodell, Hören, Sprechen, Bilder oder Musik mit eigenem Schlüssel.<button class="mlink" type="button">Mehr</button></span></div></div>
+      <div class="fh more" hidden>Jeder Client bekommt einen eigenen Schlüssel, nur einmal sichtbar, mit Rechten je Dienst, einer Vorrangklasse und Grenzen. „Sprache“ geht vor wie die Stimme des Assistenten, „Dialog“ normal, „Hintergrund“ immer zuletzt. Erlaubt sind nur Netze im Heimnetz. Der Spark speichert keine Fragen und Antworten, nur Zähler. Der Assistent selbst braucht keinen Client.</div>
+      <div id="spcbox" class="full rowtail"></div>
+      </div>
       <h3 class="sec">Logs</h3>
       <div class="setrow"><div class="lbl"><b>Höchstens so viel Platz</b><span>Ältere Einträge werden automatisch gelöscht.</span></div><div class="ctl"><input class="num" id="logs.max_mb" type="number"><span class="unit">MB</span></div></div>
       <div class="setrow"><div class="lbl"><b>Aufbewahren</b><span>Wirkt nach dem nächsten Update oder sudo ./install.sh.</span></div><div class="ctl"><input class="num" id="logs.keep_days" type="number"><span class="unit">Tage</span></div></div>
@@ -1639,6 +1646,7 @@
 <script src="/static/js/hintergrund.js"></script>
 <script src="/static/js/geraete.js"></script>
 <script src="/static/js/systemupdates.js"></script>
+<script src="/static/js/sparkclients.js"></script>
 <script src="/static/js/schwachstellen.js"></script>
 <script src="/static/js/dienste.js"></script>
 <script src="/static/js/wartung.js"></script>

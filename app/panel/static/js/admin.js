@@ -447,7 +447,8 @@ $('asr.recognizer').addEventListener('change',asrRec);
 // Configuration in sub-tabs; each one saves only its own fields (the server restarts only
 // the services whose settings changed).
 const cfgPane=p=>{document.querySelectorAll('#cfgnav button').forEach(b=>b.classList.toggle('on',b.dataset.p===p));
-  document.querySelectorAll('.pane').forEach(x=>x.classList.toggle('on',x.id==='pane-'+p));try{localStorage.setItem('cfgpane',p)}catch{}};
+  document.querySelectorAll('.pane').forEach(x=>x.classList.toggle('on',x.id==='pane-'+p));try{localStorage.setItem('cfgpane',p)}catch{}
+  if(p==='sysc'&&window.spcLoad)spcLoad()};   // Spark-Clients: admin pages only, also after a jump link
 // phones: the settings open as a list of pages; a tapped page fills the screen with "back" on top
 document.querySelectorAll('#cfgnav button').forEach(b=>b.onclick=()=>{cfgPane(b.dataset.p);if(b.dataset.p==='voices')loadClone();if(b.dataset.p==='upd'||b.dataset.p==='bak')loadSys();if(b.dataset.p==='upd')ghAdmin();if(b.dataset.p==='start'){glance();loadSecGlance(true)}if(b.dataset.p==='sysc'&&window.liveMons)liveMons();if(b.dataset.p==='sysc')gpuTakt();document.querySelector('.cfgwrap').classList.add('sub');window.scrollTo(0,0)});
 $('cfgback').onclick=()=>{document.querySelector('.cfgwrap').classList.remove('sub');window.scrollTo(0,0)};

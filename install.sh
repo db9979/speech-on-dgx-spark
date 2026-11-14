@@ -1028,6 +1028,7 @@ fi
   printf ', /usr/bin/systemctl start --no-block speech-spark-gehaeuse'   # B7: the case, from the panel's checked wish
   printf ', /usr/bin/systemctl start --no-block speech-spark-systemupdate'   # System-Updates: the checked wish (both computers)
   printf ', /usr/bin/systemctl start --no-block speech-spark-gpu-takt'   # GPU-Taktgrenze: root reads the setting itself
+  printf ', /usr/bin/systemctl start --no-block speech-spark-clients-fw'   # Spark-Clients: root builds the firewall from the config
   printf ', /usr/bin/systemctl enable --now speech-spark-schirm, /usr/bin/systemctl disable --now speech-spark-schirm, /usr/bin/systemctl start getty@tty1.service'   # B9
   printf ', /usr/bin/systemctl start --no-block speech-spark-wechsel'   # stage E4: takes the panel's checked wish
   printf ', /usr/bin/systemctl start --no-block speech-spark-werkstatt'   # Funktionen → Werkstatt: takes the checked wish
@@ -1721,10 +1722,22 @@ ExecStart=/usr/sbin/nft -f $(dirname "$ETC")/speech-spark-teilen.nft
 [Install]
 WantedBy=multi-user.target
 EOF
+# Spark-Clients (app/mandanten.py, plan spark-entkoppeln E1): the Wärter or the panel switched api.clients or changed
+# api.clients_from; root builds the door's firewall anew from the config itself (speech-spark teilen firewall), never
+# from a word of theirs. Only once a pairing made the rules file.
+cat >/etc/systemd/system/speech-spark-clients-fw.service <<EOF
+[Unit]
+Description=Speech on DGX Spark: firewall of the door anew (Spark-Clients)
+ConditionPathExists=$(dirname "$ETC")/speech-spark-teilen.nft
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash $PREFIX/app/speech-spark.sh teilen firewall
+EOF
 else
   systemctl disable --now speech-spark-tlstor.service speech-spark-waerter.service speech-spark-teilen-fw.service 2>/dev/null || true
   rm -f /etc/systemd/system/speech-spark-tlstor.service /etc/systemd/system/speech-spark-waerter.service \
-    /etc/systemd/system/speech-spark-teilen-fw.service
+    /etc/systemd/system/speech-spark-teilen-fw.service /etc/systemd/system/speech-spark-clients-fw.service
 fi
 # Notbetrieb mit Parakeet (plan raspberry-split B5c), only on the panel computer: the ASR front end with Parakeet on
 # 127.0.0.1:31009 (common.NOTASR_PORT); it loads the model at the first recording, only while the model computer is

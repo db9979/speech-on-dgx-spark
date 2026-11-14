@@ -309,7 +309,7 @@ SEITEN = {
         "heute": [("guard_ok", ("verbunden", "connected")), ("guard_bad", ("gesperrt", "blocked"))],
     },
     "teilen": {
-        "stand": "757651d33f",
+        "stand": "a3897ad21e",
         "bezug": {
             "teilen.CODE_SECS": ["s2"], "teilen.schluessel": ["s3"], "teilen.regeln": ["s4"], "tlstor.server_context": ["s5"],
             "tlstor.allowed": ["s5"], "steuer.call": ["s6"], "tarswart.check": ["s7"], "tarswart.COMMANDS": ["s7"], "tarswart.systemupdate_tun": ["s7"],
@@ -357,16 +357,23 @@ SEITEN = {
             S("s4", "schritt", ("Zertifikat angeheftet, Firewall zu", "Certificate pinned, firewall shut"),
               ("nur der Panel-Rechner", "only the panel computer"),
               ("Der Panel-Rechner merkt sich genau dieses Zertifikat und bekommt einen eigenen Wärter-Schlüssel. Die "
-               "Firewall des DGX (teilen.regeln) lässt die Ports der Tür nur für ihn zu.",
+               "Firewall des DGX (teilen.regeln) lässt die Ports der Tür nur für ihn zu, und solange Funktionen → "
+               "Spark-Clients offen ist, auch für die eingetragenen Netze im Heimnetz (mandanten.netze).",
                "The panel computer keeps exactly this certificate and gets its own Wärter key. The DGX's firewall "
-               "(teilen.regeln) opens the door's ports for it only.")),
+               "(teilen.regeln) opens the door's ports for it only, and while Features → Spark clients is open, also "
+               "for the networks entered in the home network (mandanten.netze).")),
             S("s5", "frage", ("Verbindung zum TLS-Tor erlaubt?", "Connection to the TLS-Tor allowed?"),
               ("TLS 1.3, nur api.tls_from", "TLS 1.3, only api.tls_from"),
               ("Jede Anfrage an Spracherkennung, Sprachausgabe, Sprachmodell, Bilder und Wärter geht durch das Tor. Es "
-               "spricht nur TLS 1.3 und lässt nur den Panel-Rechner herein; den Inhalt liest es nie.",
+               "spricht nur TLS 1.3 und lässt nur den Panel-Rechner und, bei offenen Spark-Clients, deren Netze herein "
+               "(tlstor.allowed); den Inhalt liest es nie. Zu den Diensten verbindet es sich von {common.TOR_SOURCE}, "
+               "so zählt niemand durch die Tür als dieser Rechner selbst. Schlüssel, Rechte und Grenzen eines Clients "
+               "prüft jeder Dienst (mandanten.finden).",
                "Every request to speech recognition, speech output, the language model, pictures and the Wärter goes "
-               "through the door. It speaks TLS 1.3 only and lets only the panel computer in; it never reads the "
-               "content."),
+               "through the door. It speaks TLS 1.3 only and lets in only the panel computer and, with Spark clients "
+               "open, their networks (tlstor.allowed); it never reads the content. It connects to the services from "
+               "{common.TOR_SOURCE}, so nobody through the door counts as this computer itself. Each service checks a "
+               "client's key, rights and limits (mandanten.finden)."),
               ("stop", "nein", ("Abgewiesen", "Refused"))),
             S("s6", "schritt", ("Befehl an den Wärter", "Command to the Wärter"),
               ("unterschrieben, mit Zeit und Nummer", "signed, with time and number"),
@@ -377,11 +384,15 @@ SEITEN = {
             S("s7", "frage", ("Unterschrift, Zeit, Nummer, Befehl gültig?", "Signature, time, number, command valid?"),
               ("{tarswart.COMMANDS|anzahl} feste Befehle", "{tarswart.COMMANDS|anzahl} fixed commands"),
               ("tarswart.check prüft die Unterschrift, eine Zeit höchstens {tarswart.WINDOW} s daneben, die Nummer nur "
-               "einmal und einen Befehl aus der festen Liste. Keine Shell, keine freien Namen. Nur die Probe einer "
+               "einmal und einen Befehl aus der festen Liste. Keine Shell, keine freien Namen. Spark-Clients verwaltet "
+               "er mit festen Befehlen (clients, client_neu, client_aendern, client_weg, clients_schalten); ein Client "
+               "selbst kommt nie an den Wärter. Nur die Probe einer "
                "gestalteten Stimme (stimme_ablegen) geht über den eigenen Pfad /v1/wart/stimme mit größerem Limit; "
                "stimmablage prüft dort Name, WAV und Anzahl.",
                "tarswart.check checks the signature, a time at most {tarswart.WINDOW} s off, the number only once and a "
-               "command from the fixed list. No shell, no free names. Only the sample of a designed voice "
+               "command from the fixed list. No shell, no free names. Spark clients it manages with fixed commands "
+               "(clients, client_neu, client_aendern, client_weg, clients_schalten); a client itself never reaches the "
+               "Wärter. Only the sample of a designed voice "
                "(stimme_ablegen) goes over its own path /v1/wart/stimme with a bigger limit; stimmablage checks the "
                "name, the WAV and the number there."),
               ("stop", "nein", ("Abgelehnt", "Refused"))),

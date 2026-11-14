@@ -340,6 +340,7 @@ MODULE = {
     "llm_tor": ("sprache", "LLM-Tor: Tür zum eigenen Sprachmodell mit Schlüssel, Feldgrenzen, System One und Lebensprobe"),
     "tlstor": ("teilen", "TLS-Tor: Tür des Modell-Rechners für ein Panel auf einem anderen Rechner (TLS 1.3, nur vom Panel-Rechner)"),
     "tarswart": ("teilen", "Wärter: feste Handgriffe auf dem Modell-Rechner (Zustand, Einheiten starten, GPU) für ein Panel anderswo"),
+    "mandanten": ("betrieb", "Spark-Clients: Schlüssel je Client mit Rechten, Vorrangklasse und Grenzen, nur aus dem Heimnetz; /v1/spark/faehigkeiten"),
     "gputakt": ("betrieb", "GPU-Taktgrenze: feste Werte, startet die root-Einheit nur bei Änderung, Stand für die GPU-Anzeige"),
     "schwachstellen_stand": ("betrieb", "Schwachstellen, das gespeicherte Ergebnis: Zahlen für Live und den Hinweis oben, nie ein Paketname"),
     "installiert": ("betrieb", "Was ein Rechner wirklich installiert hat: Pakete der venvs, Pakete in den Docker-Abbildern"),

@@ -295,6 +295,7 @@ class OwnData(Base):
 # Every features.admin_on call left in the panel (file:function) and why it may stay: it is admin-only, Spark-wide
 # (no profile), a module's own Spark switch next to its per-profile check, or a display flag combined with the block.
 ADMIN_ON_OK = {
+    "sparkclients.py:admin_on": "admin-only and Spark-wide: opens the model computer's services for other programs; no profile acts through it (Funktionen → Spark-Clients, never guests, no tool)",
     "zustellung.py:for_live": "Spark-wide numbers for Zustand → Live; each note asks features.allowed notedevice (zustellung.pick)",
     "listendav.py:for_live": "Zustand → Live: Spark-wide flag beside a number; each profile's lists ask features.allowed listdav",
     "dungeon_buch.py:admin_on": "the hero book's Spark-wide switches („Chronik und Heldenbuch“ and „Aufs reMarkable schicken“) for the night run and the admin's page; a profile asks dungeon_buch.on (dungeon_tiefe.fuer, features.allowed)",

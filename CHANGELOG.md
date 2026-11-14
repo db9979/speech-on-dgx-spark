@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older versions (V01.0.000 to V01.0.999 and the lines before version numbers): [CHANGELOG-V01.0.md](CHANGELOG-V01.0.md).
 
+- **V01.1.437** · 2026-11-14 · Spark-Clients (Spark und Assistent entkoppeln, E1+E2): Funktionen → Spark-Clients öffnet die Dienste des Modell-Rechners für andere Programme im Heimnetz, je Client ein eigener Schlüssel mit Rechten, Vorrangklasse und Grenzen; /v1/spark/faehigkeiten mit Spark-API-Version; das TLS-Tor zählt nicht mehr als „dieser Rechner“ (P884)
 - **V01.1.436** · 2026-11-14 · Fix E-Mail: unter dem Suchfeld lag ein leerer weißer Balken über den Spalten (die Vorschlagsliste blieb trotz „versteckt“ sichtbar); der Seitentest prüft jetzt, dass nichts Verstecktes sichtbar ist (P883)
 - **V01.1.435** · 2026-11-14 · iPhone-App: Lautsprecher nativ unter Einstellungen (Name, Lautstärke, Mikrofon, Updates von selbst, Raum-Modus, Test, Netz prüfen, Jetzt aktualisieren); Einrichten bleibt im Browser (P882)
 - **V01.1.434** · 2026-11-14 · Natürliches Gespräch, Paket A: beim Plaudern im Sprachmodus ein natürlicher Ton ohne „Kann ich sonst noch helfen?“ und ab und zu ein fester Hinweis aus eigenen Daten, der zum Gespräch passt (Termine, Wetter, Pakete, Einkaufsliste); ein „Ja“ sagt mehr (aus, je Profil abschaltbar, P881)

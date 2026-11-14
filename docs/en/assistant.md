@@ -1860,6 +1860,8 @@ Every function of the Spark with its switch, what it builds on, where you set it
 
 - **Vulnerabilities** (Features → Access → "Vulnerabilities"): A card under Status → Summary and the page Status → Vulnerabilities show known holes in everything the Spark runs: the panel's Python packages, the model engines (vLLM, vllm-omni), the models' Docker images and the operating system's sec …
 
+- **Spark clients** (Features → Access → "Spark clients"): Other programs in the home network use the model computer's services with a key of their own: a second assistant, Open WebUI, Home Assistant or own scripts.
+
 - **Control centre on the screen** (Features → Access → "Control centre on the screen"): A screen on the panel computer's HDMI output shows the control centre: state and the day's numbers on top, in the middle which request runs through which stage right now and on which computer (with Spark split tars and the Pi with CPU, G …
 
 - **Switch models** (Features → Access → "Switch models"): Under Status → Models an admin switches the model of a kind: language model, image understanding, speech recognition, speech output or painting pictures.

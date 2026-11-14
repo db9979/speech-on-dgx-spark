@@ -901,6 +901,15 @@ STECKBRIEFE = {
         begleiter="spark", nur_spark=True,
         modul=("systemupdates", "betrieb", "System-Updates: Betriebssystem beider Rechner prüfen und fest "
                                            "einspielen, OpenCode und OSV, Firmware nur zeigen")),
+    # sparkclients.py + ../mandanten.py (plan spark-entkoppeln E1, Dominik 2026-11-14 „2a“): other programs use the
+    # model computer's services with a key of their own (rights, class, limits, home network only); admins only, no tool
+    "sparkclients": Steckbrief(de="Spark-Clients", en="Spark clients", gruppe="sec", schalter=("spark_clients",),
+        anleitung="sparkclients",
+        ohne_werkzeug=("ohne", "sparkclients.py: nur der Admin im Panel, Schlüssel für andere Programme mit festen "
+                               "Rechten und Grenzen; das Modell bekommt kein Werkzeug"),
+        log=("system", "sparkclient"),
+        begleiter="spark", nur_spark=True,
+        modul=("sparkclients", "betrieb", "Spark-Clients im Panel: Schalter, Netze, Clients anlegen, sperren, löschen")),
     # schwachstellen.py + ../osv.py (Dominik 2026-11-13 „1“): known holes in the Spark's packages, engines, Docker images
     # and operating system against OSV, with a fixed action each; only names and versions go out, only ids come back;
     # admins only, no tool for the model

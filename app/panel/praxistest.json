@@ -6045,6 +6045,14 @@
 "text": "Pi updaten. E-Mail öffnen: unter dem Suchfeld liegt kein leerer weißer Balken mehr über Postfächern, Posteingang und Lesebereich. „vor:“ ins Suchfeld tippen: die Vorschläge erscheinen, mit Esc verschwinden sie ganz.",
 "thread": "Mail mit Ideen aus pl_mail verbessern",
 "test": "test_post_seite.Page.test_search_offers_marks_why_and_mailbox_state"
+},
+{
+"id": "P884",
+"v": 1437,
+"titel": "Spark-Clients: fremde Programme an den Spark",
+"text": "Pi und Spark updaten. Funktionen → Spark-Clients einschalten. Einstellungen → Spark → Betrieb → Spark-Clients: „Für Clients geöffnet“ an, Netz 192.168.178.0/24, Übernehmen. Einen Client „Test“ mit Recht Sprachmodell anlegen (Code), den Schlüssel kopieren. Von einem anderen Rechner im LAN: curl -k -H \"Authorization: Bearer <Schlüssel>\" https://192.168.178.171:31006/v1/spark/faehigkeiten zeigt Dienste und Rechte; eine Frage an /v1/chat/completions mit model sprachmodell antwortet. /v1/audio/speech (Port 31002) antwortet 403 „recht“. Sperren: sofort 401. Der Assistent spricht währenddessen normal. Zustand → Live zeigt beim Modell-Rechner „1 Spark-Clients“. Danach Funktionen → Spark-Clients aus: alles geschlossen.",
+"thread": "Spark und Assistent entkoppeln",
+"test": "test_mandanten.Services.test_right_and_limit"
 }
 ]
 }

@@ -2391,7 +2391,9 @@ def snapshot(view="admin", now=None):
         if x["id"] == "modell" and mr.get("on"):   # Modell-Rechner: reachable, units active, version (no address)
             x["sub"] = (("nicht erreichbar" + (" · Notbetrieb" if mr.get("notbetrieb") else "")) if not mr.get("ok") else
                         f"{mr.get('aktiv', 0)} von {mr.get('n', 0)} Diensten aktiv" + (f" · {mr['version']}" if mr.get("version") else "")
-                        + (" · Wartungspause" if mr.get("pause") else ""))
+                        + (" · Wartungspause" if mr.get("pause") else "")
+                        + (f" · {mr['clients']} Spark-Clients" if mr.get("clients") else "")
+                        + (f" · Spark-API {mr['api']}" if mr.get("api") else ""))
             rm = rb.get("modell") or {}   # Rechner: GPU, free memory and CPU of the model computer (numbers only)
             if mr.get("ok") and rm.get("frei") is not None:
                 x["sub"] += f" · GPU {_n(rm.get('gpu'))} % · {_n(rm['frei'], 1)} GiB frei · CPU {_n(rm.get('cpu'))} %"

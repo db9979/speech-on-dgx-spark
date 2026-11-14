@@ -18,7 +18,8 @@ import uvicorn
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse, PlainTextResponse, Response, StreamingResponse
 
-from common import (dauerlauf, ASR_ISO, audio_rate_ok, BodyLimit, GateFull, KeyedCORS, PrioGate, inside, outside_view, api_key_dependency, api_key_ok,
+import mandanten
+from common import (dauerlauf, ASR_ISO, audio_rate_ok, BodyLimit, GateFull, KeyedCORS, PrioGate, inside, outside_view, api_key_dependency, client_ok,
                     engine_crash_reason, load_config, NOTASR_IDLE, NOTASR_PORT, quiet_access_log, SpeechMark, stage_of, STATE)
 import smartturn
 
@@ -36,8 +37,8 @@ app = FastAPI(title="Qwen3-ASR via vLLM (DGX Spark)")
 app.add_middleware(SpeechMark)
 app.add_middleware(KeyedCORS)
 # bodies are refused before they are read when too large or without the API key
-app.add_middleware(BodyLimit, limits=[("/v1/turn", smartturn.MAX_BYTES)], default=201 * 1024**2, gate=api_key_ok, gated=("/v1/",))
-auth = [Depends(api_key_dependency())]
+app.add_middleware(BodyLimit, limits=[("/v1/turn", smartturn.MAX_BYTES)], default=201 * 1024**2, gate=client_ok, gated=("/v1/",))
+auth = [Depends(api_key_dependency("asr"))]   # api.key or a Spark-Client with the right "asr" (mandanten.py)
 client = httpx.AsyncClient(timeout=httpx.Timeout(900, connect=5))
 started = time.time()
 stats = {"requests": 0, "failures": 0, "streams": 0, "last_error": None, "active": 0}
@@ -196,6 +197,12 @@ async def health(request: Request):
         "avg_ttft_s": round(sum(ttft) / len(ttft), 3) if ttft else None,
         "timestamps": False, "queue": gate.view(),
     }
+
+
+@app.get("/v1/spark/faehigkeiten")
+def spark_faehigkeiten(client=Depends(mandanten.faehigkeiten_dep())):
+    """What this Spark offers and what the key may (mandanten.faehigkeiten, plan spark-entkoppeln E2)."""
+    return mandanten.faehigkeiten(client)
 
 
 @app.get("/v1/models", dependencies=auth)
