@@ -5950,6 +5950,14 @@
 "text": "Zustand → Schwachstellen öffnen, einen Fund mit Kennung antippen. Unter den Angaben steht „Erreichbar“ mit einem Satz. „Als Issue melden“ tippen: in spark-meldungen erscheint ein Issue mit Label schwachstelle, der Fund zeigt danach „Issue #N“, ein zweites Tippen geht nicht. Dann „Bewusst hinnehmen“, einen kurzen Grund eingeben, „Hinnehmen“: der Fund steht unten unter „Bewusst hingenommen“ und zählt oben nicht mehr mit; „Nicht mehr hinnehmen“ holt ihn zurück. Unter Zustand → System-Updates hat eine offene Prüfbitte jetzt neben „Kopieren“ den Knopf „Als Issue melden“.",
 "thread": "Schwachstellen gegen OSV prüfen",
 "test": "test_schwachstellen.Paket4.test_report_once_with_fixed_words"
+},
+{
+"id": "P872",
+"v": 1428,
+"titel": "Alle Seiten am Handy im Hochformat",
+"text": "Pi updaten. Am Handy im Browser (Hochformat) unten „Heute“ antippen. Unter den Karten steht „Meine Seiten“ mit Kalender, E-Mail, Listen, Offen, Kontakte, Wissensbuch, Finden, Mappen und Dungeon-Master (soweit freigegeben). Jede Zeile öffnet ihre Seite, „‹ Heute“ oben führt zurück. Dann Verwalten → Darstellung → „Am Rechner-Layout zeigen“: das Menü (unten „Verwalten“) listet dieselben Seiten; mit einem Profil ohne Admin ebenso.",
+"thread": "Alle Funktionen im Hochformat zeigen",
+"test": "test_hochformat.Browser.test_every_page_of_the_menu_is_reachable_in_portrait"
 }
 ]
 }

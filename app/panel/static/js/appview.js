@@ -252,12 +252,21 @@ async function renderToday(){const loc=L==='en'?'en-GB':'de-DE',now=new Date();
   await _meToday();                                       // builds #metoday (in the Ich window), then it moves here
   if(!today.classList.contains('on'))return;
   const box=$('metoday');today.innerHTML=head;if(box)today.appendChild(box);
+  // Meine Seiten (Dominik 2026-11-14: „nicht alle Funktionen im Hochformat“): every own page the menu on a computer
+  // shows (nav, one source: what the server let through), here as a list, so nothing is reachable only in landscape
+  const pg=document.createElement('div');pg.innerHTML=grp(t('Meine Seiten','My pages'),ownRows());
+  if(pg.firstChild){const at=box&&box.querySelector('.ttry');if(at)at.before(pg.firstChild);else today.appendChild(pg.firstChild)}
   today.querySelectorAll('.aprog>i[data-w]').forEach(i=>i.style.width=i.dataset.w+'%')}   // no style attribute (strict CSP)
+// the own pages of the menu (nav buttons in OWN, and Open WebUI) that are shown right now, in the menu's order
+function ownBtns(){return [...document.querySelectorAll('nav button[data-s],#navowui')].filter(b=>(OWN.has(b.dataset.s)||b.id==='navowui')&&!b.hidden&&b.style.display!=='none')}
+function ownRows(){return ownBtns().map(b=>row(b.dataset.s?`data-own="${b.dataset.s}"`:'data-owui="1"',esc(label(b)))).join('')}
 // a card of today.js names its Ich page in meLast (and calls ptab); the Ich window is closed here, so open it
 let tdPrev='';
 today.addEventListener('click',e=>{if(e.target.closest('.tcard')){tdPrev=meLast;meLast=''}},true);
 today.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
   if(b.dataset.me){TAB='me';openMe(b.dataset.me);return}
+  if(b.dataset.own){navBtn(b.dataset.own).click();window.scrollTo(0,0);return}
+  if(b.dataset.owui){$('navowui').click();return}
   if(b.classList.contains('tcard')){if(meLast){TAB='me';openMe(meLast)}else meLast=tdPrev}});
 apply();
-return {apply,tab,back,depth,on:()=>ON,current:()=>TAB}})();
+return {apply,tab,back,depth,ownBtns,on:()=>ON,current:()=>TAB}})();

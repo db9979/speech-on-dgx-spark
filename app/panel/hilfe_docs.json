@@ -4621,7 +4621,15 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Wie die App",
-"text": "Wie die App: Am Handy (unter 760 Pixel) sieht die Seite aus wie die iPhone-App, auf iPhone und Android gleich. Unten die Tabs *Spark* (Gespräch), *Heute* (Einrichten, Karten und Sätze wie Ich → Überblick), *Dokumente*, *Ich* und *Verwalten*, je nach Rolle (Gäste nur Spark, Verwalten nur Admin, Dokumente nur wenn erlaubt). Spark zeigt Gesicht (kleiner, sobald Blasen da sind), Verlauf, Mikrofonknopf und Tippfeld; oben links „Verlauf“ (Blatt von unten, nach unten wischen schließt) und „Neu“. Ich und Verwalten sind Listen wie die iOS-Einstellungen; Unterseiten kommen von rechts, „‹ Zurück“ oder die Zurück-Geste geht eine Ebene zurück. Verwalten: Zustand, Funktionen, Personen und Geräte, Einstellungen, Logs, Update, Sicherungen, Darstellung. Unter Darstellung schaltet „Am Rechner-Layout zeigen“ die andere Handy-Ansicht ein (nur dieser Browser), zurück über „Wie die App anzeigen“ im Menü. Nur Darstellung: keine eigenen Endpunkte, der Server prüft die Rechte. Blasen beginnen gut 16 Pixel vom Rand und laufen bis 40 Pixel vor den anderen Rand; „Nochmal vorlesen“ und „Löschen“ erscheinen erst nach Tipp auf die Nachricht unter der Blase."
+"text": "Wie die App: Am Handy (unter 760 Pixel) sieht die Seite aus wie die iPhone-App, auf iPhone und Android gleich. Unten die Tabs *Spark* (Gespräch), *Heute* (Einrichten, Karten und Sätze wie Ich → Überblick, darunter „Meine Seiten“: Kalender, E-Mail, Listen, Offen, Kontakte, Wissensbuch, Finden, Mappen, Dungeon-Master und Open WebUI, soweit freigegeben, in der Reihenfolge des Menüs), *Dokumente*, *Ich* und *Verwalten*, je nach Rolle (Gäste nur Spark, Verwalten nur Admin, Dokumente nur wenn erlaubt). Spark zeigt Gesicht (kleiner, sobald Blasen da sind), Verlauf, Mikrofonknopf und Tippfeld; oben links „Verlauf“ (Blatt von unten, nach unten wischen schließt) und „Neu“. Ich und Verwalten sind Listen wie die iOS-Einstellungen; Unterseiten kommen von rechts, „‹ Zurück“ oder die Zurück-Geste geht eine Ebene zurück. Verwalten: Zustand, Funktionen, Personen und Geräte, Einstellungen, Logs, Update, Sicherungen, Darstellung. Unter Darstellung schaltet „Am Rechner-Layout zeigen“ die andere Handy-Ansicht ein (nur dieser Browser), zurück über „Wie die App anzeigen“ im Menü. Jede Seite des Menüs ist so auch im Hochformat erreichbar, nicht nur in der Seitenleiste im Querformat; in der anderen Handy-A"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Wie die App",
+"text": "nsicht listet das Menü einem Profil seine eigenen Seiten, einem Admin alle. Nur Darstellung: keine eigenen Endpunkte, der Server prüft die Rechte. Blasen beginnen gut 16 Pixel vom Rand und laufen bis 40 Pixel vor den anderen Rand; „Nochmal vorlesen“ und „Löschen“ erscheinen erst nach Tipp auf die Nachricht unter der Blase."
 },
 {
 "lang": "de",
@@ -22141,7 +22149,15 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Like the app",
-"text": "Like the app: on a phone (below 760 px) the page looks like the iPhone app, the same on iPhone and Android. At the bottom the tabs *Spark* (conversation), *Today* (setup, cards and sentences as Me → Overview), *Documents*, *Me* and *Manage*, by role (guests only Spark, Manage only admin, Documents only when allowed). Spark shows the face (smaller once there are bubbles), history, mic button and text field; top left \"History\" (sheet from below, swipe down closes) and \"New\". Me and Manage are lists like the iOS settings; sub-pages slide in from the right, \"‹ Back\" or the back gesture goes one level back. Manage: status, Features, People and devices, Settings, Logs, Update, Backups, Appearance. Under Appearance \"Show the computer layout\" switches to the other phone view (this browser only), the menu's \"Show like the app\" returns. Presentation only: no own endpoints, the server checks rights. Bubbles start about 16 px from the edge and run up to 40 px before the other edge; \"Read again\" and \"Delete\" show only after a tap on the message, below the bubble."
+"text": "Like the app: on a phone (below 760 px) the page looks like the iPhone app, the same on iPhone and Android. At the bottom the tabs *Spark* (conversation), *Today* (setup, cards and sentences as Me → Overview, below them \"My pages\": Calendar, E-mail, Lists, Open, Contacts, Knowledge book, Find, Collections, Dungeon Master and Open WebUI, as far as released, in the menu's order), *Documents*, *Me* and *Manage*, by role (guests only Spark, Manage only admin, Documents only when allowed). Spark shows the face (smaller once there are bubbles), history, mic button and text field; top left \"History\" (sheet from below, swipe down closes) and \"New\". Me and Manage are lists like the iOS settings; sub-pages slide in from the right, \"‹ Back\" or the back gesture goes one level back. Manage: status, Features, People and devices, Settings, Logs, Update, Backups, Appearance. Under Appearance \"Show the computer layout\" switches to the other phone view (this browser only), the menu's \"Show like the app\" returns. So every page of the menu is reachable in portrait too, not only in the sidebar in landscape; in the other phone view the menu lists a profile's own pages, an admin all of them. Presentation"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Like the app",
+"text": " only: no own endpoints, the server checks rights. Bubbles start about 16 px from the edge and run up to 40 px before the other edge; \"Read again\" and \"Delete\" show only after a tap on the message, below the bubble."
 },
 {
 "lang": "en",

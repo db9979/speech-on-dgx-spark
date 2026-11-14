@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.428** Alles auch im Hochformat: am Handy unter Heute → Meine Seiten stehen Kalender, E-Mail, Listen, Offen, Kontakte, Wissensbuch, Finden, Mappen, Dungeon-Master und Open WebUI (vorher nur im Querformat erreichbar); das Menü der Rechner-Ansicht am Handy zeigt auch Profilen ihre Seiten
 - **V01.1.427** Schwachstellen, Paket 4: „Als Issue melden“ je Fund und auf der Prüfbitte-Karte (spark-meldungen, Label schwachstelle, je Kennung nur ein offenes Issue), „Erreichbar“ als fester Satz und „Bewusst hinnehmen“ für 30 Tage mit Grund
 - **V01.1.426** E-Mail: bis zu 3 Sendungen über dem Posteingang mit Verfolgen-Link, ein Bestätigungscode verschwindet, wenn er laut Mail abläuft
 - **V01.1.425** E-Mail: Suche mit an:, vor:, nach: und Vorschlägen, „Warum liegt die Mail hier?“, Absender bestätigt, Postfach-Zustand
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.421** Fix: „Was war meine letzte Bestellung?“ sucht in den Mails, statt eine Antwort zu erfinden
 - **V01.1.420** Schwachstellen, was wirklich läuft: tars meldet die Pakete aller venvs über den Wärter, die Docker-Abbilder werden je Digest gelesen, dazu was iPhone-App, Android-App, Begleiter, Pebble und das Panel-JavaScript mitbringen (auch im Nachtlauf auf GitHub)
 - **V01.1.419** Ruhige E-Mail-Seite: Liste und offene Mail zeichnen nur, was sich ändert, eine Mail lädt einmal, beim Zurückkommen steht die Liste sofort da
-- **V01.1.418** Schwachstellen-Seite: Zustand → Schwachstellen zeigt bekannte Lücken in Panel-Paketen, Engines auf tars, alten Docker-Abbildern und Betriebssystem, geprüft gegen OSV alle 6 Stunden, je Fund Schweregrad, Version mit Fix und ein fester Satz, was zu tun ist (aus, nur Admins)
 
 
 

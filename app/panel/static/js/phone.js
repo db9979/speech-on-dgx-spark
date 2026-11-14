@@ -39,7 +39,10 @@ MOBILE.addEventListener('change',layout);
 const closeSheet=()=>{$('msheet').style.display='none'};
 $('msheet').onclick=e=>{if(e.target===$('msheet'))closeSheet()};
 $('mmenu').onclick=()=>{const inchat=document.body.classList.contains('inchat');$('mchatitems').style.display=inchat?'':'none';
-  $('madmin').innerHTML=ADMIN?[...document.querySelectorAll('nav button[data-s]:not([hidden])')].map(b=>`<button class="mi${b.classList.contains('on')?' on':''}" data-s="${b.dataset.s}">${esc([...b.childNodes].filter(n=>n.nodeType===3).map(n=>n.textContent).join('').trim())}</button>`).join(''):'';
+  // the pages of the menu: an admin all of them, a profile its own pages above „Ich“ (Kalender, E-Mail …), so a phone in
+  // the computer layout reaches every page in portrait too (Dominik 2026-11-14)
+  const me=$('navme'),mine=b=>!!(me&&b.compareDocumentPosition(me)&Node.DOCUMENT_POSITION_FOLLOWING);
+  $('madmin').innerHTML=ADMIN||PROFILE?[...document.querySelectorAll('nav button[data-s]:not([hidden])')].filter(b=>ADMIN||mine(b)).map(b=>`<button class="mi${b.classList.contains('on')?' on':''}" data-s="${b.dataset.s}">${esc([...b.childNodes].filter(n=>n.nodeType===3).map(n=>n.textContent).join('').trim())}</button>`).join(''):'';
   $('madmin').querySelectorAll('button').forEach(x=>x.onclick=()=>{closeSheet();document.querySelector(`nav button[data-s=${x.dataset.s}]`).click();window.scrollTo(0,0)});
   $('mifind').style.display=ADMIN||PROFILE?'':'none';$('milang').textContent=$('langbtn').textContent;$('milogout').style.display=ADMIN&&$('logoutbtn').style.display!=='none'?'':'none';
   $('msheet').style.display='grid'};
