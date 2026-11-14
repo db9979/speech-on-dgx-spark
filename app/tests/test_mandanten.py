@@ -238,6 +238,50 @@ class Services(Base):
             self.assertIn("api_key_dependency())", open(os.path.join(APP, f)).read(), f)
 
 
+class Vorrang(Base):
+    """E3: speech first on the Spark for every client. "Hintergrund" never moves up at a gate and waits while somebody
+    speaks here, at most HALTEN_MAX; every other class goes on at once."""
+    def test_background_waits_for_silence_and_never_moves_up(self):
+        import asyncio
+        hinten, _ = self.neu(klasse="hintergrund")
+        dialog, _ = self.neu(klasse="dialog")
+        self.assertTrue(mandanten.fest(hinten))
+        self.assertFalse(mandanten.fest(dialog))
+        self.assertFalse(mandanten.fest(None))
+        slept = []
+
+        async def schlafen(s):
+            slept.append(s)
+        spricht = iter([True, True, True, False])
+        with redirect_stdout(io.StringIO()) as out:
+            t = asyncio.run(mandanten.halten(hinten, "llm", schlafen, lambda: next(spricht)))
+        self.assertEqual(t, 3 * mandanten.HALTEN_SCHRITT)
+        self.assertIn(f"sparkclient: gehalten sprache {hinten['id']} llm", out.getvalue())
+        self.assertEqual(asyncio.run(mandanten.halten(dialog, "llm", schlafen, lambda: True)), 0.0)
+        self.assertEqual(asyncio.run(mandanten.halten(None, "llm", schlafen, lambda: True)), 0.0)
+        slept.clear()
+        with redirect_stdout(io.StringIO()):
+            t = asyncio.run(mandanten.halten(hinten, "asr", schlafen, lambda: True))
+        self.assertEqual(t, mandanten.HALTEN_MAX)   # never forever: then last in line
+
+    def test_speech_mark_counts_a_few_seconds(self):
+        path = os.path.join(common.STATE, "speech-active-test")
+        with open(path, "w"):
+            pass
+        os.utime(path, (T0, T0))
+        self.addCleanup(os.remove, path)
+        self.assertTrue(mandanten.sprache_laeuft(T0 + 1, path))
+        self.assertFalse(mandanten.sprache_laeuft(T0 + mandanten.RUHE + 1, path))
+        self.assertFalse(mandanten.sprache_laeuft(T0, path + "-weg"))
+
+    def test_every_gate_asks_the_class(self):
+        for name in ("llm_tor.py", "asr_proxy.py", "tts_proxy.py"):
+            with open(os.path.join(APP, name), encoding="utf-8") as f:
+                src = f.read()
+            self.assertIn("mandanten.halten(", src, name)
+            self.assertIn("fest=mandanten.fest(kunde)", src, name)
+
+
 class Door(Base):
     def test_door_and_firewall_only_while_open(self):
         import teilen

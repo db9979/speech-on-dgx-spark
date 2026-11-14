@@ -588,7 +588,9 @@ async def speech(request: Request):
     g = gate(role)
     try:
         # a follow-up sentence of an answer that still plays waits behind first sentences (common.FOLGE_HEADER)
-        ticket = await g.enter(stage_of(request), folge=request.headers.get(FOLGE_HEADER) == "1")
+        kunde = getattr(request.state, "client", None)
+        await mandanten.halten(kunde, "tts")   # E3: a background client waits while somebody speaks
+        ticket = await g.enter(stage_of(request), folge=request.headers.get(FOLGE_HEADER) == "1", fest=mandanten.fest(kunde))
     except GateFull:
         raise HTTPException(503, "TTS busy: too many requests waiting")
     stats["requests"] += 1

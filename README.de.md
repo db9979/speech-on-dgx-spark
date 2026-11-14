@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.441** Spark-Clients, Vorrang auf dem Spark (E3): ein Client der Klasse „Hintergrund“ rückt an den Toren nie auf und wartet, solange auf dem Spark jemand spricht, höchstens 60 Sekunden
 - **V01.1.440** ROT-FIX: ein Browser-Test schaltet Telegram vor der Prüfung selbst aus
 - **V01.1.439** Ausgedünnt: ein Schalter Pebble-Uhr für alles auf der Uhr (Schritte, Puls und Schlaf behalten ihren); Bus und Bahn, Reddit und Feeds, das Spark-Zifferblatt und der Hinweis auf neue XiaoZhi-Versionen sind weg
 - **V01.1.438** Natürliches Gespräch, Paket B: nach einer gesprochenen Antwort zum Wetter bietet der Assistent die Termine an und umgekehrt; „Was gibt’s Neues?“ bekommt einen festen kurzen Überblick ohne Modell und „Worüber soll ich mehr erzählen?“
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.434** Natürliches Gespräch, Paket A: beim Plaudern im Sprachmodus ein natürlicher Ton und ab und zu ein fester Hinweis aus eigenen Daten, der zum Gespräch passt (Termine, Wetter, Pakete, Einkaufsliste); ein „Ja“ sagt mehr (aus, je Profil abschaltbar)
 - **V01.1.433** Zurückstellen: eine Mail bis heute Abend, morgen, Wochenende oder nächste Woche weglegen, sie kommt ungelesen oben zurück
 - **V01.1.432** Nicht belegte Antworten markieren und Erfundenes automatisch melden; der Nachtlauf darf nur Fehler beheben
-- **V01.1.431** iPhone-App: „Im Panel öffnen“ führt bei Seiten, die die App selbst kann (Kalender, E-Mail, Listen, Gedächtnis, Sicherheit und mehr), direkt zur App-Ansicht; dazu Schwachstellen unter Spark verwalten
 
 
 

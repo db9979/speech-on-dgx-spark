@@ -280,7 +280,9 @@ async def transcriptions(request: Request):
     # the gate first: a waiting upload stays in the spooled form file, only the few that run are read into
     # memory (up to 200 MB each)
     try:
-        ticket = await gate.enter(stage_of(request))
+        kunde = getattr(request.state, "client", None)
+        await mandanten.halten(kunde, "asr")   # E3: a background client waits while somebody speaks
+        ticket = await gate.enter(stage_of(request), fest=mandanten.fest(kunde))
     except GateFull:
         raise HTTPException(503, "ASR busy: too many recordings waiting")
     try:

@@ -43,7 +43,7 @@ import secrets
 import threading
 import time
 
-from common import CONFIG_PATH, LLM_ALIAS as LLM_NAME, MODEL_ARTS, SPARK_API, STATE, STAGE_HIGH, STAGE_LOW, STAGE_NORMAL, load_config, model_side, read_json, run, write_json
+from common import CONFIG_PATH, LLM_ALIAS as LLM_NAME, MODEL_ARTS, SPARK_API, SPEECH_MARK, STATE, STAGE_HIGH, STAGE_LOW, STAGE_NORMAL, load_config, model_side, read_json, run, write_json
 
 PATH = os.path.join(STATE, "spark-clients.json")
 KEY_PREFIX = "sk-spark-"
@@ -285,13 +285,48 @@ def stufe(client):
     return KLASSEN.get(str(client.get("klasse")), STAGE_NORMAL)
 
 
-def melden(client, warum, dienst, now=None):
-    """One journal line per refusal kind and client every LOG_GAP seconds."""
+def melden(client, warum, dienst, now=None, art="abgelehnt"):
+    """One journal line per kind and client every LOG_GAP seconds (a refusal, or "gehalten" while somebody speaks)."""
     now = time.monotonic() if now is None else now
     k = (str(client.get("id")), warum)
     if now - _gemeldet.get(k, -LOG_GAP) >= LOG_GAP:
         _gemeldet[k] = now
-        print(f"sparkclient: abgelehnt {warum} {k[0]} {dienst}", flush=True)
+        print(f"sparkclient: {art} {warum} {k[0]} {dienst}", flush=True)
+
+
+# E3, speech first on the Spark for every client: "Hintergrund" never moves up while it waits at a gate (PrioGate fest)
+# and, before it even queues, waits while somebody speaks here (the speech mark of ASR and TTS, any client or the
+# assistant), at most HALTEN_MAX seconds, then it goes on last in line.
+RUHE = 3.0         # seconds after the last speech piece that still count as speaking (like the panel's vorrang.GRACE)
+HALTEN_MAX = 60.0
+HALTEN_SCHRITT = 0.5
+
+
+def fest(client):
+    return isinstance(client, dict) and client.get("klasse") == "hintergrund"
+
+
+def sprache_laeuft(now=None, path=None):
+    try:
+        m = os.stat(path or SPEECH_MARK).st_mtime
+    except OSError:
+        return False
+    return 0 <= (time.time() if now is None else now) - m < RUHE
+
+
+async def halten(client, dienst, schlafen=None, laeuft=None):
+    """Seconds a background client waited for silence (0 for every other caller)."""
+    if not fest(client):
+        return 0.0
+    import asyncio
+    schlafen, laeuft = schlafen or asyncio.sleep, laeuft or sprache_laeuft
+    t = 0.0
+    while t < HALTEN_MAX and laeuft():
+        if t == 0:
+            melden(client, "sprache", dienst, art="gehalten")
+        await schlafen(HALTEN_SCHRITT)
+        t += HALTEN_SCHRITT
+    return t
 
 
 def minute_ok(client, dienst, now=None):

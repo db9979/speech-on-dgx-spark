@@ -327,6 +327,7 @@ async def _forward(port, body, request):
     dgate, dticket = (_entwickler_gate(), None) if dev else (None, None)
     if kunde is not None and body.get("stream"):   # a client's tokens per day count from the usage piece
         body = {**body, "stream_options": {"include_usage": True}}
+    await mandanten.halten(kunde, "llm")   # E3: "Hintergrund" waits while somebody speaks on the Spark (before its slot)
     if kunde is not None and not mandanten.herein(kunde):
         mandanten.melden(kunde, "parallel", "llm")
         raise HTTPException(429, "parallel")
@@ -334,7 +335,7 @@ async def _forward(port, body, request):
         if dev:
             dticket = await dgate.enter(STAGE_LOW, fest=True)
             stats["entwickler"] += 1
-        ticket = await gate.enter(STAGE_LOW, fest=True) if dev else await gate.enter(stage_of(request))
+        ticket = await gate.enter(STAGE_LOW, fest=True) if dev else await gate.enter(stage_of(request), fest=mandanten.fest(kunde))
     except GateFull:
         if dticket:
             dgate.leave(dticket)
