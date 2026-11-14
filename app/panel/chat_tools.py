@@ -572,16 +572,15 @@ async def briefing_text(t, st):
     now = datetime.datetime.now(zone)
     today = now.replace(hour=0, minute=0, second=0, microsecond=0)
     await t.out.put({"type": "briefing"})
-    topics = t.cal["topics"] if t.search else []
+    topics = chat.brief_topics(t.who["id"] if t.who and t.private_ok else "", t.cal["topics"], t.ccfg) if t.search else []
     jobs = [calendars.events(t.who["id"], today, today + datetime.timedelta(days=2), zone)
             if t.cal["calendars"] else asyncio.sleep(0)]
-    quick = dict(t.ccfg, search_pages=0, search_results=3)
-    jobs += [chat.web_search(t.c, quick, q, "day", True, True) for q in topics]   # the day's news on each topic (frisch.py)
+    jobs += [chat.brief_topic(t.c, t.ccfg, q) for _, q in topics]   # each topic's news of the day, else of the last days
     if t.mailbox:   # last, so the topics above are searched before any mail is read
         st["mail"] = True
         jobs.append(asyncio.to_thread(mail.briefing, t.who["id"]))
     if topics:
-        await t.out.put({"type": "search", "query": " · ".join(topics)})
+        await t.out.put({"type": "search", "query": " · ".join(q for _, q in topics if q)})
         if st["first"]:  # something to hear while the searches run
             st["first"] = False
             await t.sentences.put("Einen Moment, ich stelle alles zusammen.")
@@ -616,7 +615,7 @@ async def briefing_text(t, st):
         if t.tidy_on:
             parts.append(tidy.briefing_line(t.who["id"]))
     srcs = []
-    for q, r in zip(topics, res[1:]):
+    for (q, _), r in zip(topics, res[1:]):
         if isinstance(r, Exception):
             parts.append(f"Topic '{q}': search failed")
         else:

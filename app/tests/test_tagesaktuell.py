@@ -147,6 +147,60 @@ class Search(unittest.TestCase):
         self.assertIn("Kein Treffer", text)
         self.assertNotIn("frisch", self.st)
 
+    def test_briefing_topic_widens_to_the_last_days(self):
+        # Dominik 2026-11-14: a topic without news of the day got „nichts gefunden“; now its hits of the last days
+        days3 = time.time() - 3 * 86400
+        c = _Client([{"title": "Drei Tage", "url": "https://a.example/3", "content": "x", "publishedDate": iso(days3)}],
+                    empty_with_period=True)
+        text, sources = self.search(c, "Formel 1", "day", True, topic=True)
+        self.assertEqual(len(c.params), 2)                    # never a third search
+        self.assertIn(frisch.TOPIC_RECENT, text)
+        self.assertIn("Datum: " + frisch.stand(days3), text)
+        self.assertNotIn("Kein Treffer", text)
+        self.assertEqual([s["title"] for s in sources], ["Drei Tage"])
+        self.assertNotIn("frisch", self.st)
+
+    def test_briefing_topic_undated_hits_are_no_nothing(self):
+        c = _Client([{"title": "Wetter Karlsbad", "url": "https://a.example/w", "content": "Sturmwarnung"}])
+        text, sources = self.search(c, "Wetterwarnungen Wetter 76307 Karlsbad", "day", True, topic=True)
+        self.assertIn(frisch.TOPIC_UNDATED, text)
+        self.assertNotIn("Kein Treffer", text)
+        self.assertIn("Sturmwarnung", text)
+        # a question of a person keeps its clear sentence
+        chat._search_cache.clear()
+        text, _ = self.search(_Client([{"title": "W", "url": "https://a.example/w", "content": "z"}]), "Wetter", "day")
+        self.assertIn("Kein Treffer von heute", text)
+
+    def test_briefing_query_from_a_sentence(self):
+        self.assertEqual(chat.brief_query("Wetterwarnungen und Wetter in 76307 Karlsbad."),
+                         "Wetterwarnungen Wetter 76307 Karlsbad")
+        self.assertEqual(chat.brief_query("Wichtigste Neuigkeiten für Deutschland und der Welt."),
+                         "Neuigkeiten Deutschland Welt")
+        self.assertEqual(chat.brief_query("Gibt es wichtige Informationen zu Formel 1?"), "Formel 1")
+        self.assertEqual(chat.brief_query("Was gibt es?"), "Was gibt es")
+
+    def test_briefing_my_interests_become_searches(self):
+        import features
+        import ichweiss
+        real = ichweiss.confirmed, features.allowed
+        mine = [{"name": "Modellbahn", "web": False}, {"name": "Formel 1", "web": True},
+                {"name": "Wandern", "web": True}, {"name": "Kochen", "web": False}]
+        try:
+            ichweiss.confirmed = lambda uid: [dict(x) for x in mine]
+            features.allowed = lambda key, uid, c=None: True
+            topic = "Gibt es Wichtige Informationen zu meinen Interessen."
+            got = chat.brief_topics("u1", [topic, "Neuigkeiten aus Karlsbad"])
+            self.assertEqual([q for _, q in got], ["Formel 1", "Wandern", "Modellbahn", "Neuigkeiten Karlsbad"])
+            self.assertTrue(got[0][0].startswith(topic))
+            self.assertEqual(chat.brief_topics("", [topic]), [])          # personal: never for an unknown voice
+            ichweiss.confirmed = lambda uid: []
+            self.assertEqual(chat.brief_topics("u1", [topic]), [(topic, None)])
+            text, sources = asyncio.run(chat.brief_topic(None, {}, None))
+            self.assertIn("Ich → Was ich über dich weiß", text)
+            self.assertEqual(sources, [])
+        finally:
+            ichweiss.confirmed, features.allowed = real
+
     def test_without_period_as_before(self):
         c = _Client([{"title": "Turm", "url": "https://a.example/t", "content": "330 m"}])
         text, _ = self.search(c, "Eiffelturm Höhe")

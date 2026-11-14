@@ -139,6 +139,13 @@ def nothing_current(period, newest, now=None, zone=None):
             "you report; never present an older hit as today's news.")
 
 
+# a briefing topic (chat.web_search topic=True) without a hit of the day: its hits of the last days, or hits without a date
+TOPIC_RECENT = ("Nothing of today; these hits are from the last days: report the most important with their day, never "
+                "as today's news.")
+TOPIC_UNDATED = ("These hits carry no date: report what they say, but never as today's news; say nothing of a date "
+                 "you do not see.")
+
+
 # ---------------------------------------------------------------- the answer's notes (vorrat's turn state)
 def note_search(newest):
     """A search of this answer had no hit of its period (newest: its newest dated hit or 0)."""

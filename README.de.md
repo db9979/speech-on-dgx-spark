@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.430** Morgenrunde: Themen werden wirklich recherchiert, „meine Interessen“ je Interesse, ohne Treffer von heute die der letzten Tage statt „nichts gefunden“
 - **V01.1.429** Webseiten und HTML-Dateien als Markdown lesen: nur der Hauptteil ohne Menüs und Cookie-Hinweise, Überschriften, Listen und Tabellen bleiben (Idee aus get-md, Nano Collective)
 - **V01.1.428** Alles auch im Hochformat: am Handy unter Heute → Meine Seiten stehen Kalender, E-Mail, Listen, Offen, Kontakte, Wissensbuch, Finden, Mappen, Dungeon-Master und Open WebUI (vorher nur im Querformat erreichbar); das Menü der Rechner-Ansicht am Handy zeigt auch Profilen ihre Seiten
 - **V01.1.427** Schwachstellen, Paket 4: „Als Issue melden“ je Fund und auf der Prüfbitte-Karte (spark-meldungen, Label schwachstelle, je Kennung nur ein offenes Issue), „Erreichbar“ als fester Satz und „Bewusst hinnehmen“ für 30 Tage mit Grund
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.423** Fix: keine falsche Startanzeige mit Hunderten Minuten mehr, während ein Modell gemessen wird
 - **V01.1.422** Prüfbitte: opentelemetry-api 1.45.1 → 1.45.2 in der Lock-Datei des Panels (GHSA-mf5v-w3w3-f6cg, mittel, CVSS 5.3); sonst bewegt sich kein Paket
 - **V01.1.421** Fix: „Was war meine letzte Bestellung?“ sucht in den Mails, statt eine Antwort zu erfinden
-- **V01.1.420** Schwachstellen, was wirklich läuft: tars meldet die Pakete aller venvs über den Wärter, die Docker-Abbilder werden je Digest gelesen, dazu was iPhone-App, Android-App, Begleiter, Pebble und das Panel-JavaScript mitbringen (auch im Nachtlauf auf GitHub)
 
 
 

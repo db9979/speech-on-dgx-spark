@@ -5966,6 +5966,14 @@
 "text": "Pi updaten. 1) Den Assistenten etwas fragen, das er im Web nachschlagen muss und das auf der Seite als Tabelle steht (z. B. „Wie sind die Öffnungszeiten vom Hornbach in Mannheim?“): die Antwort stimmt mit der Seite überein, ohne Menü- oder Cookie-Text. 2) Unter Ich → Dokumente eine gespeicherte HTML-Seite mit Überschriften und einer Tabelle hochladen und danach fragen: unter der Antwort steht der passende Abschnitt. 3) Optional: „Leg die Seite https://… aufs reMarkable“: dort stehen Überschriften, Listen und Tabellen statt eines langen Textblocks.",
 "thread": "Webseiten als Markdown besser lesen",
 "test": "test_seitentext.Markdown.test_main_part_with_its_shape"
+},
+{
+"id": "P874",
+"v": 1430,
+"titel": "Morgenrunde-Themen recherchiert",
+"text": "Pi updaten. Unter Kalender → Einstellungen bei den Themen fürs Briefing z. B. „Wichtigste Neuigkeiten für Deutschland und der Welt.“ und „Gibt es wichtige Informationen zu meinen Interessen.“ stehen lassen. Im Assistenten „Guten Morgen“ sagen oder auf die nächste Morgenrunde warten: zu jedem Thema stehen ein bis zwei Sätze mit Inhalt (ältere Meldungen mit ihrem Tag), nicht mehr „nichts gefunden“. Für die Interessen sucht der Spark die bestätigten Interessen unter Ich → Was ich über dich weiß; sind keine bestätigt, sagt die Morgenrunde, wo man sie einträgt.",
+"thread": "Morgenrunde-Themen wirklich recherchieren",
+"test": "test_tagesaktuell.Search.test_briefing_topic_widens_to_the_last_days"
 }
 ]
 }

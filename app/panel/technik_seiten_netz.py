@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "aussen": {
-        "stand": "f278940148",
+        "stand": "8dd286e3c3",
         "bezug": {
             "dienstwacht.TIMEOUT": ["s5"], "notaus.locked_tools": ["s3"], "dienstwacht.tool_down": ["s5"],
             "netguard.client": ["s8", "s9", "s10"], "netguard.IMAP4_SSL": ["s9"],
@@ -75,13 +75,15 @@ SEITEN = {
                "netguard.DIRECT_OK; ein Selbsttest meldet jedes Modul, das direkt verbindet und dort fehlt. Fragt die "
                "Person nach Heutigem oder den letzten Tagen (feste Wörter, frisch.zeitraum), sucht SearXNG nur in diesem "
                "Zeitraum (bei Nachrichten auch in seiner Kategorie News); jeder Treffer trägt sein Datum, ältere fallen weg. "
+               "Ein Thema der Morgenrunde ohne Treffer von heute nimmt dieselben Treffer der letzten Tage mit ihrem Tag. "
                "Die eigene Websuche des Panels bei „beides“ (Erst lokal) geht denselben Weg (chat.web_search_own), nur "
                "mit den eigenen Worten der Frage und nie bei Notaus oder ausgefallenem Dienst.",
                "The language model, SearXNG at the entered address, weather, transit, Wikipedia and fixed services "
                "like Apple push go directly, without the guard. Which modules may do that and why is listed in "
                "netguard.DIRECT_OK; a self-test reports every module that connects directly and is missing there. When "
                "the person asks for today or the last days (fixed words, frisch.zeitraum), SearXNG searches only that "
-               "period (for news also its news category); every hit carries its date, older ones are dropped. The "
+               "period (for news also its news category); every hit carries its date, older ones are dropped. A "
+               "topic of the morning briefing without a hit of today takes the same hits of the last days with their day. The "
                "panel's own web search for „both“ (local first) goes the same way (chat.web_search_own), only with the "
                "question's own words and never with the kill switch or a service gone."),
               ("ok", "ja", "s9")),
