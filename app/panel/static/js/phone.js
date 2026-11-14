@@ -7,7 +7,7 @@ const MOBILE=matchMedia('(max-width:760px)');
 const mtog=document.createElement('div');mtog.className='mtoggles';
 const MOVES=[[()=>$('chatstate'),()=>$('mslot').nextElementSibling,'after'],[()=>$('profbtn'),()=>$('mmenu'),'before'],
   [()=>$('chatwake').closest('label'),()=>$('msetwake'),'in'],[()=>document.querySelector('.opts.toggles'),()=>mtog,'in'],[()=>$('chattiming'),()=>mtog,'in'],[()=>$('remlist'),()=>mtog,'in'],
-  [()=>$('talk'),()=>document.querySelector('.composer'),'in'],[()=>$('convosel'),()=>$('mconvo'),'row'],[()=>$('convofind'),()=>$('mconvo'),'row'],[()=>$('convodel'),()=>$('mconvo'),'row']];
+  [()=>$('talk'),()=>document.querySelector('.composer'),'in'],[()=>$('cvlbtn'),()=>$('mconvo'),'row'],[()=>$('convodel'),()=>$('mconvo'),'row']];
 const homes=new Map();
 // Phones open on the face alone (view "face"); "Verlauf" switches to the messenger view ("log").
 let MVIEW='face';try{MVIEW=localStorage.getItem('mview')==='log'?'log':'face'}catch{}
@@ -49,7 +49,6 @@ $('mmenu').onclick=()=>{const inchat=document.body.classList.contains('inchat');
 $('minew').onclick=()=>{closeSheet();$('chatnew').click()};$('miset').onclick=()=>{closeSheet();openSet()};
 $('milang').onclick=()=>$('langbtn').click();$('mifind').onclick=()=>{closeSheet();palOpen()};$('mitheme').onclick=()=>$('themebtn').click();
 $('milogout').onclick=()=>$('logoutbtn').click();
-$('convosel').addEventListener('change',()=>{if(MOBILE.matches)closeSheet()});
 layout();
 // ---------------------------------------------------------------- phone layout, all pages
 // header height for the sticky bars below it; the voice button steps aside while the keyboard is up

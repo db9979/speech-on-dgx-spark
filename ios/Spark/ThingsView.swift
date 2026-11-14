@@ -709,7 +709,7 @@ struct SongsView: View {
             } footer: { Text("Ohne Gesang wird es instrumental. Mit Gesang und leerem Liedtext schreibt der Spark den Text zuerst ins Feld; Künstlernamen werden dabei zu Stilwörtern. Die Beschreibung darf bis 2000 Zeichen lang sein, z. B. ein Firmentext als Vorlage.") }
             if !m.loading && m.songs.isEmpty { Text("Noch keine Musik.").foregroundStyle(.secondary) }
             // grouped by day like the list under Ich → Musik in the panel
-            ForEach(Self.days(m.songs), id: \.0) { day, songs in
+            ForEach(Self.days(m.songs, at: \.created), id: \.0) { day, songs in
                 Section(Self.dayNames[day]) {
                     ForEach(songs) { s in
                         HStack(spacing: 12) {
@@ -789,12 +789,13 @@ struct SongsView: View {
     /// Heute, Gestern, Letzte 7 Tage, Älter: the groups of the panel's list (musik.js muGroup), in this order.
     static let dayNames: [LocalizedStringKey] = ["Heute", "Gestern", "Letzte 7 Tage", "Älter"]
 
-    /// The songs by day: the index into dayNames and the songs of that group, empty groups left out.
-    static func days(_ songs: [Song]) -> [(Int, [Song])] {
+    /// Things by day (songs, earlier conversations): the index into dayNames and the things of that group in their
+    /// order, empty groups left out.
+    static func days<T>(_ items: [T], at: KeyPath<T, Date>) -> [(Int, [T])] {
         let cal = Calendar.current, today = cal.startOfDay(for: Date())
-        var groups: [[Song]] = [[], [], [], []]
-        for s in songs {
-            let n = cal.dateComponents([.day], from: cal.startOfDay(for: s.created), to: today).day ?? 0
+        var groups: [[T]] = [[], [], [], []]
+        for s in items {
+            let n = cal.dateComponents([.day], from: cal.startOfDay(for: s[keyPath: at]), to: today).day ?? 0
             groups[n < 1 ? 0 : n < 2 ? 1 : n < 7 ? 2 : 3].append(s)
         }
         return groups.indices.filter { !groups[$0].isEmpty }.map { ($0, groups[$0]) }

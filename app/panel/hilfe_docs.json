@@ -4677,7 +4677,23 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Gespräch-Komfort",
-"text": "Gespräch-Komfort: Der Assistent kennt Datum und Uhrzeit (Zeitzone des Browsers; abschaltbar unter Einstellungen → Sprachmodell). Gespräche bleiben im Browser und lassen sich oben im Verlauf öffnen oder löschen. Mit „Live-Transkript“ erscheint der Text beim Sprechen, die Erkennung ist in der Pause meist schon fertig."
+"text": "Gespräch-Komfort: Der Assistent kennt Datum und Uhrzeit (Zeitzone des Browsers; abschaltbar unter Einstellungen → Sprachmodell). Gespräche bleiben gespeichert (bei Profilen auf dem Spark) und lassen sich in der Liste „Gespräche“ öffnen und weiterführen; das offene löscht der Papierkorb oben. Mit „Live-Transkript“ erscheint der Text beim Sprechen, die Erkennung ist in der Pause meist schon fertig."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Gespräche als Liste",
+"text": "Gespräche als Liste (seit V01.1.452, ohne Schalter): Statt eines Auswahlfelds stehen die Gespräche als Liste neben dem Gespräch, geordnet nach Heute, Gestern, Letzte 7 Tage und Älter, je Zeile Titel, die letzte Antwort in einer Zeile und die Zeit; das offene ist blau. Oben „＋“ für ein neues Gespräch und „In allen Gesprächen suchen“. Ist die Karte schmaler als 760 Pixel (kleiner Bildschirm, Handy), öffnet der Listen-Knopf links im Kopf die Liste über dem Gespräch; eine Wahl, Escape oder der Knopf schließen sie. Am Handy steht der Knopf im Menü unter „Frühere Gespräche“. Die Liste zeichnet nur, was sich geändert hat (keyFill), nichts springt."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Ruhige Antworten",
+"text": "Ruhige Antworten (seit V01.1.452, ohne Schalter): Was eine Antwort benutzt hat (Werkzeuge, Herkunft wie „Quelle: E-Mail“), steht in einer grauen Zeile. Die Knöpfe unter einer Antwort (Daumen, „⋯“) erscheinen erst beim Zeigen auf die Antwort, am Handy nach einem Tipp; ihr Platz bleibt frei, nichts springt. Seltene Knöpfe (Melden, Aufs reMarkable, Ins Wissensbuch, In „Meine Dokumente“) liegen hinter „⋯“ in derselben Zeile. Die Knöpfe einer Meldung von selbst („Weniger davon“, „Nicht jetzt“) zeigen sich genauso."
 },
 {
 "lang": "de",
@@ -22285,7 +22301,23 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Conversation comfort",
-"text": "Conversation comfort: the assistant knows the date and time (the browser's time zone; can be turned off under Settings → Language model). Conversations are kept in the browser and can be reopened or deleted at the top of the conversation. With \"live transcript\" the text appears while you speak; recognition is usually done by the pause."
+"text": "Conversation comfort: the assistant knows the date and time (the browser's time zone; can be turned off under Settings → Language model). Conversations are kept (for profiles on the Spark) and can be reopened and continued from the list \"Conversations\"; the bin at the top deletes the open one. With \"live transcript\" the text appears while you speak; recognition is usually done by the pause."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Conversations as a list",
+"text": "Conversations as a list (since V01.1.452, no switch): instead of a drop-down the conversations stand as a list beside the conversation, grouped by Today, Yesterday, Last 7 days and Older, each row with the title, the last answer in one line and the time; the open one is blue. On top \"＋\" for a new conversation and \"Search all conversations\". When the card is narrower than 760 pixels (small screen, phone), the list button on the left of the header opens the list over the conversation; a pick, Escape or the button close it. On the phone the button is in the menu under \"Earlier conversations\". The list only redraws what changed (keyFill), nothing jumps."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Calm answers",
+"text": "Calm answers (since V01.1.452, no switch): what an answer used (tools, origin such as \"Source: e-mail\") stands in one grey line. The buttons under an answer (thumbs, \"⋯\") only show when you point at the answer, on a phone after a tap; their room stays, nothing jumps. Rare buttons (Report, To the reMarkable, To the knowledge book, To \"My documents\") are behind \"⋯\" in the same row. The buttons of a note the assistant sent by itself (\"Less of this\", \"Not now\") show the same way."
 },
 {
 "lang": "en",

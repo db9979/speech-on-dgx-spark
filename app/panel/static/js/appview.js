@@ -174,23 +174,19 @@ function closeSheet(){if(sheet.hidden)return;sheet.hidden=true;if(ON)render()}
 sheet.addEventListener('click',e=>{if(e.target.classList.contains('apshade')||e.target.closest('[data-close]')){closeSheet();return}
   const b=e.target.closest('[data-cid],[data-sa]');if(!b)return;closeSheet();
   if(b.dataset.sa==='new')$('chatnew').click();else if(b.dataset.sa==='find')$('convofind').click();else if(b.dataset.sa==='del')$('convodel').click();
-  else{const s=$('convosel');s.value=b.dataset.cid;s.dispatchEvent(new Event('change'))}});
+  else convoPick(b.dataset.cid)});
 // pull the sheet down to close it
 let gy=null;
 sheet.addEventListener('touchstart',e=>{gy=e.target.closest('.apshead,.sheetgrip')?e.touches[0].clientY:null},{passive:true});
 sheet.addEventListener('touchend',e=>{if(gy!=null&&e.changedTouches[0].clientY-gy>60)closeSheet();gy=null},{passive:true});
-function day(ts){const d=new Date(ts),n=new Date(),y=new Date(n);y.setDate(n.getDate()-1);
-  if(d.toDateString()===n.toDateString())return t('Heute','Today');if(d.toDateString()===y.toDateString())return t('Gestern','Yesterday');
-  return d.toLocaleDateString(L==='en'?'en-GB':'de-DE',{weekday:'long',day:'numeric',month:'long'})}
 function openHist(){let list=[];try{list=convos.load()}catch{}
-  const hm=ts=>new Date(ts).toLocaleTimeString(L==='en'?'en-GB':'de-DE',{hour:'2-digit',minute:'2-digit'});
   let html=`<button type="button" class="apsearch" data-sa="find">${SV('find')}<span>${esc(t('In Gesprächen suchen','Search conversations'))}</span></button>`+
     `<div class="apgrp"><div class="apgb"><button type="button" class="aprow" data-sa="new"><span class="apl apacc">${esc(t('Neues Gespräch','New conversation'))}</span></button></div></div>`;
   let cur=null,rows='';
   const flush=()=>{if(cur!==null&&rows)html+=`<div class="apgrp"><div class="apgh">${esc(cur)}</div><div class="apgb">${rows}</div></div>`;rows=''};
-  for(const c of list.slice().sort((a,b)=>b.updated-a.updated)){const g=day(c.updated);if(g!==cur){flush();cur=g}
+  for(const c of list.slice().sort((a,b)=>b.updated-a.updated)){const g=ldDayGroup(c.updated);if(g!==cur){flush();cur=g}
     const n=(c.msgs||[]).filter(m=>m.role==='user').length;
-    rows+=`<button type="button" class="aprow${typeof chat!=='undefined'&&chat.cid===c.id?' on':''}" data-cid="${esc(c.id)}"><span class="apl">${esc(c.title||'…')}<small>${esc(hm(c.updated))} · ${n} ${esc(n===1?t('Frage','question'):t('Fragen','questions'))}</small></span><i class="apch"></i></button>`}
+    rows+=`<button type="button" class="aprow${typeof chat!=='undefined'&&chat.cid===c.id?' on':''}" data-cid="${esc(c.id)}"><span class="apl">${esc(c.title||'…')}<small>${esc(convoWhen(c.updated))} · ${n} ${esc(n===1?t('Frage','question'):t('Fragen','questions'))}</small></span><i class="apch"></i></button>`}
   flush();if(!list.length)html+=`<div class="apfoot">${esc(t('Noch keine früheren Gespräche.','No earlier conversations yet.'))}</div>`;
   if(typeof chat!=='undefined'&&chat.cid)html+=`<div class="apgrp"><div class="apgb"><button type="button" class="aprow" data-sa="del"><span class="apl apred">${esc(t('Dieses Gespräch löschen','Delete this conversation'))}</span></button></div></div>`;
   openSheet(t('Verlauf','History'),html)}

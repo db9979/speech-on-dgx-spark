@@ -323,7 +323,7 @@ class Web(unittest.TestCase):
         self.assertIn("function endTurn(){chat.turn++;chat.resumeMic=false;stopListening(true);stopAnswer();releaseMic();", self.js)
         self.assertIn("$('chatstop').onclick=()=>{endTurn();", self.js)
         self.assertIn("$('chatnew').onclick=()=>{endTurn();", self.js)
-        self.assertIn("$('convosel').onchange=()=>{endTurn();", self.js)
+        self.assertIn("function convoPick(id){endTurn();", self.js)
         done = self.body("const done=async()=>")
         self.assertIn("g===chat.turn)await", done)
         self.assertIn("if(g!==chat.turn)return;", done)

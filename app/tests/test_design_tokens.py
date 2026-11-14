@@ -407,7 +407,7 @@ class Emoji(Ratchet, unittest.TestCase):
 
 class OwnSymbols(Ratchet, unittest.TestCase):
     WHAT = "a symbol with its own SVG paths; add it to icons.js and draw it with ic('name') or <i data-ic=\"name\">"
-    ALT = {"index.html": 42}
+    ALT = {"index.html": 41}
 
     def hits(self):
         return {n.replace(os.sep, "/"): c for n in ui_files() if n != os.path.join("js", "icons.js")

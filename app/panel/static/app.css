@@ -154,6 +154,29 @@ body.inchat #fab{display:none}
 .wakeind{display:flex;justify-content:center;align-items:center;gap:7px;font-size:12px;color:var(--mut);margin:-4px 0 6px}.wakeind[hidden]{display:none}.wakeind i{width:8px;height:8px;border-radius:50%;background:#22c55e;animation:wk 1.6s ease-in-out infinite}.wakeind.paused i{background:var(--mut);animation:none}@keyframes wk{50%{opacity:.25}}
 .bubble .src{margin-top:8px;padding-top:6px;border-top:1px solid var(--line);font-size:12px;display:flex;flex-direction:column;gap:2px}.bubble .src span{color:var(--mut)}.bubble .src a{color:var(--acc);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .convohead{display:flex;gap:8px;align-items:center;padding:12px 14px 10px 18px;border-bottom:1px solid var(--line)}.convohead select{flex:1;min-width:0;width:auto;padding:6px 10px;font-size:13px}.convohead .ib{padding:7px 9px}
+/* Gespräche als Liste (2026-11-14, chat.js fillConvos): a wide card has the list on its left, a narrow card (and the
+   phone) opens it over the conversation with the list button; rows are the list building blocks (ld-row) */
+.convo{position:relative}
+.cvl{display:none;flex-direction:column;min-height:0;background:var(--card)}
+.convo.cvwide{padding-left:var(--cvl-w)}
+.convo.cvwide .cvl{display:flex;position:absolute;left:0;top:0;bottom:0;width:var(--cvl-w);border-right:1px solid var(--line);border-radius:var(--r) 0 0 var(--r)}
+.convo:not(.cvwide).lsopen .cvl{display:flex;position:absolute;inset:0;z-index:6;border-radius:inherit}
+.convo.cvwide #cvlbtn{display:none}
+.cvlhead{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 12px 6px 16px}
+.cvlhead h3{margin:0;font:var(--t-head)}.cvlhead .ib{padding:7px 9px}
+.cvlfind{display:flex;align-items:center;gap:8px;margin:4px 12px 8px;padding:7px 10px;border:0;border-radius:var(--r-ctl);background:var(--fill);color:var(--mut);font:var(--t-sub);cursor:pointer;text-align:left}
+.cvlfind svg{width:15px;height:15px;flex:none}
+.cvlrows{flex:1;min-height:0;overflow:auto;padding:0 6px 10px;contain:content}
+#convotitle{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font:var(--t-head)}
+/* Ruhige Antworten: the grey line of what the answer used, the actions only on pointing (a phone: after a tap) */
+.bubble .mline{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 12px;margin-top:8px;font-size:12px;color:var(--mut)}
+.bubble .mline .mem,.bubble .mline .steps{margin:0;padding:0;border:0}.bubble .mline .steps[open]{flex-basis:100%}
+.macts{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:8px;opacity:0;transition:opacity var(--dur) var(--ease);-webkit-user-select:none;user-select:none}
+.macts .ratebar,.macts .picsave{margin-top:0}.macts .picsave{padding:3px 10px;font-size:12px}.macts .mx{display:none}.macts.open .mx{display:contents}
+.macts .mmore svg{width:15px;height:15px;display:block}
+.bubble .prorow{opacity:0;transition:opacity var(--dur) var(--ease)}
+.msg:hover :is(.macts,.prorow),.msg.sel :is(.macts,.prorow),:is(.macts,.prorow):focus-within,.macts.open,.macts:has(.on,.ratesheet){opacity:1}
+@media (hover:none){.msg:hover :is(.macts,.prorow){opacity:0}.msg.sel :is(.macts,.prorow),:is(.macts,.prorow):focus-within,.macts.open,.macts:has(.on,.ratesheet){opacity:1}}
 #chatlog{flex:1;overflow:auto;padding:16px 18px;display:flex;flex-direction:column;gap:10px;scroll-behavior:smooth}
 /* Tippen geht vor: the conversation is closed off (its size comes from the page), so a keystroke in the text field
    below does not lay out and draw every bubble of a long conversation again */

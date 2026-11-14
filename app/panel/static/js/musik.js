@@ -37,11 +37,9 @@ function musikAtt(a){const d=icEl('div','mem');d.append(icNode('music'),document
 // (MU.au) for the rows, the details and the bar "spielt gerade" at the bottom, so two songs never play at once.
 const MU={d:null,sel:'',q:'',f:'all',play:'',au:null,bench:''};
 const MULENS=[30,60,120,180,240,300,420,600];
-const muDay=s=>{const d=new Date((s||0)*1000);d.setHours(0,0,0,0);return Math.round((new Date().setHours(0,0,0,0)-d)/864e5)};
 // the time on the right of a row: today the clock, before that weekday and date
 const muShort=s=>{if(!s)return '';const d=new Date(s*1000),loc=L==='en'?'en-GB':'de-DE';
-  return muDay(s)<1?d.toLocaleTimeString(loc,{hour:'2-digit',minute:'2-digit'}):d.toLocaleDateString(loc,{weekday:'short',day:'2-digit',month:'2-digit'})};
-const muGroup=s=>{const n=muDay(s);return n<1?t('Heute','Today'):n<2?t('Gestern','Yesterday'):n<7?t('Letzte 7 Tage','Last 7 days'):t('Älter','Older')};
+  return ldDay(s*1000)<1?d.toLocaleTimeString(loc,{hour:'2-digit',minute:'2-digit'}):d.toLocaleDateString(loc,{weekday:'short',day:'2-digit',month:'2-digit'})};
 const muSing=s=>s.sung?t('mit Gesang','with singing')+(s.language?' ('+s.language+')':''):t('instrumental','instrumental');
 const muTitle=s=>s.wish||s.caption||t('Lied','Song');
 const muClock=x=>{x=Math.max(0,Math.floor(x||0));return Math.floor(x/60)+':'+String(x%60).padStart(2,'0')};
@@ -184,7 +182,7 @@ async function showMusik(){const box=$('musikbox');if(!box)return;if(!PROFILE||!
         if(x.state==='done'){MU.sel=x.song.id;showMusik()}else if(x.state==='error')go.disabled=false})}
     const pass=s=>MU.f==='all'||MU.f==='up'?MU.f==='all'||s.kind==='upload':MU.f==='ed'?fam(s.id).length>1:(MU.f==='sung')===!!s.sung;
     const shown=roots.filter(s=>pass(s)&&(!ql||fam(s.id).some(x=>[x.wish,x.caption,x.lyrics,muLabel(x)].some(v=>String(v||'').toLowerCase().includes(ql)))));
-    let grp='';for(const s of shown){const g=muGroup(s.t);if(g!==grp){grp=g;const h=icEl('div','ld-grp');h.append(icEl('span','',g),icEl('span','',String(shown.filter(x=>muGroup(x.t)===g).length)));list.appendChild(h)}
+    let grp='';for(const s of shown){const g=ldDayGroup(s.t*1000);if(g!==grp){grp=g;const h=icEl('div','ld-grp');h.append(icEl('span','',g),icEl('span','',String(shown.filter(x=>ldDayGroup(x.t*1000)===g).length)));list.appendChild(h)}
       const row=icEl('div','ld-row'+(MU.sel&&fam(s.id).some(x=>x.id===MU.sel)?' on':''));row.dataset.id=s.id;row.tabIndex=0;row.setAttribute('role','button');
       const pb=icEl('button','ld-ico mu');pb.type='button';pb.dataset.muplay=s.id;pb.onclick=e=>{e.stopPropagation();muToggle(s)};
       const mid=icEl('span','ld-mid');const b=icEl('b','',muTitle(s));b.title=muTitle(s);const nv=fam(s.id).length;

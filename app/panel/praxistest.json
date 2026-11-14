@@ -6158,6 +6158,14 @@
 "text": "Pi und Spark updaten. Einstellungen → Spark → Betrieb → Spark-Clients (oder Spark-Konsole → Clients): unten steht „Ein Programm verbinden“ mit https://192.168.178.171:31006/v1, Modellname sprachmodell und dem Fingerabdruck. „Für Clients geöffnet“ an, Netz 192.168.178.0/24, „Übernehmen“. Einen Client mit Recht Sprachmodell anlegen: der Kasten zeigt jetzt den Schlüssel im Eintrag API-Schlüssel und in der curl-Zeile. „Zertifikat laden“ lädt spark-zertifikat.pem. Auf einem Rechner im Heimnetz die curl-Zeile aus dem Kasten ausführen: die Antwort nennt die Dienste und das Recht llm. In Open WebUI (Verbindungen, OpenAI-API) URL und Schlüssel eintragen: das Modell sprachmodell antwortet. Beim Client „Grenzen“: „Keine Grenzen“ anhaken, „Speichern“, Code: in der Liste steht „keine Grenzen“; dann nur Anfragen pro Minute auf 2 setzen: die dritte Anfrage in einer Minute bekommt 429.",
 "thread": "Spark und Assistent entkoppeln",
 "test": "test_mandanten.Faehigkeiten.test_connect_box_names_address_parts_never_a_key"
+},
+{
+"id": "P898",
+"v": 1453,
+"titel": "Gespräche als Liste und ruhige Antworten",
+"text": "Assistent am Rechner (breites Fenster): links neben dem Gespräch steht die Liste „Gespräche“ nach Heute, Gestern, Letzte 7 Tage, Älter; ein Klick öffnet ein Gespräch, man kann direkt weiterfragen. Schmales Fenster oder Handy: der Listen-Knopf links im Kopf (Handy: Menü → Frühere Gespräche) öffnet die Liste über dem Gespräch. iPhone-App: Verlauf nach denselben Tagen, je Zeile die letzte Antwort. Unter einer neuen Antwort stehen Werkzeug und Quelle in einer grauen Zeile; Daumen und „⋯“ erscheinen erst beim Zeigen auf die Antwort (Handy: nach einem Tipp), Melden und Aufs reMarkable liegen hinter „⋯“, nichts springt.",
+"thread": "Gespräche übersichtlich ablegen und fortsetzen",
+"test": "test_gespraechsliste.Page.test_list_beside_over_and_calm_actions"
 }
 ]
 }

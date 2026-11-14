@@ -68,6 +68,9 @@ window.ldInit=n=>{const w=String(n||'?').trim().split(/\s+/).filter(Boolean);ret
 window.ldIco=n=>{const s=el('span','ld-ico');s.setAttribute('aria-hidden','true');s.appendChild(icSvg(n,16));return s};
 window.ldAva=(name,icon)=>{const s=el('span','ld-ava',icon?null:ldInit(name));s.setAttribute('aria-hidden','true');if(icon)s.appendChild(icSvg(icon,16));return s};
 window.ldSt=(kind,word)=>el('span','ld-st'+(kind?' '+kind:''),word);
+// a list by day (Musik, Gespräche, the iPhone's ThingsView.dayNames): days back from today for a time in ms, and its group
+window.ldDay=ms=>{const d=new Date(ms||0);d.setHours(0,0,0,0);return Math.round((new Date().setHours(0,0,0,0)-d)/864e5)};
+window.ldDayGroup=ms=>{const n=ldDay(ms);return n<1?t('Heute','Today'):n<2?t('Gestern','Yesterday'):n<7?t('Letzte 7 Tage','Last 7 days'):t('Älter','Older')};
 window.ldEmpty=(icon,text)=>{const d=el('div','ld-empty');d.append(icSvg(icon,28),el('span','',text));return d};
 // one row; act(row) on a click or Enter/Space (a button, link or field inside keeps its own click); without act it
 // is a plain line (no pointer, no hover)

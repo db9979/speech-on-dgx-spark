@@ -39,6 +39,7 @@ FENSTER = {
     ".fabtext": "the floating face's bubble",
     ".fabpop": "the floating face's bubble",
     "#chatlog": "the conversation: only it scrolls on the assistant page",
+    ".cvlrows": "the list of conversations beside the conversation (Assistent), scrolls on its own like the conversation",
     "body.inchat .stage": "the assistant page on a phone",
     ".sheetcard": "a sheet over the page (phone)",
     ".finds": "search results in their window",

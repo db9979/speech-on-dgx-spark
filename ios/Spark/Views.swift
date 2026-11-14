@@ -651,18 +651,17 @@ struct HistoryView: View {
                 } else {
                     List {
                         if let keptAt { StandNote(at: keptAt, loading: loading).listRowSeparator(.hidden) }
-                        ForEach(shown) { c in
-                            Button {
-                                talk.resume(c)
-                                dismiss()
-                            } label: {
-                                VStack(alignment: .leading, spacing: 3) {
-                                    Text(c.title.isEmpty ? String(localized: "Gespräch") : c.title).lineLimit(1)
-                                    Text(c.updated, format: .dateTime.day().month().hour().minute())
-                                        .font(.footnote).foregroundStyle(.secondary)
+                        // by day like the panel's list (ichteile.js ldDayGroup): Heute, Gestern, Letzte 7 Tage, Älter
+                        ForEach(ThingsView.days(shown.sorted { $0.updated > $1.updated }, at: \.updated), id: \.0) { g, items in
+                            Section(ThingsView.dayNames[g]) {
+                                ForEach(items) { c in
+                                    Button {
+                                        talk.resume(c)
+                                        dismiss()
+                                    } label: { row(c) }
+                                    .foregroundStyle(.primary)
                                 }
                             }
-                            .foregroundStyle(.primary)
                         }
                     }
                     .searchable(text: $search)
@@ -677,6 +676,25 @@ struct HistoryView: View {
                 if let k = Merken.convoList(), !k.list.isEmpty { list = k.list; keptAt = k.at }
                 await load()
             }
+        }
+    }
+
+    /// One row: the title, the last answer in one line, the time on the right (today the hour, else day and month).
+    private func row(_ c: SavedConvo) -> some View {
+        let last = c.msgs.last { ($0["role"] as? String) == "assistant" }?["content"] as? String ?? ""
+        let today = Calendar.current.isDateInToday(c.updated)
+        return HStack(alignment: .firstTextBaseline) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(c.title.isEmpty ? String(localized: "Gespräch") : c.title).lineLimit(1)
+                if !last.isEmpty {
+                    Text(verbatim: last.replacingOccurrences(of: "\n", with: " ")).lineLimit(1)
+                        .font(.footnote).foregroundStyle(.secondary)
+                }
+            }
+            Spacer(minLength: 8)
+            let fmt: Date.FormatStyle = today ? .dateTime.hour().minute() : .dateTime.day().month()
+            Text(c.updated, format: fmt)
+                .font(.footnote).monospacedDigit().foregroundStyle(.secondary)
         }
     }
 

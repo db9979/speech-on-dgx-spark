@@ -348,7 +348,11 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
   saveConvo();
   el.classList.remove('typing');if(!full.trim())el.textContent=aborted?t('(abgebrochen)','(cancelled)'):'–';
   attRender(el,att,true);
-  if(steps.length)el.appendChild(stepsFold(steps));
+  // Ruhige Antworten (Dominik 2026-11-14): what the answer used stands in one grey line (tools, origin), the actions
+  // (thumbs, read again …) in one row that shows on pointing at the answer (on a phone after a tap), rare ones behind „⋯“
+  const ml=document.createElement('div');ml.className='mline';if(steps.length)ml.appendChild(stepsFold(steps));
+  const acts=document.createElement('div'),extra=[];acts.className='macts';
+  const actBtn=(label,go)=>{const b=document.createElement('button');b.type='button';b.className='b picsave';b.textContent=label;b.onclick=()=>go(b);extra.push(b)};   // only on a click
   if(mems.length){const d=document.createElement('div');d.className='mem';d.textContent=mems.join(' · ');el.appendChild(d)}
   if(gms.length&&!foreign)el.appendChild(gmChips(gms));
   if(why)el.appendChild(whyNote(why));
@@ -358,20 +362,18 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
   if(!err)for(const c of chcards)el.appendChild(choiceCard(c));
   if(!err&&!foreign)for(const c of confirms)el.appendChild(c.vg&&window.vgAttach?vgAttach(c.vg,confirmCard(c)):confirmCard(c));   // Alles Offene: the proposal's card
   if(!err&&!foreign&&full.trim()){const g=gotoCard(gotos);if(g)el.appendChild(g)}
-  if(herk&&!err&&!foreign&&full.trim())el.appendChild(herkunftRow(herk));
-  if(rateId&&full.trim()&&!err&&typeof rateBar==='function')el.appendChild(rateBar(rateId));
-  if(rpaId&&full.trim()&&!err&&typeof rpAnswerBar==='function')el.appendChild(rpAnswerBar(rpaId));
-  if(prId&&full.trim()&&!err)pruefWatch(el,prId,text);
   if(more&&full.trim()&&!err&&!foreign&&typeof moreRow==='function')el.appendChild(moreRow(more));
+  let hw=null;if(herk&&!err&&!foreign&&full.trim()){hw=herkunftRow(herk);const p=hw.querySelector('.mem');if(p)ml.appendChild(p)}
+  if(ml.children.length)el.appendChild(ml);if(hw&&hw.children.length)el.appendChild(hw);   // „Auch im Internet suchen“ stays a chip
+  if(rateId&&full.trim()&&!err&&typeof rateBar==='function')acts.appendChild(rateBar(rateId));
+  if(rpaId&&full.trim()&&!err&&typeof rpAnswerBar==='function')extra.push(rpAnswerBar(rpaId));
+  if(prId&&full.trim()&&!err)pruefWatch(el,prId,text);
   if(typeof hilfeFabCards==='function')hilfeFabCards(hcards);
-  if(pids.length&&full.trim()&&PROFILE&&!err){const b=document.createElement('button');b.type='button';b.className='b picsave';   // 7: only on a click
-    b.textContent=t('In „Meine Dokumente“ speichern','Store under "My documents"');const said=full.trim();b.onclick=()=>picSave(said,b);el.appendChild(b)}
-  if(pids.length&&full.trim()&&PROFILE&&!err&&ALLOW.docpics){const b=document.createElement('button');b.type='button';b.className='b picsave';   // the picture itself, read by the model later
-    b.textContent=t('Bild in „Meine Dokumente“','Picture to "My documents"');const ids=pids.slice();b.onclick=()=>picKeep(ids,b);el.appendChild(b)}
-  if(full.trim()&&PROFILE&&!err&&RMSEND_ON&&typeof rmSend==='function'){const b=document.createElement('button');b.type='button';b.className='b picsave';   // only on a click
-  if(wbId&&full.trim()&&!err&&typeof wbFile==='function'){const b=document.createElement('button');b.type='button';b.className='b picsave';   // Wissensbuch: only the click files it
-    b.textContent=t('Ins Wissensbuch','To the knowledge book');b.onclick=()=>wbFile(wbId,b);el.appendChild(b)}
-    b.textContent=t('Aufs reMarkable','To the reMarkable');const said=full.trim();b.onclick=()=>rmSend(said,b);el.appendChild(b)}
+  if(pids.length&&full.trim()&&PROFILE&&!err)actBtn(t('In „Meine Dokumente“ speichern','Store under "My documents"'),b=>picSave(full.trim(),b));
+  if(pids.length&&full.trim()&&PROFILE&&!err&&ALLOW.docpics){const ids=pids.slice();actBtn(t('Bild in „Meine Dokumente“','Picture to "My documents"'),b=>picKeep(ids,b))}   // the picture itself, read by the model later
+  if(wbId&&full.trim()&&!err&&typeof wbFile==='function')actBtn(t('Ins Wissensbuch','To the knowledge book'),b=>wbFile(wbId,b));   // Wissensbuch: only the click files it
+  if(full.trim()&&PROFILE&&!err&&RMSEND_ON&&typeof rmSend==='function')actBtn(t('Aufs reMarkable','To the reMarkable'),b=>rmSend(full.trim(),b));
+  actsRow(el,acts,extra);
   const f=v=>v==null?'–':v.toFixed(2)+' s';
   const chip=(k,v,hi)=>`<span class="chip${hi?' hi':''}">${k} <b>${f(v)}</b></span>`;
   $('chattiming').innerHTML=(asrS!=null?chip(t('Spracherkennung','Recognition'),asrS):'')+chip(t('LLM erstes Wort','LLM first word'),llmS)+(ackS!=null?chip(t('erste Rückmeldung','first acknowledgement'),ackS):'')+chip(t('erster Ton','first audio'),audioS)+
@@ -387,6 +389,12 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
     if(chat.ctrl||chat.rec||chat.held)return;
     chatSay(t('Bereit.','Ready.'));if(S.hands)startListening({opened:'hands'});else if(spoken&&followSecs())startListening({follow:followSecs()});else releaseMic()};
   await done()}
+// the row of actions under an answer: the thumbs in front, the rare ones (Melden, reMarkable, Wissensbuch, Dokumente)
+// behind „⋯“ in the same row; nothing below moves when it opens (the row only grows to the side, then wraps)
+function actsRow(el,acts,extra){if(extra.length){const x=document.createElement('span');x.className='mx';x.append(...extra);
+    const b=document.createElement('button');b.type='button';b.className='b rb mmore';b.title=t('Mehr','More');b.setAttribute('aria-label',t('Mehr','More'));
+    b.setAttribute('aria-expanded','false');b.innerHTML=ic('more');b.onclick=()=>b.setAttribute('aria-expanded',String(acts.classList.toggle('open')));acts.append(b,x)}
+  if(acts.children.length)el.appendChild(acts)}
 // Ablauf zeigen (ablauf.py): the tools of this answer, folded: „3 Werkzeuge benutzt · 2,1 s“, open: ✓ or the warning symbol, name and time
 function stepsFold(steps){const d=document.createElement('details');d.className='steps';const s=document.createElement('summary');
   const sec=x=>(x/1000).toLocaleString(L==='en'?'en':'de',{maximumFractionDigits:1})+' s',all=steps.reduce((a,x)=>a+(x.ms||0),0);
@@ -623,10 +631,40 @@ async function convoLook(force){if(!PROFILE||document.hidden||(!force&&Date.now(
   else if(!chat.cid&&!chat.msgs.length&&!chat.fresh){const id=latestConvo();if(id)openConvo(id)}}
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)convoLook(true)});
 setInterval(()=>convoLook(false),30000);
-function fillConvos(){const l=convos.load(),d=x=>new Date(x).toLocaleString(L==='en'?'en-GB':'de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
-  $('convosel').innerHTML=(chat.cid?'':`<option value="">${t('Neues Gespräch','New conversation')}</option>`)+
-    l.map(c=>`<option value="${c.id}"${c.id===chat.cid?' selected':''}>${d(c.updated)} · ${esc(c.title||'…')}</option>`).join('');
+// Gespräche als Liste (Dominik 2026-11-14, Plan gespraeche-ablegen): left in the card the conversations grouped by
+// Heute, Gestern, Letzte 7 Tage and Älter (ldDayGroup), the open one in the accent, rows from the list building blocks (ld-row) and drawn
+// in parts with a fixed key (keyFill: an unchanged row stays the same node). A wide card shows the list beside the
+// conversation; a narrow one (and the phone) opens it over the conversation with the list button. Titles and texts go
+// in as text only (esc).
+const CV_WIDE=760;   // px of the card (its border box: the list's own room counts)  from which the list stands beside the conversation
+const convoTs=x=>new Date(x).toLocaleTimeString(L==='en'?'en-GB':'de-DE',{hour:'2-digit',minute:'2-digit'});
+function convoWhen(ts){const d=new Date(ts),n=ldDay(ts);if(n<1)return convoTs(ts);
+  if(n<7)return d.toLocaleDateString(L==='en'?'en-GB':'de-DE',{weekday:'short'});
+  return d.toLocaleDateString(L==='en'?'en-GB':'de-DE',{day:'2-digit',month:'2-digit'})}
+// the line below the title: the last answer, as plain text in one line
+function convoLine(c){const m=(c.msgs||[]).slice().reverse().find(x=>x.role==='assistant')||(c.msgs||[]).at(-1);
+  return m?md.plain(String(m.content||'')).replace(/\s+/g,' ').slice(0,120):''}
+function fillConvos(){const l=convos.load().slice().sort((a,b)=>b.updated-a.updated),parts=[];let g=null;
+  for(const c of l){const h=ldDayGroup(c.updated);if(h!==g){g=h;parts.push(['g:'+h,`<div class="ld-grp"><span>${esc(h)}</span></div>`])}
+    parts.push(['c:'+c.id,`<div class="ld-row${c.id===chat.cid?' on':''}" role="button" tabindex="0" data-cid="${esc(c.id)}"${c.id===chat.cid?' aria-current="true"':''}>`+
+      `<span class="ld-ico" aria-hidden="true">${ic('chat')}</span><span class="ld-mid"><b>${esc(c.title||'…')}</b><small>${esc(convoLine(c))}</small></span>`+
+      `<span class="ld-right"><span class="ld-when">${esc(convoWhen(c.updated))}</span></span></div>`])}
+  if(!l.length)parts.push(['leer',`<div class="ld-empty">${ic('chat')}<span>${esc(t('Noch keine früheren Gespräche.','No earlier conversations yet.'))}</span></div>`]);
+  keyFill($('cvlrows'),parts);
+  const c=chat.cid&&l.find(x=>x.id===chat.cid);$('convotitle').textContent=c?(c.title||'…'):t('Neues Gespräch','New conversation');
   $('convodel').disabled=!chat.cid;if(typeof offlineKeep==='function')offlineKeep()}   // verlauf.js loads after this file
+// a click on a row (or Enter) opens that conversation; narrow the list closes again
+function convoPick(id){endTurn();openConvo(id||null,true);setTalk();chatSay(t('Bereit.','Ready.'));convoList(false)}
+$('cvlrows').addEventListener('click',e=>{const r=e.target.closest('[data-cid]');if(r)convoPick(r.dataset.cid)});
+$('cvlrows').addEventListener('keydown',e=>{const r=e.target.closest('[data-cid]');if(r&&(e.key==='Enter'||e.key===' ')){e.preventDefault();convoPick(r.dataset.cid)}});
+// the list over the conversation (narrow card, phone): open with the list button, closes with a pick, Escape or the button
+function convoList(open){const c=$('convocard');if(!c)return;if(open&&typeof setView==='function'&&MOBILE.matches)setView('log');
+  c.classList.toggle('lsopen',!!open);$('cvlbtn').setAttribute('aria-expanded',String(!!open));if(open)fillConvos()}
+$('cvlbtn').onclick=()=>{if(typeof closeSheet==='function')closeSheet();convoList(!$('convocard').classList.contains('lsopen'))};
+$('cvlnew').onclick=()=>{convoList(false);$('chatnew').click()};
+$('convolist').addEventListener('keydown',e=>{if(e.key==='Escape'&&$('convocard').classList.contains('lsopen')){convoList(false);$('cvlbtn').focus()}});
+// wide or narrow: only when the card's width changes, never in every frame
+if(window.ResizeObserver)new ResizeObserver(es=>{for(const e of es){const w=(e.borderBoxSize&&e.borderBoxSize[0]?e.borderBoxSize[0].inlineSize:e.target.offsetWidth)>=CV_WIDE;if(w!==e.target.classList.contains('cvwide'))e.target.classList.toggle('cvwide',w)}}).observe($('convocard'));
 function openConvo(id,picked){const c=id&&convos.load().find(x=>x.id===id);chat.cid=c?c.id:null;chat.picked=!!(c&&picked);chat.msgs=c?c.msgs.slice():[];chat.saved=chat.msgs.length;chat.known=PROFILE&&c?c.id:null;chat.fresh=false;
   $('chatlog').innerHTML='';$('chattiming').textContent='';chat.msgs.forEach(m=>{const b=chatLog(m.role,m.content);deletable(b,m);if(m.att||m.via)attRender(b,m.att,false,m.via);if(m.vg&&window.vgMount)vgMount(b,m);if(m.mem&&window.gmChips)b.appendChild(gmChips(m.mem))});fillConvos();if(!chat.msgs.length&&typeof moreStart==='function')moreStart()}
 // What stood under an answer (sources, own documents, a document made), kept with the message so every device and a
@@ -684,7 +722,6 @@ function deleteMsg(d){if(chat.ctrl||chat.rec)return;   // not while an answer is
   chat.msgs=chat.msgs.filter(m=>!gone.has(m));
   for(const x of [...$('chatlog').children])if(x===d||gone.has(x._m))x.remove();
   if(chat.msgs.length)saveConvo(true);else if(chat.cid){convos.del(chat.cid);openConvo(null)}}
-$('convosel').onchange=()=>{endTurn();openConvo($('convosel').value||null,true);setTalk();chatSay(t('Bereit.','Ready.'))};
 $('convodel').onclick=()=>{if(!chat.cid||!confirm(t('Dieses Gespräch löschen?','Delete this conversation?')))return;
   convos.del(chat.cid);endTurn();openConvo(null)};
 // A new day starts a new conversation (setting "daily"); older ones stay in the history.

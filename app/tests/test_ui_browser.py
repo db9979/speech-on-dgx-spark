@@ -2115,9 +2115,12 @@ class Browser(unittest.TestCase):
                                            timeout=20000)
                 self.assertEqual(await pg.evaluate("document.querySelectorAll('.msg.user .picrow img').length"), 1)
                 self.assertTrue(await pg.evaluate("pics.list.length===1"))      # kept for a follow-up
+                # calm answers (test_gespraechsliste): the rare buttons are behind „⋯“, shown on pointing at the answer
+                await pg.hover(".msg.bot:last-child .bubble")
+                await pg.click(".msg.bot:last-child .mmore")
                 await pg.click(".picsave")
                 await pg.wait_for_function("document.querySelector('.picsave').textContent.includes('Gespeichert')", timeout=20000)
-                copied = await pg.evaluate("(()=>{const r=document.createRange();r.selectNodeContents(document.querySelector('.picsave').parentNode);"
+                copied = await pg.evaluate("(()=>{const r=document.createRange();r.selectNodeContents(document.querySelector('.picsave').closest('.bubble'));"
                                            "const s=getSelection();s.removeAllRanges();s.addRange(r);const x=s.toString();s.removeAllRanges();return x})()")
                 self.assertIn("Ich sehe 1 Bild.", copied)
                 self.assertNotIn("Gespeichert", copied)        # the buttons under an answer are not copied with it
