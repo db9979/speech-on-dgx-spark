@@ -1278,6 +1278,9 @@ struct SettingsView: View {
                     if talk.allowed.areas.contains("app_voice") || openPages.contains("voice") {
                         NavigationLink("Stimme einlernen") { VoiceView().keepOpen("voice", talk.allowed.areas.contains("app_voice"), $openPages) }
                     }
+                    if talk.allowed.areas.contains("esp32") || openPages.contains("speakers") {
+                        NavigationLink("Lautsprecher") { LautsprecherView().keepOpen("speakers", talk.allowed.areas.contains("esp32"), $openPages) }
+                    }
                     if talk.allowed.areas.contains("app_accounts") || openPages.contains("accounts") {
                         NavigationLink("Konten verbinden") { AccountsView().keepOpen("accounts", talk.allowed.areas.contains("app_accounts"), $openPages) }
                     }

@@ -84,7 +84,8 @@ APP_NATIVE = {"calbox": "kalender", "mailbox": "post", "taskbox": "listen", "vgb
               "wbbox": "wissensbuch", "fundbox": "finden", "mpbox": "mappen",
               "bgbox": "zustand", "factbox": "gedaechtnis", "docbox": "dokumente", "bildbox": "bilder",
               "musikbox": "musik", "wissbox": "ichweiss", "probox": "vonselbst", "agentbox": "vonselbst",
-              "wxbox": "vonselbst", "secbox": "sicherheit", "voicebox": "stimme", "notebox": "profil"}
+              "wxbox": "vonselbst", "secbox": "sicherheit", "voicebox": "stimme", "notebox": "profil",
+              "espbox": "lautsprecher"}
 # Begleiter-Gleichstand (Dominik 2026-10-30, Begleiter Paket A): every function is in the Begleiter on purpose or
 # left out with its reason. DESK: the function → the Begleiter parts (begleiter.PARTS) that carry it; DESK_SKIP: the
 # function → why not. A sub-function follows its parent unless it stands here itself. test_app_gleichstand.Begleiter

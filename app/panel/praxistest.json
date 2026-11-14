@@ -6029,6 +6029,14 @@
 "text": "Als Admin Funktionen → Natürliches Gespräch einschalten. Im Panel mit dem Mikrofon (oder in der iPhone-App) sagen: „Puh, heute ist echt viel los.“ Die Antwort klingt wie ein Gespräch, ohne „Kann ich sonst noch helfen?“, und endet mit z. B. „Übrigens stehen heute noch 2 Termine an, der nächste um 14:30 Uhr. Soll ich sie dir sagen?“ (nie ein Termintitel). „Ja“ sagen: jetzt kommen die Termine. Zwei weitere Plaudersätze bringen keinen Hinweis; „Ich will nachher noch joggen“ als dritter bringt den Wetter-Hinweis, „Nein“ darauf lässt ihn einen Tag ruhen. Getippt im Panel kommt kein Hinweis. Unter Ich → Gespräch lässt sich „Natürliches Gespräch“ ausschalten.",
 "thread": "Natürlichere Gespräche im Sprachmodus",
 "test": "test_gespraech.Hint.test_a_topic_word_gives_one_fixed_sentence_and_a_yes_becomes_the_question"
+},
+{
+"id": "P882",
+"v": 1435,
+"titel": "iPhone: Lautsprecher in der App",
+"text": "In der iPhone-App Einstellungen → Lautsprecher (mit freigegebenen eigenen Lautsprechern). Die Liste zeigt jeden eigenen Lautsprecher mit Board und grünem Punkt, wenn er verbunden ist. Einen antippen: Name ändern, Lautstärke schieben (der Lautsprecher wird sofort leiser oder lauter), Mikrofon umstellen. „Test“ sagt einen Testsatz, „Netz prüfen“ zeigt die Ergebnisse mit Haken. Unter Einstellungen → Im Panel öffnen führt „Lautsprecher“ jetzt direkt hierher.",
+"thread": "Fehlende Seiten nativ in die iOS-App bringen",
+"test": "test_iphone_panel.Things.test_speakers_from_the_app"
 }
 ]
 }

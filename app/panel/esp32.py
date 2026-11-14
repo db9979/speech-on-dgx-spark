@@ -1879,7 +1879,8 @@ async def speaker_ws(ws: WebSocket):
 
 
 def _on(prof=Depends(browser_profile)):
-    """Setting up and managing speakers: only from the profile's own browser login, never with a device key."""
+    """Setting up and managing speakers: only from the profile's own browser login or its iPhone app (the paths of
+    iphone.THINGS["esp32"]), never with any other device key."""
     if not admin_on():
         raise HTTPException(403, "speakers are turned off")
     if not profile_on(prof["id"]):

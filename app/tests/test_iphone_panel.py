@@ -252,7 +252,9 @@ class Things(unittest.TestCase):
              "ichweiss": ("GET", "/api/profile/ichweiss", 200), "tasks": ("GET", "/api/profile/tasks", 200),
              "vorgaenge": ("GET", "/api/profile/vorgaenge", 200), "contacts": ("GET", "/api/profile/contacts/page", 200),
              "kontakteaendern": ("POST", "/api/profile/contacts/card", 400),
-             "einladungen": ("GET", "/api/profile/mail/invite", 400), "dungeon": ("GET", "/api/profile/dungeon", 200)}
+             "einladungen": ("GET", "/api/profile/mail/invite", 400), "dungeon": ("GET", "/api/profile/dungeon", 200),
+             # Lautsprecher (plan ios-nativ Paket 3): the list; changing one reaches the owner check (_mine)
+             "esp32": ("GET", "/api/profile/esp32", 200)}
 
     app, uid = Areas.app, Areas.uid
 
@@ -269,12 +271,12 @@ class Things(unittest.TestCase):
     def setUp(self):
         helpers.keep_chat(self, "iphone", "iphone_panel", "bilder", "musik", "deny", "documents", "knowledge_book", "knowledge_map",
                           "knowledge_ents", "calendar", "mail", "mail_manage", "mail_later", "mail_send", "calendar_server", "mail_insight", "tasks", "reminders", "vorgaenge",
-                          "contacts", "contacts_edit", "mail_invites", "dungeon", "fund", "mappen", "hoerstueck")
+                          "contacts", "contacts_edit", "mail_invites", "dungeon", "fund", "mappen", "hoerstueck", "esp32")
         helpers.set_config(iphone=True, iphone_panel=False, bilder=True, musik=True, deny={}, documents=True,
                            knowledge_book=True, knowledge_map=True, knowledge_ents=True, calendar=True, mail=True, mail_manage=True, mail_later=True, mail_send=True,
                            calendar_server=True, mail_insight=True, tasks=True, reminders=True, vorgaenge=True,
                            contacts=True, contacts_edit=True, mail_invites=True, dungeon=True, fund=True, mappen=True,
-                           hoerstueck=True)
+                           hoerstueck=True, esp32=True)
         for name in ("image", "music"):     # the picture and music models count as installed
             old = self.section(name, enabled=True)
             self.addCleanup(lambda n=name, o=old: self.section(n, **dict({"enabled": False}, **o)))
@@ -319,6 +321,25 @@ class Things(unittest.TestCase):
         helpers.set_config(bilder=False)
         self.assertEqual(a.get("/api/bilder").status_code, 401)
         self.assertFalse(a.get("/api/iphone/hello").json()["areas"]["bilder"])
+
+    def test_speakers_from_the_app(self):
+        """Lautsprecher in the app (plan ios-nativ Paket 3): change, test, check and update reach the owner check;
+        setting up, pairing, removing and teaching the voice without the panel switch stay in the browser."""
+        c, a = self.app("Lasse")
+        d = "d_" + "0" * 12
+        self.assertEqual(a.put(f"/api/profile/esp32/{d}", json={"volume": 50}).status_code, 404)   # through, not its own
+        for what in ("test", "check", "update"):
+            self.assertEqual(a.post(f"/api/profile/esp32/{d}/{what}", json={}).status_code, 404, what)
+        self.assertEqual(a.get(f"/api/profile/esp32/{d}/diag").status_code, 404)
+        self.assertEqual(a.delete(f"/api/profile/esp32/{d}").status_code, 401)
+        self.assertEqual(a.post("/api/profile/esp32/pair", json={"code": "123456"}).status_code, 401)
+        self.assertEqual(a.post("/api/profile/esp32/setup", json={}).status_code, 401)
+        self.assertEqual(a.post(f"/api/profile/esp32/{d}/voice", json={}).status_code, 401)
+        helpers.set_config(deny={"esp32": [self.uid("Lasse")]})
+        try:
+            self.assertEqual(a.put(f"/api/profile/esp32/{d}", json={"volume": 50}).status_code, 401)
+        finally:
+            helpers.set_config(deny={})
 
     def test_delete_mail_shows_only_with_its_own_switch(self):
         """Mails löschen in the app (iphone.FLAGS): hello names it only with its own admin switch (off); the

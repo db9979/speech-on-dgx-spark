@@ -234,6 +234,11 @@ THINGS = {
               (("GET",), rf"/api/musik/job/{_DOC}"),
               (("GET",), rf"/api/musik/{_DOC}/datei"), (("DELETE",), rf"/api/musik/{_DOC}"),
               (("POST",), rf"/api/musik/{_DOC}/(?:bearbeiten|erkennen|eigenes)"), (("POST",), r"/api/musik/hochladen")),
+    # Lautsprecher (esp32.py, plan ios-nativ Paket 3): the own speakers, name, volume, microphone, own updates, the switch
+    # „Raum“, „Test“, „Netz prüfen“, „Jetzt aktualisieren“ and the diagnosis; each path checks its owner (_mine) and the
+    # release again. Setting up, pairing, removing and the voice code word stay in the browser.
+    "esp32": ((("GET",), r"/api/profile/esp32"), (("PUT",), rf"/api/profile/esp32/{_DEV}"),
+              (("GET",), rf"/api/profile/esp32/{_DEV}/diag"), (("POST",), rf"/api/profile/esp32/{_DEV}/(?:test|check|update)")),
 }
 # what hello tells the app (the app shows an area where it is true)
 RIGHTS_PANEL = ("app_mine", "app_voice", "app_auto", "app_security", "app_accounts")

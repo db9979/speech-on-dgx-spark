@@ -21760,6 +21760,246 @@
           }
         }
       }
+    },
+    "Board" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Board"
+          }
+        }
+      }
+    },
+    "Der Raum-Modus beginnt beim nächsten Weckwort." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Room mode starts at the next wake word."
+          }
+        }
+      }
+    },
+    "Diesen Lautsprecher gibt es nicht mehr." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This speaker is gone."
+          }
+        }
+      }
+    },
+    "Eigene Lautsprecher sind aus oder vom Admin für dich gesperrt." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Own speakers are off or blocked for you by the admin."
+          }
+        }
+      }
+    },
+    "Einen neuen Lautsprecher richtest du im Browser im selben WLAN ein: Ich → Lautsprecher" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You set up a new speaker in the browser on the same Wi-Fi: Me → Speakers"
+          }
+        }
+      }
+    },
+    "Einrichten, Entfernen und die Raum-Einstellungen im Browser unter Ich → Lautsprecher; Stimme hier anlernen unter Stimme einlernen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Setting up, removing and the room settings in the browser under Me → Speakers; teaching your voice here under Teach my voice."
+          }
+        }
+      }
+    },
+    "Er spricht jetzt einen Testsatz." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It says a test sentence now."
+          }
+        }
+      }
+    },
+    "Er startet neu und holt das Update." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It restarts and fetches the update."
+          }
+        }
+      }
+    },
+    "Firmware" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Firmware"
+          }
+        }
+      }
+    },
+    "Lautstärke" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volume"
+          }
+        }
+      }
+    },
+    "Mikrofon" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Microphone"
+          }
+        }
+      }
+    },
+    "Netz prüfen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check network"
+          }
+        }
+      }
+    },
+    "Noch kein Lautsprecher." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No speaker yet."
+          }
+        }
+      }
+    },
+    "Test" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Test"
+          }
+        }
+      }
+    },
+    "Test vorgemerkt: beim nächsten Weckwort." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Test noted: at the next wake word."
+          }
+        }
+      }
+    },
+    "Update beim nächsten Start." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update at the next start."
+          }
+        }
+      }
+    },
+    "Updates von selbst" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Updates by themselves"
+          }
+        }
+      }
+    },
+    "empfindlicher" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "more sensitive"
+          }
+        }
+      }
+    },
+    "jetzt" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "now"
+          }
+        }
+      }
+    },
+    "noch nie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "never"
+          }
+        }
+      }
+    },
+    "normal" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "normal"
+          }
+        }
+      }
+    },
+    "verbunden" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "connected"
+          }
+        }
+      }
+    },
+    "weniger empfindlich" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "less sensitive"
+          }
+        }
+      }
+    },
+    "· neuere da" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "· newer available"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

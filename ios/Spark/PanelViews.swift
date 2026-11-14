@@ -89,7 +89,7 @@ struct PanelBridgeView: View {
 /// iphone.THINGS); without it the panel opens, which says why.
 enum NativePage: String {
     case kalender, post, listen, offen, kontakte, wissensbuch, finden, mappen
-    case zustand, gedaechtnis, dokumente, bilder, musik, ichweiss, vonselbst, sicherheit, stimme, profil
+    case zustand, gedaechtnis, dokumente, bilder, musik, ichweiss, vonselbst, sicherheit, stimme, profil, lautsprecher
 
     var area: String? {
         switch self {
@@ -109,6 +109,7 @@ enum NativePage: String {
         case .vonselbst: return "app_auto"
         case .sicherheit: return "app_security"
         case .stimme: return "app_voice"
+        case .lautsprecher: return "esp32"
         case .zustand, .profil: return nil   // the Spark lists the page only when the profile may use it
         }
     }
@@ -135,6 +136,7 @@ enum NativePage: String {
         case .sicherheit: SecurityView()
         case .stimme: VoiceView()
         case .profil: ProfileView()
+        case .lautsprecher: LautsprecherView()
         }
     }
 }

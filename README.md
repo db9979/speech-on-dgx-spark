@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.435** iPhone app: own speakers right in the app, settings and checks
 - **V01.1.434** Natural conversation, package A: when chatting in voice mode a natural tone and now and then a fixed hint from your own data that fits the conversation (appointments, weather, parcels, shopping list); a "Yes" tells more (off, can be switched off per profile)
 - **V01.1.433** Snooze mail: put a mail away until this evening, tomorrow, the weekend or next week, it comes back unread on top
 - **V01.1.432** Mark answers that are not backed up and report made-up ones by itself; the nightly run may only fix faults
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.428** Everything in portrait too: on a phone Today → My pages lists Calendar, E-mail, Lists, Open, Contacts, Knowledge book, Find, Collections, Dungeon Master and Open WebUI (before reachable in landscape only); the computer layout's menu on a phone shows profiles their pages too
 - **V01.1.427** Vulnerabilities, package 4: "Report as issue" per finding and on the check request card (spark-meldungen, label schwachstelle, only one open issue per id), "Reachable" as a fixed sentence and "Accept knowingly" for 30 days with a reason
 - **V01.1.426** Mail: up to 3 parcels above the inbox with a tracking link, a confirmation code goes away when the mail says it expires
-- **V01.1.425** Mail: search with to:, before:, after: and suggestions, "why is this mail here", sender confirmed, mailbox state
 
 
 
