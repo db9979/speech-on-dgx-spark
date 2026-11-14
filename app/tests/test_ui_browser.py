@@ -604,6 +604,7 @@ class Browser(unittest.TestCase):
         # with the new files (V01.0.120); api() still answers
         import account
         import panel
+        helpers.set_config(telegram=False)   # setUpClass turns it on; this test switches it on itself
         async def go():
             async with async_playwright() as p:
                 br, pg, errors = await self.page(p, 1280, 900)
