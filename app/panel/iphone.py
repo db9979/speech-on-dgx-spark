@@ -232,6 +232,10 @@ THINGS = {
     # Lautsprecher (esp32.py, plan ios-nativ Paket 3): the own speakers, name, volume, microphone, own updates, the switch
     # „Raum“, „Test“, „Netz prüfen“, „Jetzt aktualisieren“ and the diagnosis; each path checks its owner (_mine) and the
     # release again. Setting up, pairing, removing and the voice code word stay in the browser.
+    # Eigene Stimme (stimmdesign.py, plan ios-nativ Paket 4): the 20 fixed voices and the own ones, „▶“, a probe from the
+    # fields and own words (the day's limit counts), „Übernehmen“ (only the last probe, never audio sent along), delete
+    "stimmdesign": ((("GET",), r"/api/stimmdesign"), (("GET",), r"/api/stimmdesign/hoeren/[a-z0-9-]{3,40}"),
+                    (("POST",), r"/api/stimmdesign/(?:probe|eigene)"), (("DELETE",), r"/api/stimmdesign/eigene/eigen-[0-9a-f]{16}")),
     "esp32": ((("GET",), r"/api/profile/esp32"), (("PUT",), rf"/api/profile/esp32/{_DEV}"),
               (("GET",), rf"/api/profile/esp32/{_DEV}/diag"), (("POST",), rf"/api/profile/esp32/{_DEV}/(?:test|check|update)")),
 }
@@ -544,6 +548,14 @@ APP_FIELDS = ("voice", "speed", "length", "pro_on", "pro_quiet", "pro_max", "pro
               "hands", "barge",   # Freihändig and Ins Wort fallen: the same values as in the browser (Vereinheitlichen Phase 6)
               "face",             # Einstellungen → Gesicht: the profile's own face, the same as Ich → Gespräch → Anzeige
               "speak")            # Antworten vorlesen: the profile's switch, every device of it follows (chat_turn.quiet)
+# Ich → Gespräch complete in the app (plan ios-nativ Paket 4, Dominik 2026-11-14): the rows of the panel's form with
+# the switch of the admin they need (an account.ALLOW key, the same as „need“ in me.js SETF, test_app_gleichstand);
+# a row whose switch is off is neither shown nor saved. Mein Name im Anfragen-Log, the tone and the roles (told to the
+# model) and who may write to me (its own list) stay in the browser.
+TALK = {"follow": "follow", "echo": "echo", "auto": "", "turn": "", "live": "", "barge_level": "", "voice_tips": "voice_tips",
+        "talk_hints": "talk_hints", "quelle_sagen": "quellesagen", "devup_night": "devup_night", "chat_receipts": "chats",
+        "chat_push_text": "chats", "msg_speaker": "chats", "msg_all": "chatall", "rate_back": "rateback", "timing": "",
+        "unklar_anon": "unklaranon"}
 RIGHTS = ("app_ha", "app_car_ha", "app_act", "app_listen", "app_push", "app_ios", "app_images",
           "app_room")
 SETTINGS_BODY = 8192
@@ -573,7 +585,8 @@ def app_settings(request: Request, prof=Depends(own_profile)):
             "style": p.get("style", "") if features.allowed("style", prof["id"], chat) else None,
             "rights": {k: bool(p.get(k)) for k in RIGHTS},
             "allow": {"proactive": proactive.enabled() and not features.blocked("proactive", prof["id"], chat),
-                      "documents": features.allowed("documents", prof["id"], chat)},
+                      "documents": features.allowed("documents", prof["id"], chat),
+                      "stimmdesign": features.allowed("stimmdesign", prof["id"], chat)},   # Gespräch → Eigene Stimme
             # services the admin released for this profile ("Von selbst" can only use those)
             "services": {k: features.allowed(f, prof["id"], chat)
                          for k, f in (("wx_on", "weather"), ("par_on", "parcels"), ("fd_on", "fuerdich"), ("con_on", "contacts"))}}
@@ -595,8 +608,16 @@ async def app_settings_save(request: Request, prof=Depends(own_profile)):
     return {"settings": {k: saved[k] for k in fields if k in saved}}
 
 
+def _talk(uid):
+    """The rows of TALK whose switch the admin released for this profile, in TALK's order."""
+    import account
+    prof = profiles.by_id(uid)
+    allow = account._allow(prof, load_config().get("chat", {})) if prof else {}
+    return tuple(k for k, need in TALK.items() if not need or allow.get(need))
+
+
 def _fields(uid):
-    return APP_FIELDS + sum((f for right, f in (("app_mine", MINE_FIELDS), ("documents", DOC_FIELDS), ("tasks", LIST_FIELDS),
+    return APP_FIELDS + _talk(uid) + sum((f for right, f in (("app_mine", MINE_FIELDS), ("documents", DOC_FIELDS), ("tasks", LIST_FIELDS),
                                                 ("app_auto", AUTO_FIELDS))
                              if area_on(uid, right) and (f is not LIST_FIELDS or features.allowed("listshare", uid))), ())
 

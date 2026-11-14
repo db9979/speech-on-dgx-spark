@@ -254,7 +254,9 @@ class Things(unittest.TestCase):
              "kontakteaendern": ("POST", "/api/profile/contacts/card", 400),
              "einladungen": ("GET", "/api/profile/mail/invite", 400), "dungeon": ("GET", "/api/profile/dungeon", 200),
              # Lautsprecher (plan ios-nativ Paket 3): the list; changing one reaches the owner check (_mine)
-             "esp32": ("GET", "/api/profile/esp32", 200)}
+             "esp32": ("GET", "/api/profile/esp32", 200),
+             # Eigene Stimme (plan ios-nativ Paket 4): through to the own-voice check (no such voice)
+             "stimmdesign": ("DELETE", "/api/stimmdesign/eigene/eigen-" + "0" * 16, 404)}
 
     app, uid = Areas.app, Areas.uid
 
@@ -271,15 +273,17 @@ class Things(unittest.TestCase):
     def setUp(self):
         helpers.keep_chat(self, "iphone", "iphone_panel", "bilder", "musik", "deny", "documents", "knowledge_book", "knowledge_map",
                           "knowledge_ents", "calendar", "mail", "mail_manage", "mail_later", "mail_send", "calendar_server", "mail_insight", "tasks", "reminders", "vorgaenge",
-                          "contacts", "contacts_edit", "mail_invites", "dungeon", "fund", "mappen", "hoerstueck", "esp32")
+                          "contacts", "contacts_edit", "mail_invites", "dungeon", "fund", "mappen", "hoerstueck", "esp32", "stimmdesign")
         helpers.set_config(iphone=True, iphone_panel=False, bilder=True, musik=True, deny={}, documents=True,
                            knowledge_book=True, knowledge_map=True, knowledge_ents=True, calendar=True, mail=True, mail_manage=True, mail_later=True, mail_send=True,
                            calendar_server=True, mail_insight=True, tasks=True, reminders=True, vorgaenge=True,
                            contacts=True, contacts_edit=True, mail_invites=True, dungeon=True, fund=True, mappen=True,
-                           hoerstueck=True, esp32=True)
+                           hoerstueck=True, esp32=True, stimmdesign=True)
         for name in ("image", "music"):     # the picture and music models count as installed
             old = self.section(name, enabled=True)
             self.addCleanup(lambda n=name, o=old: self.section(n, **dict({"enabled": False}, **o)))
+        old = self.section("tts", voicedesign_enabled=True, klon_enabled=True)   # VoiceDesign is there (Eigene Stimme)
+        self.addCleanup(lambda o=old: self.section("tts", **dict({"voicedesign_enabled": False, "klon_enabled": False}, **o)))
         iphone._pending.clear()
         for k in [k for k in guard._rate if k[0] == "pair"]:
             guard._rate.pop(k, None)
@@ -321,6 +325,28 @@ class Things(unittest.TestCase):
         helpers.set_config(bilder=False)
         self.assertEqual(a.get("/api/bilder").status_code, 401)
         self.assertFalse(a.get("/api/iphone/hello").json()["areas"]["bilder"])
+
+    def test_conversation_rows_follow_the_release(self):
+        """Gespräch komplett (plan ios-nativ Paket 4): a row of iphone.TALK comes and is saved only with its switch;
+        the rows without a switch always; the rest of the panel's form stays out."""
+        helpers.keep_chat(self, "follow_up")
+        c, a = self.app("Gesa")
+        helpers.set_config(follow_up=False)
+        d = a.get("/api/iphone/settings").json()
+        self.assertIn("turn", d["settings"])
+        self.assertNotIn("follow", d["settings"])
+        self.assertEqual(a.put("/api/iphone/settings", json={"follow": "6"}).status_code, 400)
+        self.assertNotIn("trace_name", d["settings"])
+        self.assertEqual(a.put("/api/iphone/settings", json={"trace_name": True}).status_code, 400)
+        self.assertEqual(a.put("/api/iphone/settings", json={"turn": False}).status_code, 200)
+        helpers.set_config(follow_up=True)
+        d = a.get("/api/iphone/settings").json()
+        self.assertIn("follow", d["settings"])
+        self.assertEqual(d["choices"]["follow"], list(profiles.CHOICES["follow"]))
+        r = a.put("/api/iphone/settings", json={"follow": "6"})
+        self.assertEqual((r.status_code, r.json()["settings"]["follow"]), (200, "6"))
+        self.assertEqual(a.put("/api/iphone/settings", json={"follow": "7"}).status_code, 400)
+        self.assertTrue(d["allow"]["stimmdesign"])
 
     def test_speakers_from_the_app(self):
         """Lautsprecher in the app (plan ios-nativ Paket 3): change, test, check and update reach the owner check;

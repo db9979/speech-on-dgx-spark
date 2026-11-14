@@ -79,13 +79,13 @@ APP_SKIP = {"overbox": "the app's own start screen shows the overview",
             "andbox": "the Android app, not for an iPhone"}
 # Pages the iPhone app shows itself (plan ios-nativ 5, Dominik 2026-11-14 „1-5“): „Im Panel öffnen“ leads there and
 # not into the panel; the word names the app's own view (PanelViews.swift NativePage), a long press still opens the
-# panel. A page only partly in the app (Gespräch, Dungeon-Master: new rounds) stays out until the app holds all of it.
+# panel. A page only partly in the app (Dungeon-Master: new rounds) stays out until the app holds all of it.
 APP_NATIVE = {"calbox": "kalender", "mailbox": "post", "taskbox": "listen", "vgbox": "offen", "conbox": "kontakte",
               "wbbox": "wissensbuch", "fundbox": "finden", "mpbox": "mappen",
               "bgbox": "zustand", "factbox": "gedaechtnis", "docbox": "dokumente", "bildbox": "bilder",
               "musikbox": "musik", "wissbox": "ichweiss", "probox": "vonselbst", "agentbox": "vonselbst",
               "wxbox": "vonselbst", "secbox": "sicherheit", "voicebox": "stimme", "notebox": "profil",
-              "espbox": "lautsprecher"}
+              "espbox": "lautsprecher", "setbox": "profil"}
 # Begleiter-Gleichstand (Dominik 2026-10-30, Begleiter Paket A): every function is in the Begleiter on purpose or
 # left out with its reason. DESK: the function → the Begleiter parts (begleiter.PARTS) that carry it; DESK_SKIP: the
 # function → why not. A sub-function follows its parent unless it stands here itself. test_app_gleichstand.Begleiter

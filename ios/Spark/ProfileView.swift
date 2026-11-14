@@ -10,6 +10,10 @@ final class ProfileModel: ObservableObject {
     /// what the admin released for this profile ("Von selbst" can only use those; no own switch per profile)
     @Published var services: [String: Bool] = [:]
     @Published var proactive = false
+    /// Gespräch → Eigene Stimme: the admin released „Eigene Stimmen gestalten“ for this profile
+    @Published var stimmdesign = false
+    /// the allowed values of the list rows (profiles.CHOICES), in the Spark's order
+    @Published var choices: [String: [String]] = [:]
     @Published var voices: [String] = []
     /// shown names of the designed voices (Eigene Stimmen gestalten): id → name
     @Published var voiceNames: [String: String] = [:]
@@ -56,6 +60,8 @@ final class ProfileModel: ObservableObject {
         rights = d["rights"] as? [String: Bool] ?? [:]
         services = d["services"] as? [String: Bool] ?? [:]
         proactive = (d["allow"] as? [String: Any])?["proactive"] as? Bool ?? false
+        stimmdesign = (d["allow"] as? [String: Any])?["stimmdesign"] as? Bool ?? false
+        choices = (d["choices"] as? [String: Any] ?? [:]).compactMapValues { v in (v as? [Any])?.map { "\($0)" } }
     }
 
     func set(_ key: String, _ value: Any) {
@@ -129,6 +135,9 @@ struct ProfileView: View {
                 }
                 voice
                 answers
+                Section {
+                    NavigationLink("Gespräch") { GespraechView(m: m) }
+                } footer: { Text(SparkAPI.way(String(localized: "Zuhören, Antworten, Chats und die eigene Stimme, wie im Panel unter Ich → Gespräch."))) }
                 if m.proactive { byItself }
                 rights
             }

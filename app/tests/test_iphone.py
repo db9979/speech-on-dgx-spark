@@ -311,7 +311,8 @@ class IPhone(unittest.TestCase):
         app = TestClient(panel.app)
         got = app.get("/api/iphone/settings", headers=h).json()
         # the app's own fields, plus the deadline reminder while Eigene Dokumente is released (Meine Sachen)
-        self.assertEqual(set(got["settings"]), set(iphone.APP_FIELDS + iphone.DOC_FIELDS))
+        # and the rows of Ich → Gespräch whose switch the admin released (iphone.TALK)
+        self.assertEqual(set(got["settings"]), set(iphone.APP_FIELDS + iphone.DOC_FIELDS + iphone._talk(uid_of("Ivy"))))
         self.assertFalse(got["rights"]["app_ha"])
         ok = {"voice": "Anna", "speed": 1.2, "length": "short", "pro_on": True, "pro_quiet": "21:00-06:30", "briefing_at": "07:15"}
         r = app.put("/api/iphone/settings", json=ok, headers=h)

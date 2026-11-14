@@ -136,6 +136,20 @@ class InTheApps(unittest.TestCase):
         self.assertEqual(cases, set(features.APP_NATIVE.values()))
         self.assertIn("contextMenu { panelButton(p.0) }", bridge)
 
+    def test_conversation_rows_need_the_same_switch(self):
+        """iphone.TALK (Gespräch komplett in the app) names for each row the same switch as „need“ in me.js SETF, and
+        every row is a setting the app does not already have."""
+        import iphone
+        js = read(JS, "me.js")
+        for k, need in iphone.TALK.items():
+            m = re.search(r"\{[^{}]*?k:'%s',[^\n]*" % k, js)
+            self.assertTrue(m, k)
+            got = re.search(r"need:'([a-z_]+)'", m.group(0))
+            self.assertEqual(got.group(1) if got else "", need, k)
+            self.assertIn(k, profiles.SETTINGS, k)
+            self.assertNotIn(k, iphone.APP_FIELDS, k)
+        self.assertNotIn("trace_name", iphone.TALK)   # changed only in the own browser login
+
     def test_admin_vulnerabilities_in_the_app(self):
         """Spark verwalten → Schwachstellen (plan ios-nativ 2): only the Spark's own admin paths, the names of the
         groups and places come from the overview, not from the app."""

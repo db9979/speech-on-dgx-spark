@@ -21940,6 +21940,446 @@
           }
         }
       }
+    },
+    "10 Sekunden" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "10 seconds"
+          }
+        }
+      }
+    },
+    "4 Sekunden" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "4 seconds"
+          }
+        }
+      }
+    },
+    "6 Sekunden" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "6 seconds"
+          }
+        }
+      }
+    },
+    "8 Sekunden" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "8 seconds"
+          }
+        }
+      }
+    },
+    "Alter" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Age"
+          }
+        }
+      }
+    },
+    "Anhören" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Listen"
+          }
+        }
+      }
+    },
+    "Bei Stille beenden" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "End on silence"
+          }
+        }
+      }
+    },
+    "Eigene Stimme" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Own voice"
+          }
+        }
+      }
+    },
+    "Eigene Worte (freiwillig)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Own words (optional)"
+          }
+        }
+      }
+    },
+    "Empfindlichkeit beim Ins-Wort-Fallen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sensitivity when cutting in"
+          }
+        }
+      }
+    },
+    "Fertige Stimmen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ready voices"
+          }
+        }
+      }
+    },
+    "Geschlecht" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gender"
+          }
+        }
+      }
+    },
+    "Lesebestätigung" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read receipts"
+          }
+        }
+      }
+    },
+    "Meine Lautsprecher nachts aktualisieren" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update my speakers at night"
+          }
+        }
+      }
+    },
+    "Meine Stimmen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "My voices"
+          }
+        }
+      }
+    },
+    "Name der Stimme" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Name of the voice"
+          }
+        }
+      }
+    },
+    "Natürlicher Sprecherwechsel" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Natural turn-taking"
+          }
+        }
+      }
+    },
+    "Natürliches Gespräch" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Natural conversation"
+          }
+        }
+      }
+    },
+    "Neu würfeln" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Roll again"
+          }
+        }
+      }
+    },
+    "Neue Nachrichten auf meinem Lautsprecher" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New messages on my speaker"
+          }
+        }
+      }
+    },
+    "Neue Stimme gestalten" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Design a new voice"
+          }
+        }
+      }
+    },
+    "Neue Stimmen gestalten geht, sobald VoiceDesign auf dem Spark läuft." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Designing new voices works once VoiceDesign runs on the Spark."
+          }
+        }
+      }
+    },
+    "Probe anhören" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hear a sample"
+          }
+        }
+      }
+    },
+    "Quelle ansagen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Say the source"
+          }
+        }
+      }
+    },
+    "Sagen, wenn es behoben ist" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tell me when it is fixed"
+          }
+        }
+      }
+    },
+    "Tempo" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pace"
+          }
+        }
+      }
+    },
+    "Text in der Mitteilung" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Text in the notification"
+          }
+        }
+      }
+    },
+    "Tipps beim Sprechen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tips while talking"
+          }
+        }
+      }
+    },
+    "Tonlage" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pitch"
+          }
+        }
+      }
+    },
+    "Unklare Fragen anonym zur Verbesserung" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unclear questions anonymously for improving"
+          }
+        }
+      }
+    },
+    "Was hier fehlt, hat der Admin nicht freigegeben. Ton, Rollen, wer mir schreiben darf und mein Name im Anfragen-Log: im Browser unter Ich → Gespräch." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What is missing here the admin has not released. Tone, roles, who may write to me and my name in the request log: in the browser under Me → Conversation."
+          }
+        }
+      }
+    },
+    "Weiteres" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More"
+          }
+        }
+      }
+    },
+    "Zeiten anzeigen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show timings"
+          }
+        }
+      }
+    },
+    "Zuhören" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Listening"
+          }
+        }
+      }
+    },
+    "nichts sagen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "say nothing"
+          }
+        }
+      }
+    },
+    "nur sagen, von wem" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "say only who wrote"
+          }
+        }
+      }
+    },
+    "von wem, Text auf Wunsch vorlesen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "who wrote, read the text on request"
+          }
+        }
+      }
+    },
+    "Heute %lld von %lld Proben. Höchstens %lld eigene Stimmen." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Today %lld of %lld samples. At most %lld own voices."
+          }
+        }
+      }
+    },
+    "Zuhören, Antworten, Chats und die eigene Stimme, wie im Panel unter Ich → Gespräch." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Listening, answers, chats and your own voice, as in the panel under Me → Conversation."
+          }
+        }
+      }
+    },
+    "Live-Transkript" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live transcript"
+          }
+        }
+      }
+    },
+    "egal" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "any"
+          }
+        }
+      }
+    },
+    "gering" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "low"
+          }
+        }
+      }
+    },
+    "mittel" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "medium"
+          }
+        }
+      }
+    },
+    "hoch" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "high"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

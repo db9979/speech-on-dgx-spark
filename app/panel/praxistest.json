@@ -6071,6 +6071,14 @@
 "text": "Pi updaten. Funktionen → Pebble-Uhr koppeln: darunter steht nur noch „Uhr: Schritte, Puls und Schlaf“. Mit „Pebble-Uhr koppeln“ an auf der Uhr Schnellbefehle (lang OBEN), Mein Tag, Merken, Nachrichten und Fernbedienung durchgehen: alles da, ohne weitere Schalter. Unter Funktionen gibt es Bus und Bahn, Reddit und Feeds, Neues aus Feeds melden, Spark-Zifferblatt, Uhr: Meldungen für Admins und Hinweis auf neue XiaoZhi-Version nicht mehr; Ich → Pebble-Uhr zeigt nur einen QR-Code. „Wann fährt der nächste Zug nach München?“ sucht im Web.",
 "thread": "Spark ausdünnen und zusammenführen",
 "test": "test_pebble.Pebble.test_the_watchface_is_gone"
+},
+{
+"id": "P887",
+"v": 1442,
+"titel": "iPhone: Gespräch komplett und Eigene Stimme",
+"text": "In der iPhone-App Einstellungen → Mein Profil → Gespräch. Dort stehen Zuhören (z. B. Natürlicher Sprecherwechsel, Live-Transkript), Antwort, Chats und Weiteres; was der Admin nicht freigegeben hat, fehlt. Einen Schalter umlegen und im Panel unter Ich → Gespräch nachsehen: dort steht derselbe Wert. Mit „Eigene Stimmen gestalten“: Gespräch → Eigene Stimme, eine fertige Stimme mit ▶ anhören und antippen (Haken), dann unter „Neue Stimme gestalten“ Felder wählen, „Probe anhören“, Namen eingeben, „Übernehmen“: sie steht unter Meine Stimmen mit Haken. Wischen löscht sie.",
+"thread": "Fehlende Seiten nativ in die iOS-App bringen",
+"test": "test_iphone_panel.Things.test_conversation_rows_follow_the_release"
 }
 ]
 }
