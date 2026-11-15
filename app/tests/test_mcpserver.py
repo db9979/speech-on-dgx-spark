@@ -448,6 +448,41 @@ class Outside(Base):
         self.assertEqual(mine[0]["kind"], "oauth")
 
 
+class DocumentProbe(Base):
+    """Angriffstest 2026-11-15: a template probe at document_search. Nothing is evaluated, only passages with the words
+    asked for come back, without Zeichensalat or cookie values, and a refused call names no inner detail."""
+    PROBE = "{{1337*3}} ${1337*3} <%= 1337*3 %>"
+
+    def test_template_probe_finds_only_plain_words(self):
+        import documents
+        helpers.set_config(documents=True, doc_semantic=False)
+        c, uid = profile("McpProbe")
+        documents.add(uid, "Forensik.txt", b"x", text="Das Jahr 1337 im Buch.\nSID=1c1aq7t5pu8l9c450ta9duh4i6; SERVERID=web2;\n"
+                      "›óçKÉ:Î·ý|·,é>9·¹DœXð|Q_‘×·œ5¶%•¼û9?·P·ð¾ ñ)·Sm")
+        documents.add(uid, "Lizenz.txt", b"x", text="Version 3 of the licence, section 3.")
+        token = self.key(c, ["document_search"])
+        res = call(self.lan, token, "document_search", {"query": self.PROBE})
+        text = res["content"][0]["text"]
+        self.assertFalse(res["isError"], text)
+        self.assertNotIn("4011", text)                    # 1337*3: never evaluated
+        self.assertIn("1337", text)
+        self.assertNotIn("Lizenz", text)                  # "3" alone is not the question's word
+        self.assertNotIn("1c1aq7t5pu8l9c450ta9duh4i6", text)
+        self.assertIn("SERVERID=web2", text)
+        self.assertNotIn("œ5¶", text)
+
+    def test_refusal_names_no_inner_detail(self):
+        self.assertEqual(mcpserver.invalid(KeyError("/opt/speech-spark/src/app/panel/x.py")), "Ungültige Angaben.")
+        try:
+            int("/var/lib/speech-spark/users/u_1/docs.sqlite")
+        except ValueError as e:
+            self.assertEqual(mcpserver.invalid(e), "Ungültige Angaben.")
+        try:
+            mcpserver._text({}, "query", 300)
+        except ValueError as e:
+            self.assertEqual(mcpserver.invalid(e), "Ungültige Angaben: query fehlt")
+
+
 class PageIds(unittest.TestCase):
     def test_ids_of_the_page_are_its_own(self):
         """V01.0.320 (Dominik: "Namen eingeben" although a name was there): agent.js had an #mcpname too, so the

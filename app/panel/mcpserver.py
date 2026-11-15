@@ -540,6 +540,17 @@ def _ok(rid, result, modern_info=None):
     return JSONResponse({"jsonrpc": "2.0", "id": rid, "result": result}, headers={"Cache-Control": "no-store"})
 
 
+def invalid(e):
+    """What a refused call says: the sentence only when this file raised it (its own checks: "query fehlt", "höchstens
+    300 Zeichen"); any other error stays a fixed sentence, so no path, file name or inner detail goes out (Angriffstest
+    2026-11-15). The journal line of call() says which tool, never the text."""
+    tb = e.__traceback__
+    while tb is not None and tb.tb_next is not None:
+        tb = tb.tb_next
+    own = tb is not None and os.path.abspath(tb.tb_frame.f_code.co_filename) == os.path.abspath(__file__)
+    return "Ungültige Angaben: " + str(e)[:200] if own and isinstance(e, ValueError) else "Ungültige Angaben."
+
+
 def _result(text, error=False):
     return {"content": [{"type": "text", "text": str(text)[:MAX_RESULT]}], "isError": bool(error)}
 
@@ -571,7 +582,7 @@ async def call(request, c, name, args):
     except (httpx.HTTPError, OSError) as e:
         res = _result(f"Der Dienst antwortet gerade nicht ({type(e).__name__}).", True)
     except (ValueError, TypeError, KeyError) as e:
-        res = _result(f"Ungültige Angaben: {str(e)[:200]}", True)
+        res = _result(invalid(e), True)
     finally:
         with _lock:
             _busy[c["id"]] = max(0, _busy.get(c["id"], 1) - 1)
@@ -635,7 +646,11 @@ async def run(request, c, name, args):
         return _result(status(uid, str(args.get("id") or "")[:20]))
     if group == "act":
         return _result(await propose(c, name, args))
-    return _result(await read(name, args, uid))
+    text = await read(name, args, uid)
+    if name != "write_text":       # the profile's own text back as written; every other reading without secrets
+        from textnorm import hide_secrets
+        text = hide_secrets(text)
+    return _result(text)
 
 
 # ---------------------------------------------------------------- speech
@@ -704,7 +719,7 @@ async def read(name, args, uid):
     if name == "document_search":
         import wissen
         q = _text(args, "query", 300)
-        hits = await wissen.search(uid, q)
+        hits = wissen.nur_passende(q, await wissen.search(uid, q))
         return "\n\n".join(f"[{wissen.where(h)}]\n{h['text']}" for h in hits) or "Keine passende Stelle in den Dokumenten."
     if name == "write_text":
         import schreib

@@ -282,7 +282,10 @@ async def search(uid, query, k=5, tags=None, art=None, semantic=True, keep=True,
     rerank = features.allowed("nachsortieren", uid)
     karte = wissenskarte.suche_allowed(uid)
     want, k = k, (nachsortieren.CANDIDATES if rerank else k)
-    qvec = await docembed.query(query, keep) if semantic and on(uid, "semantic") and query.strip() else None
+    # the meaning model only for a query with a word in it: "{{1337*3}} ${1337*3}" has none, and its vector lies near
+    # every short passage (Angriffstest 2026-11-15: a table line "Donations are welcome" came back)
+    worded = bool(WORD.search(query))
+    qvec = await docembed.query(query, keep) if semantic and on(uid, "semantic") and worded else None
     narrow = bool(tags or art)
     fresh = features.allowed("rmfresh", uid)
     own = documents.match_docs(uid, tags, art) if narrow else None
@@ -295,12 +298,46 @@ async def search(uid, query, k=5, tags=None, art=None, semantic=True, keep=True,
         theirs = await asyncio.to_thread(documents.search, o, query, k, qvec, offer, keep, fresh)
         hits += [dict(h, owner=owner, shared=True) for h in theirs]
     hits = sorted(hits, key=lambda h: -h.get("score", 0))[:k]
+    hits = ohne_salat(hits)
     if rerank:
         hits, _ = await nachsortieren.rank(query, hits, want, keep, trace)
     if karte:
         print(f"wissen: kartensuche | {sum(1 for h in hits[:want] if h.get('karte'))} von {len(hits[:want])} stellen "
               f"über die karte", flush=True)
     return hits[:want]
+
+
+WORD = re.compile(r"[^\W\d_]{2,}")     # a word of at least two letters
+
+
+def ohne_salat(hits):
+    """The passages without their lines of Zeichensalat (textnorm.salat: binary read as text); a passage with nothing
+    else left goes. One journal line when something was taken out (numbers only)."""
+    from textnorm import ohne_salat as clean
+    out, cut, gone = [], 0, 0
+    for h in hits:
+        text = clean(h.get("text", ""))
+        if text != h.get("text", ""):
+            cut += 1
+        if not text.strip():
+            gone += 1
+            continue
+        out.append(dict(h, text=text) if text != h.get("text", "") else h)
+    if cut:
+        print(f"wissen: zeichensalat | {cut} stellen bereinigt | {gone} weggelassen", flush=True)
+    return out
+
+
+def nur_passende(query, hits):
+    """Only passages that hold the words asked for (lokal.COVER, Dominik 2026-10-26: „Dresden“ in a dealer list came
+    back as news about the Frauenkirche); for the assistant's document_search and the MCP one alike."""
+    import lokal
+    words = lokal.terms(query)
+    kept = [h for h in hits if not words or lokal.cover(words, f"{h['name']} {h.get('head', '')} {h['text']}") >= lokal.COVER]
+    if len(kept) < len(hits):
+        print(f"wissen: dokumentsuche | {len(hits) - len(kept)} stellen ohne die suchwörter weggelassen, {len(kept)} bleiben",
+              flush=True)
+    return kept
 
 
 def cards(uid, tags=None, art=None):

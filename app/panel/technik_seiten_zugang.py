@@ -692,7 +692,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ sicherheit (the model as a whole)
     "sicherheit": {
-        "stand": "45c1cb2fe5",
+        "stand": "c7fe1953f6",
         "bezug": {
             "features.blocked": ["s5"], "geteilt.put": ["s5"], "mitschreiblink.find": ["s3", "s5"], "core.confirm_code": ["s3", "s8"], "core.CONFIRM_WINDOW": ["s3"], "guard.Slot": ["s3"],
             "notaus.STAGE": ["s2"], "vault.seal": ["s10"], "tarswart.check": ["s3"], "tarswart.COMMANDS": ["s3"], "sysupdate.wunsch_nehmen": ["s3"],
@@ -880,10 +880,11 @@ SEITEN = {
             S("s9", "schritt", ("Antwort prüfen", "Check the answer"),
               ("answercheck.unsupported, textnorm.hide_secrets", "answercheck.unsupported, textnorm.hide_secrets"),
               ("Zeiten, Daten und Beträge, die nirgends in den Quellen stehen, fallen heraus (answercheck.unsupported). "
-               "Passwörter, Codes und Schlüssel werden nie gesprochen (textnorm.hide_secrets). Die Oberfläche zeigt "
-               "Modelltext nie als HTML.",
+               "Passwörter, Codes, Schlüssel und Cookie-Werte werden nie gesprochen (textnorm.hide_secrets), auch nicht in "
+               "dem, was MCP-Lesewerkzeuge zurückgeben. Die Oberfläche zeigt Modelltext nie als HTML.",
                "Times, dates and amounts that are nowhere in the sources are dropped (answercheck.unsupported). Passwords, "
-               "codes and keys are never spoken (textnorm.hide_secrets). The pages never show model text as HTML.")),
+               "codes, keys and cookie values are never spoken (textnorm.hide_secrets), nor are they in what MCP reading tools "
+               "return. The pages never show model text as HTML.")),
             S("s10", "ende", ("Spuren", "Traces"),
               ("guard.log, Wachposten", "guard.log, Wachposten"),
               ("Logs nur mit festen Wörtern und Zahlen. Änderungen an Zugängen und Schutz schreibt guard.log mit einer "

@@ -247,7 +247,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Wissen: how a question finds passages
     "wissen": {
-        "stand": "1c67038788",
+        "stand": "eeb7b9a34f",
         "bezug": {
             "lokal.MAX_HITS": ["s5"], "wissen.search": ["s1", "s8", "s9"], "documents.search": ["s5", "s6"],
             "documents._terms": ["s5"], "documents.match_docs": ["s4"], "docembed.query": ["s3"],
@@ -377,10 +377,16 @@ SEITEN = {
               ("nur wenn das Profil Dokumente hat", "only when the profile has documents"),
               ("Das Werkzeug wird nur angeboten, wenn das Profil eigene oder geteilte Dokumente hat, die Funktion für "
                "das Profil frei ist und die Stimme erkannt ist. Gäste und fremde Stimmen am geteilten Lautsprecher "
-               "bekommen es nie. Das Profil kommt aus der Anmeldung, nie vom Modell.",
+               "bekommen es nie. Das Profil kommt aus der Anmeldung, nie vom Modell. Die Suchfrage ist reiner Text und wird "
+               "nie ausgewertet (Template-Zeichen bleiben Zeichen); die Bedeutungssuche läuft nur bei einer Frage mit einem "
+               "Wort darin, Zeilen aus Zeichensalat (textnorm.salat) fallen aus jedem Treffer, und Chat wie MCP behalten "
+               "nur Stellen mit den gefragten Wörtern (wissen.nur_passende).",
                "The tool is offered only when the profile has own or shared documents, the function is released "
                "for the profile and the voice is recognized. Guests and unknown voices at a shared speaker never "
-               "get it. The profile comes from the login, never from the model.")),
+               "get it. The profile comes from the login, never from the model. The query is plain text, never evaluated "
+               "(template signs stay signs); the meaning search runs only for a query with a word in it, lines of "
+               "garbled signs (textnorm.salat) leave every hit, and both the chat and MCP keep only passages with the "
+               "words asked for (wissen.nur_passende).")),
             S("s2", "frage", ("Tags oder Art erlaubt?", "Tags or kind allowed?"),
               ("nur mit Steckbrief und Tags", "only with document card and tags"),
               ("Das Modell darf die Suche auf Tags oder eine Dokumentart eingrenzen (höchstens fünf Tags). Ist "

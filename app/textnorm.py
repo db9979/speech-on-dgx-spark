@@ -154,6 +154,9 @@ SECRET_TOKEN = re.compile(r"(?<![\w/+=-])(?:"
                           r"xox[abpr]-[A-Za-z0-9-]{10,}|AKIA[A-Z0-9]{12,}|eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9._-]{10,}|"
                           r"otpauth://\S+|-----BEGIN[^-]{0,40}-----.*?(?:-----END[^-]{0,40}-----|$)|"
                           r"[A-Za-z0-9_+/=]{16,})(?![\w/+=-])", re.S)
+# a cookie or header value: "SID=1c1aq7t5pu8l9c450ta9duh4i6;" (the "=" in front keeps SECRET_TOKEN off it); the value
+# is hidden only when it looks like a key (_secret_token), "SERVERID=web2;" stays
+SECRET_COOKIE = re.compile(r"(?<![\w-])([A-Za-z_][\w.-]{0,40}=)([^\s;=,]{8,})(?=\s*;)")
 # words after "ist" that describe the password instead of being it ("ist falsch", "ist im Tresor")
 NOT_A_SECRET = set("""falsch richtig korrekt sicher unsicher schwach stark neu alt leer gültig ungültig bekannt unbekannt
 geheim privat noch schon jetzt leider bereits nur auch sehr zu nicht kein keine keiner keinen nie immer gleich
@@ -229,7 +232,42 @@ def hide_secrets(text, language=None):
     t = SECRET_SAID.sub(said, t)
     t = SECRET_NEXT.sub(lambda m: m.group(1) + hint, t)
     t = SECRET_TOKEN.sub(lambda m: hint if _secret_token(m.group(0)) else m.group(0), t)
+    t = SECRET_COOKIE.sub(lambda m: m.group(1) + hint if _secret_token(m.group(2)) else m.group(0), t)
     return t
+
+
+# Zeichensalat (Angriffstest 2026-11-15: a PDF page whose binary part was read as text came back from document_search):
+# a line of at least SALAT_MIN signs of which more than SALAT_SHARE are odd (_odd), or one with the replacement sign.
+# Odd are signs outside ASCII except letters of other scripts (Greek, Cyrillic, CJK …) and the usual typographic
+# signs. A Latin letter with an accent counts once, any other sign (£ ¸ ˜ · ‡ …) twice: in a German or French line
+# accents stay well below the share, in binary read as text the signs pile up.
+SALAT_MIN = 12
+SALAT_SHARE = 0.4
+_TYPO = set("–—„“”‚‘’«»€…•°§")
+
+
+def _odd(c):
+    if c < "\x80" or c in _TYPO:
+        return 0
+    if c.isalpha():
+        import unicodedata
+        return 1 if unicodedata.name(c, "LATIN").startswith("LATIN") else 0
+    return 2
+
+
+def salat(line):
+    """The line is Zeichensalat (binary read as text), see SALAT_SHARE."""
+    t = line.strip()
+    if "\ufffd" in t:
+        return True
+    if len(t) < SALAT_MIN:
+        return False
+    return sum(_odd(c) for c in t) / len(t) > SALAT_SHARE
+
+
+def ohne_salat(text):
+    """text without its Zeichensalat lines (salat); all other lines unchanged."""
+    return "\n".join(x for x in str(text).split("\n") if not salat(x))
 
 
 def parse_pronunciations(text):

@@ -1084,7 +1084,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ MCP-Programme
     "mcpc": {
-        "stand": "79ccedcefc",
+        "stand": "9b7abdf887",
         "bezug": {
             "mcpserver.MAX_CONNS": ["s3"], "mcpserver.mcp_post": ["s1"], "mcpserver.origin_ok": ["s2"],
             "mcpserver.check_conn": ["s3"], "mcpserver.is_local": ["s4"], "mcpserver.find": ["s3"],
@@ -1180,10 +1180,15 @@ SEITEN = {
               ("Stufe „hinten“: Menschen gehen vor", "level „hinten“: people go first"),
               ("Spracherkennung (höchstens {mcpserver.MAX_AUDIO|mb}) und Sprachausgabe (höchstens "
                "{mcpserver.MAX_SPEAK} Zeichen) laufen mit der Stufe „hinten“, damit Menschen am Spark immer zuerst "
-               "dran sind. Die Lese-Werkzeuge lesen nur die Daten dieses Profils.",
+               "dran sind. Die Lese-Werkzeuge lesen nur die Daten dieses Profils; was sie zurückgeben, läuft durch "
+               "textnorm.hide_secrets (Schlüssel und Cookie-Werte verdeckt), document_search behält nur Stellen mit den "
+               "gefragten Wörtern. Eine abgelehnte Anfrage nennt nur die eigenen Prüfsätze dieser Datei, sonst „Ungültige "
+               "Angaben.“ ohne Pfad oder inneren Fehler (mcpserver.invalid).",
                "Speech recognition (at most {mcpserver.MAX_AUDIO|mb}) and speech output (at most {mcpserver.MAX_SPEAK} "
                "characters) run at the level „hinten“, so people at the Spark always go first. The reading tools only "
-               "read this profile's data.")),
+               "read this profile's data; what they return passes textnorm.hide_secrets (keys and cookie values hidden), "
+               "document_search keeps only passages with the words asked for. A refused request names only this file's own "
+               "check sentences, otherwise „Ungültige Angaben.“ without a path or inner error (mcpserver.invalid).")),
             S("s10", "schritt", ("Spark fragen, nur lesend", "Ask the Spark, read only"),
               ("ein Zug mit den Lese-Werkzeugen der Verbindung", "one turn with the connection's reading tools"),
               ("ask_spark ({guard.RATE.mcpask.1} pro Minute) läuft als ein Zug des Assistenten für das Profil, aber nur "

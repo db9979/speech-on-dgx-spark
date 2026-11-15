@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.465** Attack via document search stopped: no program folders, no garbled signs, no cookie values, errors without paths
 - **V01.1.464** Nextcloud ideas 3a: polls in chats
 - **V01.1.463** The ladybug stands out: wiggles on a page change, crawls a bit now and then, turns orange with a number on page errors; nothing jumps
 - **V01.1.462** Measure Gemma 4 in NVIDIA's own version, with MTP and a faster start on long questions
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.458** Red fix: the browser test of the profile shell turns Chats off itself; iPhone history builds again
 - **V01.1.457** Fix iPhone app: the history list split into parts so the Swift compiler checks it in time again; red fix: the conversation card switches its wide view one frame later
 - **V01.1.456** Nextcloud ideas 1: birthdays as a calendar of their own and a note on a new sign-in
-- **V01.1.455** Red fix: the browser test of the conversation list taps an answer on a device without hover instead of pointing
 
 
 

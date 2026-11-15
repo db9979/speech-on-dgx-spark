@@ -14,7 +14,8 @@ Rules (fixed, never decided by the model):
 - What is read: only the kinds of file in the chosen groups (GROUPS, default on: documents, tables, slides, text,
   mails; pictures only on request and with "Bilder und Scans lesen"); never programs, archives, video, music,
   images of disks, databases or backups (everything not in a group). Hidden, system (Synology @eaDir, #recycle,
-  #snapshot), lock and temporary files are always left out, and so is every folder on the profile's own list
+  #snapshot), program package folders (node_modules, site-packages, __pycache__ …), lock and temporary files are
+  always left out, and so is every folder on the profile's own list
   (auslassen.py, Ich → Dokumente → Ausgelassene Ordner; for the Haushaltsordner the list of the admin profile that
   chose it). The content must fit the name (magic bytes, as an upload): a ".pdf" that is no PDF is left out.
 - How much: at most MAX_SOURCES folders, MAX_LIST entries looked at per folder, ROUND_FILES files or ROUND_BYTES
@@ -92,10 +93,13 @@ GROUPS = {
     "bilder": ("Bilder und Scans", "Pictures and scans", (".jpg", ".jpeg", ".png", ".webp"), False),
 }
 # never read, whatever is picked (shown with their reason in the preview)
-SKIP_DIRS = re.compile(r"^(?:[.@#].*|\$RECYCLE\.BIN|System Volume Information|lost\+found)$", re.I)
+# (also the folders of program code and its packages: node_modules and the like hold thousands of licence and readme
+# files, never the person's own documents; Angriffstest 2026-11-15 found them in document_search)
+SKIP_DIRS = re.compile(r"^(?:[.@#].*|\$RECYCLE\.BIN|System Volume Information|lost\+found|node_modules|bower_components|"
+                       r"jspm_packages|site-packages|dist-packages|__pycache__|__MACOSX)$", re.I)
 SKIP_FILES = re.compile(r"^(?:\..*|~\$.*|.*\.(?:tmp|part|crdownload|lock|swp)|Thumbs\.db|desktop\.ini)$", re.I)
 # why a file was left out (the preview and Ich → Speicher show these words)
-WHY_OUT = {"versteckt": ("System- oder versteckte Datei", "system or hidden file"),
+WHY_OUT = {"versteckt": ("System-, Programm- oder versteckte Datei", "system, program or hidden file"),
            "art": ("Art wird nie gelesen", "kind is never read"),
            "gruppe": ("Gruppe nicht gewählt", "group not picked"),
            "gross": ("zu groß", "too large"),

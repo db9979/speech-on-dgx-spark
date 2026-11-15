@@ -205,7 +205,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Sprachausgabe
     "tts": {
-        "stand": "4567cb3557",
+        "stand": "ee996e32d9",
         "bezug": {
             "textnorm.NUMBER_MODES": ["s7"], "tts_proxy.speech": ["s1"], "tts_proxy.check_reference": ["s8"],
             "tts_proxy.engine_status": ["s4"], "tts_proxy.apply_clone": ["s8"], "textnorm.speech_markdown": ["s5"],
@@ -281,10 +281,10 @@ SEITEN = {
             S("s5", "schritt", ("Markdown weg, Geheimnisse verdeckt", "Markdown off, secrets hidden"),
               ("immer, ohne Schalter", "always, no switch"),
               ("speech_markdown nimmt die Zeichen der Formatierung heraus, dann ersetzt hide_secrets Passwörter, "
-               "Codewörter, Einmal-Codes und Schlüssel durch „{textnorm.SECRET_HINT.de}“. Das läuft auf jeder "
+               "Codewörter, Einmal-Codes, Schlüssel und Cookie-Werte („SID=…;“) durch „{textnorm.SECRET_HINT.de}“. Das läuft auf jeder "
                "Anfrage, auch wenn „Text bereinigen“ aus ist; die geschriebene Antwort behält den Wert.",
                "speech_markdown takes out the formatting signs, then hide_secrets replaces passwords, code words, "
-               "one-time codes and keys with „{textnorm.SECRET_HINT.en}“. This runs on every request, also when "
+               "one-time codes, keys and cookie values („SID=…;“) with „{textnorm.SECRET_HINT.en}“. This runs on every request, also when "
                "„Clean text“ is off; the written answer keeps the value.")),
             S("s6", "schritt", ("Text bereinigen", "Clean the text"),
               ("Emojis, Lachen, Links, Code", "emojis, laughter, links, code"),

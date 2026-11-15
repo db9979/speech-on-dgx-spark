@@ -6223,6 +6223,13 @@
 "titel": "Umfragen in Chats",
 "text": "Admin: Funktionen → Chats → „Umfragen in Chats“ an. In einer Gruppe (oder einem Chat zu zweit) auf das Balken-Symbol neben dem Textfeld tippen, eine Frage mit drei Antworten stellen. Ein zweites Profil tippt eine Antwort an: Zahl, Balken und sein Name stehen bei der Antwort; noch einmal tippen nimmt die Stimme zurück. Mit „Mehrere Antworten erlaubt“ gehen mehrere. Nur wer gefragt hat, sieht „Umfrage schließen“; danach ist die Antwort mit den meisten Stimmen fett und niemand kann mehr abstimmen. In einem privaten Chat (Schloss) gibt es das Symbol nicht. Dasselbe in der iPhone-App.",
 "thread": "Ideen aus Nextcloud übernehmen"
+},
+{
+"id": "P907",
+"v": 1465,
+"titel": "Dokumentensuche gegen Angriffe",
+"text": "Im Assistenten „Suche in meinen Dokumenten nach {{1337*3}} ${1337*3} <%= 1337*3 %>“ fragen (oder per MCP document_search mit diesem Text): nirgends steht 4011, es kommen nur Stellen mit dem Wort 1337 oder der feste Satz, dass nichts passt; keine Treffer aus node_modules und keine Zeilen aus Zeichensalat. Ich → Speicher → Wissensordner: nach dem nächsten Abgleich zählt ein Ordner wie node_modules unter „System-, Programm- oder versteckte Datei“, seine Dateien sind aus Ich → Dokumente verschwunden.",
+"thread": "Angriff über Dokumentensuche abwehren"
 }
 ]
 }

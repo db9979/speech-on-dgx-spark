@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.465** Angriff über die Dokumentensuche abgewehrt: keine Programmordner, kein Zeichensalat, keine Cookie-Werte, Fehler ohne Pfade
 - **V01.1.464** Nextcloud-Ideen 3a: Umfragen in Chats
 - **V01.1.463** Käfer fällt auf: wackelt beim Seitenwechsel, krabbelt ab und zu, wird bei Fehlern der Seite orange mit Zahl; nichts springt
 - **V01.1.462** Gemma 4 in NVIDIAs eigener Fassung messen, mit MTP und schnellerem Anlauf bei langen Fragen
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.458** ROT-FIX: der Browser-Test der Profil-Hülle schaltet Chats selbst aus; iPhone-Verlauf baut wieder
 - **V01.1.457** Fix iPhone-App: Verlauf-Liste in Teile zerlegt, damit der Swift-Compiler sie wieder rechtzeitig prüft; ROT-FIX: Gesprächskarte schaltet die breite Ansicht ein Bild später um
 - **V01.1.456** Nextcloud-Ideen 1: Geburtstage als eigener Kalender und ein Hinweis bei neuer Anmeldung
-- **V01.1.455** ROT-FIX: der Browser-Test der Gesprächsliste tippt auf einem Gerät ohne Zeiger auf die Antwort statt zu zeigen
 
 
 

@@ -278,13 +278,9 @@ async def _run(t, name, args, st):
                                    only=nur[0] if nur else None)
         win = getattr(t, "recent_ask", None)
         gone = 0
-        if win is None:     # only passages that hold the words asked for (lokal.COVER, Dominik 2026-10-26: „Dresden“ in a
-            import lokal    # dealer list came back as news about the Frauenkirche)
-            words = lokal.terms(query)
-            kept = [h for h in hits if not words or lokal.cover(words, f"{h['name']} {h.get('head', '')} {h['text']}") >= lokal.COVER]
+        if win is None:     # only passages that hold the words asked for (wissen.nur_passende)
+            kept = wissen.nur_passende(query, hits)
             gone, hits = len(hits) - len(kept), kept
-            if gone:
-                print(f"wissen: dokumentsuche | {gone} stellen ohne die suchwörter weggelassen, {len(hits)} bleiben", flush=True)
         if win is not None:      # "Was habe ich zuletzt notiert?": the newest pages first, then what fits the words
             newest = await wissen.recent(t.who["id"], win[0], win[1])
             seen = {(h["id"], h["page"]) for h in newest}

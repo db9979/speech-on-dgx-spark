@@ -340,6 +340,11 @@ class Pages(Base):
         self.assertEqual(nasquelle.classify("a/b.exe", 10, ["dokumente"]), "art")
         self.assertEqual(nasquelle.classify(".git/x.txt", 10, ["text"]), "versteckt")
         self.assertEqual(nasquelle.classify("~$brief.docx", 10, ["dokumente"]), "versteckt")
+        # program package folders (Angriffstest 2026-11-15: licence texts from node_modules in document_search)
+        for rel in ("home/node_modules/typescript/ThirdPartyNoticeText.txt", "p/venv/lib/site-packages/x/README.md",
+                    "a/__pycache__/n.txt", "Projekt/bower_components/l/LICENSE.txt"):
+            self.assertEqual(nasquelle.classify(rel, 10, ["text"]), "versteckt", rel)
+        self.assertIsNone(nasquelle.classify("Module/node/Notizen.txt", 10, ["text"]))
         self.assertEqual(nasquelle.classify("x.jpg", 10, ["bilder"], pictures=False), "gruppe")
         self.assertIsNone(nasquelle.classify("x.jpg", 10, ["bilder"], pictures=True))
         self.assertEqual(nasquelle.classify("x.txt", documents.MAX_OTHER + 1, ["text"]), "gross")

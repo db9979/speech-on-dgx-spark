@@ -64,6 +64,23 @@ class Secrets(unittest.TestCase):
         self.assertIn("shown in writing only", textnorm.hide_secrets("The password is hunter2.", "English"))
         self.assertIn("nur schriftlich sichtbar", textnorm.hide_secrets("The password is hunter2.", "German"))
 
+    def test_cookie_values_hidden(self):
+        out = textnorm.hide_secrets("SID=1c1aq7t5pu8l9c450ta9duh4i6; SERVERID=web2; lang=de;")
+        self.assertNotIn("1c1aq7t5pu8l9c450ta9duh4i6", out)
+        self.assertIn("SERVERID=web2;", out)
+        self.assertIn("lang=de;", out)
+
+    def test_zeichensalat(self):
+        """Binary read as text leaves the document search (textnorm.salat); ordinary lines in any language stay."""
+        for line in ("›óçKÉ:Î·ý|·,é>9·¹DœXð|Q_‘×·œ5¶%•¼û9?·P", ">·zHÂéš¡¹‡”æÊ L =ÎÃPÝz!›rÓo1ª·™´·4 Ö? qÆÝ··",
+                     "abc \ufffd def"):
+            self.assertTrue(textnorm.salat(line), line)
+        for line in ("Die Straße in Köln, Café Française – très élégant!", "Größe: Übergrößen für Äußerungen öffnen",
+                     "Ελληνικά κείμενο εδώ", "日本語のテキストです。", "Preis: 12,50 € · 3× · ½ Liter",
+                     "Čeština: příliš žluťoučký kůň úpěl", "| Donations are welcome :-) |", "ö£"):
+            self.assertFalse(textnorm.salat(line), line)
+        self.assertEqual(textnorm.ohne_salat("Kopf\n›óçKÉ:Î·ý|·,é>9·¹DœXð|Q_‘×·œ5¶\nFuß"), "Kopf\nFuß")
+
     def test_both_speech_services_always_hide(self):
         """Before the clean_text switch, so turning clean-up off never lets a password through."""
         import ast

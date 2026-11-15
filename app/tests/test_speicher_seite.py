@@ -44,7 +44,7 @@ FOLDER = {"id": "f1f2f3", "nas": PLACE["id"], "path": "/volume1/Ablage/Vertraege
           "groups": ["dokumente"], "skip": ["Alt"], "added": 1, "docs": 1234, "seen": 1300, "left": 66,
           "out": {"art": 3, "versteckt": 2}, "last": {"t": 1, "ok": True}, "fail": None, "running": False}
 NQ = {"admin": True, "on": True, "why": None, "max": 8, "pictures": False, "docs": 1234, "max_docs": 5000, "groups": GROUPS,
-      "out_words": {"art": ["Art wird nie gelesen", "kind is never read"], "versteckt": ["System- oder versteckte Datei", "hidden"]},
+      "out_words": {"art": ["Art wird nie gelesen", "kind is never read"], "versteckt": ["System-, Programm- oder versteckte Datei", "hidden"]},
       "why_words": {"offline": ["nicht erreichbar", "not reachable"]}, "sources": [FOLDER]}
 NAB = {"admin": True, "on": True, "why": None, "docs": True, "made_ok": True, "every": 15, "folder": "spark_ablage",
        "why_words": {"offline": ["nicht erreichbar", "not reachable"]},
