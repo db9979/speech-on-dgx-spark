@@ -3275,6 +3275,10 @@ class Browser(unittest.TestCase):
     def test_profile_gets_the_same_shell(self):
         """Phase 7: a signed-in profile (no admin login) gets the admin's menu with only Assistent and Ich; guests keep
         the plain page."""
+        # the tabs below are without Chats: other tests here turn chats on and leave it (which ran before this one
+        # depended on how GitHub split the tests into parts, Dauer-Wackler V01.1.454-457)
+        helpers.keep_chat(self, "chats")
+        helpers.set_config(chats=False)
         async def go():
             async with async_playwright() as p:
                 for name, w, h in VIEWS:

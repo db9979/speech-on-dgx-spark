@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older versions (V01.0.000 to V01.0.999 and the lines before version numbers): [CHANGELOG-V01.0.md](CHANGELOG-V01.0.md).
 
+- **V01.1.458** · 2026-11-15 · ROT-FIX: der Browser-Test „Profil bekommt dieselbe Hülle“ schaltet Chats selbst aus (andere Tests lassen es an, je nach Aufteilung auf GitHub lief einer davor); Fix iPhone-App: Verlauf nutzt SongsView.days (gab es unter ThingsView nicht) und eine eigene Listen-Ansicht
 - **V01.1.457** · 2026-11-15 · Fix iPhone-App: Verlauf-Liste in Teilausdrücke zerlegt (Suche, Gruppen nach Tagen, Zeile), damit der Swift-Compiler sie wieder in vernünftiger Zeit prüft; ROT-FIX: die Gesprächskarte schaltet ihre breite Ansicht erst im nächsten Bild um (kein „ResizeObserver loop“-Fehler, Dauer-Wackler test_profile_gets_the_same_shell)
 - **V01.1.456** · 2026-11-15 · Nextcloud-Ideen, Stufe 1: Geburtstage im Kalender (Admin-Schalter chat.calendar_bdays, aus): die Geburtstage aus den Kontakten als eigener Kalender auf der Seite Kalender und in der iPhone-App, ganztägig mit Alter, nur lesen, nichts gespeichert; Hinweis bei neuer Anmeldung (chat.login_notice, aus): eine neue Art von Browser meldet sich bei den eigenen Geräten mit dem Weg Ich → Sicherheit → Abmelden, höchstens 5 am Tag
 - **V01.1.455** · 2026-11-15 · ROT-FIX: Browser-Test „Gespräche als Liste“ zeigt die Knöpfe unter einer Antwort auf einem Gerät ohne Zeiger (GitHubs Chromium, Handy) per Tipp statt per Zeigen

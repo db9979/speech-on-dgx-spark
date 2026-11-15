@@ -647,10 +647,10 @@ struct HistoryView: View {
         }
     }
 
-    /// The shown conversations by day, newest first (ThingsView.days).
+    /// The shown conversations by day, newest first (SongsView.days).
     private var groups: [(Int, [SavedConvo])] {
         let sorted: [SavedConvo] = shown.sorted { $0.updated > $1.updated }
-        return ThingsView.days(sorted, at: \SavedConvo.updated)
+        return SongsView.days(sorted, at: \SavedConvo.updated)
     }
 
     var body: some View {
@@ -663,22 +663,7 @@ struct HistoryView: View {
                 } else if list.isEmpty {
                     ContentUnavailableView("Noch keine Gespräche", systemImage: "clock")
                 } else {
-                    List {
-                        if let keptAt { StandNote(at: keptAt, loading: loading).listRowSeparator(.hidden) }
-                        // by day like the panel's list (ichteile.js ldDayGroup): Heute, Gestern, Letzte 7 Tage, Älter
-                        ForEach(groups, id: \.0) { g, items in
-                            Section(ThingsView.dayNames[g]) {
-                                ForEach(items) { c in
-                                    Button {
-                                        talk.resume(c)
-                                        dismiss()
-                                    } label: { row(c) }
-                                    .foregroundStyle(.primary)
-                                }
-                            }
-                        }
-                    }
-                    .searchable(text: $search)
+                    convoList
                 }
             }
             .navigationTitle("Verlauf")
@@ -691,6 +676,26 @@ struct HistoryView: View {
                 await load()
             }
         }
+    }
+
+    /// The conversations by day like the panel's list (ichteile.js ldDayGroup, SongsView.days): Heute, Gestern,
+    /// Letzte 7 Tage, Älter; a view of its own so the compiler checks the body quickly.
+    private var convoList: some View {
+        List {
+            if let keptAt { StandNote(at: keptAt, loading: loading).listRowSeparator(.hidden) }
+            ForEach(groups, id: \.0) { group in
+                Section(SongsView.dayNames[group.0]) {
+                    ForEach(group.1) { (c: SavedConvo) in
+                        Button {
+                            talk.resume(c)
+                            dismiss()
+                        } label: { row(c) }
+                        .foregroundStyle(.primary)
+                    }
+                }
+            }
+        }
+        .searchable(text: $search)
     }
 
     /// One row: the title, the last answer in one line, the time on the right (today the hour, else day and month).

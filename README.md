@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.458** Red fix: the browser test of the profile shell turns Chats off itself; iPhone history builds again
 - **V01.1.457** Fix iPhone app: the history list split into parts so the Swift compiler checks it in time again; red fix: the conversation card switches its wide view one frame later
 - **V01.1.456** Nextcloud ideas 1: birthdays as a calendar of their own and a note on a new sign-in
 - **V01.1.455** Red fix: the browser test of the conversation list taps an answer on a device without hover instead of pointing
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.451** Pair a Spark (E4c): on the Pi under Einstellungen → Spark → Spark koppeln enter name and code from the Spark-Konsole instead of `sudo speech-spark teilen koppeln`; root pairs through the fixed service `speech-spark-koppeln`; the Spark-Konsole loads, measures and adds own models, its overview shows only notes about the Spark itself
 - **V01.1.450** Red fix: the browser test of the bug button counts the page errors as the page noted them, instead of expecting a fixed number
 - **V01.1.449** Fix report 4: a "yes" on the question card after an answer from mail (daily briefing) keeps that answer and its question in the conversation, locked like any mail follow-up
-- **V01.1.448** Vulnerabilities fixed: brotli, certifi, filelock, nltk and Pillow raised on tars, pip 26.3 in every environment built from the lock file
 
 
 
