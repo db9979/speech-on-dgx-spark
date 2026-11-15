@@ -103,7 +103,12 @@ class Page(unittest.TestCase):
                 await self.until(pg, op + "==='0'")
                 self.assertFalse(await pg.evaluate("!!document.querySelector('#chatlog .macts .rpabar').offsetParent"))
                 h0 = await pg.evaluate("document.querySelector('#chatlog .msg:last-child').offsetHeight")
-                await pg.hover("#chatlog .msg:last-child .bubble")
+                # pointing shows them; a device without hover (GitHub's headless Chromium, a phone) after a tap
+                if await pg.evaluate("matchMedia('(hover:none)').matches"):
+                    await pg.click("#chatlog .msg:last-child .bubble", position={"x": 4, "y": 4})
+                    self.assertTrue(await pg.evaluate("document.querySelector('#chatlog .msg:last-child').classList.contains('sel')"))
+                else:
+                    await pg.hover("#chatlog .msg:last-child .bubble")
                 await self.until(pg, op + "==='1'")
                 self.assertEqual(await pg.evaluate("document.querySelector('#chatlog .msg:last-child').offsetHeight"), h0)
                 await pg.click("#chatlog .macts .mmore")

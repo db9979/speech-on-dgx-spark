@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older versions (V01.0.000 to V01.0.999 and the lines before version numbers): [CHANGELOG-V01.0.md](CHANGELOG-V01.0.md).
 
+- **V01.1.455** · 2026-11-15 · ROT-FIX: Browser-Test „Gespräche als Liste“ zeigt die Knöpfe unter einer Antwort auf einem Gerät ohne Zeiger (GitHubs Chromium, Handy) per Tipp statt per Zeigen
 - **V01.1.454** · 2026-11-14 · Gespräche nach Thema (Admin-Schalter chat.convo_topics, aus): neues Gespräch nach 30 Minuten Pause oder einem Themenwechsel der Weiche (feste Regeln, keine Rückfrage), mit Symbol der Gruppe und einem kurzen Namen aus der ersten Frage, im Hintergrund geschrieben; umbenennen, anheften (oben, bleiben), ältere ins Archiv statt verloren, eine Frage darin holt es zurück; Hinweise von selbst nicht mehr im Gespräch; iPhone zeigt Name und Nadel (P899)
 - **V01.1.453** · 2026-11-14 · Gespräche als Liste neben dem Gespräch (Heute, Gestern, Letzte 7 Tage, Älter; schmal über dem Gespräch) statt Auswahlfeld, auch im iPhone-Verlauf nach Tagen; ruhige Antworten: Werkzeug und Quelle in einer grauen Zeile, Knöpfe erst beim Zeigen, Seltenes hinter „⋯“ (P898)
 - **V01.1.452** · 2026-11-14 · Spark-Clients: Kasten „Ein Programm verbinden“ im Panel und in der Spark-Konsole mit Adresse, Ports, Modellnamen, Schlüssel, Zertifikat zum Laden, Prüfbefehl und Fehlerliste; Schritt-für-Schritt-Anleitung in der Doku; Grenzen je Client beim Anlegen und später einstellbar, auch „Keine Grenzen“ (P897)
