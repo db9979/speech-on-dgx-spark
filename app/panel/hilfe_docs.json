@@ -16501,7 +16501,7 @@
 "file": "Sicherheit und Betrieb",
 "head": "Probleme melden",
 "title": "Käfer-Symbol: Fehler oder Wunsch von jeder Seite",
-"text": "ts findet. Andere Teile des Spark dürfen beim Senden nur die Labels aus meldung.EXTRA_LABELS dazugeben (schwachstelle); meldung.labels(d) setzt sie nach festen Regeln. Log meldung: Entwurf <id> | <weg> | <bereich> | fehler/verbesserung | n Logzeilen | n Anfragen | n Seitenfehler | n ersetzt. API: POST /api/report/draft mit zusätzlich kind (fehler, verbesserung), page (höchstens 80 Zeichen) und pageerr (Zeilen)."
+"text": "ts findet. Andere Teile des Spark dürfen beim Senden nur die Labels aus meldung.EXTRA_LABELS dazugeben (schwachstelle); meldung.labels(d) setzt sie nach festen Regeln. Log meldung: Entwurf <id> | <weg> | <bereich> | fehler/verbesserung | n Logzeilen | n Anfragen | n Seitenfehler | n ersetzt. API: POST /api/report/draft mit zusätzlich kind (fehler, verbesserung), page (höchstens 80 Zeichen) und pageerr (Zeilen). Käfer fällt auf (ab V01.1.463, Dominik 2026-11-15 „3 und 4 und 1“, kein eigener Schalter): Beim Wechsel der Seite wackelt der Käfer kurz, etwa jede Minute krabbelt er ein Stück nach links und zurück (nur solange die Seite sichtbar ist). Hat die Seite einen Fehler notiert, wird er orange, schüttelt sich und zeigt die Zahl der neuen Fehler (bis „9+“); öffnest du das Fenster, gelten sie als gesehen und der Käfer wird wieder grau. Es bewegt sich nur die Zeichnung, der Knopf behält Platz und Größe, auf der Seite springt nichts; mit „Bewegung reduzieren“ des Geräts bleibt er ruhig, Farbe und Zahl bleiben. In der iPhone-App wackelt und krabbelt er genauso; eine Zahl gibt es dort nicht, weil die App keine Fehler einer Webseite sammelt (melden.js KF, ReportView.swift KaeferBild)."
 },
 {
 "lang": "de",
@@ -33949,7 +33949,7 @@
 "file": "Security and operation",
 "head": "Reporting problems",
 "title": "Ladybug: a fault or a wish from every page",
-"text": "ts of the Spark may add only the labels in meldung.EXTRA_LABELS when sending (schwachstelle); meldung.labels(d) sets them by fixed rules. Log meldung: Entwurf <id> | <way> | <area> | fehler/verbesserung | n Logzeilen | n Anfragen | n Seitenfehler | n ersetzt. API: POST /api/report/draft with in addition kind (fehler, verbesserung), page (at most 80 characters) and pageerr (lines)."
+"text": "ts of the Spark may add only the labels in meldung.EXTRA_LABELS when sending (schwachstelle); meldung.labels(d) sets them by fixed rules. Log meldung: Entwurf <id> | <way> | <area> | fehler/verbesserung | n Logzeilen | n Anfragen | n Seitenfehler | n ersetzt. API: POST /api/report/draft with in addition kind (fehler, verbesserung), page (at most 80 characters) and pageerr (lines). The ladybug stands out (since V01.1.463, Dominik 2026-11-15 \"3 und 4 und 1\", no switch of its own): on a change of page the ladybug wiggles briefly, about every minute it crawls a bit to the left and back (only while the page is visible). When the page noted an error it turns orange, shakes and shows the number of new errors (up to \"9+\"); opening the window counts them as seen and it turns grey again. Only the drawing moves, the button keeps its place and size, nothing on the page jumps; with the device's \"Reduce motion\" it stays still, colour and number stay. In the iPhone app it wiggles and crawls the same; there is no number there, as the app collects no errors of a web page (melden.js KF, ReportView.swift KaeferBild)."
 },
 {
 "lang": "en",

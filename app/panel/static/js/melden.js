@@ -16,7 +16,21 @@ function rpMsg(x,err){const m=RP.root&&RP.root.querySelector('.rpmsg');if(m){m.t
 // in the preview like every line. Words and paths only, never a request's body or answer.
 const RP_ERR=[],RP_ERR_MAX=20;
 function rpNote(kind,what){const x=String(what||'').replace(/\s+/g,' ').replace(/[?#].*$/,'').slice(0,200);if(!x)return;
-  RP_ERR.push(new Date().toTimeString().slice(0,8)+' '+kind+': '+x);if(RP_ERR.length>RP_ERR_MAX)RP_ERR.shift()}
+  RP_ERR.push(new Date().toTimeString().slice(0,8)+' '+kind+': '+x);if(RP_ERR.length>RP_ERR_MAX)RP_ERR.shift();KF.n++;kfShow();kfPlay('kf-shake')}
+// Käfer auffälliger (Dominik 2026-11-15 „3 und 4 und 1“): only the ladybug's own drawing moves (transform, a fixed
+// box), so nothing on the page shifts. 1 kf-wig: a short wiggle on every page change. 3 kf-err: orange with the
+// number of the page's errors since the report window was last opened, and a shake for each new one. 4 kf-crawl:
+// every KF_CRAWL_MS it crawls a bit to the left and back, only while the page is visible. „Bewegung reduzieren“:
+// no movement (app.css), the colour and the number stay.
+const KF={n:0,seen:0},KF_CRAWL_MS=60000;
+const kfEls=()=>document.querySelectorAll('#rpbug,#aptrail [data-ap=bug]');
+function kfShow(){const n=KF.n-KF.seen;kfEls().forEach(b=>{b.classList.toggle('kf-err',n>0);if(n>0)b.dataset.n=n>9?'9+':String(n);else delete b.dataset.n})}
+function kfPlay(c){kfEls().forEach(b=>{if(b.offsetParent===null)return;b.classList.remove(c);void b.offsetWidth;b.classList.add(c)})}
+window.kfShow=kfShow;
+document.addEventListener('animationend',e=>{const b=e.target.closest&&e.target.closest('#rpbug,#aptrail [data-ap=bug]');
+  if(b)b.classList.remove('kf-wig','kf-shake','kf-crawl')});
+document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('nav button[data-s]'))setTimeout(()=>kfPlay('kf-wig'),0)},true);
+setInterval(()=>{if(!document.hidden)kfPlay('kf-crawl')},KF_CRAWL_MS);
 window.rpNote=rpNote;
 window.addEventListener('error',e=>rpNote('js',(e.message||'')+(e.filename?' @ '+String(e.filename).split('/').pop()+':'+(e.lineno||0):'')));
 window.addEventListener('unhandledrejection',e=>rpNote('js',(e.reason&&e.reason.message)||String(e.reason||'')));
@@ -151,7 +165,7 @@ async function showReport(){const box=$('rpbox');if(!box)return;if(!PROFILE||!RP
   if(RP.root===box&&(RP.cur||RP.thread))return;RP.here=null;await rpList(box)}
 function rpOpen(here){if(typeof closeSheet==='function')closeSheet();$('rpmodal').style.display='grid';$('rphead').textContent=here?t('Fehler oder Wunsch melden','Report a fault or a wish'):t('Problem melden','Report a problem');RP.here=null;rpList($('rpbody'),here||null)}
 // the Käfer on top of every page: the window with this page, its area, its errors and the last 10 minutes
-function rpBug(){const h=rpHere();rpOpen(h)}
+function rpBug(){const h=rpHere();KF.seen=KF.n;kfShow();rpOpen(h)}
 function rpClose(){$('rpmodal').style.display='none';if(RP.root===$('rpbody'))RP.root=null}
 ON.rpOpen=()=>rpOpen();ON.rpBug=()=>rpBug();ON.rpClose=()=>rpClose();
 $('rpmodal').addEventListener('click',e=>{if(e.target===$('rpmodal'))rpClose()});

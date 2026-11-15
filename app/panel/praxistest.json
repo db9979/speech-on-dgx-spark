@@ -6209,6 +6209,13 @@
 "text": "Auf tars sudo speech-spark modelle messen gemma4nv ausführen (vorher kurz auf das jetzige Gemma 4 achten: die Messung hält das Sprachmodell an). Unter Zustand → Modelle steht danach „Gemma 4 26B A4B NVFP4 von NVIDIA mit Entwurfsmodell (MTP)“ mit Tokens pro Sekunde und Zeit bis zum ersten Wort; zum Vergleich: unsloth mit MTP 63,1. Werkzeug und Bild sollen ok sein.",
 "thread": "GPU-Taktgrenze auf tars einbauen",
 "test": "test_modelle.Katalog.test_messliste"
+},
+{
+"id": "P905",
+"v": 1463,
+"titel": "Käfer fällt auf",
+"text": "Funktionen → Zugang → Probleme melden ist an. Im Panel zwischen zwei Seiten wechseln: der Käfer oben rechts wackelt kurz. Eine Minute auf einer Seite bleiben: er krabbelt ein Stück nach links und zurück, die Seite darunter bewegt sich nicht. In der iPhone-App wackelt er beim Öffnen von Assistent oder Heute und krabbelt ebenso. Am Gerät „Bewegung reduzieren“ einschalten: er bleibt ruhig.",
+"thread": "Fehler und Wünsche als Issue melden"
 }
 ]
 }

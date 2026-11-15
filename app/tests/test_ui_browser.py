@@ -1683,7 +1683,21 @@ class Browser(unittest.TestCase):
                     box = await pg.locator(bug).bounding_box()
                     self.assertLessEqual(box["x"] + box["width"], w, name)
                     self.assertLess(box["y"], 120, f"{name}: Käfer nicht oben")
+                    self.assertGreater(box["x"], w - 120, f"{name}: Käfer nicht rechts")
                     await pg.evaluate("api('/api/report?id=zz').catch(()=>{})")   # a failed request of this page
+                    # Käfer auffälliger (Dominik 2026-11-15 „3 und 4 und 1“): orange with the number of the page's
+                    # errors; wiggle on a page change, now and then a crawl; only the drawing moves, the box stays
+                    await self.until(pg, f"document.querySelector('{bug}').classList.contains('kf-err')")
+                    self.assertGreaterEqual(int((await pg.get_attribute(bug, "data-n")).rstrip("+")), 1, name)
+                    before = await pg.locator(bug).bounding_box()
+                    moved = await pg.evaluate(f"""new Promise(r=>{{const b=document.querySelector('{bug}');kfPlay('kf-crawl');
+                        setTimeout(()=>r([b.classList.contains('kf-crawl'),getComputedStyle(b.querySelector('svg')).transform]),300)}})""")
+                    self.assertTrue(moved[0], name)
+                    self.assertNotEqual(moved[1], "none", f"{name}: Käfer krabbelt nicht")
+                    self.assertEqual(await pg.locator(bug).bounding_box(), before, f"{name}: Käfer springt")
+                    wig = await pg.evaluate(f"""new Promise(r=>{{document.querySelector('nav button[data-s].on').click();
+                        setTimeout(()=>r(document.querySelector('{bug}').classList.contains('kf-wig')),50)}})""")
+                    self.assertTrue(wig, f"{name}: kein Wackeln beim Seitenwechsel")
                     if os.environ.get("RP_SHOT"):
                         await pg.screenshot(path=f"{os.environ['RP_SHOT']}/kaefer-{name}.png")
                     await pg.click(bug)
@@ -1691,6 +1705,8 @@ class Browser(unittest.TestCase):
                     self.assertEqual(await pg.input_value("#rpbody .rparea"), "post", name)
                     self.assertEqual(await pg.input_value("#rpbody .rpmin"), "10", name)
                     self.assertEqual(await pg.locator("#rpbody [data-rpkind]").count(), 2)
+                    self.assertFalse(await pg.evaluate(f"document.querySelector('{bug}').classList.contains('kf-err')"),
+                                     f"{name}: nach dem Öffnen gilt der Fehler als gesehen")
                     # the count is the page's own errors at this moment: ours is among them, and on a busy runner a
                     # request of the page itself may have failed too (main 2026-11-14: „3 Fehler“), so the line has to
                     # say exactly as many as the page noted, never a fixed number

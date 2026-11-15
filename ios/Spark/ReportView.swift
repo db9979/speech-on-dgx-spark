@@ -27,7 +27,7 @@ struct Kaefer: ViewModifier {
             .toolbar {
                 if talk.allowed.report {
                     ToolbarItem(placement: .topBarTrailing) {
-                        Button { open = true } label: { Image(systemName: "ladybug") }
+                        Button { open = true } label: { KaeferBild() }
                             .accessibilityLabel("Fehler oder Wunsch melden")
                     }
                 }
@@ -38,6 +38,48 @@ struct Kaefer: ViewModifier {
 
 extension View {
     func kaefer(_ page: String) -> some View { modifier(Kaefer(page: page)) }
+}
+
+/// Käfer auffälliger (Dominik 2026-11-15 „3 und 4 und 1“, like the panel's melden.js KF): a short wiggle when the view
+/// appears, and every minute it crawls a bit to the left and back. Only the drawing moves (rotation and offset), the
+/// button keeps its place; with „Bewegung reduzieren“ it stays still. The orange number of the panel counts errors of a
+/// web page, which the app does not have.
+struct KaeferBild: View {
+    @Environment(\.accessibilityReduceMotion) private var still
+    @State private var turn = 0.0
+    @State private var move = 0.0
+
+    var body: some View {
+        Image(systemName: "ladybug")
+            .rotationEffect(.degrees(turn))
+            .offset(x: move)
+            .task {
+                guard !still else { return }
+                await wiggle()
+                while !Task.isCancelled {
+                    try? await Task.sleep(for: .seconds(60))
+                    if Task.isCancelled { break }
+                    await crawl()
+                }
+            }
+    }
+
+    private func step(_ seconds: Double, _ change: @escaping () -> Void) async {
+        withAnimation(.easeInOut(duration: seconds)) { change() }
+        try? await Task.sleep(for: .seconds(seconds))
+    }
+
+    private func wiggle() async {
+        for a in [-12.0, 10, -8, 5, 0] { await step(0.12) { turn = a } }
+    }
+
+    private func crawl() async {
+        await step(0.35) { turn = -90; move = -8 }
+        await step(0.7) { move = -18 }
+        await step(0.25) { turn = 90 }
+        await step(0.85) { move = 0 }
+        await step(0.25) { turn = 0 }
+    }
 }
 
 struct ReportView: View {

@@ -3705,6 +3705,15 @@ body.appview .ffilt button{flex:0 0 auto;overflow:visible}
 /* Käfer-Symbol (melden.js rpBug): Fehler oder Wunsch von jeder Seite melden; nur mit „Probleme melden“ */
 #rpbug[hidden],body.appview.apbaron #rpbug{display:none!important}
 main{position:relative}#rpbug{position:absolute;top:14px;right:14px;z-index:4;padding:8px;min-width:40px;min-height:40px;color:var(--mut);background:none;border:0}#rpbug svg{width:18px;height:18px}#rpbug:hover{color:var(--fg)}
+/* Käfer auffälliger (melden.js KF): only the drawing moves, the button keeps its box; the number sits on top of it */
+#aptrail [data-ap=bug]{position:relative}#rpbug svg,#aptrail [data-ap=bug] svg{transform-origin:50% 60%}
+#rpbug.kf-err,#aptrail [data-ap=bug].kf-err{color:var(--warnt)}
+#rpbug.kf-err::after,#aptrail [data-ap=bug].kf-err::after{content:attr(data-n);position:absolute;top:2px;right:0;min-width:16px;height:16px;padding:0 4px;box-sizing:border-box;border-radius:8px;background:var(--warn);color:var(--on-acc);font-weight:700;font-size:11.5px;line-height:16px;text-align:center;pointer-events:none}
+.kf-wig svg{animation:kfwig .6s ease-in-out}.kf-shake svg{animation:kfshake .5s ease-in-out}.kf-crawl svg{animation:kfcrawl 2.4s ease-in-out}
+@keyframes kfwig{20%{transform:rotate(-12deg)}40%{transform:rotate(10deg)}60%{transform:rotate(-8deg)}80%{transform:rotate(5deg)}}
+@keyframes kfshake{20%{transform:translateX(-3px)}40%{transform:translateX(3px)}60%{transform:translateX(-2px)}80%{transform:translateX(1px)}}
+@keyframes kfcrawl{15%{transform:translate(-8px,1px) rotate(-90deg)}45%{transform:translate(-18px,1px) rotate(-90deg)}55%{transform:translate(-18px,1px) rotate(90deg)}90%{transform:translate(0,0) rotate(90deg)}100%{transform:none}}
+@media(prefers-reduced-motion:reduce){.kf-wig svg,.kf-shake svg,.kf-crawl svg{animation:none}}
 .rpkind{display:flex;gap:6px;margin-bottom:8px}.rpkind .b.on{background:var(--acc);color:var(--on-acc);border-color:var(--acc)}
 body.appview:not(.prof):not(.guest):not(.inchat) #aptrail [data-ap=bug]{margin-right:42px}   /* neben dem Mikrofon (#fab) */
 /* Ein Programm verbinden (sparkverbinden.js) */
