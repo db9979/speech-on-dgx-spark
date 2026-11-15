@@ -4370,7 +4370,11 @@ class Equipment(Base):
         self.assertIn(tuple(kal.heute(r, x)["monat"]), kal.MONATE["alle"])
         self.assertGreaterEqual(kal.for_live()["feste"], 1)
         with open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8") as f:
-            self.assertIn("${dmKalender(v)}", f.read())
+            js = f.read()
+        self.assertIn("${dmKalender(v)}", js)
+        self.assertIn("${dmZeitzeile(v)}", js)          # date, moons and time of day in one line (Prüfung 15.11., Punkt 8)
+        with open(os.path.join(os.path.dirname(dungeon.__file__), "static", "app.css"), encoding="utf-8") as f:
+            self.assertIn(".dm-zeitzeile{display:flex", f.read())
 
     def test_the_time_of_day_comes_from_the_panel(self):
         """LlamaTale idea 1 (Tageszeit vom Panel, switch dungeontageszeit): off by default, the narrator reports it as
@@ -4646,7 +4650,7 @@ class Equipment(Base):
         self.assertGreaterEqual(an.for_live()["weg_verworfen"], 3)
         with open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8") as fh:
             js = fh.read()
-        for x in ("dmKannst(v.anleiten.knoepfe)", "{anleitung:s.value}", "data-dmanleit"):
+        for x in ("dmKannst(v.anleiten.knoepfe,mehrk)", "{anleitung:s.value}", "data-dmanleit"):
             self.assertIn(x, js)
 
     def test_a_vague_narration_is_told_again(self):
@@ -7422,6 +7426,7 @@ class Windows(unittest.TestCase):
                         if w > 760:
                             self.assertEqual(await pg.evaluate(f"[{shown}('#dmview .dm-head [data-dmkopf]'),{shown}('#dmview .dm-mek-schnell'),{shown}('#dmview .dm-head [data-dmback]'),{shown}('#dungeon .ic-tabs')]"), [False, False, True, True])
                             self.assertEqual(await pg.evaluate("getComputedStyle(document.querySelector('#dmview .dm-handeln')).position"), "static")
+                            self.assertEqual(await pg.evaluate(f"[{shown}('#dmview .dm-handeln [data-dmzu]'),{shown}('#dmview .dm-handeln .dm-wartk')]"), [False, False])   # the phone's bar only
                         else:
                             # the head: one row with title, turn and „⋯“; the rest under „⋯“
                             self.assertEqual(await pg.evaluate(f"[{shown}('#dmview .dm-head [data-dmkopf]'),{shown}('#dmview .dm-head [data-dmback]'),{shown}('#dmview .dm-head .dm-help'),{shown}('#dmview .dm-head [data-dmvoll]'),{shown}('#dungeon .ic-tabs')]"), [True, False, False, False, False])
@@ -7456,6 +7461,18 @@ class Windows(unittest.TestCase):
                             wide, below = await pg.evaluate(row)
                             self.assertGreater(wide, 300)
                             self.assertTrue(below)
+                            # the smaller bar (Punkt 6): who waits in the status line, no row of its own; ▾ folds the bar
+                            # to the field and ➤ and stays folded on this device, ▴ unfolds it
+                            self.assertEqual(await pg.evaluate(f"[{shown}('#dmview .dm-handeln .dm-wait:not(.dm-tippt)'),{shown}('#dmview .dm-handeln .dm-wartk'),{shown}('#dmview .dm-handeln [data-dmzu]')]"), [False, True, True])
+                            h0 = await pg.evaluate("document.querySelector('#dmview .dm-handeln').getBoundingClientRect().height")
+                            await pg.click("#dmview .dm-handeln [data-dmzu]")
+                            self.assertEqual(await pg.evaluate(f"[document.querySelector('#dmview .dm-handeln').classList.contains('zu'),{shown}('#dmview .dm-handeln .dm-mic'),{shown}('#dmview .dm-handeln [data-dmsend]'),localStorage.getItem('dm-leiste')]"), [True, False, True, "zu"])
+                            self.assertLess(await pg.evaluate("document.querySelector('#dmview .dm-handeln').getBoundingClientRect().height"), h0)
+                            self.assertTrue(await pg.evaluate("(()=>{const a=document.querySelector('#dmview .dm-handeln .dm-in').getBoundingClientRect(),s=document.querySelector('#dmview .dm-handeln [data-dmsend]').getBoundingClientRect();return Math.abs(a.top-s.top)<24&&a.width>250})()"))   # one row
+                            await pg.evaluate("dmDraw()")
+                            self.assertTrue(await pg.evaluate("document.querySelector('#dmview .dm-handeln').classList.contains('zu')"))   # kept
+                            await pg.click("#dmview .dm-handeln [data-dmzu]")
+                            self.assertEqual(await pg.evaluate(f"[document.querySelector('#dmview .dm-handeln').classList.contains('zu'),{shown}('#dmview .dm-handeln .dm-mic'),localStorage.getItem('dm-leiste')]"), [False, True, "auf"])
                             await pg.evaluate("window.scrollTo(0,document.documentElement.scrollHeight)")
                             await pg.wait_for_timeout(200)
                             self.assertTrue(await pg.evaluate("document.querySelector('#dmview .dm-feed').getBoundingClientRect().bottom<=document.querySelector('#dmview .dm-handeln').getBoundingClientRect().top+1"))
@@ -7867,13 +7884,17 @@ class Windows(unittest.TestCase):
                         await b.until(pg, "!!document.querySelector('#dmview .dm-fen-pult .dm-go[data-dmweiter]')")
                         self.assertTrue(await pg.evaluate(fits), w)
                         # „Tafeln“ (Dominik 2026-10-25 „empfehlung umsetzten für das spielleiter pult“): four equal cards, two by two
-                        self.assertEqual(await pg.evaluate("[...document.querySelectorAll('#dmview .dm-fen-pult .dm-pult-sp')].map(x=>x.dataset.pult)"), ["zug", "tisch", "erz", "schwer"])
+                        sp = await pg.evaluate("[...document.querySelectorAll('#dmview .dm-fen-pult .dm-pult-sp')].map(x=>x.dataset.pult)")
+                        self.assertEqual(sp[:4], ["zug", "tisch", "erz", "schwer"])
+                        self.assertIn(sp[4:], ([], ["karte"]))                                  # the host's map tools (Prüfung 15.11., Punkt 8)
                         self.assertTrue(await pg.evaluate("!!document.querySelector('#dmview .dm-fen-pult .dm-pkopf .dm-go[data-dmweiter]')"))   # on top, with who acted
                         self.assertTrue(await pg.evaluate("!!document.querySelector('#dmview .dm-fen-pult .dm-pkopf .dm-pwer')"))
                         if w == 1280:                                                                  # two by two, each row of one height
                             rows = await pg.evaluate("[...document.querySelectorAll('#dmview .dm-pult-sp')].map(x=>{const r=x.getBoundingClientRect();return [Math.round(r.top),Math.round(r.height)]})")
                             self.assertEqual((rows[0], rows[2]), (rows[1], rows[3]), rows)
                             self.assertLess(rows[0][0], rows[2][0])
+                            if sp[4:]:                                                         # the map card across the whole width
+                                self.assertTrue(await pg.evaluate("(()=>{const p=document.querySelector('#dmview .dm-pult').getBoundingClientRect(),k=document.querySelector('#dmview [data-pult=karte]').getBoundingClientRect();return k.width>p.width-2&&k.top>p.top})()"))
                         # a choice is a band of buttons, never a cut list (the voice „Wanderer am Feu…“)
                         self.assertFalse(await pg.evaluate("!!document.querySelector('#dmview .dm-fen-pult .dm-pult select')"))
                         self.assertTrue(await pg.evaluate("!!document.querySelector('#dmview .dm-fen-pult [data-pult=schwer] input[type=radio][data-dmkstufe]')"))

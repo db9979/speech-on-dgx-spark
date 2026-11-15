@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.476** Dungeon-Prüfung 15.11., Punkte 6 und 8: kleinere Handeln-Leiste am Handy (Zustand mit „wartet auf …“ in einer Zeile, Wunsch und weitere Knöpfe hinter „⋯ Mehr“, ▾ klappt auf Feld und Senden-Pfeil zusammen, je Gerät gemerkt), Datum, Monde und Tageszeit in einer Zeile über der Geschichte, „Gewölbe würfeln“ und „Karte neu würfeln“ im Spielleiter-Pult unter „Karte“ statt unter der Karte (P918)
 - **V01.1.475** Hinweise oben ruhig: nur noch ein kleines Zeichen „● N Hinweise“ neben dem Käfer, gleiche Ursache in einer Zeile
 - **V01.1.474** ROT-FIX Dungeon-Handyleiste: die Leiste wächst nicht mehr mit dem Text (Zustand eine Zeile mit „…“, Vorschläge eine Reihe zum Wischen); auf GitHub nahm sie mit breiterer Schrift über die halbe Höhe ein, test_the_phone_table_head_fight_field_group_and_hero war dadurch ein Dauer-Wackler, jetzt mit breiter Schrift geprüft
 - **V01.1.473** Käfer überdeckt nichts mehr: am Rechner im Seitenmenü neben dem Mikrofon, am Handy mit Abstand; Wächter-Test prüft alle Seiten
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.469** Dungeon-Master: Eingabefeld am Handy über die ganze Breite, Wartezeit je Zug unter Zustand, schnellere Erzählung durch festen Anfang der Anweisung
 - **V01.1.468** Ideen aus OpenFuse: Seitenänderung beim Beobachten ohne Sprachmodell, Fragen warten im Chat
 - **V01.1.467** Nextcloud-Ideen 3b: Termin finden im Chat
-- **V01.1.466** Käfer füllt vor, was die Seite bemerkt hat (nur Art, Status und Pfad), bleibt beim Scrollen stehen und steht auch auf Ich
 
 
 

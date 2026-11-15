@@ -2551,7 +2551,7 @@ textarea{resize:none}textarea[data-fest]{resize:vertical}textarea.feldplatz{padd
 .dm-dm p{margin:4px 0;white-space:pre-wrap}.dm-n{font-size:12px;font-weight:650;color:var(--acct)}
 .dm-npc{border-left:3px solid var(--acc2);padding-left:9px;margin-top:6px}.dm-npc p{margin:2px 0}.dm-heldsagt{border-left-color:var(--acc)}
 .dm-fremd .dm-fremdt{font-size:.85em;opacity:.8;font-style:italic;margin-top:2px}
-.dm-kalender{font-size:.9em;opacity:.85;margin:4px 0 8px}.dm-kalsatz{font-style:italic;margin-top:2px}
+.dm-kalender{font-size:.9em;opacity:.85;margin:4px 0 8px}.dm-wartk,.dm-zu,.dm-mehrk,.dm-nurk{display:none}.dm-zeitzeile{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:6px;margin:4px 0 8px}.dm-zeitzeile>.dm-kalender{margin:0}.dm-zeitzeile>.dm-tageszeit::before{content:"·";margin-right:6px;opacity:.6}.dm-kalsatz{font-style:italic;margin-top:2px}
 .dm-buch{border:1px solid var(--line);border-radius:12px;padding:10px;margin-top:8px}.dm-buchkopf{display:flex;align-items:center;gap:8px}.dm-buchkopf b{flex:1}.dm-buchschrift{white-space:pre-wrap;font-style:italic}
 .dm-gefaehrte.aus{opacity:.6}
 .dm-wunsch{margin-top:6px;font-size:.92em}.dm-wunsch select,.dm-wunsch textarea{width:100%;margin:4px 0}.dm-wunsch ul{margin:4px 0 0 18px;padding:0}
@@ -2672,6 +2672,15 @@ body.dg-offen{overflow:hidden}body.dg-offen #fab{display:none}
      second, so the bar reached over half the screen): the status one line, cut with „…“, the suggestions one row to swipe */
   .dm-tisch .dm-handeln .dm-zeitz{flex-wrap:nowrap;min-width:0}.dm-tisch .dm-handeln .dm-zeitz .dm-dran{white-space:nowrap;flex:0 0 auto}.dm-tisch .dm-handeln .dm-zeitz .dm-left{white-space:nowrap;flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
   .dm-tisch .dm-kannst{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}.dm-tisch .dm-kannst::-webkit-scrollbar{display:none}.dm-tisch .dm-kannst .dm-weg{flex:0 0 auto;white-space:nowrap}
+  /* the smaller bar (Prüfung 15.11., Punkt 6): the wait in the status line, „⋯ Mehr“ at the end of the suggestions, ▾ folds it */
+  .dm-tisch .dm-handeln .dm-wait:not(.dm-tippt),.dm-tisch .dm-handeln .dm-zeitz .dm-plus1,.dm-tisch .dm-handeln:not(.mehr) .dm-wunsch,.dm-tisch .dm-kannst>small{display:none}
+  .dm-tisch .dm-handeln.mehr .dm-zeitz .dm-plus1{display:inline-flex}.dm-tisch .dm-handeln .dm-wartk{display:inline;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .dm-tisch .dm-handeln .dm-zeitz{gap:8px;margin-bottom:4px}.dm-tisch .dm-handeln .dm-zeitz .dm-wartk{flex:1 1 0}.dm-tisch .dm-handeln .dm-zu{display:inline-block;margin-left:auto;border:0;background:none;color:inherit;font-size:17px;padding:2px 8px;min-width:40px;min-height:32px}
+  .dm-tisch .dm-kannst{margin-top:6px}
+  .dm-tisch .dm-handeln .dm-mehrk{display:inline-flex;border-style:dashed}.dm-tisch .dm-handeln .dm-nurk{display:flex}
+  .dm-tisch .dm-handeln.zu .dm-kannst,.dm-tisch .dm-handeln.zu .dm-mic,.dm-tisch .dm-handeln.zu .dm-mut,.dm-tisch .dm-handeln.zu .dm-wunsch{display:none}
+  .dm-tisch .dm-handeln.zu .dm-inp{flex-wrap:nowrap}.dm-tisch .dm-handeln.zu .dm-inp textarea{flex:1 1 auto}
+  .dm-tisch .dm-handeln.zu .dm-inp [data-dmsend]{flex:0 0 52px}.dm-tisch .dm-handeln.zu .dm-inp [data-dmsend] .dm-sendt{display:none}.dm-tisch .dm-handeln.zu .dm-inp [data-dmsend]::after{content:"➤";font-size:17px}
   body:has(#dmview.dm-amtisch) #dungeon .ic-tabs{display:none}
   body:has(#dmview.dm-amtisch) main,body:has(#dmview.dm-amtisch) #dungeon,body:has(#dmview.dm-amtisch) #dungeon :is(#dmroot,.ic-tabwrap,.ic-tabbody){padding-left:0;padding-right:0;margin-left:0;margin-right:0;border:0;border-radius:0;box-shadow:none;background:none}
   #dmview.dm-tisch.dm-amtisch{margin:0;border-radius:0}
@@ -3117,7 +3126,7 @@ body.dg-gast>*:not(#dgmodal){display:none!important}   /* a guest without a prof
    top, four equal cards in two columns, one strip „Nur für dich“; headings in small caps only, a choice a band of buttons */
 .dm-pkopf{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin-bottom:14px}.dm-pkopf .dm-go{flex:1 1 260px;width:auto;margin:0}
 .dm-pwerl{display:flex;flex-wrap:wrap;gap:6px}.dm-pwer{display:inline-flex;align-items:center;gap:4px;padding:5px 11px;border-radius:999px;border:1px solid var(--t-linie,var(--line));font-size:13px;white-space:nowrap}.dm-pwer.ok{border-color:color-mix(in srgb,#2f6b45 60%,transparent);background:color-mix(in srgb,#2f6b45 16%,transparent)}
-.dm-pult{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:stretch}.dm-pult-sp{min-width:0;display:flex;flex-direction:column;gap:8px;border:1px solid var(--t-linie,var(--line));border-radius:14px;padding:12px 14px 14px;background:color-mix(in srgb,var(--t-karte,var(--card)) 60%,transparent)}
+.dm-pult{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:stretch}.dm-pult-sp[data-pult=karte]{grid-column:1/-1}.dm-pult-sp{min-width:0;display:flex;flex-direction:column;gap:8px;border:1px solid var(--t-linie,var(--line));border-radius:14px;padding:12px 14px 14px;background:color-mix(in srgb,var(--t-karte,var(--card)) 60%,transparent)}
 .dm-pult-sp>h5,.dm-pgeheim>h5{margin:0 0 2px;font-size:11.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;opacity:.75}.dm-pult-sp .dm-zeile,.dm-pult-sp .dm-mehr{margin-top:0}.dm-pult-sp .dm-mehr{margin-top:auto}
 .dm-plabel{font-size:13px;opacity:.85}
 .dm-schalt{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;box-sizing:border-box;padding:9px 12px;border-radius:12px;border:1px solid var(--t-linie,var(--line));background:transparent;color:inherit;font:inherit;font-size:14px;text-align:left;cursor:pointer}

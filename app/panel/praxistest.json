@@ -6307,6 +6307,14 @@
 "text": "Mit mindestens einem Hinweis (z. B. NAS aus oder offene Schwachstellen) eine Admin-Seite öffnen: über der Seite steht keine Zeile mehr, oben rechts neben dem Käfer nur „● N Hinweise“ (Punkt rot bei einem roten Hinweis), der Käfer bleibt frei. Antippen: die Hinweise liegen als Blase darüber, die Seite rückt nicht; „Ansehen“ springt und schließt sie, ein Tipp daneben oder Esc schließt sie. Fällt die NAS aus, steht „Die NAS antwortet seit … nicht. Betroffen: …“ als eine Zeile statt drei. In der Android-App steht „● N“ in der Leiste oben, im iPhone unter Spark verwalten → Monitoring → Braucht dich eine zugeklappte Zeile „N Hinweise“.",
 "thread": "Meldungen oben ruhiger machen",
 "test": "test_sprunglinks.Browser.test_alerts_fold_and_still_jump"
+},
+{
+"id": "P918",
+"v": 1476,
+"titel": "Dungeon: kleinere Leiste am Handy, Zeitzeile, Karten-Knöpfe im Pult",
+"text": "Am Handy eine Runde öffnen: unten steht der Zustand in einer Zeile („Du bist dran“, wie viele gehandelt haben, auf wen gewartet wird), darunter das Feld über die ganze Breite mit Mikrofon und „Handeln“, darunter die Vorschläge als eine Reihe zum Wischen mit „⋯ Mehr“ am Ende (zeigt den Wunsch an den Erzähler). ▾ oben rechts klappt die Leiste auf Feld und Pfeil zusammen, nach dem Neuladen bleibt sie zu, ▴ öffnet sie. Über der Geschichte stehen Datum, Monde und Tageszeit in einer Zeile. Als Gastgeber mit Karte: „Gewölbe würfeln“ und „Karte neu würfeln“ stehen nicht mehr unter der Karte, sondern im Spielleiter-Pult unter „Karte“.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler",
+"test": "test_dungeon.Windows.test_the_phone_table_head_fight_field_group_and_hero"
 }
 ]
 }

@@ -7828,6 +7828,22 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: ruhigere Spalte und eine Zeile für die Zeit (Prüfung 15.11., Punkt 8): Ohne eigenen Schalter. Datum, Monde, Fest und Tageszeit stehen in einer Zeile über der Geschichte (dmZeitzeile), nur wenn sie nicht passt, bricht sie um. Die Werkzeuge des Gastgebers für die Karte („🎲 Gewölbe würfeln“, „↻ Karte neu würfeln“, dmkHost) stehen nicht mehr unter der Karte in der Spalte des Spiels, sondern im Spielleiter-Pult in der Karte „Karte“. Selbsttest test_the_map_at_the_table in test_dungeon_karte (keine Knöpfe an der Karte, das Gewölbe aus dem Pult)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "KI-Dungeon-Master: kleinere Handeln-Leiste am Handy (Prüfung 15.11., Punkt 6)",
+"text": "KI-Dungeon-Master: kleinere Handeln-Leiste am Handy (Prüfung 15.11., Punkt 6): Ohne eigenen Schalter. Am Handy (bis 760 Pixel breit) steht der Zustand in einer Zeile („Du bist dran“, wie viele gehandelt haben, auf wen gewartet wird), darunter das Eingabefeld über die ganze Breite mit Mikrofon und „Handeln“ und darunter die Vorschläge als eine Reihe zum Wischen. Wunsch an den Erzähler und weitere Knöpfe liegen hinter dem Chip „⋯ Mehr“. Mit ▾ klappt die Leiste auf Feld und Senden-Pfeil zusammen, mit ▴ wieder auf; das merkt sich jedes Gerät selbst (nur im Browser, nichts auf dem Spark). Am Computer bleibt die Leiste wie bisher. Selbsttest test_the_phone_table_head_fight_field_group_and_hero in test_dungeon."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "KI-Dungeon-Master: Leben nur mit Grund",
 "text": "KI-Dungeon-Master: Leben nur mit Grund: dungeon.grounded: Schaden außerhalb des Kampfs gilt nur nach einer misslungenen Probe dieses Zugs auf KOERPER_WERTE (Stärke, Geschick, Konstitution), etwa Sprung, Klettern, zuschnappendes Schloss; die Zeile nennt „Probe „…“ misslungen“. Anderer Schaden fällt weg (dungeon: folgen | schaden | ohne grund, Zähler schaden_ohne_grund). Heilung und Gegnertreffer bleiben. Selbsttest LifeLossReason."
 },
@@ -25590,6 +25606,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "N. Live: fights with foes' life cut, in the bench cells with fights too long. Self-tests test_a_long_fight_is_made_shorter, test_the_aim_at_medium_for_every_level_and_group and test_the_master_and_a_lone_boss_are_won_often_enough in test_dungeon_pruefstand."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: a quieter column and one line for the time (review 15 Nov, point 8): No switch of its own. Date, moons, festival and time of day stand in one line above the story (dmZeitzeile), wrapped only when it does not fit. The host's tools for the map (\"🎲 Roll a vault\", \"↻ Roll the map again\", dmkHost) are no longer under the map in the play column but in the game master console in the card \"Map\". Self-test test_the_map_at_the_table in test_dungeon_karte (no buttons at the map, the vault from the console)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "AI Dungeon Master: a smaller action bar on the phone (review 15 Nov, point 6)",
+"text": "AI Dungeon Master: a smaller action bar on the phone (review 15 Nov, point 6): No switch of its own. On the phone (up to 760 pixels wide) the status stands in one line (\"Your turn\", how many have acted, who is awaited), below it the input field across the full width with microphone and \"Act\", and below that the suggestions as one row to swipe. The wish to the narrator and further buttons are behind the chip \"⋯ More\". With ▾ the bar folds to the field and the send arrow, with ▴ it opens again; each device remembers this itself (only in the browser, nothing on the Spark). On the computer the bar stays as before. Self-test test_the_phone_table_head_fight_field_group_and_hero in test_dungeon."
 },
 {
 "lang": "en",

@@ -1180,8 +1180,13 @@ class Table(unittest.TestCase):
                                 await (await pg.query_selector("#dmview .dmk")).screenshot(path=os.path.join(os.environ["DMK_SHOT"], f"welt-{x['id']}-{w}.png"))
                             await pg.evaluate("dmRound()")
                         if w == 1280:                    # the host rolls a vault: the grid of rooms, the way out
-                            await pg.click("#dmview [data-dmkarte=gewoelbe]")
+                            # the host's tools are in the game master console, never in the map (Prüfung 15.11., Punkt 8)
+                            self.assertFalse(await pg.evaluate("!!document.querySelector('#dmview .dmk [data-dmkarte]')"))
+                            await pg.click("#dmview .dm-pultk")
+                            await b.until(pg, "!!document.querySelector('#dmview [data-pult=karte] [data-dmkarte=gewoelbe]')")
+                            await pg.click("#dmview [data-pult=karte] [data-dmkarte=gewoelbe]")
                             await b.until(pg, "!!document.querySelector('#dmview .dmk-wege [data-dmkid=ein]')")
+                            await pg.keyboard.press("Escape")                                  # the console closes
                             self.assertFalse(await pg.evaluate("!!document.querySelector('#dmview .dmk-tief')"))   # not inside yet
                             with dungeon._lock:                  # the next turn's narration takes the way in
                                 d = dungeon._read()
