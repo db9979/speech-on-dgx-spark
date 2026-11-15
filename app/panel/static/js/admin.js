@@ -1110,6 +1110,7 @@ function certBox(m,c,pinned,accept,forget){if(!m)return;m.textContent='';m.class
     else if(c.fits&&!c.self_signed)line(t('Passt zur Adresse; nichts zu tun.','Fits the address; nothing to do.'));
     else{line(t('Passt nicht zur Adresse oder ist selbst ausgestellt. Besser: die Adresse mit einem Namen von oben eintragen. Sonst den Fingerabdruck mit dem auf dem Server vergleichen (Synology: Systemsteuerung, Sicherheit, Zertifikat) und nur wenn er gleich ist annehmen.',
       'Does not fit the address or is self-made. Better: enter the address with a name from above. Otherwise compare the fingerprint with the one on the server (Synology: Control Panel, Security, Certificate) and accept it only when it is the same.'));
+      if(!c.self_signed)line(t('Von einer anerkannten Stelle (etwa Let\'s Encrypt): spätere Erneuerungen mit demselben Namen nimmt der Spark von selbst an.','From a recognised authority (such as Let\'s Encrypt): later renewals with the same name are accepted by the Spark on its own.'));
       btn(t('Diesem Zertifikat vertrauen','Trust this certificate'),()=>accept(c.sha256))}
     return}
   if(pinned){line(t('Angenommenes Zertifikat: ','Accepted certificate: ')+pinned);btn(t('Vergessen','Forget'),forget)}}

@@ -5,8 +5,17 @@ and accepts exactly that certificate: from then on only a server with that certi
 for this address, checked inside the TLS handshake before anything is sent (the pinned certificate is the only
 trust anchor, the name is not compared). A new certificate on the NAS stops the copy until it is accepted again.
 
+Renewal (Dominik 2026-11-15, Let's Encrypt renews every month): when the accepted certificate comes from a
+certificate authority (issuer is not the certificate itself), the Spark also trusts any certificate that a public
+authority signed (the usual trust store) and that carries one of the accepted certificate's names (literally, a
+wildcard only as the same wildcard). That is the check a browser does, only against the remembered name instead
+of the address (an IP or nas.fritz.box). The accepted certificate itself stays trusted too. A self-made
+certificate (issuer = subject) keeps the exact pin; a certificate of a private authority (Synology's own) passes
+only as the exact pinned one, because the private authority is not in the trust store.
+
     fetch(url, level) -> {"sha256", "names", "until", "self_signed", "fits", "pem"}  (what the server presents)
-    verify(pem)       -> what netguard.client(verify=...) takes: an SSLContext that trusts only this certificate
+    verify(pem)       -> what netguard.client(verify=...) takes: an SSLContext that trusts only this certificate,
+                         or for an authority's certificate also its renewals under the same name
     problem(e)        -> "cert" when an exception is a refused certificate, else ""
 """
 import asyncio
@@ -99,11 +108,103 @@ def sha_of(pem):
     return fingerprint(ssl.PEM_cert_to_DER_cert(pem)) if pem else ""
 
 
+def _names(cert):
+    """DNS and IP names of a certificate as ssl.getpeercert() gives it (a dict), lower case."""
+    out = set()
+    for kind, value in (cert or {}).get("subjectAltName", ()):
+        if kind in ("DNS", "IP Address"):
+            out.add(str(value).lower().rstrip("."))
+    return out
+
+
+def _check(obj):
+    names = obj.context.spark_names
+    if not names & _names(obj.getpeercert()):
+        raise ssl.SSLCertVerificationError("CERTIFICATE_VERIFY_FAILED: name does not match the accepted certificate")
+
+
+class _NamedObject(ssl.SSLObject):
+    """The asynchronous connection (httpx through anyio): after the handshake the name must fit."""
+    def do_handshake(self):
+        super().do_handshake()
+        _check(self)
+
+
+class _NamedSocket(ssl.SSLSocket):
+    """The blocking connection: after the handshake the name must fit (the socket is closed otherwise)."""
+    def do_handshake(self, block=False):
+        super().do_handshake(block)
+        try:
+            _check(self)
+        except ssl.SSLCertVerificationError:
+            self.close()
+            raise
+
+
+class _NamedContext(ssl.SSLContext):
+    sslobject_class = _NamedObject
+    sslsocket_class = _NamedSocket
+    spark_names = frozenset()
+
+
+def renewing(pem):
+    """The names under which renewals of this accepted certificate count: only for a certificate an authority
+    issued (not self-made), only DNS and IP names; an empty set keeps the exact pin."""
+    pem = clean(pem)
+    if not pem:
+        return frozenset()
+    try:
+        from cryptography import x509
+        c = x509.load_pem_x509_certificate(pem.encode())
+    except (ValueError, ImportError):
+        return frozenset()
+    if c.issuer == c.subject:
+        return frozenset()
+    try:
+        san = c.extensions.get_extension_for_class(x509.SubjectAlternativeName).value
+    except x509.ExtensionNotFound:
+        return frozenset()
+    names = [str(n) for n in san.get_values_for_type(x509.DNSName)] + \
+            [str(n) for n in san.get_values_for_type(x509.IPAddress)]
+    return frozenset(n.lower().rstrip(".") for n in names if n and len(n) <= 253)
+
+
+TRUST_FILE = None    # selftests only: a file with one more authority (a test authority); never set by a setting
+
+
+def _store(ctx):
+    if TRUST_FILE:
+        ctx.load_verify_locations(cafile=TRUST_FILE)
+        return
+    try:
+        import certifi                  # the same trust store httpx uses for every other address
+        ctx.load_verify_locations(cafile=certifi.where())
+    except (ImportError, OSError, ssl.SSLError):
+        ctx.load_default_certs()
+
+
 def verify(pem):
-    """True (the normal check) without a pinned certificate; with one an SSLContext that trusts only it."""
+    """True (the normal check) without a pinned certificate; with one an SSLContext that trusts only it, for an
+    authority's certificate also every certificate the trust store vouches for under one of its names."""
     from common import pinned_context
     pem = clean(pem)
-    return pinned_context(pem) if pem else True
+    if not pem:
+        return True
+    names = renewing(pem)
+    if not names:
+        return pinned_context(pem)
+    ctx = _NamedContext(ssl.PROTOCOL_TLS_CLIENT)
+    ctx.minimum_version = ssl.TLSVersion.TLSv1_2
+    ctx.check_hostname = False          # the address is an IP or a home name; the names are checked after the handshake
+    ctx.verify_mode = ssl.CERT_REQUIRED  # the chain to a trusted authority (or the pinned certificate) inside the handshake
+    ctx.verify_flags |= ssl.VERIFY_X509_PARTIAL_CHAIN
+    _store(ctx)
+    try:
+        ctx.load_verify_locations(cadata=pem)
+    except (ssl.SSLError, ValueError, TypeError):
+        pass
+    ctx.spark_names = names
+    return ctx
 
 
 def problem(e):

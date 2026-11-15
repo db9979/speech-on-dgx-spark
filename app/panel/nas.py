@@ -21,7 +21,7 @@ Rules (fixed, not decided by the model): adding a connection or changing its use
 server key only in the profile's browser login with a code (stufen.py); a connection that a use still needs is
 not removed (409); the password never comes back; the certificate check is never switched off: a certificate
 that does not fit is accepted only by its fingerprint (zertpin.py), and a new one stops every use until it is
-accepted again. Connections go through netguard HOME (a NAS lives in the home network) with the IP checked once.
+accepted again (an authority's renewal under the same name passes on its own, zertpin.renewing). Connections go through netguard HOME (a NAS lives in the home network) with the IP checked once.
 
 Zustand → Live: target "NAS" (live.py "nas", numbers only), events when a connection is added, changed or removed
 (guard.LIVE_WORDS). Logs →

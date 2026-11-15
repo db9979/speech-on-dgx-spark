@@ -20,6 +20,7 @@ function nasCert(m,c,again){m.textContent='';const line=x=>{const s=document.cre
   line(t('Gilt für: ','Valid for: ')+((c.names||[]).join(', ')||'–')+' · '+t('bis ','until ')+new Date(c.until*1000).toLocaleDateString()+(c.expired?t(' (abgelaufen)',' (expired)'):''));
   line(t('Passt nicht zur Adresse oder ist selbst ausgestellt. Den Fingerabdruck mit dem im NAS vergleichen (Synology: Systemsteuerung → Sicherheit → Zertifikat) und nur annehmen, wenn er gleich ist.',
     'Does not fit the address or is self-made. Compare the fingerprint with the one in the NAS (Synology: Control Panel → Security → Certificate) and accept it only when it is the same.'));
+  if(!c.self_signed)line(t('Von einer anerkannten Stelle (etwa Let\'s Encrypt): spätere Erneuerungen mit demselben Namen nimmt der Spark von selbst an.','From a recognised authority (such as Let\'s Encrypt): later renewals with the same name are accepted by the Spark on its own.'));
   const b=document.createElement('button');b.type='button';b.className='b';b.textContent=t('Fingerabdruck stimmt, annehmen','Fingerprint matches, accept');b.onclick=()=>again(c.sha256);codeLock(b,'confirm');m.appendChild(b)}
 const nasCertOf=e=>{if(e.status!==409)return null;try{return JSON.parse(e.detail).cert||null}catch{return null}};
 async function showNas(){const box=$('nasbox');if(!box)return;if(!PROFILE||!NAS_ON){box.innerHTML='';NAS_LIST=[];return}

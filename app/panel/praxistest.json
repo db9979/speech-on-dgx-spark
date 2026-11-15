@@ -6268,6 +6268,14 @@
 "titel": "Dungeon: Eingabefeld am Handy und Wartezeit je Zug",
 "text": "Am iPhone eine Runde öffnen (KI-Dungeon-Master): das Feld für die Aktion geht über die ganze Breite, Mikrofon, Heldenmut und „Handeln“ stehen darunter, der Hinweistext bricht nicht mehr um. Zwei, drei Züge spielen. Danach Zustand → Überblick, Kasten Dungeon-Master: dort steht „heute Wartezeit je Zug Ø … s, längste … s (Proben Ø … s bei N, Erzählen Ø … s bei N), … % der Züge nachgebessert“; die Zahlen passen ungefähr zu dem, was du am Tisch gewartet hast. Ab dem zweiten Zug kommt die Erzählung gefühlt nicht langsamer als vorher.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P913",
+"v": 1470,
+"titel": "Zertifikat der NAS erneuert sich von selbst",
+"text": "Nach dem Update, ohne etwas zu tun: Zustand → Logs, Suche „nasquelle: fehler“ zeigt keine neue Zeile mit art=cert mehr, und die Meldungen „NAS (Sicherung)“ und „Wissensordner antwortet nicht“ sind nach ein paar Minuten weg (das schon angenommene Let's-Encrypt-Zertifikat gilt jetzt auch für seine Erneuerung). Ich → Speicher → „Verbindung prüfen“ zeigt „verbunden“, Einstellungen → Sicherung → „Jetzt senden“ klappt. Beim nächsten Erneuern auf der Synology (etwa in einem Monat) kommt keine Meldung mehr.",
+"thread": "NAS-Ausfall seit 10:54 klären",
+"test": "test_zertpin.Renewal.test_renewal_under_the_same_name_passes"
 }
 ]
 }
