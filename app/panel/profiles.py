@@ -1492,6 +1492,18 @@ CONVO_META = ("area", "name", "own", "pin")   # kept by the Spark whatever a dev
 MAX_PINNED = 20       # pinned conversations never move to the archive
 MAX_ARCHIVE = 500     # older conversations kept (only while the function is on), the oldest go
 ARCHIVE_ON = []       # gespraechsthema.py: [f(uid) -> True while Gespräche nach Thema is on for the profile]
+# Abwesend (abwesenheit.py hooks itself): f(uid) -> {"bis": last day ISO, "satz": …} while the profile is away, else
+# None; the chats show „abwesend bis …“, a Spark call does not ring, „Ruf … an“ says it first
+AWAY = []
+
+
+def away(uid):
+    """{"bis", "satz"} while the profile uid is away (AWAY), else None."""
+    for f in AWAY if uid else ():
+        a = f(uid)
+        if a:
+            return a
+    return None
 
 
 def _archive_on(uid):

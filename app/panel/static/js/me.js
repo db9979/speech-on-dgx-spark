@@ -427,7 +427,7 @@ async function docTry(){const q=$('docfind').value.trim();if(!q){$('dochits').in
   catch(x){$('dochits').innerHTML=`<li class="err">${esc(x.message)}</li>`}}
 $('dochits').onclick=e=>{if(e.target.closest('[data-hitclose]')){$('dochits').innerHTML='';return}const h=e.target.closest('[data-docview]');if(h)docView(h.dataset.docview)};
 $('dochits').onkeydown=e=>{const h=e.target.closest('[data-docview]');if(h&&e.key==='Enter')docView(h.dataset.docview)};
-let DOCS_ON=true,SPK_ON=false,CAL_ON=true,HA_ON=false,MAIL_ON=false;
+let DOCS_ON=true,SPK_ON=false,CAL_ON=true,HA_ON=false,MAIL_ON=false,AWAY_ON=false;
 // The "Ich" window: conversation settings for everyone, plus the profile's own pages once logged in.
 // On phones the window opens as a list of its pages (like the iPhone settings); a page then fills the
 // screen with a back arrow. Wider screens keep the side bar.
@@ -554,7 +554,7 @@ function calTopics(){const box=$('caltopchips');if(!box)return;
 async function calTopSave(again){const {r,d}=await apiTry('/api/profile/calendar/topics',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({topics:CAL_TOPICS})});
   if(!r.ok){calMsg(errSay(r.status,d.detail,''),true);return}
   calRender(d);calMsg(t('Themen gespeichert.','Topics saved.'));if(again){const n=$('caltopchips').querySelector('.caltopnew');if(n)n.focus()}}
-async function showCal(){if(!CAL_ON)return;calRender(await (await api('/api/profile/calendar')).json());$('calmsg').textContent='';$('calmsg').className='';calServer()}
+async function showCal(){if(!CAL_ON)return;calRender(await (await api('/api/profile/calendar')).json());$('calmsg').textContent='';$('calmsg').className='';calServer();calAway()}
 // Kalender-Server (kalenderserver.py, Spark-Kalender Stufe 4): the Spark calendars in the iPhone's calendar app over
 // CalDAV, with an app password per profile; shown once after making it, only its hash stays on the Spark
 async function calServer(pw){const box=$('calserver');if(!box)return;
@@ -575,6 +575,26 @@ async function calServer(pw){const box=$('calserver');if(!box)return;
     const {r:r2,d:d2}=await apiTry('/api/profile/calserver',{method:'POST'});if(!r2.ok){msg.className='err';msg.textContent=errSay(r2.status,d2.detail,'');return}calServer(d2.password)};
   const drop=box.querySelector('[data-srv=drop]');if(drop)drop.onclick=async()=>{if(!confirm(t('Zugang löschen? Kalender-Apps erreichen deine Spark-Kalender dann nicht mehr.','Delete access? Calendar apps can no longer reach your Spark calendars.')))return;
     const {r:r2,d:d2}=await apiTry('/api/profile/calserver',{method:'DELETE'});if(!r2.ok){msg.className='err';msg.textContent=errSay(r2.status,d2.detail,'');return}calServer()}}
+// Abwesenheit (abwesenheit.py, Nextcloud-Ideen 1): from–until, a text for replies, a stand-in; the panel uses it by fixed rules
+async function calAway(){const box=$('calaway');if(!box)return;if(!AWAY_ON){box.hidden=true;return}
+  const {r,d}=await apiTry('/api/profile/abwesenheit');if(!r.ok){box.hidden=true;return}box.hidden=false;
+  const a=d.eintrag||{},iso=x=>new Date(x+'T00:00').toLocaleDateString(L==='en'?'en-GB':'de-DE',{weekday:'short',day:'numeric',month:'numeric',year:'numeric'});
+  const now=Date.now()/1000,state=d.eintrag?(a.start<=now?t('aktiv bis ','active until ')+iso(a.bis):t('aktiv ab ','active from ')+iso(a.von)):'';
+  const sw=(k,de,en,on)=>`<div class="setrow"><div class="lbl"><b>${esc(t(de,en))}</b></div><label class="tgl"><input type="checkbox" data-away="${k}"${on?' checked':''}><i></i></label></div>`;
+  box.innerHTML=`<div class="mgrp">${esc(t('Abwesenheit','Away'))}${state?` <span class="pill">${esc(state)}</span>`:''}</div>`+
+    `<div class="fh">${esc(t('Während du weg bist: ein ganztägiger Eintrag im Kalender, „abwesend bis …“ neben deinem Namen in den Chats, Anrufe klingeln nicht, und wer dich anrufen will, hört, bis wann du weg bist und wer dich vertritt.','While you are away: an all-day entry in the calendar, "away until …" next to your name in the chats, calls do not ring, and whoever wants to call you hears until when you are away and who stands in.'))}</div>`+
+    `<div class="two2"><div><label>${esc(t('Von','From'))}</label><input type="date" id="awayvon" value="${esc(a.von||'')}"></div><div><label>${esc(t('Bis','Until'))}</label><input type="date" id="awaybis" value="${esc(a.bis||'')}"></div></div>`+
+    `<label>${esc(t('Text für Antworten','Text for replies'))}</label><textarea id="awaytext" rows="3" maxlength="${d.max_text}">${esc(a.text||'')}</textarea>`+
+    `<label>${esc(t('Vertretung','Stand-in'))}</label><input id="awayvert" maxlength="60" autocomplete="off" value="${esc(a.vertretung||'')}" placeholder="${esc(t('z. B. Sabine','e.g. Sabine'))}">`+
+    sw('mail','Mail-Antwort (einmal pro Absender, nie an Newsletter)','Mail reply (once per sender, never to newsletters)',a.mail)+
+    sw('kalender','Im Kalender zeigen','Show in the calendar',d.eintrag?a.kalender:true)+
+    `<div class="row" style="margin-top:6px"><button class="b p" type="button" data-awayact="save">${esc(t('Speichern','Save'))}</button>`+
+    (d.eintrag?`<button class="b" type="button" data-awayact="drop">${esc(t('Abwesenheit beenden','End away'))}</button>`:'')+`<span class="awaymsg"></span></div>`;
+  const msg=box.querySelector('.awaymsg'),say=(x,err)=>{msg.className=err?'err':'';msg.textContent=x};
+  box.querySelector('[data-awayact=save]').onclick=async()=>{const on=k=>box.querySelector(`[data-away=${k}]`).checked;
+    const {r:r2,d:d2}=await apiTry('/api/profile/abwesenheit',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({von:$('awayvon').value,bis:$('awaybis').value,text:$('awaytext').value,vertretung:$('awayvert').value,mail:on('mail'),kalender:on('kalender'),tz:TZ()})});
+    if(!r2.ok){say(errSay(r2.status,d2.detail,''),true);return}await calAway();box.querySelector('.awaymsg').textContent=t('Gespeichert.','Saved.')};
+  const drop=box.querySelector('[data-awayact=drop]');if(drop)drop.onclick=async()=>{const {r:r2,d:d2}=await apiTry('/api/profile/abwesenheit',{method:'DELETE'});if(!r2.ok){say(errSay(r2.status,d2.detail,''),true);return}calAway()}}
 async function calRemove(id,name,spark){if(!confirm(t('Kalender „','Remove calendar "')+name+t('“ entfernen?','"?')+(spark?' '+t('Seine Termine liegen nur auf dem Spark und werden gelöscht.','Its appointments live only on the Spark and are deleted.'):'')))return;calRender(await (await api('/api/profile/calendar/'+encodeURIComponent(id),{method:'DELETE'})).json())}
 const calMsg=(x,err,list)=>{const m=$('calmsg');m.className=err?'err':'';m.innerHTML=esc(x)+(list&&list.length?'<ul class="facts small">'+list.map(e=>`<li>${esc(e)}</li>`).join('')+'</ul>':'')};
 $('calsave').onclick=async()=>{const spark=!!CALKIND[$('calkind').value].spark;calMsg(spark?t('Lege an …','Creating …'):t('Prüfe den Kalender …','Checking the calendar …'));

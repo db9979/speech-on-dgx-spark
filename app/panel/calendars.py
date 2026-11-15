@@ -847,6 +847,7 @@ VIEW_MAX = 600            # appointments per answer
 # function (uid, day, days, zone) -> None (not for this profile) or (name, why, [{start, end, allday, title}]); always
 # read only, never cached, never in the assistant's calendar_events (the briefing names birthdays on its own)
 EXTRA = []
+LIVE = {}                 # name -> for_live() of a module that hooks itself into the calendar (abwesenheit.py)
 
 
 async def view(uid, day, days, zone):

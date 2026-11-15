@@ -13231,6 +13231,126 @@
         }
       }
     },
+    "Abwesenheit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Away"
+          }
+        }
+      }
+    },
+    "Deine Abwesenheit; ändern lässt sie sich unter Kalender → Einstellungen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your time away; change it under Calendar → Settings."
+          }
+        }
+      }
+    },
+    "abwesend bis %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "away until %@"
+          }
+        }
+      }
+    },
+    "Abwesenheit beendet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Away ended."
+          }
+        }
+      }
+    },
+    "Aktiv": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Active"
+          }
+        }
+      }
+    },
+    "Eingetragen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entered"
+          }
+        }
+      }
+    },
+    "Während du weg bist: ein ganztägiger Eintrag im Kalender, „abwesend bis …“ neben deinem Namen in den Chats, Anrufe klingeln nicht, und wer dich anrufen will, hört, bis wann du weg bist und wer dich vertritt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "While you are away: an all-day entry in the calendar, \"away until …\" next to your name in the chats, calls do not ring, and whoever wants to call you hears until when you are away and who stands in."
+          }
+        }
+      }
+    },
+    "Text für Antworten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text for replies"
+          }
+        }
+      }
+    },
+    "Vertretung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stand-in"
+          }
+        }
+      }
+    },
+    "Mail-Antwort (einmal pro Absender, nie an Newsletter)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mail reply (once per sender, never to newsletters)"
+          }
+        }
+      }
+    },
+    "Im Kalender zeigen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show in the calendar"
+          }
+        }
+      }
+    },
+    "Abwesenheit beenden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "End away"
+          }
+        }
+      }
+    },
     "Geburtstag aus deinen Kontakten; ändern lässt er sich in der Kontaktkarte.": {
       "localizations": {
         "en": {

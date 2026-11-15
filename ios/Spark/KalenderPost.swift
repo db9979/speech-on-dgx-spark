@@ -139,8 +139,10 @@ extension SparkAPI {
         v.connected = d["connected"] as? Bool ?? true
         v.calendars = (d["calendars"] as? [String] ?? []).map { String($0.prefix(80)) }
         // a calendar the panel makes itself (calendars.EXTRA): the app names it in its own language
-        for (k, w) in d["made"] as? [String: String] ?? [:] where w == "geburtstag" {
-            if let i = Int(k), i >= 0, i < v.calendars.count { v.calendars[i] = String(localized: "Geburtstage") }
+        for (k, w) in d["made"] as? [String: String] ?? [:] {
+            guard let i = Int(k), i >= 0, i < v.calendars.count else { continue }
+            if w == "geburtstag" { v.calendars[i] = String(localized: "Geburtstage") }
+            if w == "abwesend" { v.calendars[i] = String(localized: "Abwesenheit") }
         }
         v.add = d["add"] as? [Int] ?? []
         v.errors = d["errors"] as? [String] ?? []
@@ -439,6 +441,7 @@ struct KalenderView: View {
     @StateObject private var m = KalenderModel()
     @State private var open: CalEvent?
     @State private var form: CalForm?
+    @State private var away = false
     @AppStorage("kalender.liste") private var asList = false
 
     var body: some View {
@@ -498,6 +501,12 @@ struct KalenderView: View {
             ToolbarItem(placement: .topBarLeading) {
                 Button("Heute") { Task { await m.show(Date()) } }
             }
+            if talk.allowed.areas.contains("abwesend") {
+                ToolbarItem(placement: .primaryAction) {
+                    Button { away = true } label: { Image(systemName: "airplane") }
+                        .accessibilityLabel("Abwesenheit")
+                }
+            }
             ToolbarItem(placement: .primaryAction) {
                 Button { asList.toggle() } label: { Image(systemName: asList ? "calendar" : "list.bullet") }
                     .accessibilityLabel(asList ? Text("Tag zeigen") : Text("Liste zeigen"))
@@ -512,6 +521,9 @@ struct KalenderView: View {
         .refreshable { await m.load(talk.allowed.areas.contains("calendar")) }
         .task { await m.load(talk.allowed.areas.contains("calendar")) }
         .overlay { if m.loading && m.keptAt == nil { LadeZeilen(rows: 5).padding() } }
+        .sheet(isPresented: $away, onDismiss: { Task { await m.load(talk.allowed.areas.contains("calendar")) } }) {
+            NavigationStack { AbwesenheitView() }
+        }
         .sheet(item: $open) { e in
             KalenderDetail(e: e, calendar: m.v.calendars.indices.contains(e.cal) ? m.v.calendars[e.cal] : "",
                            change: { DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { form = CalForm(event: e, day: m.day) } },
@@ -687,6 +699,7 @@ struct KalenderDetail: View {
         case "abo": return String(localized: "Nur lesen: der Kalender ist ein Abo-Link (iCal), Änderungen gehen nur beim Anbieter.")
         case "geteilt": return String(localized: "Nur lesen: ein Kalender, den dir jemand geteilt hat; ändern kann ihn nur, wem er gehört.")
         case "geburtstag": return String(localized: "Geburtstag aus deinen Kontakten; ändern lässt er sich in der Kontaktkarte.")
+        case "abwesend": return String(localized: "Deine Abwesenheit; ändern lässt sie sich unter Kalender → Einstellungen.")
         default: return String(localized: "Nur lesen: dieser Kalender lässt sich hier nicht ändern.")
         }
     }

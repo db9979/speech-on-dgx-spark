@@ -176,9 +176,10 @@ function kalBind(m){m.querySelectorAll('[data-i]').forEach(b=>b.onclick=e=>{e.st
   KAL.ghost=null;KAL.at='';if(x.edit)kalFormOpen('edit',x);else{KAL.sel=x;KAL.form=null;kalDraw()}})}
 // why an appointment is read-only (calendars._why): a fixed word from the panel, the text is ours
 // a calendar the panel makes itself (calendars.EXTRA, "made": index -> kind) is named by the page in both languages
-const KAL_MADE={geburtstag:['Geburtstage','Birthdays']};
+const KAL_MADE={geburtstag:['Geburtstage','Birthdays'],abwesend:['Abwesenheit','Away']};
 const kalCN=(d,i)=>{const k=(d.made||{})[i];return KAL_MADE[k]?t(...KAL_MADE[k]):((d.calendars||[])[i]||'')};
-const KAL_WHY={geburtstag:['Geburtstag aus deinen Kontakten; ändern lässt er sich in der Kontaktkarte.','Birthday from your contacts; change it in the contact card.'],
+const KAL_WHY={abwesend:['Deine Abwesenheit; ändern lässt sie sich unter Kalender → Einstellungen.','Your time away; change it under Calendar → Settings.'],
+  geburtstag:['Geburtstag aus deinen Kontakten; ändern lässt er sich in der Kontaktkarte.','Birthday from your contacts; change it in the contact card.'],
   abo:['Nur lesen: der Kalender ist ein Abo-Link (iCal), Änderungen gehen nur beim Anbieter.','Read only: the calendar is a subscription link (iCal), changes only at its provider.'],
   geteilt:['Nur lesen: ein Kalender, den dir jemand geteilt hat; ändern kann ihn nur, wem er gehört.','Read only: a calendar someone shared with you; only its owner can change it.'],
   lesen:['Nur lesen: dieser Kalender lässt sich hier nicht ändern.','Read only: this calendar cannot be changed here.']};

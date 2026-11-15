@@ -301,6 +301,7 @@
     "tasks_link": false,
     "calendar_server": false,
     "calendar_bdays": false,
+    "away": false,
     "mail": false,
     "mail_tidy": false,
     "mail_manage": false,

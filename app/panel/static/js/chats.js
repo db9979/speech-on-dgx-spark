@@ -98,7 +98,7 @@ function cxList(){const box=cxEl('cxlist');if(!box)return;const S=CX.S||{chats:[
     esc(S.far_asks+' '+t('von anderen Sparks warten auf deine Antwort','from other Sparks wait for your answer')),`<span class="cx-flags"><em class="cx-un">${S.far_asks}</em></span>`):'';
   if(!S.chats.length){box.innerHTML=asks+`<div class="ld-empty">${ic('chats')}<span>${esc(t('Noch keine Chats. Mit „＋ Neuer Chat“ schreibst du jemandem.','No chats yet. With "＋ New chat" you write to someone.'))}</span></div>`;return}
   box.innerHTML=asks+S.chats.map(c=>cxRow(`data-cx="${esc(c.id)}"`,c.id===CX.cur,cxAva(c.with||c.id,cxTitle(c.title),c.kind==='group'),
-    `${c.private?ic('lock','cxmk')+' ':''}${c.far?ic('globe','cxmk')+' ':''}${esc(cxTitle(c.title))}`,esc(cxPreview(c)),
+    `${c.private?ic('lock','cxmk')+' ':''}${c.far?ic('globe','cxmk')+' ':''}${esc(cxTitle(c.title))}${c.away?` <small class="cx-away">${esc(cxAway(c.away))}</small>`:''}`,esc(cxPreview(c)),
     `<span class="ld-when">${c.last?esc(cxWhen(c.last.t)):''}</span><span class="cx-flags">${c.mute?`<i class="cx-mute" title="${esc(t('stumm','muted'))}">${ic('belloff')}</i>`:''}${c.unread?`<em class="cx-un${c.mute?' quiet':''}">${c.unread>99?'99+':c.unread}</em>`:''}</span>`)).join('');
   if(S.private&&window.csShareCheck)csShareCheck(box)}
 const cxPick=e=>{if(e.target.closest('[data-cxfar]')){cxFindReset();if(!CX.cur)CX.data=null;cxPane('far');return}
@@ -135,9 +135,11 @@ async function cxOpen(cid,quiet){if(!cid)return;const first=CX.cur!==cid;
 function cxClose(){cxRecStop(false);CX.cur='';CX.data=null;CX.pane='';box().classList.remove('sel');
   for(const id of ['cxtop','cxlog','cxpane','cxwhy','cxreply','cxcomp'])cxEl(id).hidden=true;cxEl('cxempty').hidden=false;cxList()}
 cxEl('cxback').addEventListener('click',()=>{if(CX.pane==='invite'||CX.pane==='far'){cxPane('new');return}if(CX.pane&&CX.cur&&CX.data){cxPane('');return}if(CX.pane&&!CX.cur){cxPane('');cxClose();return}cxClose()});
+// Abwesend (abwesenheit.py): the other one is away until the day (ISO), shown next to the name
+const cxAway=iso=>{const d=new Date(iso+'T00:00');return t('abwesend bis ','away until ')+d.getDate()+'.'+(d.getMonth()+1)+'.'};
 function cxTop(){const d=CX.data;if(!d)return;cxEl('cxempty').hidden=true;cxEl('cxtop').hidden=false;
   const tp=CX.typing[CX.cur],sub=tp&&tp.until>Date.now()?(d.kind==='group'?tp.name+' '+t('schreibt …','is typing …'):t('schreibt …','typing …'))
-    :d.kind==='group'?d.members.map(m=>m.name).filter(Boolean).join(', '):d.far?d.addr||'':'';
+    :d.kind==='group'?d.members.map(m=>m.name).filter(Boolean).join(', '):d.far?d.addr||'':d.away?cxAway(d.away):'';
   cxEl('cxinfo').hidden=false;
   const tt=cxEl('cxtitle');tt.dataset.mk=d.private?'private':d.far?'far':'';tt.querySelector('b').innerHTML=(d.private?ic('lock','cxmk')+' ':'')+(d.far?ic('globe','cxmk')+' ':'')+esc(cxTitle(d.title));tt.querySelector('small').textContent=sub;tt.querySelector('small').hidden=!sub;
   const why=cxEl('cxwhy');why.hidden=d.can_send;why.textContent=d.can_send?'':cxTr(d.why||t('Hier kannst du gerade nicht schreiben.','You cannot write here right now.'));

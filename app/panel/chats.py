@@ -484,6 +484,9 @@ def listing(uid, now=None):
         if other:
             item["with"] = other
             item["can_send"] = takes(other, uid)
+            gone = None if RID.fullmatch(other) else profiles.away(other)   # Abwesend, never another Spark
+            if gone:
+                item["away"] = gone["bis"]
         if c.get("kind") == "priv":
             import chatsec
             item["private"], item["can_send"] = True, chatsec.can(other, uid)
@@ -559,6 +562,9 @@ def items(uid, cid, before="", now=None):
                    "" if c.get("kind") == "one" or groups_on() else "Gruppen-Chats sind gerade ausgeschaltet."),
            "private": c.get("kind") == "priv", "fixed": bool(c.get("fixed")), "far": c.get("kind") == "far",
            "far_home": bool(c.get("home")), **({"addr": _far_addr(c, uid)} if c.get("kind") == "far" else {})}
+    gone = profiles.away(others[0]) if c.get("kind") in ("one", "priv") and others else None
+    if gone:
+        out["away"] = gone["bis"]          # Abwesend: „abwesend bis …“ under the name
     if spans(c):
         import verbundgruppe
         if not (verbundgruppe.admin_on() and verbundgruppe.usable(uid)):

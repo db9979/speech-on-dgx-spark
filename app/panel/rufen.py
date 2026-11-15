@@ -258,9 +258,11 @@ def _spark_offer(uid, other, name, video, src):
     p = {"kind": "spark", "to": other, "name": name, "video": bool(video)}
     _propose(uid, p, src)
     _log("proposed", video=int(bool(video)))
+    gone = profiles.away(other)   # Abwesend (abwesenheit.py): said first, the call would not ring
+    first = f"Sag zuerst genau: „{gone['satz']} Der Anruf klingelt dort nicht.“ " if gone else ""
     return _note(("(Vorschlag)", describe(p), "wartet auf Ja"),
-                 f"Noch NICHT angerufen. Frag den Nutzer genau: „{question(p)}“ Erst sein Ja in der nächsten Nachricht "
-                 "ruft an; mit „mit Video“ oder „nur Sprache“ wählt er Bild oder nur Ton.")
+                 f"Noch NICHT angerufen. {first}Frag den Nutzer genau: „{question(p)}“ Erst sein Ja in der nächsten "
+                 "Nachricht ruft an; mit „mit Video“ oder „nur Sprache“ wählt er Bild oder nur Ton.")
 
 
 def _phone_offer(uid, to, src):

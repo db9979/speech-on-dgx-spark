@@ -25,6 +25,8 @@ struct ChatSummary: Identifiable, Hashable {
     var fixed = false
     var preview = ""
     var date: Date?
+    /// Abwesend (abwesenheit.py): the other one is away until this day
+    var away: Date?
 }
 
 /// A photo, file or voice message of a chat message.
@@ -200,6 +202,7 @@ extension SparkAPI {
             c.unread = (x["unread"] as? NSNumber)?.intValue ?? 0
             c.muted = ((x["mute"] as? NSNumber)?.doubleValue ?? 0) != 0
             c.fixed = x["fixed"] as? Bool ?? false
+            c.away = (x["away"] as? String).flatMap { AbwesenheitModel.day($0) }
             if let l = x["last"] as? [String: Any] {
                 c.date = Date(timeIntervalSince1970: (l["t"] as? NSNumber)?.doubleValue ?? 0)
                 c.preview = Self.preview(l, group: c.group)
@@ -830,6 +833,9 @@ private struct ChatRow: View {
                     if c.priv { Image(systemName: "lock.fill").font(.caption).foregroundStyle(.secondary) }
                     if c.far { Image(systemName: "globe").font(.caption).foregroundStyle(.secondary) }
                     Text(verbatim: c.title).font(.headline).lineLimit(1)
+                    if let a = c.away {
+                        Text("abwesend bis \(a.formatted(.dateTime.day().month(.defaultDigits)))").font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                    }
                 }
                 Text(verbatim: c.preview).font(.subheadline).foregroundStyle(.secondary).lineLimit(1)
             }

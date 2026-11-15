@@ -248,7 +248,7 @@ class Things(unittest.TestCase):
              "calendar": ("GET", "/api/profile/calendar/view", 200), "mail": ("GET", "/api/profile/mail/inbox", 200),
              "mailmanage": ("GET", "/api/profile/mail/folders", 400),
              "mailspaeter": ("GET", "/api/profile/mail/snooze", 200), "mailsend": ("POST", "/api/profile/mail/send/preview", 400),
-             "calserver": ("GET", "/api/profile/calserver", 200), "fuerdich": ("GET", "/api/profile/fuerdich", 200),
+             "calserver": ("GET", "/api/profile/calserver", 200), "abwesend": ("GET", "/api/profile/abwesenheit", 200), "fuerdich": ("GET", "/api/profile/fuerdich", 200),
              "ichweiss": ("GET", "/api/profile/ichweiss", 200), "tasks": ("GET", "/api/profile/tasks", 200),
              "vorgaenge": ("GET", "/api/profile/vorgaenge", 200), "contacts": ("GET", "/api/profile/contacts/page", 200),
              "kontakteaendern": ("POST", "/api/profile/contacts/card", 400),
@@ -272,11 +272,11 @@ class Things(unittest.TestCase):
 
     def setUp(self):
         helpers.keep_chat(self, "iphone", "iphone_panel", "bilder", "musik", "deny", "documents", "knowledge_book", "knowledge_map",
-                          "knowledge_ents", "calendar", "mail", "mail_manage", "mail_later", "mail_send", "calendar_server", "mail_insight", "tasks", "reminders", "vorgaenge",
+                          "knowledge_ents", "calendar", "mail", "mail_manage", "mail_later", "mail_send", "calendar_server", "away", "mail_insight", "tasks", "reminders", "vorgaenge",
                           "contacts", "contacts_edit", "mail_invites", "dungeon", "fund", "mappen", "hoerstueck", "esp32", "stimmdesign")
         helpers.set_config(iphone=True, iphone_panel=False, bilder=True, musik=True, deny={}, documents=True,
                            knowledge_book=True, knowledge_map=True, knowledge_ents=True, calendar=True, mail=True, mail_manage=True, mail_later=True, mail_send=True,
-                           calendar_server=True, mail_insight=True, tasks=True, reminders=True, vorgaenge=True,
+                           calendar_server=True, away=True, mail_insight=True, tasks=True, reminders=True, vorgaenge=True,
                            contacts=True, contacts_edit=True, mail_invites=True, dungeon=True, fund=True, mappen=True,
                            hoerstueck=True, esp32=True, stimmdesign=True)
         for name in ("image", "music"):     # the picture and music models count as installed

@@ -415,6 +415,7 @@ Die eigenen Seiten E-Mail, Kalender und Kontakte, der Abruf beim Anbieter, der v
 
 | Modul | Aufgabe |
 |---|---|
+| `app/panel/abwesenheit.py` | Abwesenheit: von–bis, Text, Vertretung; Kalender, Chats, Anrufe, Mail-Antwort |
 | `app/panel/antwortvorschlag.py` | Antwortvorschläge zu einer Mail: drei Richtungen, umformen, nur im Speicher; ausgelastet: 503 und „Noch einmal“ |
 | `app/panel/calendars.py` | Kalender und Tagesbriefing, einzelne Kalender mit anderen Profilen geteilt |
 | `app/panel/contacts.py` | Kontakte per CardDAV: Seite Kontakte wie Apple, ändern nur mit Schalter, zurück mit ETag |
@@ -707,6 +708,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `users/ID/mail-vorrat.bin` | Mail-Vorrat: die neuesten Kopfzeilen (300 je Postfach, 30 Tage) und bis zu 40 Mailtexte ohne Anhänge | Mails | versiegelt | ja | – |
 | `users/ID/wetter-vorrat.bin` | Wetter-Vorrat: die letzte Vorhersage für den eigenen Ort | Zustand | versiegelt | ja | – |
 | `users/ID/pakete-vorrat.bin` | Paket-Vorrat: die zuletzt aus den Mails gelesenen Sendungen | Mails | versiegelt | ja | – |
+| `users/ID/abwesenheit.bin` | Abwesenheit: von, bis, Text für Antworten, Vertretung, Schalter | Einstellungen | versiegelt | ja | – |
 | `users/ID/mail-zurueck.bin` | Zurückstellen: wartende Mails (Message-ID, Postfach, Zeit, Absender, Betreff) | Mails | versiegelt | ja | – |
 | `users/ID/mail-tidy.json` | Posteingang aufräumen | Einstellungen | – | ja | – |
 | `users/ID/fuerdich-vorrat.bin` | Für dich: die letzte Lesung je Postfach (gefundene Einträge mit Absender, Betreff und Zeit, kein Mailtext) | Mails | versiegelt | ja | – |

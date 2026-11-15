@@ -131,6 +131,9 @@ DATEIEN = [
            art="Zustand", schutz=("versiegelt", "sealed"), export=VORRAT),  # weather.SUPPLY
     profil("pakete-vorrat.bin", "Paket-Vorrat: die zuletzt aus den Mails gelesenen Sendungen", "Parcel supply: the parcels last read from the mails",
            art="Mails", schutz=("versiegelt", "sealed"), export=VORRAT),  # parcels.SUPPLY
+    profil("abwesenheit.bin", "Abwesenheit: von, bis, Text für Antworten, Vertretung, Schalter",
+           "Away: from, until, reply text, stand-in, switches", art="Einstellungen",
+           schutz=("versiegelt", "sealed")),  # abwesenheit.STORE
     profil("mail-zurueck.bin", "Zurückstellen: wartende Mails (Message-ID, Postfach, Zeit, Absender, Betreff)",
            "Snooze mail: waiting mails (Message-ID, mailbox, time, sender, subject)", art="Mails",
            schutz=("versiegelt", "sealed")),  # spaeter.STORE

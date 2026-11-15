@@ -6187,6 +6187,13 @@
 "titel": "Hinweis bei neuer Anmeldung",
 "text": "Admin: Funktionen → „Hinweis bei neuer Anmeldung“ an. In deinem Profil schon am Handy angemeldet sein. Dann am PC in einem anderen Browser (etwa Firefox) mit PIN anmelden: das Handy bekommt „Neue Anmeldung: Windows · Firefox. Warst du das nicht? Ich → Sicherheit → Abmelden.“ Unter Ich → Sicherheit beendet „Abmelden“ genau diese Anmeldung. Noch einmal im selben Browser anmelden: kein Hinweis. Unter Zustand → Logs (Bereich System) stehen „anmeldehinweis: gesendet“ und „kein hinweis bekannt“.",
 "thread": "Ideen aus Nextcloud übernehmen"
+},
+{
+"id": "P902",
+"v": 1459,
+"titel": "Abwesenheit eintragen",
+"text": "Admin: Funktionen → Kalender und Tagesbriefing → „Abwesenheit“ an. Kalender → Einstellungen → Abwesenheit: Von gestern, Bis übermorgen, Text und Vertretung „Sabine“ eintragen, Speichern. Oben steht „aktiv bis …“. Seite Kalender: links der Kalender „Abwesenheit“ mit Schloss und ein ganztägiger Eintrag „Abwesend · Vertretung Sabine“. Ein anderes Profil sieht in Chats neben deinem Namen „abwesend bis …“; ruft es dich per Spark-Anruf an, klingelt nichts, der Anruf steht als verpasst im Chat. Sagt es „Ruf <dein Name> an“, hört es vorher „… ist bis … weg, Vertretung Sabine.“ „Abwesenheit beenden“: alles sofort weg. iPhone-App (nach dem nächsten TestFlight): Kalender → Flugzeug-Knopf zeigt und ändert dieselbe Abwesenheit.",
+"thread": "Ideen aus Nextcloud übernehmen"
 }
 ]
 }

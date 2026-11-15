@@ -103,7 +103,7 @@ router = APIRouter()
 
 # whoami flag -> function in features.py
 WHO = {"documents": "documents", "reminders": "reminders", "speaker_id": "speaker", "calendar": "calendar",
-       "homeassistant": "ha", "mail": "mail", "mail_tidy": "tidy", "mail_style": "mailstil", "mail_insight": "fuerdich", "ichweiss": "ichweiss", "share": "teilen", "mail_manage": "mailmanage", "mail_later": "mailspaeter", "mail_delete": "maildelete", "mail_learn": "maillearn", "mail_code": "mailcode", "mail_send": "mailsend", "proactive": "proactive", "room": "room",
+       "homeassistant": "ha", "mail": "mail", "mail_tidy": "tidy", "mail_style": "mailstil", "mail_insight": "fuerdich", "ichweiss": "ichweiss", "share": "teilen", "mail_manage": "mailmanage", "mail_later": "mailspaeter", "away": "abwesend", "mail_delete": "maildelete", "mail_learn": "maillearn", "mail_code": "mailcode", "mail_send": "mailsend", "proactive": "proactive", "room": "room",
        "room_voices": "roomtv", "room_ha": "roomha", "room_remote": "roomfar", "weather": "weather", "contacts": "contacts",
        "parcels": "parcels", "telegram": "telegram", "tasks": "tasks", "vorgaenge": "vorgaenge", "knowledge_book": "wissensbuch", "knowledge_map": "wissenskarte", "knowledge_ents": "wissensknoten", "knowledge_search": "kartensuche", "find": "fund",
        "esp32": "esp32", "iphone": "iphone", "iphone_panel": "iphonepanel", "pebble": "pebble", "pebble_health": "pebblegesund", "terminal": "terminal",

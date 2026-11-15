@@ -577,6 +577,14 @@ STECKBRIEFE = {
         ohne_werkzeug=("ohne", "nur eine Ansicht auf der Seite Kalender und in den Apps; nach Geburtstagen fragt man "
                                "über Kontakte (contacts_search), das Tagesbriefing nennt sie schon"),
         begleiter="panel"),
+    # abwesenheit.py (Nextcloud-Ideen 1, Dominik 2026-11-15 „alles umsetzen“): away from day to day, shown in the
+    # calendar and the chats, calls do not ring, the mail thread's auto reply reads it; fixed rules, never the model
+    "abwesend": Steckbrief(de="Abwesenheit", en="Away", gruppe="day", schalter=("away", "calendar"),
+        anleitung="abwesend", parent="calendar", me="calbox",
+        ohne_werkzeug=("regel", "nur Kalender → Einstellungen und die Apps; Chats, Anrufe und „Ruf … an“ lesen sie nach "
+                                "festen Regeln (abwesenheit.py), nie das Modell"),
+        begleiter="panel",
+        modul=("abwesenheit", "post", "Abwesenheit: von–bis, Text, Vertretung; Kalender, Chats, Anrufe, Mail-Antwort")),
     # kalenderserver.py (Dominik 2026-10-19 „1a-5a“, Spark-Kalender Stufe 4): the profile's Spark calendars for the
     # calendar app of the iPhone (CalDAV, an app password per profile)
     "calserver": Steckbrief(de="Kalender-Server für Kalender-Apps", en="Calendar server for calendar apps",

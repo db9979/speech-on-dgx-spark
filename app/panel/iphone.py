@@ -178,6 +178,8 @@ THINGS = {
     "calendar": ((("GET",), r"/api/profile/calendar/(?:view|quick)"), (("POST", "PUT"), r"/api/profile/calendar/event"), (("POST",), r"/api/profile/calendar/undo")),
     # Kalender-Server (kalenderserver.py): see, make (with a fresh code) and delete the app password for calendar apps
     "calserver": ((("GET", "POST", "DELETE"), r"/api/profile/calserver"),),
+    # Abwesenheit (abwesenheit.py): see, save and delete the own entry
+    "abwesend": ((("GET", "PUT", "DELETE"), r"/api/profile/abwesenheit"),),
     # E-Mail: the inbox and one mail as plain text (stays unread); ordering and sending each with their own function
     "mail": ((("GET",), r"/api/profile/mail/(?:inbox|message|view|bild)"),),
     "mailmanage": ((("GET",), r"/api/profile/mail/(?:folders|tree|folder|file)"),

@@ -415,6 +415,7 @@ The own pages E-mail, Calendar and Contacts, fetching from the provider, the sea
 
 | Module | Task |
 |---|---|
+| `app/panel/abwesenheit.py` | Abwesend: ein Profil trägt unter Calendar → Settings „Abwesenheit“ ein, von wann bis wann es weg ist, einen Text für Antworten und eine Vertretung. |
 | `app/panel/antwortvorschlag.py` | Antwortvorschläge: when a mail is answered on the page E-Mail or in the iPhone app, three short answers in different directions (e.g. |
 | `app/panel/calendars.py` | Calendar and daily briefing per profile (guests have neither). |
 | `app/panel/contacts.py` | Contacts per profile, read only (CardDAV: iCloud, Nextcloud, others). |
@@ -707,6 +708,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `users/ID/mail-vorrat.bin` | Mail supply: the newest headers (300 per mailbox, 30 days) and up to 40 mail texts without attachments | Mails | sealed | yes | – |
 | `users/ID/wetter-vorrat.bin` | Weather supply: the last forecast for the own place | State | sealed | yes | – |
 | `users/ID/pakete-vorrat.bin` | Parcel supply: the parcels last read from the mails | Mails | sealed | yes | – |
+| `users/ID/abwesenheit.bin` | Away: from, until, reply text, stand-in, switches | Settings | sealed | yes | – |
 | `users/ID/mail-zurueck.bin` | Snooze mail: waiting mails (Message-ID, mailbox, time, sender, subject) | Mails | sealed | yes | – |
 | `users/ID/mail-tidy.json` | Inbox tidy | Settings | – | yes | – |
 | `users/ID/fuerdich-vorrat.bin` | For you: the last reading per mailbox (found entries with sender, subject and time, no mail text) | Mails | sealed | yes | – |

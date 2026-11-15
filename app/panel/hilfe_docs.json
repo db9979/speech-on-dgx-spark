@@ -10132,6 +10132,22 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Abwesenheit (Nextcloud-Idee, standardmäßig aus)",
+"text": "Abwesenheit (Nextcloud-Idee, standardmäßig aus): Unter Kalender → Einstellungen → Abwesenheit (iPhone-App: Kalender → Abwesenheit) trägt ein Profil ein, von welchem bis zu welchem Tag es weg ist (höchstens 366 Tage), einen Text für Antworten (höchstens 2000 Zeichen), eine Vertretung (ein Name) und zwei Schalter: „Mail-Antwort“ und „Im Kalender zeigen“. Admin-Schalter Funktionen → Kalender und Tagesbriefing → „Abwesenheit“ (chat.away, aus; baut auf Kalender). Solange das Profil weg ist, gelten feste Regeln des Panels, nie des Modells: ein ganztägiger Eintrag „Abwesend“ im eigenen Kalender „Abwesenheit“ (nur lesen, über calendars.EXTRA, nichts in einem CalDAV-Kalender), „abwesend bis …“ neben dem Namen in Chats-Liste und Chat (profiles.AWAY, nie für einen anderen Spark), ein Spark-Anruf klingelt nicht und ist gleich ein verpasster, und „Ruf … an“ sagt vorher „Dominik ist bis 4. Januar weg, Vertretung Sabine.“ Die Mail-Antwort selbst baut der Mail-Teil; er liest abwesenheit.aktiv(uid) (von, bis, Text, nur mit „Mail-Antwort“) und erfährt jede Änderung über abwesenheit.ON_CHANGE. Gespeichert versiegelt im Profil (abwesenheit.bin), samt Zeitzone des Browsers; nach dem letzten Tag geht de"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Abwesenheit (Nextcloud-Idee, standardmäßig aus)",
+"text": "r Eintrag von selbst, „Abwesenheit beenden“ löscht ihn sofort. Live (Knoten Kalender) zeigt nur, wie viele Profile gerade weg sind und wie viele Anrufe heute nicht geklingelt haben."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Termine: änderbar oder nur lesen, mit ihrem Text",
 "text": "Termine: änderbar oder nur lesen, mit ihrem Text: Auf der Seite Kalender trägt ein Termin, den die Seite nicht ändern kann, ein 🔒 in Woche, Tag und Liste; seine Karte nennt mit festen Worten den Grund (calendars._why): Abo-Link (iCal), geteilter Kalender, wiederholter Termin (Serie im Kalender-Programm ändern) oder ein hier nicht änderbarer Kalender. Die Karte zeigt auch Text (DESCRIPTION, „Notiz“) und Link (URL) des Termins, nur als Text: höchstens 2000 Zeichen, ohne Steuerzeichen, Links nur mit http oder https, sie öffnen sich nie von selbst; lange Notizen zeigen 8 Zeilen und „Weiter lesen“. Ein privater Termin aus einem geteilten Kalender bleibt „belegt“, ohne Text und Link. Dasselbe in der iPhone-App (Schloss, Abschnitt „Notiz“, Grund in der Karte)."
 },
@@ -14014,6 +14030,14 @@
 "head": "Mein Tag",
 "title": "Mein Tag",
 "text": "- Geburtstage im Kalender (Funktionen → Mein Tag → „Geburtstage im Kalender“; baut auf „Kalender“; Kalender → Einstellungen): Die Geburtstage aus deinen Kontakten stehen als eigener Kalender „Geburtstage“ auf der Seite Kalender und in der iPhone-App, ganztägig und mit dem Alter, wenn das Jahr bekannt ist."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Mein Tag",
+"title": "Mein Tag",
+"text": "- Abwesenheit (Funktionen → Mein Tag → „Abwesenheit“; baut auf „Kalender“; Kalender → Einstellungen): Du trägst ein, von wann bis wann du weg bist, einen Text für Antworten und wer dich vertritt."
 },
 {
 "lang": "de",
@@ -27676,6 +27700,22 @@
 "src": "assistant",
 "file": "Assistant and panel",
 "head": "Voice chat",
+"title": "Away (Nextcloud idea, off by default)",
+"text": "Away (Nextcloud idea, off by default): Under Calendar → Settings → Away (iPhone app: Calendar → Away) a profile enters from which day to which day it is away (at most 366 days), a text for replies (at most 2000 characters), a stand-in (a name) and two switches: \"Mail reply\" and \"Show in the calendar\". Admin switch Features → Calendar and daily briefing → \"Away\" (chat.away, off; builds on Calendar). While the profile is away, fixed rules of the panel apply, never the model: an all-day entry \"Away\" in a calendar of its own, \"Away\" (read only, through calendars.EXTRA, nothing in a CalDAV calendar), \"away until …\" next to the name in the chat list and the chat (profiles.AWAY, never for another Spark), a Spark call does not ring and is a missed one at once, and \"Call …\" first says \"Dominik is away until 4 January, stand-in Sabine.\" The mail reply itself is built by the mail part; it reads abwesenheit.aktiv(uid) (from, until, text, only with \"Mail reply\") and learns of every change through abwesenheit.ON_CHANGE. Stored sealed in the profile (abwesenheit.bin), with the browser's time zone; after the last day the entry goes by itself, \"End away\" deletes it at once. Live (node Calendar) sho"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Away (Nextcloud idea, off by default)",
+"text": "ws only how many profiles are away now and how many calls did not ring today."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
 "title": "Appointments: changeable or read only, with their text",
 "text": "Appointments: changeable or read only, with their text: on the Calendar page an appointment the page cannot change carries a 🔒 in week, day and list; its card names the reason in fixed words (calendars._why): subscription link (iCal), shared calendar, repeating appointment (change the series in the calendar app) or a calendar that cannot be changed here. The card also shows the appointment's text (DESCRIPTION, \"Note\") and link (URL), as text only: at most 2000 characters, no control characters, links only with http or https, never opening by themselves; long notes show 8 lines and \"Read on\". A private appointment from a shared calendar stays \"belegt\" (busy), without text or link. The same in the iPhone app (lock, section \"Note\", reason in the card)."
 },
@@ -31502,6 +31542,14 @@
 "head": "My day",
 "title": "My day",
 "text": "- Birthdays in the calendar (Features → My day → \"Birthdays in the calendar\"; builds on \"Calendar\"; Calendar → Settings): The birthdays from your contacts show as a calendar of their own, \"Birthdays\", on the Calendar page and in the iPhone app, all day and with the age when the year is known."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My day",
+"title": "My day",
+"text": "- Away (Features → My day → \"Away\"; builds on \"Calendar\"; Calendar → Settings): You enter from when until when you are away, a text for replies and who stands in."
 },
 {
 "lang": "en",
