@@ -570,6 +570,13 @@ STECKBRIEFE = {
         schalter=("calendar_share", "calendar"), anleitung="calshare", parent="calendar", me="calbox",
         ohne_werkzeug=("regel", "calendars.py: calendar_events liest geteilte Kalender mit („Was hat Sabine "
                                 "morgen?“), calendar_add trägt in einen genannten ein, erst nach Ja")),
+    # contacts.bday_calendar (Nextcloud-Ideen K3, Dominik 2026-11-15 „alles umsetzen“): the contacts' birthdays as a
+    # read-only calendar of its own on the page Kalender, made anew each time, nothing stored
+    "calbday": Steckbrief(de="Geburtstage im Kalender", en="Birthdays in the calendar", gruppe="day",
+        schalter=("calendar_bdays", "calendar", "contacts"), anleitung="calbday", parent="calendar", me="calbox",
+        ohne_werkzeug=("ohne", "nur eine Ansicht auf der Seite Kalender und in den Apps; nach Geburtstagen fragt man "
+                               "über Kontakte (contacts_search), das Tagesbriefing nennt sie schon"),
+        begleiter="panel"),
     # kalenderserver.py (Dominik 2026-10-19 „1a-5a“, Spark-Kalender Stufe 4): the profile's Spark calendars for the
     # calendar app of the iPhone (CalDAV, an app password per profile)
     "calserver": Steckbrief(de="Kalender-Server für Kalender-Apps", en="Calendar server for calendar apps",
@@ -804,6 +811,15 @@ STECKBRIEFE = {
         begleiter="stays in the panel; the Begleiter's settings (Übersicht) link to its place (Meine Daten on the "
                   "Ich page Sicherheit)",
         modul=("mfa", "zugang", "Zweiter Anmeldeschritt mit Code (TOTP) und Wiederherstellungscodes")),
+    # anmeldehinweis.py (Nextcloud-Ideen 11, Dominik 2026-11-15 „alles umsetzen“): a PIN login from a kind of browser
+    # new for the profile sends a note to its devices; fixed rules, nothing stored
+    "anmeldehinweis": Steckbrief(de="Hinweis bei neuer Anmeldung", en="Note on a new sign-in", gruppe="sec",
+        schalter=("login_notice",), anleitung="anmeldehinweis", me="secbox",
+        ohne_werkzeug=("ohne", "läuft von selbst bei jeder Anmeldung mit PIN; beendet wird eine Anmeldung unter "
+                               "Ich → Sicherheit"),
+        log=("system", "anmeldehinweis"), begleiter="panel",
+        modul=("anmeldehinweis", "zugang", "Hinweis bei neuer Anmeldung: neue Art von Browser → Mitteilung an die "
+                                           "eigenen Geräte, höchstens 5 am Tag")),
     # reports as GitHub issues with anonymized log lines (meldung.py); what goes out is shown before
     "melden": Steckbrief(de="Probleme melden", en="Reporting problems", gruppe="sec", schalter=("report",),
         anleitung="melden", me="rpbox", ohne_werkzeug=("regel", "meldung.py: „Spark, Problem melden: …“"),

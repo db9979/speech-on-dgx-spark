@@ -793,7 +793,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Post, Kalender, Kontakte
     "post": {
-        "stand": "569777a982",
+        "stand": "435e080a52",
         "bezug": {
             "kalenderserver.login": ["s2", "s10"], "kontaktserver._write": ["s10"], "kontaktserver.MAX_CARDS": ["s10"],
             "mail.MAX_ACCOUNTS": ["s3"], "mail.lookup": ["s1", "s5", "s7"], "calendars.view": ["s1"],
@@ -823,9 +823,13 @@ SEITEN = {
             S("s1", "start", ("Seite, Frage oder App", "Page, question or app"),
               ("E-Mail, Kalender, Kontakte, Assistent", "E-mail, Calendar, Contacts, assistant"),
               ("Das Profil öffnet eine eigene Seite (calendars.view für den Kalender, mail.lookup für die Mails) oder fragt "
-               "den Assistenten, der dieselben Helfer nimmt. Oder eine Kalender- oder Kontakte-App auf dem Handy meldet sich.",
+               "den Assistenten, der dieselben Helfer nimmt. Oder eine Kalender- oder Kontakte-App auf dem Handy meldet sich. "
+               "Für die Seite hängt calendars.view Kalender an, die das Panel selbst macht (calendars.EXTRA, etwa die "
+               "Geburtstage aus den Kontakten): nur lesen, nichts gespeichert.",
                "The profile opens a page of its own (calendars.view for the calendar, mail.lookup for mail) or asks the "
-               "assistant, which takes the same helpers. Or a calendar or contacts app on the phone signs in.")),
+               "assistant, which takes the same helpers. Or a calendar or contacts app on the phone signs in. For the page "
+               "calendars.view adds calendars the panel makes itself (calendars.EXTRA, such as the birthdays from the "
+               "contacts): read only, nothing stored.")),
             S("s2", "frage", ("Eine Kalender- oder Kontakte-App?", "A calendar or contacts app?"),
               ("/caldav/ und /carddav/", "/caldav/ and /carddav/"),
               ("Apps kommen nicht durch die Anmeldung des Panels, sondern durch kalenderserver.login: Profil-Kennung und "

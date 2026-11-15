@@ -6173,6 +6173,20 @@
 "titel": "Gespräche nach Thema",
 "text": "Admin: Funktionen → Gespräche nach Thema an. Im Assistenten etwas zum Kalender fragen, nach der Antwort links in der Liste: das Gespräch hat ein Kalender-Symbol und nach ein paar Sekunden einen kurzen Namen. Mehr als 3 Minuten warten und nach dem Wetter fragen: im Gespräch steht eine Linie „Neues Gespräch“, in der Liste ein zweites Gespräch. Eine Rückfrage („und morgen?“) bleibt im selben. Mit dem Stift im Kopf umbenennen, mit der Nadel anheften: es steht unter „Angeheftet“ oben. iPhone-App: der Verlauf zeigt Name und Nadel. Unter Zustand → Logs (Bereich Gespräch) stehen „thema neu wechsel“ und „name ok“.",
 "thread": "Gespräche übersichtlich ablegen und fortsetzen"
+},
+{
+"id": "P900",
+"v": 1456,
+"titel": "Geburtstage im Kalender",
+"text": "Admin: Funktionen → Kalender und Tagesbriefing → „Geburtstage im Kalender“ an. Seite Kalender: links steht der Kalender „Geburtstage“ mit Schloss; in der Woche eines Geburtstags aus deinen Kontakten steht ein ganztägiger Eintrag mit Name und Alter (wenn das Jahr bekannt ist). Antippen: „Geburtstag aus deinen Kontakten; ändern lässt er sich in der Kontaktkarte.“ Links abhaken blendet ihn aus. iPhone-App (nach dem nächsten TestFlight): Kalender zeigt dieselben Einträge. Schalter aus: der Kalender ist sofort weg.",
+"thread": "Ideen aus Nextcloud übernehmen"
+},
+{
+"id": "P901",
+"v": 1456,
+"titel": "Hinweis bei neuer Anmeldung",
+"text": "Admin: Funktionen → „Hinweis bei neuer Anmeldung“ an. In deinem Profil schon am Handy angemeldet sein. Dann am PC in einem anderen Browser (etwa Firefox) mit PIN anmelden: das Handy bekommt „Neue Anmeldung: Windows · Firefox. Warst du das nicht? Ich → Sicherheit → Abmelden.“ Unter Ich → Sicherheit beendet „Abmelden“ genau diese Anmeldung. Noch einmal im selben Browser anmelden: kein Hinweis. Unter Zustand → Logs (Bereich System) stehen „anmeldehinweis: gesendet“ und „kein hinweis bekannt“.",
+"thread": "Ideen aus Nextcloud übernehmen"
 }
 ]
 }

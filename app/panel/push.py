@@ -276,7 +276,8 @@ WHY = {"agent": "Auftrag", "briefing": "Tagesüberblick", "notaus": "Notaus", "s
        "pro-": "Von selbst", "mcp": "MCP-Bestätigung", "admin": "Hinweis", "hello": "Test", "devup": "Geräte-Update", "doc": "Dokument", "bild": "Bild",
        "svc": "Dienst-Wächter", "wartung": "Wartungspause", "chat-": "Chat", "wache": "Wachposten",
        "modell": "Modellwechsel", "ruf": "Anruf starten", "listen": "Listen",
-       "share": "Geteilt", "vg-": "Offen", "mailcode": "Bestätigungscode", "hoerstueck": "Hörstück"}
+       "share": "Geteilt", "vg-": "Offen", "mailcode": "Bestätigungscode", "hoerstueck": "Hörstück",
+       "login": "Anmeldung"}
 
 
 def _why(tag):

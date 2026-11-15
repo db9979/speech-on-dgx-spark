@@ -283,6 +283,7 @@ FEATURES = (
     F(**steckbrief.feature("calendar")),
     F(**steckbrief.feature("calshare")),
     F(**steckbrief.feature("calserver")),
+    F(**steckbrief.feature("calbday")),
     F(**steckbrief.feature("weather")),
     # mail and contacts
     F(**steckbrief.feature("mail")),
@@ -353,6 +354,7 @@ FEATURES = (
     F(**steckbrief.feature("speaker")),
     F(**steckbrief.feature("spkcode")),
     F(**steckbrief.feature("mfa")),
+    F(**steckbrief.feature("anmeldehinweis")),
     F(**steckbrief.feature("melden")),
     F(**steckbrief.feature("meldenadmin")),
     F(**steckbrief.feature("meldendirekt")),

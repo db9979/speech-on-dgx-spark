@@ -115,7 +115,7 @@ function kalMini(month,mode){const first=new Date(month.getFullYear(),month.getM
     [...Array(42)].map((_,i)=>{const d=kalAdd(a,i),iso=kalIso(d);return `<button type="button" data-mday="${iso}" class="${d.getMonth()!==first.getMonth()?'other':''}${iso===today?' now':''}${iso===sel&&mode==='side'?' sel':''}">${d.getDate()}</button>`}).join('')+`</div></div>`}
 function kalSide(w,a){const d=KAL.data,mini=KAL.mini||KAL.day;
   a.innerHTML=kalMini(mini,'side')+`<div class="kcals"><b>${esc(t('Kalender','Calendars'))}</b>`+d.calendars.map((n,i)=>{const ro=!(d.edit||[]).includes(i)&&!(d.add||[]).includes(i);
-    return `<label class="kcal ${kalKc(i)}"><input type="checkbox" data-cal="${i}"${KAL_HIDE.has(n)?'':' checked'}><i></i><span>${esc(n)}</span>${(d.shared||[]).includes(i)?`<small>${esc(t('geteilt','shared'))}</small>`:ro?`<small aria-label="${esc(t('nur lesen','read only'))}">${ic('lock')}</small>`:''}</label>`}).join('')+`</div>`;
+    return `<label class="kcal ${kalKc(i)}"><input type="checkbox" data-cal="${i}"${KAL_HIDE.has(n)?'':' checked'}><i></i><span>${esc(kalCN(d,i))}</span>${(d.shared||[]).includes(i)?`<small>${esc(t('geteilt','shared'))}</small>`:ro?`<small aria-label="${esc(t('nur lesen','read only'))}">${ic('lock')}</small>`:''}</label>`}).join('')+`</div>`;
   a.querySelectorAll('[data-mnav]').forEach(b=>b.onclick=()=>{KAL.mini=new Date(mini.getFullYear(),mini.getMonth()+Number(b.dataset.mnav),1);kalSide(w,a)});
   a.querySelectorAll('[data-mday]').forEach(b=>b.onclick=()=>{KAL.day=new Date(b.dataset.mday+'T00:00');KAL.mini=null;if(KAL.view==='year')KAL.view='day';if(!kalWide())KAL.side=false;KAL.sel=null;KAL.form=null;kalLoad()});
   a.querySelectorAll('[data-cal]').forEach(c=>c.onchange=()=>{kalHideSet(d.calendars[Number(c.dataset.cal)],!c.checked);KAL.mini=mini;kalDraw()});
@@ -175,7 +175,11 @@ function kalBind(m){m.querySelectorAll('[data-i]').forEach(b=>b.onclick=e=>{e.st
   if(KAL.form){kalClose();return}   // the first tap closes (and saves) the open inspector
   KAL.ghost=null;KAL.at='';if(x.edit)kalFormOpen('edit',x);else{KAL.sel=x;KAL.form=null;kalDraw()}})}
 // why an appointment is read-only (calendars._why): a fixed word from the panel, the text is ours
-const KAL_WHY={abo:['Nur lesen: der Kalender ist ein Abo-Link (iCal), Änderungen gehen nur beim Anbieter.','Read only: the calendar is a subscription link (iCal), changes only at its provider.'],
+// a calendar the panel makes itself (calendars.EXTRA, "made": index -> kind) is named by the page in both languages
+const KAL_MADE={geburtstag:['Geburtstage','Birthdays']};
+const kalCN=(d,i)=>{const k=(d.made||{})[i];return KAL_MADE[k]?t(...KAL_MADE[k]):((d.calendars||[])[i]||'')};
+const KAL_WHY={geburtstag:['Geburtstag aus deinen Kontakten; ändern lässt er sich in der Kontaktkarte.','Birthday from your contacts; change it in the contact card.'],
+  abo:['Nur lesen: der Kalender ist ein Abo-Link (iCal), Änderungen gehen nur beim Anbieter.','Read only: the calendar is a subscription link (iCal), changes only at its provider.'],
   geteilt:['Nur lesen: ein Kalender, den dir jemand geteilt hat; ändern kann ihn nur, wem er gehört.','Read only: a calendar someone shared with you; only its owner can change it.'],
   lesen:['Nur lesen: dieser Kalender lässt sich hier nicht ändern.','Read only: this calendar cannot be changed here.']};
 // repeat and alert as the page names them (kalserie.RULES, kalserie.ALARMS)
@@ -191,7 +195,7 @@ function kalDetail(w){const box=w.querySelector('.kaldet'),x=KAL.sel;if(!box)ret
   if(!x){box.hidden=true;if(!(KAL.side&&!kalWide()))w.querySelector('.kalshade').hidden=true;return}
   const d=KAL.data,when=x.allday?new Date(x.start*1000).toLocaleDateString(kalLoc(),{weekday:'short',day:'numeric',month:'long'})+' · '+t('ganztägig','all day')
     :new Date(x.start*1000).toLocaleDateString(kalLoc(),{weekday:'short',day:'numeric',month:'long'})+', '+kalTime(x.start)+'–'+kalTime(x.end);
-  box.innerHTML=`<button type="button" class="kalx" data-close="1" aria-label="${esc(t('Schließen','Close'))}">${ic('x')}</button><div class="mut"><i class="kdot ${kalKc(x.cal)}"></i>${esc((d.calendars||[])[x.cal]||'')}</div><h3>${esc(x.title)}</h3>`+
+  box.innerHTML=`<button type="button" class="kalx" data-close="1" aria-label="${esc(t('Schließen','Close'))}">${ic('x')}</button><div class="mut"><i class="kdot ${kalKc(x.cal)}"></i>${esc(kalCN(d,x.cal))}</div><h3>${esc(x.title)}</h3>`+
     `<dl class="ld-facts"><dt>${esc(t('Wann','When'))}</dt><dd>${esc(when)}</dd>${x.location?`<dt>${esc(t('Wo','Where'))}</dt><dd>${esc(x.location)}</dd>`:''}${x.rule?`<dt>${esc(t('Wiederholen','Repeat'))}</dt><dd>${esc(kalRuleName(x.rule,x.until))}</dd>`:''}${x.alarm?`<dt>${esc(t('Erinnerung','Alert'))}</dt><dd>${esc(kalAlarmName(x.alarm))}</dd>`:''}${x.link?`<dt>${esc(t('Link','Link'))}</dt><dd class="kallink">${esc(x.link)}</dd>`:''}</dl>`+
     (x.note?`<div class="kalnote${x.note.length>400||x.note.split('\n').length>8?' cut':''}">${esc(x.note)}</div>${x.note.length>400||x.note.split('\n').length>8?`<button type="button" class="b kalmore" data-act="more">${esc(t('Weiter lesen','Read on'))}</button>`:''}`:'')+
     `<div class="kalro">${ic('lock')} ${esc(x.title==='belegt'&&(d.shared||[]).includes(x.cal)?t('Privater Termin aus einem geteilten Kalender.','Private appointment from a shared calendar.'):t(...(KAL_WHY[x.why]||KAL_WHY.lesen)))}</div>`;

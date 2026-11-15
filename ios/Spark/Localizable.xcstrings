@@ -13231,6 +13231,16 @@
         }
       }
     },
+    "Geburtstag aus deinen Kontakten; ändern lässt er sich in der Kontaktkarte.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Birthday from your contacts; change it in the contact card."
+          }
+        }
+      }
+    },
     "Nur lesen: der Kalender ist ein Abo-Link (iCal), Änderungen gehen nur beim Anbieter.": {
       "localizations": {
         "en": {

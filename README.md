@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.456** Nextcloud ideas 1: birthdays as a calendar of their own and a note on a new sign-in
 - **V01.1.455** Red fix: the browser test of the conversation list taps an answer on a device without hover instead of pointing
 - **V01.1.454** Conversations by topic: a new conversation after a pause or a change of topic, with symbol and a short name, pin and archive
 - **V01.1.453** Conversations as a list beside the conversation instead of a drop-down, calm answers with buttons only on pointing
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.449** Fix report 4: a "yes" on the question card after an answer from mail (daily briefing) keeps that answer and its question in the conversation, locked like any mail follow-up
 - **V01.1.448** Vulnerabilities fixed: brotli, certifi, filelock, nltk and Pillow raised on tars, pip 26.3 in every environment built from the lock file
 - **V01.1.447** Follow-up to V01.1.446: Praxistest P891 (Spark-Konsole) in the list
-- **V01.1.446** Spark-Konsole (E4): with `sudo speech-spark konsole an <net>` the Spark has a web page of its own on port 31010 (overview, models, clients, pair an assistant with a code, updates, logs), the panel's code in a mode of its own, home network only, only its own paths
 
 
 

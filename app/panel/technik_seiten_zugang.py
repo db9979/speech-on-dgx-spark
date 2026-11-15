@@ -449,7 +449,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ zugang (guard, core, profiles, features)
     "zugang": {
-        "stand": "04e73bb48f",
+        "stand": "5495e78c1b",
         "bezug": {
             "guard.MAX_FAILS": ["s2", "s3"], "guard.MAX_NAME_FAILS": ["s2", "s3"], "guard.LOCK_FIRST": ["s2"],
             "guard.DAY_FAILS": ["s2", "s3"], "guard.failed": ["s3"], "guard.succeeded": ["s5"],
@@ -516,7 +516,9 @@ SEITEN = {
                "zweite Schritt dabei (Code, Passkey oder vertrauter Browser), trägt die Sitzung sein Zeichen: nur "
                "dann zählt eine Admin-Rolle des Profils, ohne eigene Admin-Anmeldung. Danach liest das Panel "
                "Kalender und Mails des Profils im Hintergrund vorab (vorwaermen.py, höchstens alle "
-               "{vorwaermen.WARM_AGAIN} Sekunden), damit seine Seiten sofort aufgehen.",
+               "{vorwaermen.WARM_AGAIN} Sekunden), damit seine Seiten sofort aufgehen. Ist die Art des Browsers neu "
+               "für das Profil, bekommen seine Geräte einen Hinweis (anmeldehinweis.py, höchstens "
+               "{anmeldehinweis.MAX_DAY} am Tag).",
                "The address's counter is cleared; strangers' wrong attempts for the name keep counting. The profile "
                "cookie is signed and stands in the list of signed-in browsers; it holds at most "
                "{profiles.SESSION_DAYS} days without use and is renewed while used. The admin cookie is signed with "
@@ -524,7 +526,8 @@ SEITEN = {
                "(code, passkey or a trusted browser) the session carries its mark: only then does a profile's "
                "admin role count, without an admin sign-in of its own. Then the panel reads the profile's calendars "
                "and mail ahead in the background (vorwaermen.py, at most every {vorwaermen.WARM_AGAIN} seconds), so "
-               "its pages open at once.")),
+               "its pages open at once. When the kind of browser is new for the profile, its devices get a note "
+               "(anmeldehinweis.py, at most {anmeldehinweis.MAX_DAY} a day).")),
             S("s6", "schritt", ("Profil bestimmen", "Find the profile"),
               ("profiles.current", "profiles.current"),
               ("Zuerst, was nur das Panel selbst setzt (Telegram, „Spark fragen“ über MCP), dann der Geräteschlüssel "

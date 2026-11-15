@@ -35,6 +35,7 @@ from collections import deque
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 
+import anmeldehinweis
 import dungeon_live
 import guard
 import features
@@ -1834,6 +1835,8 @@ def snapshot(view="admin", now=None):
             x["sub"] = (f"{nasl.get('conns', 0)} Verbindungen · {nasl.get('profiles', 0)} Profile"
                         + (f" · {nasl['bad']} mit Fehler" if nasl.get("bad") else "")
                         + (" · Sicherung" if nasl.get("backup") else ""))
+        if x["id"] == "webpush" and anmeldehinweis.heute():   # Hinweis bei neuer Anmeldung: notes today (a number)
+            x["sub"] += f" · heute {anmeldehinweis.heute()} Anmelde-Hinweise"
         if x["id"] == "cal" and kal.get("on"):   # Kalender teilen: shares in numbers (never a name or an appointment)
             x["sub"] += f" · {kal.get('shares', 0)} geteilt von {kal.get('owners', 0)} Profilen"
         if x["id"] == "mail" and post_page:      # Mails ordnen: messages ordered on the page today (a number)

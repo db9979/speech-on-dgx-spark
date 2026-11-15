@@ -138,6 +138,10 @@ extension SparkAPI {
         var v = CalView()
         v.connected = d["connected"] as? Bool ?? true
         v.calendars = (d["calendars"] as? [String] ?? []).map { String($0.prefix(80)) }
+        // a calendar the panel makes itself (calendars.EXTRA): the app names it in its own language
+        for (k, w) in d["made"] as? [String: String] ?? [:] where w == "geburtstag" {
+            if let i = Int(k), i >= 0, i < v.calendars.count { v.calendars[i] = String(localized: "Geburtstage") }
+        }
         v.add = d["add"] as? [Int] ?? []
         v.errors = d["errors"] as? [String] ?? []
         v.notes = (d["notes"] as? [String] ?? []).prefix(10).map { String($0.prefix(80)) }
@@ -682,6 +686,7 @@ struct KalenderDetail: View {
         switch why {
         case "abo": return String(localized: "Nur lesen: der Kalender ist ein Abo-Link (iCal), Änderungen gehen nur beim Anbieter.")
         case "geteilt": return String(localized: "Nur lesen: ein Kalender, den dir jemand geteilt hat; ändern kann ihn nur, wem er gehört.")
+        case "geburtstag": return String(localized: "Geburtstag aus deinen Kontakten; ändern lässt er sich in der Kontaktkarte.")
         default: return String(localized: "Nur lesen: dieser Kalender lässt sich hier nicht ändern.")
         }
     }

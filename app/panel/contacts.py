@@ -22,6 +22,7 @@ from urllib.parse import urljoin
 
 import httpx
 
+import calendars
 import hintergrund
 import kontaktkarte
 import netguard
@@ -448,6 +449,27 @@ def birthdays(uid, day, days=1):
                 age = d.year - int(m.group(1)) if m.group(1) != "-" else None
                 out.append((d, x["name"], age))
     return sorted(out)
+
+
+BDAY_CAL = "Geburtstage"   # the calendar's name on the page Kalender (the page says it in English through "made")
+
+
+def bday_calendar(uid, day, days, zone):
+    """Geburtstage im Kalender (Nextcloud-Ideen K3, Dominik 2026-11-15): the birthdays of the profile's contacts as a
+    calendar of its own on the page Kalender, all day, with the age when the year is known. Made from the contacts'
+    copy each time (nothing stored, nothing leaves the Spark); read only, changed in the contact card. None when the
+    function is off for the profile or it has no contacts."""
+    if not (features.allowed("calbday", uid) and usable(uid)):
+        return None
+    out = []
+    for d, name, age in birthdays(uid, day, days):
+        t0 = datetime.datetime.combine(d, datetime.time(), zone)
+        out.append({"start": int(t0.timestamp()), "end": int((t0 + datetime.timedelta(days=1)).timestamp()),
+                    "allday": True, "title": f"{name} ({age})" if age else name})
+    return BDAY_CAL, "geburtstag", out
+
+
+calendars.EXTRA.append(bday_calendar)
 
 
 def birthday_sentence(uid, day):

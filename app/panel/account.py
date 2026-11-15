@@ -31,6 +31,7 @@ import fuerdich  # noqa: E402
 import hintergrund  # noqa: E402
 import parcels  # noqa: E402
 import vorwaermen  # noqa: E402
+import anmeldehinweis  # noqa: E402
 import memtidy  # noqa: E402
 import gedaechtnis  # noqa: E402
 import siegel  # noqa: E402
@@ -423,6 +424,12 @@ def admin_protocol(request: Request, limit: int = 300):
 # ---------------------------------------------------------------- profiles
 # Who is talking to the assistant. A browser logs in to a profile with its PIN (cookie), a speaker
 # sends its device key. Everything stored for a profile is only reachable through that login.
+ANMELDE_TEILE = anmeldehinweis.Teile(sessions=profiles.sessions,
+                                     allowed=lambda uid: features.allowed("anmeldehinweis", uid),
+                                     who=lambda uid: profiles.log_name(profiles.by_id(uid)),
+                                     send=lambda *a, **kw: push.send(*a, **kw))
+
+
 @router.post("/api/profile/login")  # open: without chat.public it is the way in
 async def profile_login(request: Request):
     body = await request.json()
@@ -448,6 +455,7 @@ async def profile_login(request: Request):
     _trust(r, body, uid, request)
     admin_signed_in(request, uid, next((u["name"] for u in profiles.names() if u["id"] == uid), name.strip()))
     vorwaermen.ask(uid)   # signed in: read its calendars and mail ahead (vorwaermen.py)
+    anmeldehinweis.ask(uid, value, ANMELDE_TEILE)   # a new kind of browser: a note to its devices (Nextcloud-Ideen 11)
     return r
 
 

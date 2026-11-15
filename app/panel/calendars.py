@@ -843,6 +843,10 @@ VIEW_DAYS = 42            # the page asks for at most six weeks at a time (a mon
 VIEW_BUDGET = 8.0         # seconds; a slow calendar shows „lädt noch“ and keeps loading in the background, the page
                           # never waits longer and asks again (kalender.js)
 VIEW_MAX = 600            # appointments per answer
+# calendars made by the panel itself from other data, after the profile's own (Nextcloud-Ideen K3): each entry is a
+# function (uid, day, days, zone) -> None (not for this profile) or (name, why, [{start, end, allday, title}]); always
+# read only, never cached, never in the assistant's calendar_events (the briefing names birthdays on its own)
+EXTRA = []
 
 
 async def view(uid, day, days, zone):
@@ -854,7 +858,8 @@ async def view(uid, day, days, zone):
     t1 = t0 + datetime.timedelta(days=days)
     cals = reading(uid)["calendars"]
     names = [c.get("name", "") for c in cals]
-    if not names:
+    extra = [x for x in (f(uid, day, days, zone) for f in EXTRA) if x]
+    if not names and not extra:
         return {"connected": False, "calendars": [], "events": [], "errors": []}
     shared = [i for i, c in enumerate(cals) if c.get("owner")]
     # the page may change an appointment of an own CalDAV calendar (never an iCal link, never a shared one) and add
@@ -875,7 +880,15 @@ async def view(uid, day, days, zone):
                     "alarm": x.get("alarm", 0), "people": x.get("people", []) if ok else [],
                     **({"uid": x.get("uid", ""), "rid": x.get("rid", 0), "rule": x.get("rule", ""), "until": x.get("until", "")}
                        if x.get("repeat") else {})})
-    return {"connected": True, "calendars": names, "shared": shared, "edit": edit, "add": add, "events": out,
+    made = {}
+    for name, why, evs in extra:
+        made[len(names)] = why
+        out += [{"start": x["start"], "end": x["end"], "allday": bool(x["allday"]), "title": x["title"], "location": "",
+                 "cal": len(names), "edit": False, "note": "", "link": "", "why": why, "alarm": 0, "people": []}
+                for x in evs[:VIEW_MAX]]
+        names = names + [name]
+    out.sort(key=lambda x: (x["start"], not x["allday"]))
+    return {"connected": True, "calendars": names, "made": made, "shared": shared, "edit": edit, "add": add, "events": out,
             "errors": [n for n, _ in errors], "loading": loading, "notes": notes(uid)}
 
 
