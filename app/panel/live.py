@@ -269,7 +269,8 @@ def _pruefstand():
     if not dungeon_pruefstand.on():
         return ""
     c = dungeon_pruefstand.counts()
-    return (f" · Prüfstand {c['zellen']} Felder, {c['unter']} unter und {c['ueber']} über dem Ziel" if c["zellen"] else " · Prüfstand noch ohne Lauf") + \
+    return (f" · Prüfstand {c['zellen']} Felder, {c['unter']} unter und {c['ueber']} über dem Ziel, {c['zu_lang']} mit zu langen Kämpfen"
+            if c["zellen"] else " · Prüfstand noch ohne Lauf") + \
         (f" · mit Runen {c['runen_plus']:+} Punkte".replace(".", ",") if c["runen_plus"] is not None else "") + \
         (f" · gegen Bosse {c['boss_unter']} Gruppengrößen unter dem Ziel" if c["boss_unter"] is not None else "") + (" · Prüfstand spielt gerade" if c["laeuft"] else "")
 
@@ -1283,14 +1284,14 @@ def ruhe(targets, busy, now=None):
 def _dungeon_tempo(dgn):
     """How long the table waits today (dungeon_tempo.for_live, the keys tempo_… of the Dungeon-Master's numbers): mean
     and longest wait of a told turn, the model's mean for checks and narration with their counts, the share of turns
-    rewritten; seconds with one decimal (numbers only)."""
+    rewritten, the checks steps the panel answered itself; seconds with one decimal (numbers only)."""
     t = {k[6:]: v for k, v in dgn.items() if k.startswith("tempo_")}
     if not t.get("zuege"):
         return ""
     s = lambda ms: round(ms / 1000, 1)      # noqa: E731
     return (f" · heute Wartezeit je Zug Ø {s(t['mittel_ms'])} s, längste {s(t['laengste_ms'])} s"
             f" (Proben Ø {s(t['proben_ms'])} s bei {t['proben_n']}, Erzählen Ø {s(t['erzaehlen_ms'])} s bei {t['erzaehlen_n']}),"
-            f" {t['neu_pct']} % der Züge nachgebessert")
+            f" {t['neu_pct']} % der Züge nachgebessert" + (f", {t['gespart']} Proben-Fragen gespart" if t.get("gespart") else ""))
 
 
 def _dungeon_musik(m):
@@ -2270,6 +2271,7 @@ def snapshot(view="admin", now=None):
                         + (f" · heute {dgn['ding_fehlt']} Aktionen mit Dingen, die der Held nicht dabeihat" if dgn.get("ding_fehlt") else "")
                         + (f" · heute {dgn['tageszeit_weg']} Sprünge der Tageszeit verworfen" if dgn.get("tageszeit_weg") else "")
                         + (f" · {dgn['gegner_mehrfach']} Gegner mit Mehrfachangriff stehen" if dgn.get("gegner_mehrfach") else "")
+                        + (f" · {dgn['kampf_kuerzer']} Kämpfe mit gekürztem Gegnerleben" if dgn.get("kampf_kuerzer") else "")
                         + (f" · heute {dgn['oel']} Öle aufgetragen" if dgn.get("oel") else "")
                         + (f" · heute {dgn['beleg_falsch']} Erzählungen mit Zahlen ohne Würfel-Beleg nachgebessert" if dgn.get("beleg_falsch") else "")
                         + (f" · heute {dgn['hoer_namen']} Aufnahmen mit den Namen der Runde gehört" if dgn.get("hoer_namen") else "")

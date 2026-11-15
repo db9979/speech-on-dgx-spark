@@ -44,7 +44,7 @@ Teil 2 (Kampf-Tiefe, Bestiarium-Punkte 4-6 and item point 2, Dominik 2026-10-24 
                (blows); its schaden is the mean of its damaging attacks, so the turn is as strong as in the SRD
 
 rd["kampf"] = {"gegner": [{k, id, name, zeichen, leben, max, rk, angriff, schaden, plus, wuerfel, ep, aus, art, resistenz,
-               immun, schwaeche, zustaende, boss, phase, angriffe}], "seit": zug, "budget": n, "gefahr": "leicht"|"mittel"|"schwer"};
+               immun, schwaeche, zustaende, boss, phase, angriffe, mal (shorter)}], "seit": zug, "budget": n, "gefahr": "leicht"|"mittel"|"schwer"};
 hero states in h["zust"] = [{"id", "bis": zug}]; dungeon.py owns the round and calls in.
 """
 import math
@@ -146,6 +146,11 @@ BRENNT = 4                 # schaden_pro_zug: 1W4 at each of the foes' turns
 KRIT = "dungeonkrit"       # the switch „Krit- und Patzer-Tabellen“ (D&D idea 2, features.py) for the round's host
 BOSS_LEBEN = 0.5           # a boss: its life times 1 + this per hero beyond the first
 ANTEIL_MIN = 0.4           # the budget times the group's share of its life, at least this (Review 27.10. B5)
+LAENGE_ZUEGE = 4.6         # Prüfung 15.11., Punkt 1 (fights of 6 to 7 turns at most): the foes' life together at most this
+LAENGE_HELD = (3, 0.4)     # many times the sum over the heroes of 3 + 0.4 × level (about a hero's damage a turn) …
+LAENGE_SCHADEN = 0.9       # … more is cut evenly by f, and the foes' damage grows by (1 / f) to this power,
+LAENGE_SCHADEN_MAX = 3     # at most this many times, so the balance bench keeps its wins (AIM)
+LAENGE_BOSS_MAX = 2        # with a boss at most twice, so a hero alone is not felled by one blow (Punkt 9, 200 fights a cell)
 BOSS_PHASE = 2             # a boss at half life: this much more to hit, once
 
 SCHEMA_BEGEGNUNG = {"type": "array", "maxItems": ARTEN, "items": {"type": "object", "additionalProperties": False, "required": ["id"],
@@ -469,9 +474,10 @@ def fill(wahl, n_held, b):
     return [(g, n) for g, n in out]
 
 
-def lineup(wahl, li, n_held):
+def lineup(wahl, li, n_held, stufen=()):
     """The foes of an encounter with their bestiary values, numbered when several of a kind come; a boss has more life
-    the more heroes stand against it (start, and the balance bench dungeon_pruefstand)."""
+    the more heroes stand against it (start, and the balance bench dungeon_pruefstand). stufen: the heroes' levels, for
+    the length of the fight (shorter)."""
     gegner = []
     for g, n in wahl:
         for j in range(n):
@@ -484,6 +490,24 @@ def lineup(wahl, li, n_held):
                            **({"person": g["person"]} if g.get("person") else {})})
             if g.get("boss"):
                 gegner[-1]["leben"] = gegner[-1]["max"] = int(g["leben"] * faktor(g, n_held))
+    return shorter(gegner, stufen)
+
+
+def shorter(gegner, stufen):
+    """A fight of LAENGE_ZUEGE turns or so (Prüfung 15.11., Punkt 1, Dominik „1-11“): when the foes' life together is
+    more than LAENGE_ZUEGE times the sum over the heroes' levels of LAENGE_HELD, each foe keeps the share f of its life
+    (at least 1) and its damage grows by (1 / f) ** LAENGE_SCHADEN, at most LAENGE_SCHADEN_MAX times, with a boss
+    LAENGE_BOSS_MAX ("mal", foes_turn).
+    The same for the table and the balance bench; without levels nothing changes."""
+    cap = LAENGE_ZUEGE * sum(LAENGE_HELD[0] + LAENGE_HELD[1] * s for s in stufen)
+    alle = sum(g["max"] for g in gegner)
+    if not stufen or alle <= cap:
+        return gegner
+    f = cap / alle
+    mal = round(min(LAENGE_BOSS_MAX if any(g.get("boss") for g in gegner) else LAENGE_SCHADEN_MAX, (1 / f) ** LAENGE_SCHADEN), 2)
+    for g in gegner:
+        g["leben"] = g["max"] = max(1, round(g["max"] * f))
+        g["mal"] = mal
     return gegner
 
 
@@ -496,7 +520,7 @@ def start(dm, r, rd, held, wahl, li):
     """An encounter into the round: the foes with their bestiary values, numbered when several of a kind come."""
     if not wahl:
         return None
-    gegner = lineup(wahl, li, len(held))
+    gegner = lineup(wahl, li, len(held), [h["stufe"] for h in held])
     b = budget(dm, r, rd, held)
     rd["kampf"] = {"gegner": gegner, "seit": rd.get("zug", 0), "budget": b, "gefahr": danger(adjusted(gegner, len(held)), budget(dm, r, rd, held, False)),
                    "bezug": reference(dm, r, rd, held), "wert": adjusted(gegner, len(held)),
@@ -510,6 +534,8 @@ def start(dm, r, rd, held, wahl, li):
             gefahr=rd["kampf"]["gefahr"])
     dm._day.bump("begegnungen")
     print(f"dungeon: kampf | start | {len(gegner)} gegner | {rd['kampf']['gefahr']}", flush=True)
+    if gegner[0].get("mal"):                       # shorter: less life, more damage (Prüfung 15.11., Punkt 1)
+        print(f"dungeon: kampf | kuerzer | schaden mal {gegner[0]['mal']}", flush=True)
     return rd["kampf"]
 
 
@@ -933,7 +959,8 @@ def foes_turn(dm, r, rd, hits, rng=None):
             ac = (h["ruestung"] if h.get("gefaehrte") else rk(dm, r, h)) + (haltung.ABWEHR if steht == "abwehr" else 0) + umgebung.cover(rd, pid)
             plus = (BOSS_PHASE if g.get("phase") == 2 else 0) + (haltung.ZIELT if art == "zielt" else -haltung.HOLT if art == "holt_aus" else 0)
             hit = w == 20 or (w != 1 and w + g["angriff"] + plus >= ac)
-            n = max(1, _dice(rng, g["wuerfel"] * (2 if w == 20 else 1) * (2 if art == "holt_aus" else 1), g["schaden"]) + g["plus"]) if hit else 0
+            n = max(1, round((_dice(rng, g["wuerfel"] * (2 if w == 20 else 1) * (2 if art == "holt_aus" else 1), g["schaden"]) + g["plus"])
+                             * g.get("mal", 1))) if hit else 0                    # mal: a shorter fight (shorter)
             x = {"k": g["k"], "gegner": g["name"], "pid": pid, "name": h["name"], "w": w, "ws": ws, "vt": vt, "bonus": g["angriff"] + plus,
                  "gesamt": w + g["angriff"] + plus, "rk": ac, "treffer": hit, "krit": w == 20, "schaden": n, "art": g.get("art", ""),
                  **({"ansage": art} if art else {}), **({"haltung": steht} if steht else {})}
@@ -1336,4 +1363,5 @@ def learn(rd, gid, arten):
 def for_live(rs):
     return {"kaempfe_laufen": sum(1 for v in rs if v.get("kampf")), "gegner_stehen": sum(len(up(v)) for v in rs),
             "gegner_erkannt": sum(len(v.get("kennt") or {}) for v in rs),
-            "gegner_mehrfach": sum(1 for v in rs for g in up(v) if blows(g) > 1)}
+            "gegner_mehrfach": sum(1 for v in rs for g in up(v) if blows(g) > 1),
+            "kampf_kuerzer": sum(1 for v in rs if any(g.get("mal") for g in up(v)))}      # shorter (Prüfung 15.11., Punkt 1)

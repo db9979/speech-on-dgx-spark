@@ -3,7 +3,8 @@ Idee 5).
 
 - The bench fights with the real rules: a group of the level built like a player's hero, an encounter of exactly the
   danger asked, the fight through dungeon_kampf's attacks and the foes' turn; the same seed gives the same table.
-- The aim: at „mittel“ a group wins AIM (70 to 90 per cent) at every level and group size.
+- The aim: at „mittel“ a group wins AIM (70 to 90 per cent) at every level and group size, and a fight lasts ZUEGE_MAX
+  turns at most on average (Prüfung 15.11., Punkt 1).
 - Only while „Balance-Prüfstand“ is on: the night runs once a night in its window, the admin's button at most once a
   minute and one run at a time; a profile gets nothing.
 - The live overview has numbers only; nothing of a round is touched, nothing counts into the day's numbers.
@@ -15,6 +16,7 @@ import contextlib
 import datetime
 import io
 import os
+import random
 import unittest
 from unittest import mock
 
@@ -105,12 +107,49 @@ class Bench(unittest.TestCase):
         self.assertEqual(list(b), sorted(b))
         self.assertEqual(list(kampf.GRUPPE), sorted(kampf.GRUPPE))
 
+    def test_a_long_fight_is_made_shorter(self):
+        """Prüfung 2026-11-15, Punkt 1 (Dominik „1-11“): the foes' life together at most LAENGE_ZUEGE times the sum
+        over the heroes of LAENGE_HELD; above it every foe keeps the same share of its life and hits that much harder
+        (at most LAENGE_SCHADEN_MAX, with a boss LAENGE_BOSS_MAX); below it and without levels nothing changes."""
+        r = dungeon.rules()
+        g = max((x for x in r["gegner"] if not x.get("boss") and x["leben"] >= 20), key=lambda x: x["leben"])
+        cap = kampf.LAENGE_ZUEGE * (kampf.LAENGE_HELD[0] + kampf.LAENGE_HELD[1] * 2) * 2
+        n = int(cap // g["leben"]) + 2
+        lang = kampf.lineup([(g, n)], 0, 2, [2, 2])
+        self.assertEqual(kampf.lineup([(g, n)], 0, 2), [dict(x, leben=g["leben"], max=g["leben"]) for x in kampf.lineup([(g, n)], 0, 2)])
+        self.assertTrue(all("mal" not in x for x in kampf.lineup([(g, n)], 0, 2)))           # no levels: as before
+        self.assertLessEqual(sum(x["max"] for x in lang), cap + n)                               # rounded, at least 1 each
+        f = cap / (g["leben"] * n)
+        self.assertEqual({x["mal"] for x in lang}, {round(min(kampf.LAENGE_SCHADEN_MAX, (1 / f) ** kampf.LAENGE_SCHADEN), 2)})
+        k = min((x for x in r["gegner"] if not x.get("boss")), key=lambda x: x["leben"])
+        kurz = kampf.lineup([(k, 1)], 0, 2, [10, 10])                                         # far below: nothing changes
+        self.assertEqual((kurz[0]["max"], "mal" in kurz[0]), (k["leben"], False))
+        b = max((x for x in r["gegner"] if x.get("boss")), key=lambda x: x["leben"])
+        self.assertLessEqual(kampf.lineup([(b, 1)], 0, 1, [1])[0]["mal"], kampf.LAENGE_BOSS_MAX)
+        def blow(foe, seed):                       # the foes' turn against a hero who is always hit
+            h = dict(ps.party(r, 1, 2, random.Random(1))[0], leben=999, leben_max=999)
+            rd = {"lang": "de", "zug": 1, "offen": {}, "log": [], "plaetze": {"p0": {"held": h, "made": 0}},
+                  "kampf": {"gegner": [dict(foe, angriffe=1)]}}
+            with contextlib.redirect_stdout(io.StringIO()):
+                return [y for y in kampf.foes_turn(dungeon, r, rd, [], random.Random(seed)) if y.get("k")]
+        hits = 0
+        for seed in range(40):
+            a, b = blow({k: v for k, v in lang[0].items() if k != "mal"}, seed), blow(lang[0], seed)
+            for x, y in zip(a, b):
+                self.assertEqual(x["treffer"], y["treffer"])
+                if x["treffer"]:
+                    hits += 1
+                    self.assertEqual(y["schaden"], max(1, round(x["schaden"] * lang[0]["mal"])))   # the same dice, times mal
+        self.assertGreater(hits, 0)
+
     def test_the_aim_at_medium_for_every_level_and_group(self):
         """The self-test of the balance (Dominik 2026-10-24, Idee 5 „Ein Selbsttest hält das Ziel“)."""
         z = ps.bench(dungeon.rules(), kaempfe=ps.KAEMPFE, seed="selbsttest", workers=W)      # as at night: 200 per cell
         self.assertEqual(len(z), dungeon.rules()["grenzen"]["stufe_max"] * ps.GRUPPE_MAX)
         off = {k: c["siege"] for k, c in z.items() if not ps.AIM[0] <= c["siege"] <= ps.AIM[1]}
         self.assertEqual(off, {}, "Stufe/Gruppe außerhalb des Ziels")
+        lang = {k: c["runden"] for k, c in z.items() if c["runden"] > ps.ZUEGE_MAX}
+        self.assertEqual(lang, {}, "Stufe/Gruppe mit zu langen Kämpfen")   # Prüfung 15.11., Punkt 1 (dungeon_kampf.shorter)
 
 
     def test_people_who_fight_keep_the_aim(self):
@@ -189,14 +228,14 @@ class Bench(unittest.TestCase):
         (dungeon_karte._room_foes) and one boss of the world alone worth BOSS_BAND times the budget: every group size
         wins at least BOSS_ZIEL per cent on average over the levels; the master has a room at every level and size."""
         r = dungeon.rules()
-        b = ps.bosses(r, kaempfe=40, seed="selbsttest", workers=W)
+        b = ps.bosses(r, kaempfe=ps.KAEMPFE, seed="selbsttest", workers=W)   # as at night: 200 a cell (Prüfung 15.11., Punkt 9)
         self.assertEqual(len(b["herr"]), r["grenzen"]["stufe_max"] * ps.GRUPPE_MAX)
         self.assertTrue(b["boss"])
         for art, z in b.items():
             self.assertEqual({g: m for g, m in ps.per_group(z).items() if m < ps.BOSS_ZIEL}, {}, art)
         self.assertEqual(ps.boss_below(b), 0)
         self.assertEqual(ps.boss_below({"herr": {"1/1": {"siege": ps.BOSS_ZIEL - 1}}}), 1)
-        self.assertEqual(b["herr"]["3/2"], ps.boss_cell(r, 3, 2, "herr", 40, "selbsttest"))   # the seed decides, never the clock
+        self.assertEqual(b["herr"]["3/2"], ps.boss_cell(r, 3, 2, "herr", ps.KAEMPFE, "selbsttest"))   # the seed decides, never the clock
 
     def test_the_economy_keeps_its_aim(self):
         """Wirtschaft Punkt 6 (Dominik 2026-10-25 „1-12“): at every level a hero earns 1.2 to 2 times what normal play
@@ -261,7 +300,7 @@ class Page(Base):
         self.assertEqual(len(d["herr"]), n)                                       # Review 27.10. B1: the master's room at every cell
         self.assertEqual(d["boss_ziel"], ps.BOSS_ZIEL)
         # with the game the runes are measured too (Regeltiefe „Voll“ is every host's choice since Ausdünnen 1)
-        self.assertRegex(live._pruefstand(), r"^ · Prüfstand \d+ Felder, \d+ unter und \d+ über dem Ziel · mit Runen [+-]\d+(,\d+)? Punkte · gegen Bosse \d+ Gruppengrößen unter dem Ziel$")
+        self.assertRegex(live._pruefstand(), r"^ · Prüfstand \d+ Felder, \d+ unter und \d+ über dem Ziel, \d+ mit zu langen Kämpfen · mit Runen [+-]\d+(,\d+)? Punkte · gegen Bosse \d+ Gruppengrößen unter dem Ziel$")
         self.assertEqual(ps.last()["nacht"], "")                                  # the button is not the night's run
         asyncio.run(ps.due())                                                      # noon: no night run
         self.assertEqual(ps.last()["nacht"], "")

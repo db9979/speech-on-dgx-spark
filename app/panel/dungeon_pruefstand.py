@@ -1,8 +1,9 @@
 """KI-Dungeon-Master: the balance bench „Balance-Prüfstand“ (Dominik 2026-10-24 „alle umsetzen“, Idee 5): the panel
 plays thousands of fights alone, with the real rules and dice of dungeon_kampf (attacks, foes_turn, hurt, suffers,
 flees, expire) and the merged catalog, for every level and group size, without the model and without a round. The
-admin sees under Regeln how often the group wins and how much life it loses; a self-test keeps the aim (AIM, 70 to 90
-per cent wins at „mittel“).
+admin sees under Regeln how often the group wins, how much life it loses and how many turns a fight lasts; a self-test
+keeps the aim (AIM, 70 to 90 per cent wins at „mittel“) and the length (ZUEGE_MAX, 7 turns at most on average; the
+foes' life and damage by dungeon_kampf.shorter).
 
 - A group: GRUPPE_MAX heroes at most, every class of the world in turn from a start the seed draws, the first people,
   built like a player's hero (dungeon.new_hero) and raised like at the table (Review 27.10. B6, raise_to): level by
@@ -64,6 +65,7 @@ from core import auth, json_body
 router = APIRouter()
 FILE = os.path.join(STATE, "dungeon-pruefstand.json")
 AIM = (70, 90)                 # per cent wins at „mittel“ the self-test keeps
+ZUEGE_MAX = 7                  # turns of a fight at „mittel“ at most on average, every cell (Prüfung 15.11., Punkt 1)
 GRUPPE_MAX = 5
 KAEMPFE = 200                  # fights per level and group size at night and on the button
 RUNDEN = 30                    # turns of one fight at most
@@ -262,7 +264,7 @@ def fight(r, held, wahl, rng):
     """One fight to its end: {"sieg": bool, "leben": share of the group's life lost, "runden"}."""
     rd = {"lang": "de", "zug": 0, "offen": {}, "log": [],
           "plaetze": {f"p{i}": {"held": h, "made": i} for i, h in enumerate(held)}}
-    rd["kampf"] = {"gegner": kampf.lineup(wahl, 0, len(held))}
+    rd["kampf"] = {"gegner": kampf.lineup(wahl, 0, len(held), [h["stufe"] for h in held])}
     voll = sum(h["leben"] for h in held)
     spells = {f"p{i}": _spell(r, h) for i, h in enumerate(held)}
     n = 0
@@ -528,7 +530,7 @@ def view():
             "kaempfe": d.get("kaempfe", 0), "gefahr": d.get("gefahr", "mittel"), "zellen": d.get("zellen", {}),
             "wirtschaft": d.get("wirtschaft", {}), "wirtschaft_ziel": list(WIRTSCHAFT), "runen": d.get("runen", {}),
             "runen_plus": runes_plus(d.get("zellen", {}), d.get("runen", {})) if d.get("runen") else None, "runen_ziel": RUNEN_PLUS,
-            "herr": d.get("herr", {}), "boss": d.get("boss", {}), "boss_ziel": BOSS_ZIEL}
+            "herr": d.get("herr", {}), "boss": d.get("boss", {}), "boss_ziel": BOSS_ZIEL, "zuege_max": ZUEGE_MAX}
 
 
 @router.get("/api/admin/dungeon/pruefstand", dependencies=[Depends(auth)])
@@ -556,10 +558,12 @@ async def now(request: Request):
 
 
 def counts():
-    """For the live overview: the table's cells, how many below and above the aim, whether a run is on."""
+    """For the live overview: the table's cells, how many below and above the aim, how many with fights longer than
+    ZUEGE_MAX, whether a run is on."""
     d = last()
     z = d.get("zellen") or {}
     return {"zellen": len(z), "unter": sum(1 for c in z.values() if c["siege"] < AIM[0]),
-            "ueber": sum(1 for c in z.values() if c["siege"] > AIM[1]), "laeuft": _run["laeuft"],
+            "ueber": sum(1 for c in z.values() if c["siege"] > AIM[1]), "zu_lang": sum(1 for c in z.values() if c["runden"] > ZUEGE_MAX),
+            "laeuft": _run["laeuft"],
             "runen_plus": runes_plus(z, d["runen"]) if d.get("runen") else None,
             "boss_unter": boss_below({k: d[k] for k in ("herr", "boss") if d.get(k)}) if d.get("herr") else None}

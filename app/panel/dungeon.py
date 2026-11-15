@@ -4683,9 +4683,34 @@ async def _ask_json(system, user, schema, name, tokens):
         return None
 
 
+def panel_knows(r, rd):
+    """Whether the panel already knows the answer of the checks step for every open action (Prüfung 15.11., Punkt 3), so
+    the model is not asked: check_proben drops any check for a hero down, for going, buying, selling and resting
+    (einordnung.typed) and for everyday acts (einordnung.everyday); in a fight an attack without a spell is the
+    panel's (kampf.attackers) when its foe is clear: the action names one standing, or only one stands (the model's
+    ziel would pick nothing else, an attack's advantage never comes from the model). Anything else asks the model."""
+    offen = rd.get("offen") or {}
+    att = {p["pid"]: g for p, g, _ in kampf.attackers(_me, r, rd, [])} if kampf.up(rd) else {}
+    for pid, a in offen.items():
+        t = (a or {}).get("text")
+        if zustand((rd["plaetze"].get(pid) or {}).get("held") or {}) or einordnung.typed(t) or einordnung.everyday(t):
+            continue
+        if pid in att and not (a or {}).get("kraft") and (att[pid] or len(kampf.up(rd)) == 1):
+            continue
+        return False
+    return True
+
+
 async def ask_checks(r, rd, count=True):
-    """The checks the model asks for this turn, by fixed rules (check_proben). Returns (checks, dropped); count=False
-    for the Erzähler-Prüfstand (no day counters)."""
+    """The checks the model asks for this turn, by fixed rules (check_proben); none and no model call when the panel
+    already knows them (panel_knows). Returns (checks, dropped); count=False for the Erzähler-Prüfstand (no day
+    counters)."""
+    if panel_knows(r, rd):
+        rd["_ohne"] = []
+        if count:
+            dungeon_tempo.spart()
+        print(f"dungeon: probe | gespart | {len(rd.get('offen') or {})} aktionen", flush=True)
+        return [], 0
     t0 = dungeon_tempo.uhr()
     obj = await _ask_json(system_text(r, rd, "proben"), facts(r, rd, proben=True), schema_proben(r), "proben", 300)
     if count:

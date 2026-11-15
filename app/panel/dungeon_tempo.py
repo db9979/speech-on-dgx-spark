@@ -1,8 +1,8 @@
 """KI-Dungeon-Master: how long the table waits (Prüfung 2026-11-15, Punkt 2, Dominik „1-11“).
 
 Per day in memory, only numbers: the wait of every told turn from its close to the narration at the table, the
-model's answers for the checks („proben“) and the narration („erzaehlen“, every try, rewrites too), and how many turns
-needed at least one rewrite. Live (Zustand → Überblick) shows the mean and the longest wait, the mean per call and the
+model's answers for the checks („proben“) and the narration („erzaehlen“, every try, rewrites too), how many turns
+needed at least one rewrite, and how many checks steps the panel answered itself (Punkt 3, dungeon.panel_knows). Live (Zustand → Überblick) shows the mean and the longest wait, the mean per call and the
 share of turns rewritten; a wish for speed is measured here first. The Erzähler-Prüfstand never counts (count=False).
 """
 import time
@@ -10,8 +10,9 @@ import time
 from common import DayCounter
 
 ARTEN = ("proben", "erzaehlen")
-# per kind [answers, milliseconds in all, the longest]; "zug" the told turns, "neu" turns with a rewrite
-_day = DayCounter(zug=[0, 0, 0], proben=[0, 0, 0], erzaehlen=[0, 0, 0], neu=0)
+# per kind [answers, milliseconds in all, the longest]; "zug" the told turns, "neu" turns with a rewrite, "gespart" checks
+# steps without the model
+_day = DayCounter(zug=[0, 0, 0], proben=[0, 0, 0], erzaehlen=[0, 0, 0], neu=0, gespart=0)
 
 
 def uhr():
@@ -36,16 +37,22 @@ def zug(s, neu):
         _day.bump("neu")
 
 
+def spart():
+    """A checks step the panel answered itself, without the model (dungeon.panel_knows)."""
+    _day.bump("gespart")
+
+
 def _mean_ms(x):
     return round(x[1] / x[0]) if x[0] else 0
 
 
 def for_live():
     """Today's waits as whole numbers (dungeon.for_live puts them under tempo_): told turns, mean and longest wait in
-    milliseconds, per kind of call its count and mean, the share of turns rewritten in per cent."""
+    milliseconds, per kind of call its count and mean, the share of turns rewritten in per cent, the checks steps without the model."""
     t = _day.counts()
     z = t["zug"]
-    out = {"zuege": z[0], "mittel_ms": _mean_ms(z), "laengste_ms": z[2], "neu_pct": round(100 * t["neu"] / z[0]) if z[0] else 0}
+    out = {"zuege": z[0], "mittel_ms": _mean_ms(z), "laengste_ms": z[2], "neu_pct": round(100 * t["neu"] / z[0]) if z[0] else 0,
+           "gespart": t["gespart"]}
     for a in ARTEN:
         out[a + "_n"], out[a + "_ms"] = t[a][0], _mean_ms(t[a])
     return out

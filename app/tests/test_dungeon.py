@@ -1091,8 +1091,10 @@ class ReviewAnzeige(Turns):
 
     def test_a_dropped_check_tells_its_seat_why(self):
         """A check the panel drops for walking, a hero down or an action that only asks gives a fixed line only at that
-        seat (OHNE_PROBE), once a turn; buying, selling and resting keep their own line (TIPP)."""
-        self.act_all("Ich gehe in den Keller.")
+        seat (OHNE_PROBE), once a turn; buying, selling and resting keep their own line (TIPP). A turn of only going asks
+        the model nothing (panel_knows), so here the other seat sneaks."""
+        self.assertEqual(self.c.post(f"/api/profile/dungeon/{self.rid}/aktion", json={"text": "Ich gehe in den Keller.", "zug": 1, "so_lassen": True}).status_code, 200)
+        self.assertEqual(self.v.post("/api/dungeon/aktion", json={"code": self.code, "text": "Ich schleiche leise hinterher.", "zug": 1, "so_lassen": True}).status_code, 200)
         with contextlib.redirect_stdout(io.StringIO()) as out:
             rd = self.play([{"proben": [{"wer": "Arvid", "wert": "weisheit", "stufe": "mittel", "wofuer": "Den Keller erkunden"}]},
                             {"erzaehlung": "Arvid und Bela steigen die Stufen in den Keller hinab.", "frage_an": ""}])
@@ -5356,7 +5358,7 @@ class BetterStories(Base):
         d = dungeon.for_live()
         self.assertEqual({k: v for k, v in d.items() if k.startswith("tempo_")},
                          {"tempo_zuege": 1, "tempo_mittel_ms": 10500, "tempo_laengste_ms": 10500, "tempo_neu_pct": 100, "tempo_proben_n": 1,
-                          "tempo_proben_ms": 1500, "tempo_erzaehlen_n": 2, "tempo_erzaehlen_ms": 1500})
+                          "tempo_proben_ms": 1500, "tempo_erzaehlen_n": 2, "tempo_erzaehlen_ms": 1500, "tempo_gespart": 0})
         self.assertEqual(live._dungeon_tempo(d), " · heute Wartezeit je Zug Ø 10.5 s, längste 10.5 s (Proben Ø 1.5 s bei 1, "
                                                  "Erzählen Ø 1.5 s bei 2), 100 % der Züge nachgebessert")
         with contextlib.redirect_stdout(io.StringIO()):
@@ -8140,6 +8142,57 @@ class Fight(Turns):
         self.assertEqual(rd["plaetze"][pid]["held"]["name"], "Cora")
         self.assertTrue(dungeon.fresh(rd, pid))
         self.assertIn("Cora kommt dazu.", [e["text"][0] for e in rd["log"] if e["art"] == "system"])
+
+    def test_the_checks_step_without_the_model_gives_the_same(self):
+        """Prüfung 2026-11-15, Punkt 3 (Dominik „1-11“): where the panel already knows the checks step (going, buying,
+        selling, resting, everyday acts, a clear attack in a fight), the model is not asked, and the turn comes out as
+        with the model's answer: no check, the same attacks on the same dice, even when the model asked a check with
+        advantage for every seat. Anything else in the turn still asks the model; Live counts the steps saved."""
+        import dungeon_tempo
+        import live
+        r = dungeon.rules()
+        p = mock.patch.object(dungeon_tempo, "_day", dungeon.DayCounter(**dungeon_tempo._day._zero))
+        p.start()
+        self.addCleanup(p.stop)
+
+        def answer(rd, ziel=""):                   # the model asks a check for every seat, with advantage
+            return {"proben": [{"wer": rd["plaetze"][pid]["held"]["name"], "wert": "geschick", "stufe": "mittel", "vorteil": "vorteil",
+                                "ziel": ziel, "wofuer": "Probe"} for pid in rd["offen"]]}
+
+        def compare(texts, ziel=""):
+            rd = self.state(self.rid)
+            rd["offen"] = {pid: {"text": t} for pid, t in zip((self.host, self.gp), texts)}
+            a, b = copy.deepcopy(rd), copy.deepcopy(rd)
+            asked = []
+
+            async def ask(system, user, schema, name, tokens):
+                asked.append(name)
+                return json.dumps(answer(b, ziel))
+            with contextlib.redirect_stdout(io.StringIO()), mock.patch.object(dungeon, "ask_model", ask):
+                pa, _ = dungeon.check_proben(r, a, answer(a, ziel))
+                with_model = kampf.attacks(dungeon, r, a, pa, random.Random(7))
+                pb, _ = asyncio.run(dungeon.ask_checks(r, b))
+                without = kampf.attacks(dungeon, r, b, pb, random.Random(7))
+            return asked, with_model, without
+
+        for texts in (("Ich gehe weiter nach Norden.", "Ich gehe auch weiter."), ("Ich kaufe einen Heiltrank.", "Ich verkaufe meinen Dolch."),
+                      ("Wir rasten hier.", "Ich grüße den Wirt und lächle.")):
+            asked, with_model, without = compare(texts)
+            self.assertEqual(asked, [], texts)                          # no model call
+            self.assertEqual(with_model, without, texts)               # and the same turn: no check either way
+            self.assertEqual(without, ([], []), texts)
+        asked, _, _ = compare(("Ich gehe weiter.", "Ich schleiche an der Wache vorbei."))
+        self.assertEqual(asked, ["proben"])                          # one action the panel does not know: the model is asked
+        foe = self.fight()
+        for texts in (("Ich greife an.", "Ich greife an."), (f"Ich greife {foe['name'][0]} an.", "Ich trinke und lächle.")):
+            asked, with_model, without = compare(texts, ziel=foe["name"][0])
+            self.assertEqual(asked, [], texts)
+            self.assertEqual(with_model, without, texts)                # the same foe, the same dice, no advantage from the model
+            self.assertTrue(without[1], texts)
+        asked, _, _ = compare(("Ich greife an.", "Ich untersuche den Altar."))
+        self.assertEqual(asked, ["proben"])
+        self.assertEqual(dungeon.for_live()["tempo_gespart"], 5)
+        self.assertIn(", 5 Proben-Fragen gespart", live._dungeon_tempo(dict(dungeon.for_live(), tempo_zuege=1)))
 
     def test_the_first_turn_gives_nothing_to_others(self):
         """Punkt 2: in its first turn at the table a hero gives no potion to a friend, trades nothing and casts no spell
