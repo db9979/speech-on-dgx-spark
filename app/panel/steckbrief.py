@@ -599,6 +599,13 @@ STECKBRIEFE = {
         ohne_werkzeug=("regel", "läuft von selbst jede Minute aus der Kopie der Kalender (abwesenheit.minute), nie "
                                 "das Modell"),
         begleiter="panel"),
+    # terminfinden.py (Nextcloud-Ideen 3, K1+K2, Dominik 2026-11-15 „alles umsetzen“): free times of a chat's members
+    # (busy/free only) as a poll; the winner goes into the calendars of who asked and who voted for it
+    "terminfinden": Steckbrief(de="Termin finden", en="Find a time", gruppe="day",
+        schalter=("calendar_find", "calendar", "chats_polls", "chats"), anleitung="terminfinden", parent="calendar",
+        me="calbox", ohne_werkzeug=("ohne", "nur Knöpfe auf der Seite Chats und in den Apps (Zeiten suchen, abstimmen lassen)"),
+        begleiter="panel",
+        modul=("terminfinden", "geraete", "Termin finden: freie Zeiten aller im Chat, Umfrage, Eintrag")),
     # kalenderserver.py (Dominik 2026-10-19 „1a-5a“, Spark-Kalender Stufe 4): the profile's Spark calendars for the
     # calendar app of the iPhone (CalDAV, an app password per profile)
     "calserver": Steckbrief(de="Kalender-Server für Kalender-Apps", en="Calendar server for calendar apps",

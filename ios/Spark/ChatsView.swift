@@ -55,6 +55,15 @@ struct ChatPoll: Hashable {
     var win = -1
     var canClose = false
     var voters = 0
+    /// "termin": Termin finden (terminfinden.py) enters the winner on closing
+    var art = ""
+}
+
+/// A free time of Termin finden (terminfinden.py).
+struct ChatSlot: Hashable {
+    let start: String
+    let end: String
+    var label = ""
 }
 
 /// The message a message answers.
@@ -150,6 +159,8 @@ struct ChatState {
     var groups = false
     /// Umfragen in Chats (umfrage.py) for this profile
     var polls = false
+    /// Termin finden (terminfinden.py) for this profile
+    var termin = false
     /// private chats (Ende-zu-Ende) are on for this profile
     var priv = false
     var chats: [ChatSummary] = []
@@ -207,6 +218,7 @@ extension SparkAPI {
         s.media = d["media"] as? Bool ?? false
         s.groups = d["groups"] as? Bool ?? false
         s.polls = d["polls"] as? Bool ?? false
+        s.termin = d["termin"] as? Bool ?? false
         s.priv = d["private"] as? Bool ?? false
         s.maxText = (d["max_text"] as? NSNumber)?.intValue ?? 4000
         s.maxMembers = (d["max_members"] as? NSNumber)?.intValue ?? 50
@@ -296,6 +308,7 @@ extension SparkAPI {
             o.win = (p["win"] as? NSNumber)?.intValue ?? -1
             o.canClose = p["can_close"] as? Bool ?? false
             o.voters = (p["voters"] as? NSNumber)?.intValue ?? 0
+            o.art = String((p["art"] as? String ?? "").prefix(12))
             l.poll = o
         }
         if let m = x["media"] as? [String: Any] {
@@ -374,6 +387,22 @@ extension SparkAPI {
 
     func chatPollClose(_ id: String, mid: String) async throws {
         _ = try await post("api/chats/poll/close", ["id": id, "mid": mid])
+    }
+
+    /// Termin finden (terminfinden.py): the times when everybody in the chat is free (busy or free only).
+    func chatFreeTimes(_ id: String, from: String, days: Int, minutes: Int, von: Int, bis: Int) async throws -> (slots: [ChatSlot], without: Int) {
+        let d = try await post("api/chats/termin/frei", ["id": id, "from": from, "days": days, "minutes": minutes, "von": von,
+                                                          "bis": bis, "tz": TimeZone.current.identifier])
+        let slots = (d["slots"] as? [[String: Any]] ?? []).prefix(10).compactMap { x -> ChatSlot? in
+            guard let s = x["start"] as? String, let e = x["end"] as? String else { return nil }
+            return ChatSlot(start: s, end: e, label: String((x["label"] as? String ?? "").prefix(60)))
+        }
+        return (slots, (d["ohne"] as? NSNumber)?.intValue ?? 0)
+    }
+
+    func chatTermin(_ id: String, title: String, slots: [ChatSlot]) async throws {
+        _ = try await post("api/chats/termin", ["id": id, "title": title, "tz": TimeZone.current.identifier,
+                                                "slots": slots.map { ["start": $0.start, "end": $0.end] }])
     }
 
     /// Takes a message back for everybody (within an hour).
@@ -706,7 +735,7 @@ struct ChatsView: View {
                 // calls only in a chat of two on this Spark (anrufe.py); "new chat" opens one of two as well
                 ChatThreadView(id: id, title: c?.title ?? "", media: m.state.media, maxText: m.state.maxText,
                                callable: Conversation.shared.allowed.calls && !(c?.group ?? false) && !(c?.far ?? false),
-                               contacts: m.state.contacts, polls: m.state.polls)
+                               contacts: m.state.contacts, polls: m.state.polls, termin: m.state.termin)
             }
             .refreshable { await m.load() }
             .task {
@@ -1272,6 +1301,7 @@ struct ChatThreadView: View {
     let maxText: Int
     let callable: Bool
     var polls = false
+    var termin = false
     @State private var polling = false
     @State private var closing: ChatLine?
     let contacts: [Recipient]
@@ -1285,9 +1315,10 @@ struct ChatThreadView: View {
     @ObservedObject private var feed = ChatFeed.shared
     @Environment(\.dismiss) private var dismiss
 
-    init(id: String, title: String, media: Bool, maxText: Int, callable: Bool = false, contacts: [Recipient] = [], polls: Bool = false) {
+    init(id: String, title: String, media: Bool, maxText: Int, callable: Bool = false, contacts: [Recipient] = [], polls: Bool = false, termin: Bool = false) {
         _m = StateObject(wrappedValue: ChatThreadModel(id: id, title: title))
         self.polls = polls
+        self.termin = termin
         self.media = media
         self.maxText = maxText
         self.callable = callable
@@ -1410,7 +1441,7 @@ struct ChatThreadView: View {
             }
         }
         .sheet(isPresented: $polling) {
-            ChatPollForm { q, opts, multi in await m.makePoll(q, opts, multi) }
+            ChatPollForm(chat: m.id, termin: termin, done: { await m.load() }) { q, opts, multi in await m.makePoll(q, opts, multi) }
         }
         .confirmationDialog("Die Umfrage schließen?", isPresented: Binding(get: { closing != nil }, set: { if !$0 { closing = nil } }),
                             titleVisibility: .visible) {
@@ -2080,7 +2111,8 @@ private struct ChatPollView: View {
                 .disabled(p.closed)
             }
             Text(verbatim: (p.closed ? String(localized: "Geschlossen") + " · " : p.multi ? String(localized: "Mehrere erlaubt") + " · " : "")
-                 + String(localized: "\(p.voters) Stimmen"))
+                 + String(localized: "\(p.voters) Stimmen")
+                 + (p.art == "termin" && p.closed && p.win >= 0 ? " · " + String(localized: "eingetragen bei allen, die dafür gestimmt haben") : ""))
                 .font(.caption).foregroundStyle(.secondary)
             if p.canClose {
                 Button("Umfrage schließen") { act(.closePoll) }.font(.footnote)
@@ -2091,7 +2123,22 @@ private struct ChatPollView: View {
 
 /// A new poll (umfrage.py): the question, 2 to 10 answers, one or several allowed.
 private struct ChatPollForm: View {
+    let chat: String
+    var termin = false
+    let done: () async -> Void
     let send: (String, [String], Bool) async -> Bool
+    @State private var findTime = false
+    @State private var title = ""
+    @State private var minutes = 60
+    @State private var from = Calendar.current.date(byAdding: .day, value: 1, to: Date()) ?? Date()
+    @State private var days = 7
+    @State private var von = 8
+    @State private var bis = 20
+    @State private var slots: [ChatSlot] = []
+    @State private var picked: Set<ChatSlot> = []
+    @State private var searched = false
+    @State private var without = 0
+    @State private var error: String?
     @State private var question = ""
     @State private var answers = ["", "", ""]
     @State private var multi = false
@@ -2101,6 +2148,110 @@ private struct ChatPollForm: View {
     var body: some View {
         NavigationStack {
             Form {
+                if termin {
+                    Picker("Art", selection: $findTime) {
+                        Text("Frage").tag(false)
+                        Text("Termin finden").tag(true)
+                    }
+                    .pickerStyle(.segmented)
+                }
+                if findTime { timeSections } else { questionSections }
+                if let e = error { Text(verbatim: SparkAPI.way(e)).font(.footnote).foregroundStyle(Theme.badText) }
+            }
+            .navigationTitle(findTime ? "Termin finden" : "Umfrage")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Abbrechen") { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) {
+                    if findTime {
+                        Button("Abstimmen lassen") { Task { await vote() } }
+                            .disabled(busy || title.trimmingCharacters(in: .whitespaces).isEmpty || picked.count < 2)
+                    } else {
+                        Button("Umfrage stellen") {
+                            busy = true
+                            Task {
+                                let opts = answers.map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+                                if await send(question.trimmingCharacters(in: .whitespacesAndNewlines), opts, multi) { dismiss() }
+                                busy = false
+                            }
+                        }
+                        .disabled(busy || question.trimmingCharacters(in: .whitespaces).isEmpty
+                                  || answers.filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }.count < 2)
+                    }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder private var timeSections: some View {
+        Section("Termin") {
+            TextField("Titel", text: $title).onChange(of: title) { _, t in if t.count > 120 { title = String(t.prefix(120)) } }
+            Picker("Dauer", selection: $minutes) {
+                ForEach([30, 60, 90, 120, 180], id: \.self) { n in Text(verbatim: n < 60 ? "\(n) min" : n % 60 == 0 ? "\(n / 60) h" : "1,5 h").tag(n) }
+            }
+            DatePicker("Ab", selection: $from, displayedComponents: .date)
+            Picker("Wie viele Tage", selection: $days) { ForEach([3, 7, 14], id: \.self) { Text(verbatim: "\($0)").tag($0) } }
+            Picker("Von", selection: $von) { ForEach(6...14, id: \.self) { Text(verbatim: String(format: "%02d:00", $0)).tag($0) } }
+            Picker("Bis", selection: $bis) { ForEach(12...23, id: \.self) { Text(verbatim: String(format: "%02d:00", $0)).tag($0) } }
+            Button("Freie Zeiten suchen") { Task { await search() } }.disabled(busy)
+        }
+        if searched {
+            Section("Alle sind frei") {
+                if slots.isEmpty {
+                    Text("Keine Zeit, in der alle frei sind. Mehr Tage, eine kürzere Dauer oder andere Uhrzeiten wählen.")
+                        .font(.footnote).foregroundStyle(.secondary)
+                }
+                ForEach(slots, id: \.self) { x in
+                    Button {
+                        if picked.contains(x) { picked.remove(x) } else { picked.insert(x) }
+                    } label: {
+                        HStack {
+                            Image(systemName: picked.contains(x) ? "checkmark.circle.fill" : "circle")
+                            Text(verbatim: x.label)
+                        }
+                    }
+                }
+                if without > 0 {
+                    Text("\(without) im Chat ohne Kalender, zählen als frei").font(.footnote).foregroundStyle(.secondary)
+                }
+            }
+        }
+    }
+
+    private func search() async {
+        guard let api = SparkAPI.current else { return }
+        busy = true
+        defer { busy = false }
+        let f = DateFormatter()
+        f.calendar = Calendar(identifier: .gregorian)
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.dateFormat = "yyyy-MM-dd"
+        do {
+            let r = try await api.chatFreeTimes(chat, from: f.string(from: from), days: days, minutes: minutes, von: von, bis: max(bis, von + 1))
+            slots = r.slots
+            picked = Set(r.slots)
+            without = r.without
+            searched = true
+            error = nil
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
+
+    private func vote() async {
+        guard let api = SparkAPI.current else { return }
+        busy = true
+        defer { busy = false }
+        do {
+            try await api.chatTermin(chat, title: title.trimmingCharacters(in: .whitespaces), slots: slots.filter { picked.contains($0) })
+            await done()
+            dismiss()
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
+
+    @ViewBuilder private var questionSections: some View {
                 Section("Frage") {
                     TextField("z. B. Wann grillen wir?", text: $question, axis: .vertical)
                         .onChange(of: question) { _, t in if t.count > 300 { question = String(t.prefix(300)) } }
@@ -2117,24 +2268,5 @@ private struct ChatPollForm: View {
                 Section {
                     Toggle("Mehrere Antworten erlaubt", isOn: $multi)
                 }
-            }
-            .navigationTitle("Umfrage")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Abbrechen") { dismiss() } }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Umfrage stellen") {
-                        busy = true
-                        Task {
-                            let opts = answers.map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
-                            if await send(question.trimmingCharacters(in: .whitespacesAndNewlines), opts, multi) { dismiss() }
-                            busy = false
-                        }
-                    }
-                    .disabled(busy || question.trimmingCharacters(in: .whitespaces).isEmpty
-                              || answers.filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }.count < 2)
-                }
-            }
-        }
     }
 }

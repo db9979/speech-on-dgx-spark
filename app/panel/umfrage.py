@@ -31,11 +31,11 @@ ON_CLOSE = {}             # art -> f(uid, cid, mid, poll, winner index) when a p
 def _make(uid, cid, opts, multi, art, data):
     def extra(mid):
         return {"poll": {"opts": [chats.seal(o, cid, f"{mid}/o{i}") for i, o in enumerate(opts)], "multi": bool(multi),
-                         "votes": {}, "closed": 0, "art": art, **({"data": data} if data else {})}}
+                         "votes": {}, "closed": 0, "art": art, **({"data": data(mid) if callable(data) else data} if data else {})}}
     return extra
 
 
-async def stellen(uid, cid, question, options, multi=False, art="", data=None, now=None):
+async def stellen(uid, cid, question, options, multi=False, art="", data=None, now=None, mark="📊 "):
     """Puts a poll into the chat: the question as the message's text, 2 to MAX_OPTS answers. Returns the message."""
     if not features.allowed(KEY, uid):
         raise PermissionError(("Umfragen sind für dich aus. " + features.missing_text(KEY, uid)).strip())
@@ -46,7 +46,7 @@ async def stellen(uid, cid, question, options, multi=False, art="", data=None, n
         raise ValueError("Bitte eine Frage eingeben.")
     if not 2 <= len(opts) <= MAX_OPTS or len(set(o.lower() for o in opts)) != len(opts):
         raise ValueError(f"Bitte 2 bis {MAX_OPTS} verschiedene Antworten.")
-    item = await chats.send(uid, cid, "📊 " + q, now=now, extra=_make(uid, cid, opts, multi, art, data))
+    item = await chats.send(uid, cid, mark + q, now=now, extra=_make(uid, cid, opts, multi, art, data))
     _count.bump("gestellt")
     chats._log("poll made", options=len(opts))
     return item

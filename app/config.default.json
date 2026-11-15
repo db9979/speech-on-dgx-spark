@@ -423,6 +423,7 @@
     "chats": false,
     "chats_groups": false,
     "chats_polls": false,
+    "calendar_find": false,
     "chats_media": false,
     "chats_invite": false,
     "chats_private": false,

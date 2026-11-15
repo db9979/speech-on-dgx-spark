@@ -272,6 +272,7 @@ FEATURES = (
     F(**steckbrief.feature("messages_all")),
     F(**steckbrief.feature("chatgroups")),
     F(**steckbrief.feature("umfrage")),
+    F(**steckbrief.feature("terminfinden")),
     F(**steckbrief.feature("chatmedia")),
     F(**steckbrief.feature("chatinvite")),
     F(**steckbrief.feature("chatprivate")),

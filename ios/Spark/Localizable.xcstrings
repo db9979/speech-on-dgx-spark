@@ -13461,6 +13461,106 @@
         }
       }
     },
+    "Termin finden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find a time"
+          }
+        }
+      }
+    },
+    "Abstimmen lassen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Let them vote"
+          }
+        }
+      }
+    },
+    "Dauer": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Length"
+          }
+        }
+      }
+    },
+    "Ab": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From"
+          }
+        }
+      }
+    },
+    "Wie viele Tage": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How many days"
+          }
+        }
+      }
+    },
+    "Freie Zeiten suchen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find free times"
+          }
+        }
+      }
+    },
+    "Alle sind frei": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Everybody is free"
+          }
+        }
+      }
+    },
+    "Keine Zeit, in der alle frei sind. Mehr Tage, eine kürzere Dauer oder andere Uhrzeiten wählen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No time when everybody is free. Choose more days, a shorter length or other hours."
+          }
+        }
+      }
+    },
+    "%lld im Chat ohne Kalender, zählen als frei": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld in the chat without a calendar, count as free"
+          }
+        }
+      }
+    },
+    "eingetragen bei allen, die dafür gestimmt haben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "entered for everybody who voted for it"
+          }
+        }
+      }
+    },
     "Geburtstag aus deinen Kontakten; ändern lässt er sich in der Kontaktkarte.": {
       "localizations": {
         "en": {

@@ -1141,7 +1141,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": " und speichert nur seinen SHA-256-Hash in profiles.json. Die App bekommt ihn genau einmal und legt ihn im Schlüsselbund ab. 6. Jede Anfrage mit Schlüssel: profiles.current sucht den Hash des Schlüssels in der Geräteliste. Ein Geräteschlüssel geht vor dem Cookie; das Profil kommt so immer aus dem Schlüssel, nie aus dem, was die App schreibt. 7. Pfad für die App erlaubt?: Ein App-Schlüssel gilt nur für die 76 Pfade in profiles.APP_PATHS (Chat, Spracherkennung, Gespräche, Erinnerungen, Chats, Anrufe …), ein paar Lese-Muster, die Panel-Bereiche (Admin-Schalter iPhone-App mit Panel) und „Meine Sachen“ (iphone.THINGS, je Teil nur mit der Freigabe seiner eigenen Funktion). Alles andere sieht er ohne Profil. 8. App gerade aus oder Mein Notaus?: Ist die App vom Admin aus- oder für das Profil gesperrt, oder hat das Profil Mein Notaus an, gibt es für diese Anfrage kein Profil. Die App bekommt „gerade nicht“ (503), behält ihre Kopplung und geht wieder, sobald der Schalter zurück ist. 9. Wie ein Browser des Profils: Die App fragt über dieselben Endpunkte wie die Seite, mit denselben Grenzen. Was sie zusätzlich darf (Smart Home, CarPlay, Zuhören, Dokumente, Bilder), sagt ihr der Spark in /api/ip"
+"text": " und speichert nur seinen SHA-256-Hash in profiles.json. Die App bekommt ihn genau einmal und legt ihn im Schlüsselbund ab. 6. Jede Anfrage mit Schlüssel: profiles.current sucht den Hash des Schlüssels in der Geräteliste. Ein Geräteschlüssel geht vor dem Cookie; das Profil kommt so immer aus dem Schlüssel, nie aus dem, was die App schreibt. 7. Pfad für die App erlaubt?: Ein App-Schlüssel gilt nur für die 78 Pfade in profiles.APP_PATHS (Chat, Spracherkennung, Gespräche, Erinnerungen, Chats, Anrufe …), ein paar Lese-Muster, die Panel-Bereiche (Admin-Schalter iPhone-App mit Panel) und „Meine Sachen“ (iphone.THINGS, je Teil nur mit der Freigabe seiner eigenen Funktion). Alles andere sieht er ohne Profil. 8. App gerade aus oder Mein Notaus?: Ist die App vom Admin aus- oder für das Profil gesperrt, oder hat das Profil Mein Notaus an, gibt es für diese Anfrage kein Profil. Die App bekommt „gerade nicht“ (503), behält ihre Kopplung und geht wieder, sobald der Schalter zurück ist. 9. Wie ein Browser des Profils: Die App fragt über dieselben Endpunkte wie die Seite, mit denselben Grenzen. Was sie zusätzlich darf (Smart Home, CarPlay, Zuhören, Dokumente, Bilder), sagt ihr der Spark in /api/ip"
 },
 {
 "lang": "de",
@@ -1181,7 +1181,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 10 Minuten gilt ein Kopplungs-Code (Schritt 3) - 5 iPhones pro Profil (Schritt 2) - 76 feste Pfade für den App-Schlüssel (Schritt 7) - 30 Minuten gilt ein Android-Download-Link (Schritt 3) - 5 Downloads pro Android-Link (Schritt 3) - 10 Minuten gilt eine Kopplungszeile fürs Terminal (Schritt 3) - 5 Terminals pro Profil (Schritt 2) - 120 Sekunden nach der letzten Eingabe gilt ein Gerät als benutzt (Schritt 9) - 5 Minuten bis eine ungesehene Mitteilung aufs Handy nachkommt (Schritt 9)"
+"text": "- 10 Minuten gilt ein Kopplungs-Code (Schritt 3) - 5 iPhones pro Profil (Schritt 2) - 78 feste Pfade für den App-Schlüssel (Schritt 7) - 30 Minuten gilt ein Android-Download-Link (Schritt 3) - 5 Downloads pro Android-Link (Schritt 3) - 10 Minuten gilt eine Kopplungszeile fürs Terminal (Schritt 3) - 5 Terminals pro Profil (Schritt 2) - 120 Sekunden nach der letzten Eingabe gilt ein Gerät als benutzt (Schritt 9) - 5 Minuten bis eine ungesehene Mitteilung aufs Handy nachkommt (Schritt 9)"
 },
 {
 "lang": "de",
@@ -10180,6 +10180,22 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Termin finden (Nextcloud-Idee, standardmäßig aus)",
+"text": "Termin finden (Nextcloud-Idee, standardmäßig aus): Admin-Schalter Funktionen → Kalender und Tagesbriefing → „Termin finden“ (chat.calendar_find, aus; braucht „Kalender“ und „Umfragen in Chats“). Im Chat zu zweit oder in einer Gruppe dieses Spark öffnet das Balken-Symbol oben „Frage“ und „Termin finden“: Titel, Dauer (30 Minuten bis 3 Stunden), ab welchem Tag, wie viele Tage (höchstens 14) und zwischen welchen Uhrzeiten. „Freie Zeiten suchen“ liest für jedes Mitglied nur die Termine mit Uhrzeit aus der Kopie seiner eigenen Kalender (ganztägige zählen nicht) und zeigt Zeiten, in denen alle frei sind: im Raster von 30 Minuten, höchstens zwei pro Tag (die zweite mindestens zwei Stunden nach der ersten), höchstens 6, nie in der Vergangenheit. Nach außen gehen nur diese Zeiten und die Zahl der Mitglieder ohne Kalender (sie zählen als frei), nie ein Titel, Ort oder eine Uhrzeit eines anderen Termins. Die gewählten Zeiten (2 bis 6) werden eine Umfrage mit „📅“ und „Mehrere erlaubt“; der Titel liegt versiegelt in der Nachricht. Schließt, wer gefragt hat, die Umfrage, trägt der Spark die Zeit mit den meisten Stimmen bei ihm und bei jedem ein, der für sie gestimmt hat (die Stimme ist das Ja), "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Termin finden (Nextcloud-Idee, standardmäßig aus)",
+"text": "in den ersten beschreibbaren eigenen Kalender; ohne Stimme nichts. Nie ein Werkzeug fürs Modell. Endpunkte POST /api/chats/termin/frei und POST /api/chats/termin (Anmeldung, Profil, CSRF, 1 KB bzw. 4 KB, Rate-Limit der Chats). Logs (Bereich Kalender) „calendar: find | members 3 | free 2 | without 1“, „calendar: find poll | slots 2“, „calendar: find entered | n 2 | failed 0“; Live (Knoten Kalender) nur Suchen, Umfragen und Einträge heute."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Termine: änderbar oder nur lesen, mit ihrem Text",
 "text": "Termine: änderbar oder nur lesen, mit ihrem Text: Auf der Seite Kalender trägt ein Termin, den die Seite nicht ändern kann, ein 🔒 in Woche, Tag und Liste; seine Karte nennt mit festen Worten den Grund (calendars._why): Abo-Link (iCal), geteilter Kalender, wiederholter Termin (Serie im Kalender-Programm ändern) oder ein hier nicht änderbarer Kalender. Die Karte zeigt auch Text (DESCRIPTION, „Notiz“) und Link (URL) des Termins, nur als Text: höchstens 2000 Zeichen, ohne Steuerzeichen, Links nur mit http oder https, sie öffnen sich nie von selbst; lange Notizen zeigen 8 Zeilen und „Weiter lesen“. Ein privater Termin aus einem geteilten Kalender bleibt „belegt“, ohne Text und Link. Dasselbe in der iPhone-App (Schloss, Abschnitt „Notiz“, Grund in der Karte)."
 },
@@ -13973,6 +13989,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Mein Tag",
 "title": "Mein Tag",
+"text": "- Termin finden (Funktionen → Mein Tag → „Termin finden“; baut auf „Kalender“; Kalender → Einstellungen): Im Chat (zu zweit oder Gruppe) unter „Umfrage“ → „Termin finden“: Titel, Dauer, ab welchem Tag und zwischen welchen Uhrzeiten."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Mein Tag",
+"title": "Mein Tag",
 "text": "- Fotos, Dateien und Sprache in Chats (Funktionen → Mein Tag → „Fotos, Dateien und Sprache in Chats“; baut auf „Chats“; Ich → Gespräch): Im Chat links neben dem Eingabefeld: 📎 schickt ein Foto oder eine Datei (PDF, Word, Excel, PowerPoint, OpenDocument, Text), 🎤 nimmt eine Sprachnachricht auf (bis 5 Minuten, darunter steht, was gesagt wurde)."
 },
 {
@@ -15653,7 +15677,7 @@
 "file": "iPhone-App „Spark“",
 "head": "Nachrichten an andere Profile",
 "title": "Nachrichten an andere Profile",
-"text": "Seit V01.0.654 können die Chats in der App so viel wie im Panel: Änderungen kommen sofort (über dieselbe Verbindung wie die Chats-Seite, nur solange die Chats offen sind und die App vorn ist; sonst kommen die Mitteilungen wie bisher), oben steht „schreibt …“. Lange auf eine Nachricht drücken: Reagieren (👍 ❤️ 😂 😮 😢 🙏, noch einmal tippen nimmt sie weg), Antworten (mit Zitat, Tippen aufs Zitat springt hin), Kopieren, Ändern (15 Minuten) und Für alle zurücknehmen (1 Stunde). Weiter oben „Ältere Nachrichten“, Trennlinien pro Tag, ✓ gesendet, ✓✓ zugestellt, blaue ✓✓ gelesen. Umfragen (wenn „Umfragen in Chats“ an ist): das Balken-Symbol neben dem Textfeld stellt eine Frage mit 2 bis 10 Antworten, in der Nachricht tippst du deine Antwort an, wer gefragt hat, schließt sie. Mit ✎ oben links ein neuer Chat oder eine neue Gruppe (wenn Gruppen-Chats an sind; du bist ihr Admin). Das Suchfeld über der Liste sucht in deinen Chats. Ein Tippen auf den Namen oben öffnet die Chat-Infos: Stumm (1 Stunde, 8 Stunden, immer), Nachrichten verschwinden (24 Stunden, 7 oder 90 Tage; in Gruppen nur die Admins), bei Gruppen Name, Mitglieder (nach links wischen: zum Admin machen oder entfernen), Personen hinzufü"
+"text": "Seit V01.0.654 können die Chats in der App so viel wie im Panel: Änderungen kommen sofort (über dieselbe Verbindung wie die Chats-Seite, nur solange die Chats offen sind und die App vorn ist; sonst kommen die Mitteilungen wie bisher), oben steht „schreibt …“. Lange auf eine Nachricht drücken: Reagieren (👍 ❤️ 😂 😮 😢 🙏, noch einmal tippen nimmt sie weg), Antworten (mit Zitat, Tippen aufs Zitat springt hin), Kopieren, Ändern (15 Minuten) und Für alle zurücknehmen (1 Stunde). Weiter oben „Ältere Nachrichten“, Trennlinien pro Tag, ✓ gesendet, ✓✓ zugestellt, blaue ✓✓ gelesen. Umfragen (wenn „Umfragen in Chats“ an ist): das Balken-Symbol neben dem Textfeld stellt eine Frage mit 2 bis 10 Antworten, in der Nachricht tippst du deine Antwort an, wer gefragt hat, schließt sie. Mit „Termin finden“ (wenn an) sucht der Spark Zeiten, in denen alle im Chat frei sind, und lässt darüber abstimmen. Mit ✎ oben links ein neuer Chat oder eine neue Gruppe (wenn Gruppen-Chats an sind; du bist ihr Admin). Das Suchfeld über der Liste sucht in deinen Chats. Ein Tippen auf den Namen oben öffnet die Chat-Infos: Stumm (1 Stunde, 8 Stunden, immer), Nachrichten verschwinden (24 Stunden, 7 oder 90 Tage; in Gruppen n"
 },
 {
 "lang": "de",
@@ -15661,7 +15685,7 @@
 "file": "iPhone-App „Spark“",
 "head": "Nachrichten an andere Profile",
 "title": "Nachrichten an andere Profile",
-"text": "gen, Chat für mich leeren und Gruppe verlassen. Es gelten dieselben Regeln und Grenzen wie im Panel; die App kann nichts, was das Profil im Browser nicht auch darf."
+"text": "ur die Admins), bei Gruppen Name, Mitglieder (nach links wischen: zum Admin machen oder entfernen), Personen hinzufügen, Chat für mich leeren und Gruppe verlassen. Es gelten dieselben Regeln und Grenzen wie im Panel; die App kann nichts, was das Profil im Browser nicht auch darf."
 },
 {
 "lang": "de",
@@ -19013,7 +19037,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": " the keychain. 6. Every request with the key: profiles.current looks up the key's hash in the device list. A device key comes before the cookie; the profile always comes from the key, never from what the app writes. 7. Path allowed for the app?: An app key only works for the 76 paths in profiles.APP_PATHS (chat, speech recognition, conversations, reminders, chats, calls …), a few read patterns, the panel areas (admin switch iPhone app with panel) and \"My things\" (iphone.THINGS, each part only with the release of its own function). Everything else it sees without a profile. 8. App off right now or My kill switch?: If the app is switched off by the admin or blocked for the profile, or the profile has My kill switch on, this request has no profile. The app gets „not now“ (503), keeps its pairing and works again as soon as the switch is back. 9. Like a browser of the profile: The app asks through the same endpoints as the page, with the same limits. What it may do on top (smart home, CarPlay, listening, documents, pictures) the Spark tells it in /api/iphone/hello; the app only shows it and follows it. Calls between profiles ring through a VoIP push from Apple that carries only the call"
+"text": " the keychain. 6. Every request with the key: profiles.current looks up the key's hash in the device list. A device key comes before the cookie; the profile always comes from the key, never from what the app writes. 7. Path allowed for the app?: An app key only works for the 78 paths in profiles.APP_PATHS (chat, speech recognition, conversations, reminders, chats, calls …), a few read patterns, the panel areas (admin switch iPhone app with panel) and \"My things\" (iphone.THINGS, each part only with the release of its own function). Everything else it sees without a profile. 8. App off right now or My kill switch?: If the app is switched off by the admin or blocked for the profile, or the profile has My kill switch on, this request has no profile. The app gets „not now“ (503), keeps its pairing and works again as soon as the switch is back. 9. Like a browser of the profile: The app asks through the same endpoints as the page, with the same limits. What it may do on top (smart home, CarPlay, listening, documents, pictures) the Spark tells it in /api/iphone/hello; the app only shows it and follows it. Calls between profiles ring through a VoIP push from Apple that carries only the call"
 },
 {
 "lang": "en",
@@ -19045,7 +19069,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 10 minutes a pairing code is valid (step 3) - 5 iPhones per profile (step 2) - 76 fixed paths for the app key (step 7) - 30 minutes an Android download link is valid (step 3) - 5 downloads per Android link (step 3) - 10 minutes a terminal pairing line is valid (step 3) - 5 terminals per profile (step 2) - 120 seconds after the last input a device counts as in use (step 9) - 5 minutes until an unseen note follows to the phone (step 9)"
+"text": "- 10 minutes a pairing code is valid (step 3) - 5 iPhones per profile (step 2) - 78 fixed paths for the app key (step 7) - 30 minutes an Android download link is valid (step 3) - 5 downloads per Android link (step 3) - 10 minutes a terminal pairing line is valid (step 3) - 5 terminals per profile (step 2) - 120 seconds after the last input a device counts as in use (step 9) - 5 minutes until an unseen note follows to the phone (step 9)"
 },
 {
 "lang": "en",
@@ -27804,6 +27828,22 @@
 "src": "assistant",
 "file": "Assistant and panel",
 "head": "Voice chat",
+"title": "Find a time (Nextcloud idea, off by default)",
+"text": "Find a time (Nextcloud idea, off by default): Admin switch Features → Calendar and daily briefing → \"Find a time\" (chat.calendar_find, off; needs \"Calendar\" and \"Polls in chats\"). In a chat for two or a group of this Spark the bar symbol opens \"Question\" and \"Find a time\" at the top: title, length (30 minutes to 3 hours), from which day, how many days (at most 14) and between which hours. \"Find free times\" reads for every member only the appointments with a time from the copy of their own calendars (all-day ones do not count) and shows times when everybody is free: on a 30-minute grid, at most two a day (the second at least two hours after the first), at most 6, never in the past. Only these times and the number of members without a calendar (they count as free) leave the Spark, never a title, place or time of somebody else's appointment. The chosen times (2 to 6) become a poll with \"📅\" and \"Several allowed\"; the title is sealed in the message. When who asked closes the poll, the Spark enters the time with the most votes for them and for everybody who voted for it (the vote is the yes), into the first writable calendar of their own; without a vote nothing. Never a tool for the mode"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Find a time (Nextcloud idea, off by default)",
+"text": "l. Endpoints POST /api/chats/termin/frei and POST /api/chats/termin (sign-in, profile, CSRF, 1 KB or 4 KB, the chats' rate limit). Logs (area calendar) \"calendar: find | members 3 | free 2 | without 1\", \"calendar: find poll | slots 2\", \"calendar: find entered | n 2 | failed 0\"; Live (node Calendar) only searches, polls and entries today."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
 "title": "Appointments: changeable or read only, with their text",
 "text": "Appointments: changeable or read only, with their text: on the Calendar page an appointment the page cannot change carries a 🔒 in week, day and list; its card names the reason in fixed words (calendars._why): subscription link (iCal), shared calendar, repeating appointment (change the series in the calendar app) or a calendar that cannot be changed here. The card also shows the appointment's text (DESCRIPTION, \"Note\") and link (URL), as text only: at most 2000 characters, no control characters, links only with http or https, never opening by themselves; long notes show 8 lines and \"Read on\". A private appointment from a shared calendar stays \"belegt\" (busy), without text or link. The same in the iPhone app (lock, section \"Note\", reason in the card)."
 },
@@ -31541,6 +31581,14 @@
 "file": "Assistant and panel",
 "head": "My day",
 "title": "My day",
+"text": "- Find a time (Features → My day → \"Find a time\"; builds on \"Calendar\"; Calendar → Settings): In the chat (for two or a group) under \"Poll\" → \"Find a time\": title, length, from which day and between which hours."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My day",
+"title": "My day",
 "text": "- Photos, files and voice in chats (Features → My day → \"Photos, files and voice in chats\"; builds on \"Chats\"; Me → Conversation): In the chat left of the input field: 📎 sends a photo or a file (PDF, Word, Excel, PowerPoint, OpenDocument, text), 🎤 records a voice message (up to 5 minutes, with what was said underneath)."
 },
 {
@@ -33165,7 +33213,7 @@
 "file": "iPhone app \"Spark\"",
 "head": "Messages to other profiles",
 "title": "Messages to other profiles",
-"text": "Since V01.0.654 chats in the app do as much as in the panel: changes arrive at once (over the same connection as the Chats page, only while the chats are open and the app is in front; otherwise notifications come as before), and the top shows \"typing …\". Long-press a message: React (👍 ❤️ 😂 😮 😢 🙏, tapping again takes it away), Reply (with a quote; tapping the quote jumps there), Copy, Change (15 minutes) and Take back for everybody (1 hour). Further up \"Older messages\", a line per day, ✓ sent, ✓✓ delivered, blue ✓✓ read. Polls (when \"Polls in chats\" is on): the bar symbol next to the text field asks a question with 2 to 10 answers, in the message you tap your answer, who asked closes it. ✎ at the top left starts a new chat or a new group (when group chats are on; you are its admin). The search field above the list searches your chats. Tapping the name at the top opens the chat info: mute (1 hour, 8 hours, always), messages disappear (24 hours, 7 or 90 days; in groups only the admins), for groups name, members (swipe left to make admin or remove), add people, clear chat for me and leave group. The same rules and limits as in the panel apply; the app can do nothing the profile may not"
+"text": "Since V01.0.654 chats in the app do as much as in the panel: changes arrive at once (over the same connection as the Chats page, only while the chats are open and the app is in front; otherwise notifications come as before), and the top shows \"typing …\". Long-press a message: React (👍 ❤️ 😂 😮 😢 🙏, tapping again takes it away), Reply (with a quote; tapping the quote jumps there), Copy, Change (15 minutes) and Take back for everybody (1 hour). Further up \"Older messages\", a line per day, ✓ sent, ✓✓ delivered, blue ✓✓ read. Polls (when \"Polls in chats\" is on): the bar symbol next to the text field asks a question with 2 to 10 answers, in the message you tap your answer, who asked closes it. With \"Find a time\" (when on) the Spark looks for times when everybody in the chat is free and lets them vote. ✎ at the top left starts a new chat or a new group (when group chats are on; you are its admin). The search field above the list searches your chats. Tapping the name at the top opens the chat info: mute (1 hour, 8 hours, always), messages disappear (24 hours, 7 or 90 days; in groups only the admins), for groups name, members (swipe left to make admin or remove), add people, clear chat for m"
 },
 {
 "lang": "en",
@@ -33173,7 +33221,7 @@
 "file": "iPhone app \"Spark\"",
 "head": "Messages to other profiles",
 "title": "Messages to other profiles",
-"text": " do in the browser."
+"text": "e and leave group. The same rules and limits as in the panel apply; the app can do nothing the profile may not do in the browser."
 },
 {
 "lang": "en",

@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.467** Nextcloud-Ideen 3b: Termin finden im Chat
 - **V01.1.466** Käfer füllt vor, was die Seite bemerkt hat (nur Art, Status und Pfad), bleibt beim Scrollen stehen und steht auch auf Ich
 - **V01.1.465** Angriff über die Dokumentensuche abgewehrt: keine Programmordner, kein Zeichensalat, keine Cookie-Werte, Fehler ohne Pfade
 - **V01.1.464** Nextcloud-Ideen 3a: Umfragen in Chats
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.460** Fix: die nächtliche Paketprüfung auf GitHub läuft wieder
 - **V01.1.459** Nextcloud-Ideen 2a: Abwesenheit mit Vertretung, im Kalender und in Chats, Anrufe klingeln nicht
 - **V01.1.458** ROT-FIX: der Browser-Test der Profil-Hülle schaltet Chats selbst aus; iPhone-Verlauf baut wieder
-- **V01.1.457** Fix iPhone-App: Verlauf-Liste in Teile zerlegt, damit der Swift-Compiler sie wieder rechtzeitig prüft; ROT-FIX: Gesprächskarte schaltet die breite Ansicht ein Bild später um
 
 
 

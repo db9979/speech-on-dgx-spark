@@ -6238,6 +6238,13 @@
 "text": "Funktionen → Zugang → Probleme melden ist an. Auf einer langen Seite nach unten scrollen: der Käfer bleibt oben rechts stehen. Ich öffnen: der Käfer steht dort auch (am Handy links neben dem Mikrofon). Einen Fehler auf einer Seite auslösen, bis der Käfer orange mit Zahl wird, dann auf ihn tippen: „Fehler“ ist gewählt, und die Beschreibung beginnt mit „Auf der Seite „…“ hat der Käfer … Fehler bemerkt:“ und den Fehlern als Pfad und Status, ohne Inhalte.",
 "thread": "Fehler und Wünsche als Issue melden",
 "test": "test_ui_browser.Browser.test_report_bug_on_every_page"
+},
+{
+"id": "P909",
+"v": 1467,
+"titel": "Termin finden",
+"text": "Admin: Funktionen → Kalender und Tagesbriefing → „Termin finden“ an (dazu „Umfragen in Chats“). In einer Gruppe mit zwei weiteren Profilen das Balken-Symbol antippen, oben „Termin finden“ wählen, Titel, Dauer 1 h, ab morgen, 7 Tage, 8 bis 20 Uhr, „Freie Zeiten suchen“. Es kommen nur Zeiten, in denen niemand einen Termin mit Uhrzeit hat (höchstens zwei pro Tag, höchstens 6); fremde Termine sind nirgends zu sehen. „Abstimmen lassen“: die Umfrage steht mit 📅 im Chat. Zwei stimmen für eine Zeit, einer für eine andere; du schließt die Umfrage. Die Zeit mit den meisten Stimmen steht danach in deinem Kalender und in dem derer, die dafür gestimmt haben, nicht beim Dritten. Dasselbe in der iPhone-App.",
+"thread": "Ideen aus Nextcloud übernehmen"
 }
 ]
 }

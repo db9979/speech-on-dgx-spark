@@ -183,15 +183,30 @@ function cxPollHtml(x){const p=x.poll,max=Math.max(1,...p.n);
   return `<span class="cx-poll">`+p.opts.map((o,i)=>`<button type="button" class="cx-po${p.mine.includes(i)?' on':''}${p.closed&&p.win===i?' win':''}" data-cxa="vote" data-mid="${esc(x.id)}" data-i="${i}"${p.closed?' disabled':''}>`+
     `<span class="cx-pbar" data-pc="${Math.round(100*p.n[i]/max)}"></span><b>${p.mine.includes(i)?'✓ ':''}${esc(o)}</b><i>${p.n[i]}</i>`+
     (p.who[i].length?`<small>${esc(p.who[i].filter(Boolean).join(', '))}</small>`:'')+`</button>`).join('')+
-    `<small class="cx-pinfo">${esc((p.closed?t('Geschlossen · ','Closed · '):p.multi?t('Mehrere erlaubt · ','Several allowed · '):'')+(p.voters===1?t('1 Stimme','1 vote'):p.voters+' '+t('Stimmen','votes')))}</small>`+
+    `<small class="cx-pinfo">${esc((p.closed?t('Geschlossen · ','Closed · '):p.multi?t('Mehrere erlaubt · ','Several allowed · '):'')+(p.voters===1?t('1 Stimme','1 vote'):p.voters+' '+t('Stimmen','votes'))+(p.art==='termin'&&p.closed&&p.win>=0?t(' · eingetragen bei allen, die dafür gestimmt haben',' · entered for everybody who voted for it'):''))}</small>`+
     (p.can_close?`<button type="button" class="b" data-cxa="pclose" data-mid="${esc(x.id)}">${esc(t('Umfrage schließen','Close poll'))}</button>`:'')+`</span>`}
-function cxPollForm(){const p=cxEl('cxpane');
-  p.innerHTML=`<label class="cx-lbl" for="cxpq">${esc(t('Frage','Question'))}</label><input id="cxpq" maxlength="300" autocomplete="off" placeholder="${esc(t('z. B. Wann grillen wir?','e.g. When do we barbecue?'))}">`+
+function cxPollForm(mode){const p=cxEl('cxpane'),tf=!!(CX.S&&CX.S.termin);CX.pmode=tf&&mode==='t'?'t':'q';
+  const seg=tf?`<div class="cx-acts2 cx-pseg"><button type="button" class="b${CX.pmode==='q'?' p':''}" data-cxn="pmode" data-m="q">${esc(t('Frage','Question'))}</button><button type="button" class="b${CX.pmode==='t'?' p':''}" data-cxn="pmode" data-m="t">${esc(t('Termin finden','Find a time'))}</button></div>`:'';
+  if(CX.pmode==='t'){cxTerminForm(p,seg);return}
+  p.innerHTML=seg+`<label class="cx-lbl" for="cxpq">${esc(t('Frage','Question'))}</label><input id="cxpq" maxlength="300" autocomplete="off" placeholder="${esc(t('z. B. Wann grillen wir?','e.g. When do we barbecue?'))}">`+
     `<div class="cx-grp">${esc(t('Antworten','Answers'))}</div><div id="cxpopts">${[0,1,2].map(cxPollOpt).join('')}</div>`+
     `<div class="cx-acts2"><button type="button" class="b" data-cxn="popt">${esc(t('Antwort dazu','Add answer'))}</button></div>`+
     `<label class="cx-pp"><input type="checkbox" id="cxpmulti"><span>${esc(t('Mehrere Antworten erlaubt','Several answers allowed'))}</span></label>`+
     `<div class="cx-acts2"><button type="button" class="b p" data-cxn="pollgo">${esc(t('Umfrage stellen','Make poll'))}</button><button type="button" class="b" data-cxn="cancel">${esc(t('Abbrechen','Cancel'))}</button></div><div class="cx-msgline mut" id="cxpmsg"></div>`;
   cxEl('cxpq').focus()}
+// Termin finden (terminfinden.py): free times of everybody in the chat (busy or free only), chosen ones become the poll
+const cxSel=(id,list,val)=>`<select id="${id}">${list.map(([v,l])=>`<option value="${v}"${v===val?' selected':''}>${esc(l)}</option>`).join('')}</select>`;
+function cxTerminForm(p,seg){const d=new Date();d.setDate(d.getDate()+1);const iso=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const hrs=(a,b)=>Array.from({length:b-a+1},(_,i)=>[a+i,String(a+i).padStart(2,'0')+':00']);CX.tslots=[];
+  p.innerHTML=seg+`<label class="cx-lbl" for="cxtt">${esc(t('Titel','Title'))}</label><input id="cxtt" maxlength="120" autocomplete="off" placeholder="${esc(t('z. B. Grillen','e.g. Barbecue'))}">`+
+    `<div class="cx-sw"><label for="cxtdur">${esc(t('Dauer','Length'))}</label>${cxSel('cxtdur',[[30,'30 min'],[60,'1 h'],[90,'1,5 h'],[120,'2 h'],[180,'3 h']],60)}</div>`+
+    `<div class="cx-sw"><label for="cxtfrom">${esc(t('Ab','From'))}</label><input type="date" id="cxtfrom" value="${iso}"></div>`+
+    `<div class="cx-sw"><label for="cxtdays">${esc(t('Wie viele Tage','How many days'))}</label>${cxSel('cxtdays',[[3,'3'],[7,'7'],[14,'14']],7)}</div>`+
+    `<div class="cx-sw"><label for="cxtvon">${esc(t('Zwischen','Between'))}</label><span class="cx-inl">${cxSel('cxtvon',hrs(6,14),8)}${cxSel('cxtbis',hrs(12,23),20)}</span></div>`+
+    `<div class="cx-acts2"><button type="button" class="b" data-cxn="tsearch">${esc(t('Freie Zeiten suchen','Find free times'))}</button></div><div id="cxtslots"></div>`+
+    `<div class="cx-acts2"><button type="button" class="b p" data-cxn="tgo" id="cxtgo" hidden>${esc(t('Abstimmen lassen','Let them vote'))}</button><button type="button" class="b" data-cxn="cancel">${esc(t('Abbrechen','Cancel'))}</button></div><div class="cx-msgline mut" id="cxpmsg"></div>`;
+  cxEl('cxtt').focus()}
+const cxTz=()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone||''}catch{return ''}};
 const cxPollOpt=i=>`<input class="cx-popt" maxlength="120" autocomplete="off" aria-label="${esc(t('Antwort','Answer')+' '+(i+1))}" placeholder="${esc(t('Antwort','Answer')+' '+(i+1))}">`;
 cxEl('cxpoll').addEventListener('click',()=>{if(CX.data)cxPane('poll')});
 // tap on a bubble: reactions and what can be done with it, right below
@@ -314,6 +329,17 @@ cxEl('cxpane').addEventListener('click',async e=>{const b=e.target.closest('[dat
     else if(a==='invite')cxPane('invite');
     else if(a==='invmake'){const name=(cxEl('cxinvname')||{}).value||'';b.disabled=true;
       try{const r=await cxApi('/api/chats/invite',{name:name.trim(),base:location.origin});cxInvite(r)}finally{b.disabled=false}}
+    else if(a==='pmode')cxPollForm(b.dataset.m);
+    else if(a==='tsearch'){b.disabled=true;
+      try{const r=await cxApi('/api/chats/termin/frei',{id:CX.cur,from:cxEl('cxtfrom').value,days:+cxEl('cxtdays').value,minutes:+cxEl('cxtdur').value,von:+cxEl('cxtvon').value,bis:+cxEl('cxtbis').value,tz:cxTz()});
+        CX.tslots=r.slots||[];const box=cxEl('cxtslots');
+        box.innerHTML=(CX.tslots.length?`<div class="cx-grp">${esc(t('Alle sind frei','Everybody is free'))}</div>`+CX.tslots.map((x,i)=>`<label class="cx-pp"><input type="checkbox" data-ts="${i}" checked><span>${esc(x.label)}</span></label>`).join('')
+          :`<div class="cx-none mut">${esc(t('Keine Zeit, in der alle frei sind. Mehr Tage, eine kürzere Dauer oder andere Uhrzeiten wählen.','No time when everybody is free. Choose more days, a shorter length or other hours.'))}</div>`)+
+          (r.ohne?`<small class="mut">${esc(r.ohne+' '+t('im Chat ohne Kalender, zählen als frei','in the chat without a calendar, count as free'))}</small>`:'');
+        cxEl('cxtgo').hidden=CX.tslots.length<2}finally{b.disabled=false}}
+    else if(a==='tgo'){const slots=[...cxEl('cxtslots').querySelectorAll('input[data-ts]:checked')].map(i=>CX.tslots[+i.dataset.ts]).filter(Boolean);b.disabled=true;
+      try{await cxApi('/api/chats/termin',{id:CX.cur,title:cxEl('cxtt').value.trim(),slots,tz:cxTz()});
+        cxPane('');await cxOpen(CX.cur,true);const log=cxEl('cxlog');log.scrollTop=log.scrollHeight;cxLoad()}finally{b.disabled=false}}
     else if(a==='popt'){const o=cxEl('cxpopts'),n=o.querySelectorAll('input').length;if(n<10)o.insertAdjacentHTML('beforeend',cxPollOpt(n));if(n>=9)b.hidden=true}
     else if(a==='pollgo'){b.disabled=true;
       try{await cxApi('/api/chats/poll',{id:CX.cur,q:cxEl('cxpq').value.trim(),opts:[...cxEl('cxpopts').querySelectorAll('input')].map(i=>i.value.trim()).filter(Boolean),multi:cxEl('cxpmulti').checked});
