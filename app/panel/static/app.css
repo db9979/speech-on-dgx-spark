@@ -256,6 +256,8 @@ body[data-face=wave] .av i{width:16px;height:2.5px;border-radius:2px;background:
 @keyframes dots{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}}
 @keyframes pop{from{opacity:0;transform:translateY(6px) scale(.98)}to{opacity:1;transform:none}}
 .composer{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line);align-items:flex-end}
+.chatq{padding:8px 12px 0;border-top:1px solid var(--line)}.chatq .fh{margin:0 0 4px}
+.chatq-i{display:flex;align-items:center;gap:6px;margin:4px 0}.chatq-i span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .composer textarea{border-radius:22px;padding:10px 16px}
 .send{flex:none;width:42px;height:42px;border-radius:50%;border:0;cursor:pointer;color:var(--on-acc);background:linear-gradient(135deg,var(--acc),var(--acc2));display:grid;place-items:center}
 .send svg{width:18px;height:18px}

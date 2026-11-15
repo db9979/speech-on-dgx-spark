@@ -168,7 +168,9 @@ $('dadd').onclick=async()=>{const u=$('duser').value;if(!u){$('dmsg').innerHTML=
 window.devUser=async(id,u)=>{try{await api('/api/admin/devices/'+id,jpost('PUT',{user:u}));$('dmsg').textContent=t('Gerät umgehängt.','Device moved.')}catch(e){perr('dmsg',e)}loadProf()};
 window.delDev=async(id,n,spk)=>{if(!confirm(t('Gerät „','Delete device "')+n+t('“ löschen? Sein Schlüssel gilt dann nicht mehr.','"? Its key stops working.')+(spk?t(' Der Lautsprecher muss danach neu eingerichtet werden.',' The speaker then has to be set up again.'):'')))return;
   await api('/api/admin/devices/'+id,{method:'DELETE'});$('dmsg').textContent='';loadProf()};
-const sendTyped=()=>{const x=$('chattext').value.trim()||(typeof pics!=='undefined'&&pics.list.length?t('Was ist auf dem Bild?','What is in the picture?'):'');if(!x)return;$('chattext').value='';audioCtx();stopListening(true);stopAnswer();chat.nextSpoken=false;ask(x,null)};
+const sendTyped=()=>{const withPics=typeof pics!=='undefined'&&pics.list.length>0,x=$('chattext').value.trim()||(withPics?t('Was ist auf dem Bild?','What is in the picture?'):'');if(!x)return;
+  if(!withPics&&(chat.ctrl||(chat.queue.length&&!chat.qHeld))&&chatQueueAdd(x)){$('chattext').value='';return}   // Nachschieben (chat.js): waits for the answer
+  $('chattext').value='';audioCtx();stopListening(true);stopAnswer();chat.nextSpoken=false;ask(x,null)};
 $('chatsend').onclick=sendTyped;   // Enter sendet über feld.js (data-senden)
 document.addEventListener('keydown',e=>{if(e.code!=='Space'||!$('chat').classList.contains('on')||/INPUT|TEXTAREA|SELECT|BUTTON/.test(document.activeElement.tagName))return;
   e.preventDefault();$('talk').click()});

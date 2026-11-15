@@ -402,6 +402,7 @@ Home Assistant, tasks, For you, weather, reMarkable, MCP and what the Spark does
 | `app/panel/rmliste.py` | „Was liegt auf meinem reMarkable?“ and „Welche Aufgaben hast du dort gefunden?“: the tool remarkable_library. |
 | `app/panel/rmpapier.py` | Paper for the reMarkable: folders by kind, designed sheets in the device's own page format, ticked boxes read back. |
 | `app/panel/rmplus.py` | More with the reMarkable. |
+| `app/panel/seitenvergleich.py` | Seitenänderung ohne Modell: a watch whose task is a web address compares the page's lines from one run to the next, by fixed rules, without the language model. |
 | `app/panel/tasks.py` | Lists per profile: the shopping list, the to-do list and own lists („Setz Milch auf die Einkaufsliste“, „Was steht auf der Baumarkt-Liste?“). |
 | `app/panel/vorgaenge.py` | Alles Offene im Assistenten: what needs the person becomes one Vorgang in one place per profile. |
 | `app/panel/vorrat.py` | Vorrat: a profile's sealed supply on the disk, the one way to keep what a service read for a profile so it answers at once after a restart and when its sourc … |

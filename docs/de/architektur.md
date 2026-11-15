@@ -402,6 +402,7 @@ Home Assistant, Aufgaben, Für dich, Wetter, reMarkable, MCP und was der Spark v
 | `app/panel/rmliste.py` | Werkzeug: was auf dem reMarkable liegt und welche Aufgaben dort stehen |
 | `app/panel/rmpapier.py` | Gestaltete Blätter fürs reMarkable |
 | `app/panel/rmplus.py` | Mehr mit dem reMarkable: Senden, Ordner, Abgleich |
+| `app/panel/seitenvergleich.py` | Seitenänderung beim Beobachten: Zeilen einer Seite ohne Modell vergleichen, Zeiten zählen nicht, nur Prüfsummen bleiben |
 | `app/panel/tasks.py` | Listen für Einkauf und Aufgaben, wie Apple Erinnerungen: Farbe, Reihenfolge, Info je Eintrag, Erinnern zur Uhrzeit |
 | `app/panel/vorgaenge.py` | Alles Offene im Assistenten: Karten mit Knöpfen, Später, Seite Offen, Ja-Knopf, Telegram-Knöpfe |
 | `app/panel/vorrat.py` | Vorrat je Profil: Antworten aus dem Speicher, solange frisch genug; versiegelt auf der Platte (Mail, Wetter, Pakete) |

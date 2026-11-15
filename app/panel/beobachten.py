@@ -24,6 +24,8 @@ import re
 import time
 from urllib.parse import urlsplit
 
+import seitenvergleich
+
 MAX_WATCH = 10             # watches per profile
 MAX_KNOWN = 50             # values remembered per watch
 MAX_HIST = 20              # runs kept in the history of a watch
@@ -78,10 +80,18 @@ def _norm(text):
     return re.sub(r"\s+", " ", t).strip(" .,;:")
 
 
+ASKS = re.compile(r"(?i)\b(" + ASK + r"|beobacht\w*|keep an eye on|watch)")
+
+
+def _page(t):
+    """The address of „Sag mir Bescheid, wenn sich https://… ändert“ (Seitenänderung, seitenvergleich.py), else None."""
+    return seitenvergleich.address(t) if ASKS.search(t) else None
+
+
 def wants(text):
     """True when the person's words ask for a watch (also the Weiche's word for group "agent")."""
     t = str(text or "")
-    return bool(WORDS.search(t)) and not NOT_WEB.search(t)
+    return bool(WORDS.search(t) or _page(t)) and not NOT_WEB.search(t)
 
 
 def _clean(text, most):
@@ -109,8 +119,10 @@ def parse(text):
     if len(t) > 400 or NOT_WEB.search(t):
         return None
     m = WATCH.search(t)
-    clause = None
-    if m and WEB_RX.search(m.group("clause")):
+    clause, page = None, _page(t)
+    if page:
+        clause = page
+    elif m and WEB_RX.search(m.group("clause")):
         clause = m.group("clause")
     else:
         k = KEEP_EYE.search(t)
@@ -122,7 +134,8 @@ def parse(text):
     # „… lieber jeden Montag“ changes a watch there is (agent_change), it is no new one
     if not clause or CHANGE.search(t):
         return None
-    out = {"task": _clean(t, 500), "title": title_of(clause), "repeat": "daily", "time": "08:00"}
+    out = {"task": _clean(t, 500), "title": seitenvergleich.title(page) if page else title_of(clause),
+           "repeat": "daily", "time": "08:00"}
     tl = t.lower()
     hm = re.search(r"\bum (\d{1,2})(?::(\d{2}))? ?uhr\b|\bat (\d{1,2})(?::(\d{2}))? ?(am|pm)?\b", tl)
     if hm:

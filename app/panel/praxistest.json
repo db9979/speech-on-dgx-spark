@@ -6245,6 +6245,22 @@
 "titel": "Termin finden",
 "text": "Admin: Funktionen → Kalender und Tagesbriefing → „Termin finden“ an (dazu „Umfragen in Chats“). In einer Gruppe mit zwei weiteren Profilen das Balken-Symbol antippen, oben „Termin finden“ wählen, Titel, Dauer 1 h, ab morgen, 7 Tage, 8 bis 20 Uhr, „Freie Zeiten suchen“. Es kommen nur Zeiten, in denen niemand einen Termin mit Uhrzeit hat (höchstens zwei pro Tag, höchstens 6); fremde Termine sind nirgends zu sehen. „Abstimmen lassen“: die Umfrage steht mit 📅 im Chat. Zwei stimmen für eine Zeit, einer für eine andere; du schließt die Umfrage. Die Zeit mit den meisten Stimmen steht danach in deinem Kalender und in dem derer, die dafür gestimmt haben, nicht beim Dritten. Dasselbe in der iPhone-App.",
 "thread": "Ideen aus Nextcloud übernehmen"
+},
+{
+"id": "P910",
+"v": 1468,
+"titel": "Seitenänderung beim Beobachten",
+"text": "Ich → Aufträge → + Neu → unter „Beobachten“ nur eine Adresse eintragen, z. B. https://avm.de/service/downloads, dann „Beobachten“. Die Zeile heißt „Änderungen: avm.de/service/downloads“, im Detail steht „Seitenänderung: … ohne Sprachmodell“. „Jetzt prüfen“: im Verlauf „Ausgangsstand: … Zeilen“. Am nächsten Tag (oder nach einer Änderung der Seite erneut „Jetzt prüfen“) kommt nur dann eine Mitteilung „Seite geändert“, wenn sich wirklich eine Zeile geändert hat; „vor 5 Minuten“ oder eine Uhrzeit allein zählen nicht. Per Sprache: „Sag mir Bescheid, wenn sich https://… ändert“, dann „Ja“.",
+"thread": "Seitenänderung, Nachschieben und PDF-Formulare bauen",
+"test": "test_seitenaenderung.Runs.test_first_run_keeps_the_stand_then_only_changes_count"
+},
+{
+"id": "P911",
+"v": 1468,
+"titel": "Fragen warten im Chat",
+"text": "Im Chat eine längere Frage stellen und, während die Antwort noch kommt, eine zweite tippen und senden. Die erste Antwort läuft weiter, die zweite Frage steht über dem Textfeld unter „Wartet, bis die Antwort fertig ist“ und geht von selbst raus, sobald die erste Antwort samt Stimme fertig ist. Noch einmal mit zwei wartenden Fragen: ✕ nimmt eine heraus, „Jetzt senden“ bricht die laufende Antwort ab und schickt sie sofort. Stopp drücken: die Zeile sagt „Angehalten“, nichts geht mehr von selbst raus.",
+"thread": "Seitenänderung, Nachschieben und PDF-Formulare bauen",
+"test": "test_seitenaenderung.Waiting.test_queue"
 }
 ]
 }

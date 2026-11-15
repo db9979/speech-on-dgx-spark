@@ -155,6 +155,7 @@ MODULE = {
     # Anbindungen
     "homeassistant": ("dienste", "Home Assistant pro Profil"),
     "hamelden": ("dienste", "Home Assistant meldet Ereignisse an den Spark"),
+    "seitenvergleich": ("dienste", "Seitenänderung beim Beobachten: Zeilen einer Seite ohne Modell vergleichen, Zeiten zählen nicht, nur Prüfsummen bleiben"),
     "senden": ("post", "Mails senden auf der Seite E-Mail: Vorschau-Blatt, SMTP über TLS, Kopie in Gesendet, Später senden versiegelt"),
     "antwortvorschlag": ("post", "Antwortvorschläge zu einer Mail: drei Richtungen, umformen, nur im Speicher; ausgelastet: 503 und „Noch einmal“"),
     "postfach": ("post", "Mails ordnen auf der Seite E-Mail: gelesen, markieren, Archiv, Ordner, Mehrfachauswahl, Löschen in den Papierkorb"),

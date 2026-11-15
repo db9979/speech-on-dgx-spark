@@ -49,6 +49,7 @@ import llm
 import mcp
 import notaus
 import profiles
+import seitenvergleich
 import tracelog
 import vorrang
 import features
@@ -576,6 +577,9 @@ async def run_job(uid, jid):
     s = profiles.settings(uid)
     prof = profiles.by_id(uid) or {"name": ""}
     plan = next((x for x in load(uid)["plans"] if x["id"] == item.get("plan")), None) if item.get("origin") == "watch" else None
+    if plan and plan.get("page"):
+        await page_run(uid, jid, plan, chat.page_text)
+        return
     system = JOB_SYSTEM + ("\n\n" + beobachten.RULES if plan else "") + (auftragsplan.HINT if plus else "") \
         + "\n\n" + chat.now_line(s.get("tz", ""))
     task = item["task"]
@@ -588,15 +592,8 @@ async def run_job(uid, jid):
     counts = {"all": 0, "search": 0, "page": 0, "task": item.get("task") or ""}
     steps = []
     used_private = False
-    rec = None
-    try:     # Zustand → Live: the job as a request of its own with every round and tool (never the task text)
-        import live
-        kind = "Beobachten" if item.get("origin") == "watch" else "Auftrag"
-        rec = live.begin("auto", "", uid=uid, auto=True, why=kind, src="job")
-        if rec is not None:
-            rec.step("in", kind, rec.t0)
-    except Exception:
-        rec = None
+    # Zustand → Live: the job as a request of its own with every round and tool (never the task text)
+    rec = _live_begin(uid, "Beobachten" if item.get("origin") == "watch" else "Auftrag")
 
     async def work():
         nonlocal used_private
@@ -700,13 +697,49 @@ def _drop_job(uid, jid):
     mutate(uid, lambda d: d.update(jobs=[x for x in d["jobs"] if x["id"] != jid]))
 
 
+PAGE_CHARS = 60000      # characters of a watched page compared (Seitenänderung)
+
+
+async def page_run(uid, jid, plan, page_text):
+    """One run of a watch on a page (Seitenänderung, seitenvergleich.py): reads the page once with page_text
+    (chat.page_text) and compares its lines with the last run by fixed rules; no language model, no other tool. The
+    first run only keeps the stand."""
+    url = plan["page"]
+    _set_job(uid, jid, steps=[{"t": int(time.time()), "what": "Seite: " + url[:120]}])
+    rec = _live_begin(uid, "Beobachten")    # Zustand → Live: the run with its one tool (never the address)
+    if rec is not None:
+        rec.now("tool", "read_page")
+    t0 = time.time()
+    try:
+        text = await page_text(None, url, PAGE_CHARS, seconds=20)
+    except Exception:   # noqa: BLE001  (a page that cannot be read counts as a failed run)
+        text = ""
+    page_lines = seitenvergleich.lines(text)
+    if rec is not None:
+        rec.step("tool", "read_page", t0, time.time(), ok=bool(page_lines))
+    _live_end(rec, bool(page_lines))
+    now = int(time.time())
+    if not page_lines:
+        _set_job(uid, jid, state="failed", finished=now, error="Die Seite ließ sich nicht lesen.")
+        await watch_done(uid, jid, "", {}, page={})
+        return
+    diff = seitenvergleich.compare(plan["stand"], page_lines) if plan.get("stand") else None
+    report = seitenvergleich.report(diff, url) if diff and seitenvergleich.count(diff) else ""
+    _set_job(uid, jid, state="done", finished=now, report=report, summary=summary_of(report) if report else "",
+             private=False)
+    hintergrund.note(uid, "agent", True)
+    await watch_done(uid, jid, report, {}, page={"stand": seitenvergleich.stand(page_lines), "diff": diff,
+                                                 "n": len(page_lines)})
+
+
 PAUSED_SAY = {"fehler": f"ging {beobachten.FAILS}-mal hintereinander nicht",
               "idle": f"hat {beobachten.IDLE_DAYS} Tage nichts Neues gefunden"}
 
 
-async def watch_done(uid, jid, report, counts):
+async def watch_done(uid, jid, report, counts, page=None):
     """The panel's verdict on one run of a watch (beobachten.check): only checked new finds go out, a run without
-    anything new stays quiet and leaves only a line in the watch's history. Returns the result word."""
+    anything new stays quiet and leaves only a line in the watch's history. Returns the result word.
+    page (page_run): {"stand", "diff", "n"} of a Seitenänderung, {} when the page could not be read."""
     import push
     item = job(uid, jid) or {}
     pid = item.get("plan")
@@ -716,7 +749,11 @@ async def watch_done(uid, jid, report, counts):
         print("agent: watch run | result gone | why deleted meanwhile", flush=True)
         return "gone"
     verdict = None
-    if report:
+    if page:
+        diff = page.get("diff")
+        found = seitenvergleich.finds(diff, plan["page"]) if diff and seitenvergleich.count(diff) else []
+        verdict = {"new": found, "old": [], "dropped": 0}
+    elif report and page is None:
         verdict = beobachten.check(report, {"pages": counts.get("pages") or {}, "searches": counts.get("searches") or []},
                                    [k.get("v") for k in plan.get("known") or []], plan.get("below"))
     now = int(time.time())
@@ -735,7 +772,16 @@ async def watch_done(uid, jid, report, counts):
                 out["r"] = "fehler"
             else:
                 x["fails"] = 0
-                if verdict["new"]:
+                if page:     # Seitenänderung: the stand of this run is the next run's comparison
+                    x["stand"] = page["stand"]
+                if verdict["new"] and page:
+                    x["last_hit"] = now
+                    beobachten.note(x, "neu", seitenvergleich.summary(page["diff"]), seitenvergleich.count(page["diff"]), now)
+                    out["r"] = "neu"
+                elif page and not page.get("diff"):
+                    beobachten.note(x, "still", f"Ausgangsstand: {page['n']} Zeilen", 0, now)
+                    out["r"] = "still"
+                elif verdict["new"]:
                     beobachten.remember(x, verdict["new"], now)
                     x["last_hit"] = now
                     beobachten.note(x, "neu", verdict["new"][0]["v"], len(verdict["new"]), now)
@@ -751,12 +797,13 @@ async def watch_done(uid, jid, report, counts):
             out["p"] = dict(x)
     mutate(uid, fn)
     r, p = out.get("r", "gone"), out.get("p") or plan
-    print(f"agent: watch run | result {r} | new {len(verdict['new']) if verdict else 0} | "
+    print(f"agent: watch run | kind {'page' if page is not None else 'model'} | result {r} | new {len(verdict['new']) if verdict else 0} | "
           f"dropped {verdict['dropped'] if verdict else 0} | {profiles.log_name(profiles.by_id(uid))}", flush=True)
     if r == "neu":
         _set_job(uid, jid, finds=verdict["new"][:beobachten.MAX_FINDS], title=p.get("title", ""))
         await asyncio.to_thread(_keep, uid, jid)
-        title, body = beobachten.push_text(p, verdict["new"])
+        title, body = seitenvergleich.push_text(p.get("title") or p["task"], page["diff"], p["page"]) if page \
+            else beobachten.push_text(p, verdict["new"])
         try:
             await push.send(uid, title, body, tag="agent", private=True)
         except Exception as e:
@@ -776,6 +823,18 @@ async def watch_done(uid, jid, report, counts):
         except Exception as e:
             print("agent: watch push failed |", type(e).__name__, flush=True)
     return r
+
+
+def _live_begin(uid, kind):
+    """A job's run as a request of its own under Zustand → Live (kind: a fixed word), or None."""
+    try:
+        import live
+        rec = live.begin("auto", "", uid=uid, auto=True, why=kind, src="job")
+        if rec is not None:
+            rec.step("in", kind, rec.t0)
+        return rec
+    except Exception:
+        return None
 
 
 def _live_end(rec, ok):
@@ -847,10 +906,13 @@ def parse_plan(args, zone, now=None):
     if args.get("kind") == "watch":   # a watch (beobachten.py): reports only what is new, never just once
         if rep == "once":
             raise ValueError("Eine Beobachtung läuft immer wieder: täglich, werktags, wöchentlich oder monatlich.")
-        p.update(kind="watch", only_new=args.get("only_new") is not False,
-                 title=clean(args.get("title"), 80) or beobachten.title_of(task))
+        page = seitenvergleich.address(task)   # Seitenänderung: the panel compares the page itself, no model
+        p.update(kind="watch", only_new=page is not None or args.get("only_new") is not False,
+                 title=clean(args.get("title"), 80) or (seitenvergleich.title(page) if page else beobachten.title_of(task)))
+        if page:
+            p["page"] = page
         below = args.get("below")
-        if below not in (None, "", False):
+        if below not in (None, "", False) and not page:
             try:
                 below = float(str(below).replace(",", "."))
             except ValueError:
@@ -919,6 +981,9 @@ def describe_when(p):
 
 
 def describe_plan(p):
+    if p.get("kind") == "watch" and p.get("page"):
+        return (f"Beobachten „{p.get('title') or p['task']}“: {describe_when(p)} die Seite vergleichen, nur melden, "
+                "wenn sie sich ändert (ohne Sprachmodell)")
     if p.get("kind") == "watch":
         return (f"Beobachten „{p.get('title') or p['task']}“: {describe_when(p)} nachsehen, "
                 + ("nur melden, wenn es etwas Neues gibt" if p.get("only_new", True) else "jedes Mal berichten")
@@ -1145,9 +1210,11 @@ def edit_plan(uid, pid, changes):
             if x["id"] != pid:
                 continue
             out["before"] = dict(x)
-            for k in EDIT_KEYS:
+            for k in EDIT_KEYS + ("page",):
                 x.pop(k, None)
             x.update(fresh)
+            if x.get("page") != out["before"].get("page") or changes.get("forget"):
+                x.pop("stand", None)    # another page (or „Bekanntes vergessen“): the next run starts afresh
             if "on" in changes:
                 x["paused"] = changes["on"] is False
                 if changes["on"] is not False:
@@ -1625,7 +1692,7 @@ def _view(uid):
             "watch": watch_on(uid), "max_watch": beobachten.MAX_WATCH, "own": own_tasks(uid, d),
             "ha": bool(features.allowed("ha", uid) and homeassistant.get(uid)),
             "jobs": [_public_job(x) for x in reversed(d["jobs"])],
-            "plans": [dict(x, text=describe_plan(x)) for x in d["plans"]],
+            "plans": [dict({k: v for k, v in x.items() if k != "stand"}, text=describe_plan(x)) for x in d["plans"]],
             "routines": d["routines"], "day_max": DAY_MAX, "search": bool(ccfg().get("search_url") and features.allowed("search", uid)),
             "servers": [{"name": s["name"], "tools": [t["name"] for t in s.get("tools") or [] if t.get("mode") != "off"]}
                         for s in servers_for(uid) if uid in (s.get("users") or [])]}

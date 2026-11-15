@@ -339,7 +339,7 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
   catch(e){if(e.name!=='AbortError')err=e instanceof TypeError&&!pids.length&&offlineQueue(text,cid)?t('Keine Verbindung zum Spark. Die Frage geht raus, sobald er wieder antwortet.','No connection to the Spark. The question goes out once it answers again.'):errText(e instanceof TypeError?'net':'',e.message);if(pids.length&&/picture is gone/.test(errRaw(e)))picsGone()}
   const aborted=ctrl.signal.aborted;if(chat.ctrl===ctrl)chat.ctrl=null;if(frame)show(drawn,true);
   const moved=chat.msgs!==msgs,drop=()=>{const i=msgs.lastIndexOf(um);if(i>=0)msgs.splice(i,1)};
-  if(ended){drop();el.classList.remove('typing');el.textContent=ENDE_TEXT[ended];   // nothing kept, nothing asked again
+  if(ended){drop();el.classList.remove('typing');if(chat.queue.length){chat.qHeld=true;chatQueueDraw()}el.textContent=ENDE_TEXT[ended];   // nothing kept, nothing asked again
     if(!moved)chatSay(ENDE_TEXT[ended]);if(g===chat.turn)endTurn();return}
   const att=attOf(searches,sources,docs,drefs,mkcards,blcards);   // what stands under the answer, kept with it
   // another person's voice: the exchange is theirs, so it stays out of this browser's history and context
@@ -554,7 +554,19 @@ try{$('chatwake').checked=localStorage.getItem('wake')==='1'}catch{}
 $('chatwake').onchange=()=>{try{localStorage.setItem('wake',$('chatwake').checked?'1':'0')}catch{}if($('chatwake').checked)startWake();else if(!(window.room&&room.on))stopWake()};
 // started once it is known who uses this page (see guestLock)
 $('talk').onclick=()=>{audioCtx();if(MOBILE.matches&&$('talk').classList.contains('ans')){$('chatstop').click();return}if(chat.rec)stopListening(false);else startListening()};
-$('chatstop').onclick=()=>{endTurn();chatSay(t('Gestoppt.','Stopped.'))};
+$('chatstop').onclick=()=>{endTurn();chatSay(t('Gestoppt.','Stopped.'));if(chat.queue.length){chat.qHeld=true;chatQueueDraw()}};
+// Nachschieben (Idee aus OpenFuse, Dominik 2026-11-15): a question typed while the Spark still answers waits in a
+// visible line above the field and goes out on its own, in order, once the answer and its voice are over. Stopp
+// holds the line: each waiting question then has „Jetzt senden“ and ✕. At most Q_MAX wait; never with pictures.
+const Q_MAX=5;chat.queue=[];chat.qHeld=false;chat.qTimer=null;
+function chatQueueAdd(x){if(chat.queue.length>=Q_MAX)return false;chat.queue.push(x);chatQueueDraw();chatQueueWatch();return true}
+function chatQueueDraw(){const box=$('chatq');if(!box)return;box.hidden=!chat.queue.length;if(!chat.queue.length){chat.qHeld=false;box.textContent='';return}
+  box.innerHTML=`<div class="fh">${esc(chat.qHeld?t('Angehalten. Wartende Fragen gehen nur noch von Hand raus:','Held. Waiting questions now only go out by hand:'):t('Wartet, bis die Antwort fertig ist:','Waiting until the answer is done:'))}</div>`+
+    chat.queue.map((x,i)=>`<div class="chatq-i"><span>${esc(x)}</span><button class="b" type="button" data-qsend="${i}">${esc(t('Jetzt senden','Send now'))}</button><button class="ib" type="button" data-qdel="${i}" aria-label="${esc(t('Nicht senden','Do not send'))}" title="${esc(t('Nicht senden','Do not send'))}">${ic('x')}</button></div>`).join('');
+  box.querySelectorAll('[data-qdel]').forEach(b=>b.onclick=()=>{chat.queue.splice(+b.dataset.qdel,1);chatQueueDraw()});
+  box.querySelectorAll('[data-qsend]').forEach(b=>b.onclick=()=>{const x=chat.queue.splice(+b.dataset.qsend,1)[0];chat.qHeld=false;chatQueueDraw();stopAnswer();chat.nextSpoken=false;ask(x,null);chatQueueWatch()})}
+function chatQueueWatch(){if(chat.qTimer)return;chat.qTimer=setInterval(()=>{if(!chat.queue.length){clearInterval(chat.qTimer);chat.qTimer=null;return}
+  if(chat.qHeld||chat.ctrl||playing()||chat.asrBusy||chat.rec)return;const x=chat.queue.shift();chatQueueDraw();chat.nextSpoken=false;ask(x,null)},300)}
 $('searchtest').onclick=async()=>{$('searchmsg').textContent=t('Teste …','Testing …');
   try{const r=await (await api('/api/search-test?url='+encodeURIComponent($('chat.search_url').value.trim()))).json();$('searchmsg').textContent=`${r.results} ${t('Treffer in','results in')} ${r.seconds} s: ${r.first.map(x=>x.title).join(' · ').slice(0,120)}`}
   catch(e){$('searchmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
