@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.473** Käfer überdeckt nichts mehr: am Rechner im Seitenmenü neben dem Mikrofon, am Handy mit Abstand; Wächter-Test prüft alle Seiten
 - **V01.1.472** Dungeon-Master: Kämpfe höchstens 6 bis 7 Züge bei gleicher Siegquote, Bosse nachgemessen, keine Proben-Frage an das Modell, wo das Panel schon entscheidet
 - **V01.1.471** Ideen aus OpenFuse 3: PDF-Formulare ausfüllen, als neues Dokument speichern und als Antwort mailen
 - **V01.1.470** Zertifikat der NAS: Let's-Encrypt-Erneuerungen gehen von selbst durch
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.466** Käfer füllt vor, was die Seite bemerkt hat (nur Art, Status und Pfad), bleibt beim Scrollen stehen und steht auch auf Ich
 - **V01.1.465** Angriff über die Dokumentensuche abgewehrt: keine Programmordner, kein Zeichensalat, keine Cookie-Werte, Fehler ohne Pfade
 - **V01.1.464** Nextcloud-Ideen 3a: Umfragen in Chats
-- **V01.1.463** Käfer fällt auf: wackelt beim Seitenwechsel, krabbelt ab und zu, wird bei Fehlern der Seite orange mit Zahl; nichts springt
 
 
 

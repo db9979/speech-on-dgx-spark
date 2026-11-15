@@ -1683,7 +1683,13 @@ class Browser(unittest.TestCase):
                     box = await pg.locator(bug).bounding_box()
                     self.assertLessEqual(box["x"] + box["width"], w, name)
                     self.assertLess(box["y"], 120, f"{name}: Käfer nicht oben")
-                    self.assertGreater(box["x"], w - 120, f"{name}: Käfer nicht rechts")
+                    # on the phone at the top right; on the computer in the head of the side menu, left of the microphone
+                    fab = await pg.locator("#fab .fabface").first.bounding_box()
+                    if w < 760:
+                        self.assertGreater(box["x"], w - 140, f"{name}: Käfer nicht rechts")
+                    else:
+                        self.assertLess(box["x"] + box["width"], fab["x"], f"{name}: Käfer nicht links vom Mikrofon")
+                        self.assertLess(abs((box["y"] + box["height"] / 2) - (fab["y"] + fab["height"] / 2)), 6, name)
                     await pg.evaluate("api('/api/report?id=zz').catch(()=>{})")   # a failed request of this page
                     # Käfer auffälliger (Dominik 2026-11-15 „3 und 4 und 1“): orange with the number of the page's
                     # errors; wiggle on a page change, now and then a crawl; only the drawing moves, the box stays
@@ -1745,6 +1751,54 @@ class Browser(unittest.TestCase):
                     on_top = await pg.evaluate("""(()=>{const b=document.getElementById('rpbug'),r=b.getBoundingClientRect();
                         if(!r.width)return false;const e=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return !!e&&b.contains(e)})()""")
                     self.assertTrue(on_top, f"{name}: Käfer fehlt auf Ich")
+                    self.assertEqual(errors, [], name)
+                    await br.close()
+
+        try:
+            self.run_async(go())
+        finally:
+            helpers.set_config(report=False)
+
+    def test_report_bug_covers_nothing(self):
+        """Wächter (Dominik 2026-11-15: „Bug und mic zu dicht … alle Seiten checken“): on every page, on the computer and
+        the phone, and on Ich, the ladybug neither covers nor touches anything one can use or read (a button, a link, a
+        field, the microphone, a page title's words); at least `room` pixels lie between them, except its neighbours
+        in the phone's bar, which keeps its own spacing."""
+        room = 6
+        probe = r"""(room=>{const out=[];
+          for(const b of document.querySelectorAll('#rpbug,#aptrail [data-ap=bug]')){if(!b.getClientRects().length)continue;
+            const r=b.getBoundingClientRect();if(!r.width)continue;
+            for(const e of document.querySelectorAll('button,a[href],input,select,textarea,[role=button],label.tgl,.fabface,h1,h2')){
+              if(e===b||b.contains(e)||e.contains(b)||!e.getClientRects().length||(b.closest('#aptrail')&&e.closest('#aptrail')))continue;
+              const st=getComputedStyle(e);if(st.visibility==='hidden'||+st.opacity===0)continue;
+              let q=e.getBoundingClientRect();if(/^H[12]$/.test(e.tagName)){const g=document.createRange();g.selectNodeContents(e);q=g.getBoundingClientRect()}
+              if(!q.width||!q.height)continue;
+              if(q.left<r.right+room&&q.right>r.left-room&&q.top<r.bottom+room&&q.bottom>r.top-room){
+                const x=Math.min(Math.max(q.left+1,r.left-room),q.right-1),y=Math.min(Math.max(q.top+1,r.top-room),q.bottom-1),t=document.elementFromPoint(x,y);
+                if(t&&(e.contains(t)||t.contains(e)||b.contains(t)))out.push((e.id||e.tagName)+' '+(e.textContent||'').trim().slice(0,20))}}}
+          return out})"""
+
+        async def go():
+            async with async_playwright() as p:
+                for name, w, h in VIEWS:
+                    helpers.set_config(report=True)
+                    br, pg, errors = await self.page(p, w, h, csp=True)
+                    await self.loaded(pg)
+                    await pg.evaluate("document.getElementById('wizmodal')&&(document.getElementById('wizmodal').style.display='none')")
+                    found = {}
+                    for sec in await pg.evaluate("[...document.querySelectorAll('main>section')].map(s=>s.id)"):
+                        await pg.evaluate(f"goSec('{sec}')")
+                        await pg.wait_for_timeout(250)
+                        hit = await pg.evaluate(f"({probe})({room})")
+                        if hit:
+                            found[sec] = hit
+                    await pg.evaluate("openMe('list')")
+                    await self.until(pg, "document.getElementById('profmodal').style.display==='grid'")
+                    await pg.wait_for_timeout(300)
+                    hit = await pg.evaluate(f"({probe})({room})")
+                    if hit:
+                        found["ich"] = hit
+                    self.assertEqual(found, {}, f"{name}: Käfer zu dicht")
                     self.assertEqual(errors, [], name)
                     await br.close()
 

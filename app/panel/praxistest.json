@@ -6291,6 +6291,14 @@
 "titel": "Dungeon: kürzere Kämpfe und weniger Wartezeit",
 "text": "Eine Runde mit 3 oder 4 Helden ab Stufe 4 spielen und einen gewöhnlichen Kampf (Gefahr mittel) bis zum Ende führen: er dauert etwa 5 bis 7 Züge statt 9 bis 12, die Gegner treffen dafür spürbar härter, und die Gruppe gewinnt meist. In einem Zug, in dem alle nur angreifen, gehen, kaufen oder rasten, kommt die Erzählung schneller (keine Proben-Frage). Danach Zustand → Überblick: in der Wartezeit-Zeile steht „… Proben-Fragen gespart“. Als Admin unter Regeln → Balance-Prüfstand „Jetzt durchspielen“: die Spalte Runden bleibt bei höchstens 7, kein Feld rot.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P916",
+"v": 1473,
+"titel": "Käfer überdeckt nichts",
+"text": "Funktionen → Zugang → Probleme melden ist an. Am Rechner: der Käfer sitzt oben im Seitenmenü links neben dem Mikrofon, auch im Chat und bei Fernzugang liegt er über keinem Knopf. Am Handy auf Heute, Ich, Kalender und im Chat: zwischen Käfer und Mikrofon ist Platz, nichts liegt übereinander.",
+"thread": "Fehler und Wünsche als Issue melden",
+"test": "test_ui_browser.Browser.test_report_bug_covers_nothing"
 }
 ]
 }
