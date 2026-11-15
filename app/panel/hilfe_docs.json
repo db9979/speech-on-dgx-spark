@@ -7797,7 +7797,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "KI-Dungeon-Master: Tempo und Tisch am Handy (Prüfung 15.11.)",
-"text": "ut und „Handeln“ darunter. Selbsttests test_the_wait_per_turn_and_the_rewrites_as_numbers, test_the_phone_table_head_fight_field_group_and_hero in test_dungeon und test_the_system_text_in_its_fixed_order in test_dungeon_erzaehlstand."
+"text": "ut und „Handeln“ darunter. Die Leiste wächst nicht mit dem Text: der Zustand bleibt eine Zeile (zu lang mit „…“), die Vorschläge eine Reihe zum Wischen (ROT-FIX 15.11., auf GitHub mit breiterer Schrift nahm sie sonst über die halbe Höhe). Selbsttests test_the_wait_per_turn_and_the_rewrites_as_numbers, test_the_phone_table_head_fight_field_group_and_hero in test_dungeon und test_the_system_text_in_its_fixed_order in test_dungeon_erzaehlstand."
 },
 {
 "lang": "de",
@@ -25557,7 +25557,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "AI Dungeon Master: pace and the table on the phone (review 15 Nov)",
-"text": "AI Dungeon Master: pace and the table on the phone (review 15 Nov): No switch of its own. 1. Wait per turn: dungeon_tempo.py measures for every told turn at the table the time from the close of the turn to the narration, each model call for the checks („proben“) and each try of the narration („erzaehlen“, rewrites too), and counts the turns with at least one rewrite. Status → Live shows in the Dungeon Master box „heute Wartezeit je Zug Ø … s, längste … s (Proben Ø … s bei N, Erzählen Ø … s bei N), … % der Züge nachgebessert“, numbers only, in memory per day. The narrator bench does not count (count=False). 2. The model's cache: the narrator's instruction has the fixed part first (role, rules, task, examples, style of the round) and only at the end under „This turn:“ (dungeon.ZUG_KOPF) everything that changes from turn to turn: length (LAENGE), time of day, guiding, witnesses, thoughts, quests, wandering, coming along, moment, way and find. So the long start stays the same and the model takes it from its cache. 3. Input field on the phone: below 760 px the action field stands in a row of its own over the whole width, microphone, heroic courage and „Handeln“ below. Self-tests test_th"
+"text": "AI Dungeon Master: pace and the table on the phone (review 15 Nov): No switch of its own. 1. Wait per turn: dungeon_tempo.py measures for every told turn at the table the time from the close of the turn to the narration, each model call for the checks („proben“) and each try of the narration („erzaehlen“, rewrites too), and counts the turns with at least one rewrite. Status → Live shows in the Dungeon Master box „heute Wartezeit je Zug Ø … s, längste … s (Proben Ø … s bei N, Erzählen Ø … s bei N), … % der Züge nachgebessert“, numbers only, in memory per day. The narrator bench does not count (count=False). 2. The model's cache: the narrator's instruction has the fixed part first (role, rules, task, examples, style of the round) and only at the end under „This turn:“ (dungeon.ZUG_KOPF) everything that changes from turn to turn: length (LAENGE), time of day, guiding, witnesses, thoughts, quests, wandering, coming along, moment, way and find. So the long start stays the same and the model takes it from its cache. 3. Input field on the phone: below 760 px the action field stands in a row of its own over the whole width, microphone, heroic courage and „Handeln“ below. The bar does not g"
 },
 {
 "lang": "en",
@@ -25565,7 +25565,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "AI Dungeon Master: pace and the table on the phone (review 15 Nov)",
-"text": "e_wait_per_turn_and_the_rewrites_as_numbers, test_the_phone_table_head_fight_field_group_and_hero in test_dungeon and test_the_system_text_in_its_fixed_order in test_dungeon_erzaehlstand."
+"text": "row with the text: the status stays one line (cut with \"…\" when too long), the suggestions one row to swipe (ROT-FIX 15 Nov, with GitHub's wider font it took more than half the height before). Self-tests test_the_wait_per_turn_and_the_rewrites_as_numbers, test_the_phone_table_head_fight_field_group_and_hero in test_dungeon and test_the_system_text_in_its_fixed_order in test_dungeon_erzaehlstand."
 },
 {
 "lang": "en",

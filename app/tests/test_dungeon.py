@@ -7442,6 +7442,14 @@ class Windows(unittest.TestCase):
                             above = ("(()=>{const f=document.querySelector('#dmview .dm-handeln'),u=document.querySelector('#dmview .dm-unten');"
                                      "if(!f||!f.getClientRects().length)return false;const a=f.getBoundingClientRect(),c=u.getBoundingClientRect();return a.bottom<=c.top+1&&a.top>innerHeight/2})()")
                             self.assertTrue(await pg.evaluate(above))
+                            # the bar never grows with the text (ROT-FIX 15.11.: on GitHub's wider fonts the suggestions took
+                            # a third row): with wide letters the status stays one line, the suggestions one row to swipe
+                            await pg.evaluate("document.querySelector('#dmview .dm-handeln').style.letterSpacing='4px'")
+                            rows = ("(()=>{const one=es=>{const r=es.filter(e=>e.getClientRects().length).map(e=>e.getBoundingClientRect());return r.every(x=>x.top<r[0].bottom&&x.bottom>r[0].top)};"
+                                    "return [one([...document.querySelectorAll('#dmview .dm-zeitz>*')]),one([...document.querySelectorAll('#dmview .dm-kannst .dm-weg')])]})()")
+                            self.assertEqual(await pg.evaluate(rows), [True, True])
+                            self.assertTrue(await pg.evaluate(above))
+                            await pg.evaluate("document.querySelector('#dmview .dm-handeln').style.letterSpacing=''")
                             # the field over the whole width, its buttons in the row below (Prüfung 15.11., Punkt 5)
                             row = ("(()=>{const a=document.querySelector('#dmview .dm-handeln .dm-in').getBoundingClientRect(),"
                                    "s=document.querySelector('#dmview .dm-handeln [data-dmsend]').getBoundingClientRect();return [Math.round(a.width),s.top>=a.bottom-1]})()")

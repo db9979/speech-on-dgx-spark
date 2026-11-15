@@ -2670,6 +2670,10 @@ body.dg-offen{overflow:hidden}body.dg-offen #fab{display:none}
   .dm-tisch .dm-story .dm-handeln .dm-inp{border-top:0;padding-top:2px}
   /* the field over the whole width in a row of its own, microphone, heroic courage and „Handeln“ below (Prüfung 15.11., Punkt 5) */
   .dm-tisch .dm-handeln .dm-inp{flex-wrap:wrap}.dm-tisch .dm-handeln .dm-inp textarea{flex:1 1 100%}.dm-tisch .dm-handeln .dm-inp [data-dmsend]{flex:1}
+  /* the bar never grows with the text (ROT-FIX 15.11.: with wider fonts the suggestions took a third row and the status a
+     second, so the bar reached over half the screen): the status one line, cut with „…“, the suggestions one row to swipe */
+  .dm-tisch .dm-handeln .dm-zeitz{flex-wrap:nowrap;min-width:0}.dm-tisch .dm-handeln .dm-zeitz .dm-dran{white-space:nowrap;flex:0 0 auto}.dm-tisch .dm-handeln .dm-zeitz .dm-left{white-space:nowrap;flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
+  .dm-tisch .dm-kannst{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}.dm-tisch .dm-kannst::-webkit-scrollbar{display:none}.dm-tisch .dm-kannst .dm-weg{flex:0 0 auto;white-space:nowrap}
   body:has(#dmview.dm-amtisch) #dungeon .ic-tabs{display:none}
   body:has(#dmview.dm-amtisch) main,body:has(#dmview.dm-amtisch) #dungeon,body:has(#dmview.dm-amtisch) #dungeon :is(#dmroot,.ic-tabwrap,.ic-tabbody){padding-left:0;padding-right:0;margin-left:0;margin-right:0;border:0;border-radius:0;box-shadow:none;background:none}
   #dmview.dm-tisch.dm-amtisch{margin:0;border-radius:0}
