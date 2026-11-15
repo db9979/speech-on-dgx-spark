@@ -1707,6 +1707,14 @@ class Browser(unittest.TestCase):
                     self.assertEqual(await pg.locator("#rpbody [data-rpkind]").count(), 2)
                     self.assertFalse(await pg.evaluate(f"document.querySelector('{bug}').classList.contains('kf-err')"),
                                      f"{name}: nach dem Öffnen gilt der Fehler als gesehen")
+                    # Käfer vorausfüllen (Dominik 2026-11-15): what the page noticed, kind, status and path only
+                    pre = await pg.input_value("#rpbody .rptext")
+                    self.assertIn("Anfrage /api/report ist gescheitert (404)", pre, name)
+                    self.assertNotIn("id=zz", pre, name)
+                    js = await pg.evaluate("rpFound({page:'X',found:['10:00:00 js: Anna schrieb Geheim @ chat.js:12','10:00:01 js: Anna']})")
+                    self.assertIn("JavaScript-Fehler in chat.js:12", js)
+                    self.assertNotIn("Anna", js)                              # never the message of a JavaScript error
+                    self.assertEqual(await pg.get_attribute("#rpbody [data-rpkind].on", "data-rpkind"), "fehler", name)
                     # the count is the page's own errors at this moment: ours is among them, and on a busy runner a
                     # request of the page itself may have failed too (main 2026-11-14: „3 Fehler“), so the line has to
                     # say exactly as many as the page noted, never a fixed number
@@ -1729,6 +1737,14 @@ class Browser(unittest.TestCase):
                     self.assertIn("api: 4", body)
                     over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
                     self.assertLessEqual(over, 1, name)
+                    # Dominik 2026-11-15: it stays in its place while the page scrolls, and stands on Ich too
+                    self.assertEqual(await pg.evaluate("getComputedStyle(document.getElementById('rpbug')).position"), "fixed", name)
+                    await pg.evaluate("rpClose();openMe('list')")
+                    await self.until(pg, "document.getElementById('profmodal').style.display==='grid'")
+                    await pg.wait_for_timeout(400)
+                    on_top = await pg.evaluate("""(()=>{const b=document.getElementById('rpbug'),r=b.getBoundingClientRect();
+                        if(!r.width)return false;const e=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return !!e&&b.contains(e)})()""")
+                    self.assertTrue(on_top, f"{name}: Käfer fehlt auf Ich")
                     self.assertEqual(errors, [], name)
                     await br.close()
 

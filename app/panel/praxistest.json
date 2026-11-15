@@ -6230,6 +6230,14 @@
 "titel": "Dokumentensuche gegen Angriffe",
 "text": "Im Assistenten „Suche in meinen Dokumenten nach {{1337*3}} ${1337*3} <%= 1337*3 %>“ fragen (oder per MCP document_search mit diesem Text): nirgends steht 4011, es kommen nur Stellen mit dem Wort 1337 oder der feste Satz, dass nichts passt; keine Treffer aus node_modules und keine Zeilen aus Zeichensalat. Ich → Speicher → Wissensordner: nach dem nächsten Abgleich zählt ein Ordner wie node_modules unter „System-, Programm- oder versteckte Datei“, seine Dateien sind aus Ich → Dokumente verschwunden.",
 "thread": "Angriff über Dokumentensuche abwehren"
+},
+{
+"id": "P908",
+"v": 1466,
+"titel": "Käfer füllt vor und bleibt stehen",
+"text": "Funktionen → Zugang → Probleme melden ist an. Auf einer langen Seite nach unten scrollen: der Käfer bleibt oben rechts stehen. Ich öffnen: der Käfer steht dort auch (am Handy links neben dem Mikrofon). Einen Fehler auf einer Seite auslösen, bis der Käfer orange mit Zahl wird, dann auf ihn tippen: „Fehler“ ist gewählt, und die Beschreibung beginnt mit „Auf der Seite „…“ hat der Käfer … Fehler bemerkt:“ und den Fehlern als Pfad und Status, ohne Inhalte.",
+"thread": "Fehler und Wünsche als Issue melden",
+"test": "test_ui_browser.Browser.test_report_bug_on_every_page"
 }
 ]
 }

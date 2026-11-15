@@ -3706,8 +3706,10 @@ body.appview .ffilt button{flex:0 0 auto;overflow:visible}
 #pane-feat.fsplit .fdin{max-height:calc(100vh - 2 * var(--s4) - var(--h-bar))}
 /* Käfer-Symbol (melden.js rpBug): Fehler oder Wunsch von jeder Seite melden; nur mit „Probleme melden“ */
 #rpbug[hidden],body.appview.apbaron #rpbug{display:none!important}
-main{position:relative}#rpbug{position:absolute;top:14px;right:14px;z-index:4;padding:8px;min-width:40px;min-height:40px;color:var(--mut);background:none;border:0}#rpbug svg{width:18px;height:18px}#rpbug:hover{color:var(--fg)}
+main{position:relative}#rpbug{position:fixed;top:calc(14px + env(safe-area-inset-top));right:calc(14px + env(safe-area-inset-right));z-index:7;padding:8px;min-width:40px;min-height:40px;color:var(--mut);background:none;border:0}#rpbug svg{width:18px;height:18px}#rpbug:hover{color:var(--fg)}
 /* Käfer auffälliger (melden.js KF): only the drawing moves, the button keeps its box; the number sits on top of it */
+/* the phone's Ich is a full window above the page (#profmodal): the ladybug stands on it, left of its microphone */
+body.appview:has(#profmodal[style*="grid"]) #rpbug{z-index:51;right:calc(48px + env(safe-area-inset-right))}
 #aptrail [data-ap=bug]{position:relative}#rpbug svg,#aptrail [data-ap=bug] svg{transform-origin:50% 60%}
 #rpbug.kf-err,#aptrail [data-ap=bug].kf-err{color:var(--warnt)}
 #rpbug.kf-err::after,#aptrail [data-ap=bug].kf-err::after{content:attr(data-n);position:absolute;top:2px;right:0;min-width:16px;height:16px;padding:0 4px;box-sizing:border-box;border-radius:8px;background:var(--warn);color:var(--on-acc);font-weight:700;font-size:11.5px;line-height:16px;text-align:center;pointer-events:none}

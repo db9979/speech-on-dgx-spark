@@ -25,7 +25,7 @@ function rpNote(kind,what){const x=String(what||'').replace(/\s+/g,' ').replace(
 const KF={n:0,seen:0},KF_CRAWL_MS=60000;
 const kfEls=()=>document.querySelectorAll('#rpbug,#aptrail [data-ap=bug]');
 function kfShow(){const n=KF.n-KF.seen;kfEls().forEach(b=>{b.classList.toggle('kf-err',n>0);if(n>0)b.dataset.n=n>9?'9+':String(n);else delete b.dataset.n})}
-function kfPlay(c){kfEls().forEach(b=>{if(b.offsetParent===null)return;b.classList.remove(c);void b.offsetWidth;b.classList.add(c)})}
+function kfPlay(c){kfEls().forEach(b=>{if(!b.getClientRects().length)return;b.classList.remove(c);void b.offsetWidth;b.classList.add(c)})}
 window.kfShow=kfShow;
 document.addEventListener('animationend',e=>{const b=e.target.closest&&e.target.closest('#rpbug,#aptrail [data-ap=bug]');
   if(b)b.classList.remove('kf-wig','kf-shake','kf-crawl')});
@@ -74,6 +74,7 @@ async function rpList(root,here){RP.root=root;RP.cur=null;RP.thread=null;here=he
     <h3 style="margin:14px 0 4px">${esc(d.staff?t('Alle Meldungen','All reports'):t('Meine Meldungen','My reports'))}</h3>
     <ul class="facts rplist">${d.items.map(item).join('')||`<li class="mut"><span>${esc(t('Noch keine.','None yet.'))}</span></li>`}</ul>`;
   if(nsw)xbind(root,()=>rpList(root));
+  {const tx=root.querySelector('.rptext'),f=here&&here.found?rpFound(here):'';if(tx&&f&&!tx.value){tx.value=f}}
   const pn=root.querySelector('.rppagen');if(pn)pn.textContent='('+here.page+' · '+(RP_ERR.length?RP_ERR.length+' '+t('Fehler',RP_ERR.length===1?'error':'errors'):t('keine Fehler','no errors'))+')';
   root.querySelectorAll('[data-rpkind]').forEach(b=>b.onclick=()=>root.querySelectorAll('[data-rpkind]').forEach(x=>{const on=x===b;x.classList.toggle('on',on);x.setAttribute('aria-pressed',on?'true':'false')}));
   root.querySelector('[data-rpmake]').onclick=async e=>{const b=e.currentTarget;if(RP.busy)return;RP.busy=true;b.disabled=true;rpMsg(t('Lege an und anonymisiere …','Making and anonymizing …'));
@@ -165,7 +166,18 @@ async function showReport(){const box=$('rpbox');if(!box)return;if(!PROFILE||!RP
   if(RP.root===box&&(RP.cur||RP.thread))return;RP.here=null;await rpList(box)}
 function rpOpen(here){if(typeof closeSheet==='function')closeSheet();$('rpmodal').style.display='grid';$('rphead').textContent=here?t('Fehler oder Wunsch melden','Report a fault or a wish'):t('Problem melden','Report a problem');RP.here=null;rpList($('rpbody'),here||null)}
 // the Käfer on top of every page: the window with this page, its area, its errors and the last 10 minutes
-function rpBug(){const h=rpHere();KF.seen=KF.n;kfShow();rpOpen(h)}
+function rpBug(){const h=rpHere(),k=Math.min(KF.n-KF.seen,RP_ERR.length);if(k>0)h.found=RP_ERR.slice(-k);KF.seen=KF.n;kfShow();rpOpen(h)}
+// Käfer vorausfüllen (Dominik 2026-11-15): after the orange number, the description starts with what the page noticed,
+// by fixed rules and only kind, status and path of each error (a JavaScript error only its file and line, never its
+// message, which could carry words of the page); at most RP_FOUND_MAX, the person changes or deletes it before sending
+function rpFound(here){const seen=new Set(),out=[];
+  for(const x of here.found||[]){const m=/^\S+ (api|js): (.*)$/.exec(x);if(!m)continue;let w;
+    if(m[1]==='api'){const a=/^(\d{3}) (\/[\w\/.\-]*)/.exec(m[2]);if(!a)continue;w=t(`Anfrage ${a[2]} ist gescheitert (${a[1]})`,`Request ${a[2]} failed (${a[1]})`)}
+    else{const f=/ @ ([\w.\-]+\.js:\d+)$/.exec(m[2]);w=f?t(`JavaScript-Fehler in ${f[1]}`,`JavaScript error in ${f[1]}`):t('JavaScript-Fehler','JavaScript error')}
+    if(!seen.has(w)){seen.add(w);out.push('- '+w)}if(out.length>=RP_FOUND_MAX)break}
+  if(!out.length)return '';const n=(here.found||[]).length;
+  return t(`Auf der Seite „${here.page}“ hat der Käfer ${n} Fehler bemerkt:`,`On the page "${here.page}" the ladybug noticed ${n} error${n===1?'':'s'}:`)+'\n'+out.join('\n')+'\n'+t('Was ich gerade gemacht habe: ','What I was doing: ')}
+const RP_FOUND_MAX=5;
 function rpClose(){$('rpmodal').style.display='none';if(RP.root===$('rpbody'))RP.root=null}
 ON.rpOpen=()=>rpOpen();ON.rpBug=()=>rpBug();ON.rpClose=()=>rpClose();
 $('rpmodal').addEventListener('click',e=>{if(e.target===$('rpmodal'))rpClose()});
