@@ -35,6 +35,9 @@ class Static(unittest.TestCase):
         self.assertIn("keyFill($('cvlrows'),parts)", js)
         self.assertIn('class="ld-row', js[js.index("function fillConvos"):])
         self.assertIn("esc(convoName(c))", js)
+        # the wide view changes the card's padding: switched one frame later, or Chromium reports a ResizeObserver loop
+        # as a page error (Dauer-Wackler test_profile_gets_the_same_shell, V01.1.457)
+        self.assertIn("requestAnimationFrame(()=>e.target.classList.toggle('cvwide',w))", js)
         self.assertIn("const convoName=c=>(window.TOPICS_ON&&c.name)||c.title||'…'", js)
         # one source for the groups: the app view's sheet takes the same helpers
         av = read("js", "appview.js")

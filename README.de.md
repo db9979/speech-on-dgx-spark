@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.457** Fix iPhone-App: Verlauf-Liste in Teile zerlegt, damit der Swift-Compiler sie wieder rechtzeitig prüft; ROT-FIX: Gesprächskarte schaltet die breite Ansicht ein Bild später um
 - **V01.1.456** Nextcloud-Ideen 1: Geburtstage als eigener Kalender und ein Hinweis bei neuer Anmeldung
 - **V01.1.455** ROT-FIX: der Browser-Test der Gesprächsliste tippt auf einem Gerät ohne Zeiger auf die Antwort statt zu zeigen
 - **V01.1.454** Gespräche nach Thema: neues Gespräch nach Pause oder Themenwechsel, mit Symbol und kurzem Namen, Anheften und Archiv
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.450** ROT-FIX: der Browser-Test der Käfer-Schaltfläche zählt die Fehler der Seite so, wie die Seite sie notiert hat, statt eine feste Zahl zu erwarten
 - **V01.1.449** Fix Meldung 4: ein „Ja“ auf die Rückfrage-Karte nach einer Antwort aus Mail (Tagesüberblick) behält diese Antwort samt Frage im Gespräch, gesperrt wie jede Mail-Folgefrage
 - **V01.1.448** Schwachstellen behoben: brotli, certifi, filelock, nltk und Pillow auf tars angehoben, pip 26.3 in allen Umgebungen aus der Sperrdatei
-- **V01.1.447** Nachtrag zu V01.1.446: Praxistest P891 (Spark-Konsole) in der Liste
 
 
 

@@ -634,9 +634,23 @@ struct HistoryView: View {
     private var shown: [SavedConvo] {
         let q = search.trimmingCharacters(in: .whitespaces).lowercased()
         guard !q.isEmpty else { return list }
-        return list.filter { c in
-            c.title.lowercased().contains(q) || c.name.lowercased().contains(q) || c.msgs.contains { ($0["content"] as? String)?.lowercased().contains(q) == true }
+        return list.filter { Self.matches($0, q) }
+    }
+
+    /// One conversation found by the search: its title, its name or one of its messages (split up so the compiler
+    /// type-checks it quickly).
+    private static func matches(_ c: SavedConvo, _ q: String) -> Bool {
+        if c.title.lowercased().contains(q) || c.name.lowercased().contains(q) { return true }
+        return c.msgs.contains { m in
+            let text = m["content"] as? String ?? ""
+            return text.lowercased().contains(q)
         }
+    }
+
+    /// The shown conversations by day, newest first (ThingsView.days).
+    private var groups: [(Int, [SavedConvo])] {
+        let sorted: [SavedConvo] = shown.sorted { $0.updated > $1.updated }
+        return ThingsView.days(sorted, at: \SavedConvo.updated)
     }
 
     var body: some View {
@@ -652,7 +666,7 @@ struct HistoryView: View {
                     List {
                         if let keptAt { StandNote(at: keptAt, loading: loading).listRowSeparator(.hidden) }
                         // by day like the panel's list (ichteile.js ldDayGroup): Heute, Gestern, Letzte 7 Tage, Älter
-                        ForEach(ThingsView.days(shown.sorted { $0.updated > $1.updated }, at: \.updated), id: \.0) { g, items in
+                        ForEach(groups, id: \.0) { g, items in
                             Section(ThingsView.dayNames[g]) {
                                 ForEach(items) { c in
                                     Button {
@@ -681,13 +695,16 @@ struct HistoryView: View {
 
     /// One row: the title, the last answer in one line, the time on the right (today the hour, else day and month).
     private func row(_ c: SavedConvo) -> some View {
-        let last = c.msgs.last { ($0["role"] as? String) == "assistant" }?["content"] as? String ?? ""
+        let answer: [String: Any]? = c.msgs.last { ($0["role"] as? String) == "assistant" }
+        let last: String = answer?["content"] as? String ?? ""
+        let title: String = !c.name.isEmpty ? c.name : (c.title.isEmpty ? String(localized: "Gespräch") : c.title)
         let today = Calendar.current.isDateInToday(c.updated)
+        let fmt: Date.FormatStyle = today ? .dateTime.hour().minute() : .dateTime.day().month()
         return HStack(alignment: .firstTextBaseline) {
             VStack(alignment: .leading, spacing: 3) {
                 HStack(spacing: 4) {
                     if c.pin { Image(systemName: "pin.fill").font(.caption).foregroundStyle(.secondary) }
-                    Text(!c.name.isEmpty ? c.name : c.title.isEmpty ? String(localized: "Gespräch") : c.title).lineLimit(1)
+                    Text(title).lineLimit(1)
                 }
                 if !last.isEmpty {
                     Text(verbatim: last.replacingOccurrences(of: "\n", with: " ")).lineLimit(1)
@@ -695,7 +712,6 @@ struct HistoryView: View {
                 }
             }
             Spacer(minLength: 8)
-            let fmt: Date.FormatStyle = today ? .dateTime.hour().minute() : .dateTime.day().month()
             Text(c.updated, format: fmt)
                 .font(.footnote).monospacedDigit().foregroundStyle(.secondary)
         }
