@@ -47,7 +47,18 @@ GRADLE_PLUGIN = {"com.android.application": "com.android.tools.build:gradle",
                  "org.jetbrains.kotlin.android": "org.jetbrains.kotlin:kotlin-gradle-plugin"}
 GRADLE_ID = re.compile(r'id\("([a-z0-9.]+)"\) version "([0-9][0-9A-Za-z.\-]{0,39})"')
 NUGET = re.compile(r'<PackageReference Include="([A-Za-z0-9.\-]{1,80})" Version="([0-9][0-9A-Za-z.\-]{0,39})"')
+# every file apps() reads, relative to the repository root (GitHub's nightly check fetches exactly these, pakete.yml)
+IOS_RESOLVED = "ios/Spark.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved"
+ANDROID_GRADLE = "android/build.gradle.kts"
+NUGET_DATEIEN = ("tools/begleiter/windows/SparkBegleiter.csproj", "tools/begleiter/outlook-classic/SparkOutlook.csproj",
+                 "tools/sparkhilfe/windows/SparkHilfe.csproj")
+NPM_DATEIEN = ("pebble/package.json",)
 VENDOR_JS = (("app/panel/fernbild.py", re.compile(r'^GUAC_VERSION = "([0-9][0-9.]{0,19})"', re.M), "guacamole-common-js"),)
+
+
+def app_dateien():
+    """Every file apps() reads, relative to the repository root."""
+    return (IOS_RESOLVED, ANDROID_GRADLE) + NUGET_DATEIEN + NPM_DATEIEN + tuple(rel for rel, _, _ in VENDOR_JS)
 
 
 def _lies(root, rel):
@@ -65,7 +76,7 @@ def apps(root):
     ships vendored (guacamole-common-js)."""
     out = []
     try:
-        res = json.loads(_lies(root, "ios/Spark.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved") or "{}")
+        res = json.loads(_lies(root, IOS_RESOLVED) or "{}")
     except ValueError:
         res = {}
     for pin in res.get("pins") or []:
@@ -73,13 +84,12 @@ def apps(root):
         m = re.fullmatch(r"https://(github\.com/[A-Za-z0-9_.\-]{1,60}/[A-Za-z0-9_.\-]{1,60}?)(?:\.git)?", loc)
         if m and FIX.fullmatch(ver):
             out.append(("ios", m.group(1), ver, "SwiftURL"))
-    for n, v in GRADLE_ID.findall(_lies(root, "android/build.gradle.kts")):
+    for n, v in GRADLE_ID.findall(_lies(root, ANDROID_GRADLE)):
         if n in GRADLE_PLUGIN:
             out.append(("android", GRADLE_PLUGIN[n], v, "Maven"))
-    for rel in ("tools/begleiter/windows/SparkBegleiter.csproj", "tools/begleiter/outlook-classic/SparkOutlook.csproj",
-                "tools/sparkhilfe/windows/SparkHilfe.csproj"):
+    for rel in NUGET_DATEIEN:
         out += [("begleiter", n, v, "NuGet") for n, v in NUGET.findall(_lies(root, rel))]
-    for rel in ("pebble/package.json",):
+    for rel in NPM_DATEIEN:
         try:
             deps = json.loads(_lies(root, rel) or "{}").get("dependencies") or {}
         except ValueError:

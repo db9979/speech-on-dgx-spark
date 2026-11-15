@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.460** Fix: die nächtliche Paketprüfung auf GitHub läuft wieder
 - **V01.1.459** Nextcloud-Ideen 2a: Abwesenheit mit Vertretung, im Kalender und in Chats, Anrufe klingeln nicht
 - **V01.1.458** ROT-FIX: der Browser-Test der Profil-Hülle schaltet Chats selbst aus; iPhone-Verlauf baut wieder
 - **V01.1.457** Fix iPhone-App: Verlauf-Liste in Teile zerlegt, damit der Swift-Compiler sie wieder rechtzeitig prüft; ROT-FIX: Gesprächskarte schaltet die breite Ansicht ein Bild später um
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.453** Gespräche als Liste neben dem Gespräch statt Auswahlfeld, ruhige Antworten mit Knöpfen erst beim Zeigen
 - **V01.1.452** Spark-Clients: Kasten „Ein Programm verbinden“ im Panel und in der Spark-Konsole mit Adresse, Ports, Modellnamen, Schlüssel, Zertifikat zum Laden, Prüfbefehl und Fehlerliste; Schritt-für-Schritt-Anleitung in der Doku; Grenzen je Client beim Anlegen und später einstellbar, auch „Keine Grenzen“
 - **V01.1.451** Spark koppeln (E4c): am Pi unter Einstellungen → Spark → Spark koppeln Name und Code aus der Spark-Konsole eintragen statt `sudo speech-spark teilen koppeln`; root koppelt über den festen Dienst `speech-spark-koppeln`; in der Spark-Konsole Modelle laden, messen und eigene hinzufügen, der Überblick zeigt nur Hinweise zum Spark selbst
-- **V01.1.450** ROT-FIX: der Browser-Test der Käfer-Schaltfläche zählt die Fehler der Seite so, wie die Seite sie notiert hat, statt eine feste Zahl zu erwarten
 
 
 

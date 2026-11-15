@@ -33,6 +33,14 @@ jobs:
           persist-credentials: false
           sparse-checkout: |
             tools/pakete_pruefen.py
+            app/osv.py
+            ios/Spark.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
+            android/build.gradle.kts
+            tools/begleiter/windows/SparkBegleiter.csproj
+            tools/begleiter/outlook-classic/SparkOutlook.csproj
+            tools/sparkhilfe/windows/SparkHilfe.csproj
+            pebble/package.json
+            app/panel/fernbild.py
             app/requirements-panel.lock
             app/requirements-ytdlp.lock
             app/modelle.py

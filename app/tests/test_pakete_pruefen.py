@@ -142,6 +142,36 @@ class Pakete(unittest.TestCase):
         # a hole published tonight must not turn main red without a push
         self.assertNotIn("pakete_pruefen", helpers.repo_file(".github", "workflows", "tests.yml"))
 
+    def test_nightly_checkout_holds_every_file_the_check_reads(self):
+        """pakete.yml fetches only a few files (sparse checkout); the run of 2026-11-14 died because app/osv.py was not
+        among them. Here the check runs in a copy with exactly those files and must read the same as from the whole
+        repository."""
+        root = os.path.dirname(helpers.APP)
+        if not os.path.exists(os.path.join(root, "tools", "pakete_pruefen.py")):
+            self.skipTest("tools/ is not part of this copy")
+        text = helpers.repo_file(".github", "workflows", "pakete.yml")
+        block = re.search(r"sparse-checkout: \|\n((?:\s+\S+\n)+)", text)
+        self.assertIsNotNone(block)
+        listed = [x.strip() for x in block.group(1).splitlines() if x.strip()]
+        osv = lade("pakete_pruefen.py").osv
+        for rel in ("app/osv.py",) + osv.app_dateien():
+            self.assertIn(rel, listed)
+        with tempfile.TemporaryDirectory() as d:
+            for rel in listed:
+                src = os.path.join(root, rel)
+                self.assertTrue(os.path.isfile(src), rel)
+                os.makedirs(os.path.dirname(os.path.join(d, rel)), exist_ok=True)
+                with open(src, "rb") as a, open(os.path.join(d, rel), "wb") as b:
+                    b.write(a.read())
+            spec = importlib.util.spec_from_file_location("pakete_sparse", os.path.join(d, "tools", "pakete_pruefen.py"))
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)                                 # imports app/osv.py from the copy
+            whole = lade("pakete_pruefen.py")
+            self.assertEqual(mod.gepinnt(d), whole.gepinnt(root))
+            self.assertEqual(mod.motoren(d), whole.motoren(root))
+            self.assertEqual(mod.osv.apps(d), whole.osv.apps(root))
+            self.assertTrue(mod.osv.apps(d))
+
 
 
 def lade(name):
