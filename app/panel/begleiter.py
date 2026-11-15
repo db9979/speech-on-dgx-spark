@@ -2619,6 +2619,13 @@ def busy(uid, now=None):
     return bool(q and now < q["until"])
 
 
+def quiet_why(uid, now=None):
+    """Why the profile is busy now ("call", "present", "termin" from abwesenheit.py), "" when it is not."""
+    now = time.time() if now is None else now
+    q = _quiet.get(uid)
+    return q.get("why", "") if q and now < q["until"] else ""
+
+
 def set_busy(uid, on, why="call", now=None):
     """Marks the profile busy (for QUIET_TTL) or not; returns the held titles when a busy time ends, else None."""
     now = time.time() if now is None else now

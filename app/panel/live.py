@@ -1840,6 +1840,8 @@ def snapshot(view="admin", now=None):
             x["sub"] += f" · heute {anmeldehinweis.heute()} Anmelde-Hinweise"
         if x["id"] == "cal" and weg.get("on"):   # Abwesenheit: profiles away now, calls not rung today (numbers only)
             x["sub"] += f" · {weg['weg']} abwesend, heute {weg['anrufe']} Anrufe nicht geklingelt"
+        if x["id"] == "cal" and weg.get("busy_on"):   # Beschäftigt im Termin: profiles busy now, times today (numbers)
+            x["sub"] += f" · {weg['termin']} gerade im Termin, heute {weg['termine']}-mal beschäftigt"
         if x["id"] == "cal" and kal.get("on"):   # Kalender teilen: shares in numbers (never a name or an appointment)
             x["sub"] += f" · {kal.get('shares', 0)} geteilt von {kal.get('owners', 0)} Profilen"
         if x["id"] == "mail" and post_page:      # Mails ordnen: messages ordered on the page today (a number)

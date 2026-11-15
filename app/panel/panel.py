@@ -498,6 +498,10 @@ async def stability():
                     await zustellung.follow()
                 except Exception as e:
                     print("push: nachfassen", type(e).__name__, flush=True)
+                try:   # Beschäftigt im Termin: quiet while an appointment runs (abwesenheit.py)
+                    await abwesenheit.minute()
+                except Exception as e:
+                    print("calendar: busy failed", type(e).__name__, flush=True)
                 try:   # Zurückstellen: mails whose time came go back into the inbox, unread (spaeter.py)
                     await asyncio.to_thread(spaeter.due)
                 except Exception as e:

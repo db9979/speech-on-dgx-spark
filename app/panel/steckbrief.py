@@ -585,6 +585,13 @@ STECKBRIEFE = {
                                 "festen Regeln (abwesenheit.py), nie das Modell"),
         begleiter="panel",
         modul=("abwesenheit", "post", "Abwesenheit: von–bis, Text, Vertretung; Kalender, Chats, Anrufe, Mail-Antwort")),
+    # abwesenheit.minute (Nextcloud-Ideen 1, Stufe 2b): while an appointment of the own calendars runs, the profile is
+    # busy like the Begleiter's „Nicht stören“: no announcements, notes wait, calls do not ring, chats say „beschäftigt“
+    "beschaeftigt": Steckbrief(de="Beschäftigt im Termin", en="Busy in an appointment", gruppe="day",
+        schalter=("calendar_busy", "calendar"), anleitung="beschaeftigt", parent="calendar", me="calbox",
+        ohne_werkzeug=("regel", "läuft von selbst jede Minute aus der Kopie der Kalender (abwesenheit.minute), nie "
+                                "das Modell"),
+        begleiter="panel"),
     # kalenderserver.py (Dominik 2026-10-19 „1a-5a“, Spark-Kalender Stufe 4): the profile's Spark calendars for the
     # calendar app of the iPhone (CalDAV, an app password per profile)
     "calserver": Steckbrief(de="Kalender-Server für Kalender-Apps", en="Calendar server for calendar apps",

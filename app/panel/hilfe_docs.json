@@ -10148,6 +10148,14 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Beschäftigt im Termin (Nextcloud-Idee, standardmäßig aus)",
+"text": "Beschäftigt im Termin (Nextcloud-Idee, standardmäßig aus): Solange ein Termin mit Uhrzeit aus den eigenen Kalendern eines Profils läuft (nie ganztägig, nie ein geteilter), ist es „beschäftigt“ wie beim „Nicht stören“ des Begleiters (begleiter.set_busy, Grund termin): keine Durchsagen an seine Lautsprecher, Mitteilungen warten und kommen nach dem Termin als eine Zusammenfassung „Während du beschäftigt warst“ (Alarme, Erinnerungen und Sicherheitshinweise immer, begleiter.URGENT), Spark-Anrufe klingeln nicht, und in Chats steht nur das Wort „beschäftigt“, nie der Termin. Admin-Schalter Funktionen → Kalender und Tagesbriefing → „Beschäftigt im Termin“ (chat.calendar_busy, aus; baut auf Kalender). abwesenheit.minute() prüft jede Minute aus der Kopie der Kalender (calendars.events, ältere Blöcke sofort) für die Profile, deren Kalender der Spark ohnehin frisch hält, höchstens 5 Sekunden je Profil; ein eigenes „Nicht stören“ des Begleiters bleibt unberührt. Live (Knoten Kalender) zeigt nur Anzahlen."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Termine: änderbar oder nur lesen, mit ihrem Text",
 "text": "Termine: änderbar oder nur lesen, mit ihrem Text: Auf der Seite Kalender trägt ein Termin, den die Seite nicht ändern kann, ein 🔒 in Woche, Tag und Liste; seine Karte nennt mit festen Worten den Grund (calendars._why): Abo-Link (iCal), geteilter Kalender, wiederholter Termin (Serie im Kalender-Programm ändern) oder ein hier nicht änderbarer Kalender. Die Karte zeigt auch Text (DESCRIPTION, „Notiz“) und Link (URL) des Termins, nur als Text: höchstens 2000 Zeichen, ohne Steuerzeichen, Links nur mit http oder https, sie öffnen sich nie von selbst; lange Notizen zeigen 8 Zeilen und „Weiter lesen“. Ein privater Termin aus einem geteilten Kalender bleibt „belegt“, ohne Text und Link. Dasselbe in der iPhone-App (Schloss, Abschnitt „Notiz“, Grund in der Karte)."
 },
@@ -14038,6 +14046,14 @@
 "head": "Mein Tag",
 "title": "Mein Tag",
 "text": "- Abwesenheit (Funktionen → Mein Tag → „Abwesenheit“; baut auf „Kalender“; Kalender → Einstellungen): Du trägst ein, von wann bis wann du weg bist, einen Text für Antworten und wer dich vertritt."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Mein Tag",
+"title": "Mein Tag",
+"text": "- Beschäftigt im Termin (Funktionen → Mein Tag → „Beschäftigt im Termin“; baut auf „Kalender“; Kalender → Einstellungen): Solange ein Termin mit Uhrzeit aus deinen eigenen Kalendern läuft, bist du „beschäftigt“: keine Durchsagen an deine Lautsprecher, Mitteilungen warten und kommen nach dem Termin als eine Zusammenfassung (Alarme, Erinnerungen und Sicherhei …"
 },
 {
 "lang": "de",
@@ -27716,6 +27732,14 @@
 "src": "assistant",
 "file": "Assistant and panel",
 "head": "Voice chat",
+"title": "Busy in an appointment (Nextcloud idea, off by default)",
+"text": "Busy in an appointment (Nextcloud idea, off by default): While an appointment with a time from a profile's own calendars runs (never all day, never a shared one), it is \"busy\" like with the Begleiter's \"Do not disturb\" (begleiter.set_busy, reason termin): no announcements to its speakers, notes wait and come after the appointment as one summary \"While you were busy\" (alarms, reminders and safety notes always, begleiter.URGENT), Spark calls do not ring, and the chats show only the word \"busy\", never the appointment. Admin switch Features → Calendar and daily briefing → \"Busy in an appointment\" (chat.calendar_busy, off; builds on Calendar). abwesenheit.minute() checks every minute from the copy of the calendars (calendars.events, older blocks at once) for the profiles whose calendars the Spark keeps fresh anyway, at most 5 seconds per profile; the Begleiter's own \"Do not disturb\" stays untouched. Live (node Calendar) shows numbers only."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
 "title": "Appointments: changeable or read only, with their text",
 "text": "Appointments: changeable or read only, with their text: on the Calendar page an appointment the page cannot change carries a 🔒 in week, day and list; its card names the reason in fixed words (calendars._why): subscription link (iCal), shared calendar, repeating appointment (change the series in the calendar app) or a calendar that cannot be changed here. The card also shows the appointment's text (DESCRIPTION, \"Note\") and link (URL), as text only: at most 2000 characters, no control characters, links only with http or https, never opening by themselves; long notes show 8 lines and \"Read on\". A private appointment from a shared calendar stays \"belegt\" (busy), without text or link. The same in the iPhone app (lock, section \"Note\", reason in the card)."
 },
@@ -31550,6 +31574,14 @@
 "head": "My day",
 "title": "My day",
 "text": "- Away (Features → My day → \"Away\"; builds on \"Calendar\"; Calendar → Settings): You enter from when until when you are away, a text for replies and who stands in."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My day",
+"title": "My day",
+"text": "- Busy in an appointment (Features → My day → \"Busy in an appointment\"; builds on \"Calendar\"; Calendar → Settings): While an appointment with a time from your own calendars runs, you are \"busy\": no announcements to your speakers, notes wait and come as one summary after the appointment (alarms, reminders and safety notes always come), Spark calls do n …"
 },
 {
 "lang": "en",

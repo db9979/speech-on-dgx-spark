@@ -229,7 +229,7 @@ async def start(uid, cid, video, dev, now=None, client="web"):
     rufen.taken(uid, cid)   # a call the assistant kept for this chat (Anrufe per Assistent) is done
     _count.today()["calls"] += 1
     _live("📞 Anruf beginnt")
-    gone = not busy and bool(profiles.away(other))   # Abwesend (abwesenheit.py): never rings, a missed call at once
+    gone = not busy and bool(profiles.away(other))   # Abwesend or in an appointment (abwesenheit.py): a missed call
     if busy or gone or _quiet(other):
         await end(other, call, "busy" if busy else "quiet", now=now)
         _log("not rung", why="busy" if busy else "away" if gone else "quiet")

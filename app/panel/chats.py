@@ -485,7 +485,9 @@ def listing(uid, now=None):
             item["with"] = other
             item["can_send"] = takes(other, uid)
             gone = None if RID.fullmatch(other) else profiles.away(other)   # Abwesend, never another Spark
-            if gone:
+            if gone and gone.get("busy"):
+                item["busy"] = True               # Beschäftigt im Termin: the word only, never the appointment
+            elif gone:
                 item["away"] = gone["bis"]
         if c.get("kind") == "priv":
             import chatsec
@@ -563,7 +565,9 @@ def items(uid, cid, before="", now=None):
            "private": c.get("kind") == "priv", "fixed": bool(c.get("fixed")), "far": c.get("kind") == "far",
            "far_home": bool(c.get("home")), **({"addr": _far_addr(c, uid)} if c.get("kind") == "far" else {})}
     gone = profiles.away(others[0]) if c.get("kind") in ("one", "priv") and others else None
-    if gone:
+    if gone and gone.get("busy"):
+        out["busy"] = True                 # Beschäftigt im Termin: the word only
+    elif gone:
         out["away"] = gone["bis"]          # Abwesend: „abwesend bis …“ under the name
     if spans(c):
         import verbundgruppe

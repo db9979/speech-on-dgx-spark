@@ -13351,6 +13351,16 @@
         }
       }
     },
+    "beschäftigt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "busy"
+          }
+        }
+      }
+    },
     "Geburtstag aus deinen Kontakten; ändern lässt er sich in der Kontaktkarte.": {
       "localizations": {
         "en": {

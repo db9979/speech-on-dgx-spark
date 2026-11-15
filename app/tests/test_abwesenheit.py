@@ -1,12 +1,16 @@
-"""Abwesenheit (Nextcloud-Ideen 1, abwesenheit.py): an entry from–until under Kalender → Einstellungen.
+"""Abwesenheit and Beschäftigt im Termin (Nextcloud-Ideen 1, abwesenheit.py): an entry from–until under Kalender → Einstellungen.
 
 - Off (chat.away, default off): the endpoint says no, no calendar „Abwesenheit“, nobody is away.
 - On: saved sealed (abwesenheit.bin, never plain text); wrong days are refused; the calendar shows one read-only
   all-day entry; the chats list and the chat show „abwesend bis …“ for the other one; a Spark call does not ring (a
   missed one at once); the mail thread's aktiv() gives {von, bis, text} only with „Mail-Antwort“; ON_CHANGE after
   each save and delete; deleting ends it everywhere.
+Beschäftigt im Termin (chat.calendar_busy, off): only while an appointment with a time runs (never all day), busy
+like the Begleiter's „Nicht stören“ (notes wait, one summary after), never over the Begleiter's own busy time; chats get
+the word only. The appointments are given, the time is fixed.
 The days are counted from today in both directions (from yesterday to tomorrow), so no time of day changes a result.
 """
+import asyncio
 import datetime
 import json
 import os
@@ -156,6 +160,75 @@ class Abwesenheit(unittest.TestCase):
         import calendars
         self.assertEqual(calendars.EXTRA.count(abwesenheit.kalender), 1)
         self.assertEqual(profiles.AWAY.count(abwesenheit.away), 1)
+
+
+
+class Beschaeftigt(unittest.TestCase):
+    NOW = 1773230400                        # 2026-03-11 12:00 UTC
+
+    @classmethod
+    def setUpClass(cls):
+        cls.c, cls.uid = profile("Termin Tilda")
+
+    def setUp(self):
+        import begleiter
+        import calendars
+        self.b, self.cal = begleiter, calendars
+        helpers.keep_chat(self, "calendar_busy", "calendar")
+        helpers.set_config(calendar_busy=True, calendar=True)
+        self.evs = []
+        p = mock.patch.object(calendars, "events", new=mock.AsyncMock(side_effect=lambda *a, **k: (self.evs, [])))
+        p.start()
+        self.addCleanup(p.stop)
+        self.sent = []
+        r = mock.patch.object(begleiter, "release", new=mock.AsyncMock(side_effect=lambda uid, held: self.sent.append(held)))
+        r.start()
+        self.addCleanup(r.stop)
+        u = mock.patch.dict(calendars._used, {self.uid: self.NOW}, clear=True)   # only this profile is looked at
+        u.start()
+        self.addCleanup(u.stop)
+
+    def tearDown(self):
+        self.b._quiet.pop(self.uid, None)
+        abwesenheit._termin.discard(self.uid)
+
+    def at(self, h, m=0):
+        return datetime.datetime(2026, 3, 11, h, m, tzinfo=datetime.timezone.utc)
+
+    def tick(self, plus=0):
+        return asyncio.run(abwesenheit.minute(self.NOW + plus))
+
+    def test_busy_only_in_an_appointment_with_a_time(self):
+        self.evs = [{"start": self.at(0), "end": self.at(23, 59), "allday": True}]
+        self.tick()
+        self.assertFalse(self.b.busy(self.uid, self.NOW))
+        self.evs = [{"start": self.at(11, 30), "end": self.at(12, 30), "allday": False}]
+        self.assertEqual(self.tick(), 1)
+        self.assertEqual(self.b.quiet_why(self.uid, self.NOW), "termin")
+        self.assertTrue(self.b.hold(self.uid, "Neue Mail", "pro-mail", now=self.NOW + 10))     # a note waits
+        self.assertFalse(self.b.hold(self.uid, "Notaus", "notaus", now=self.NOW + 10))        # never held
+        self.assertEqual(profiles.away(self.uid)["busy"], True)
+        self.assertNotIn("11:30", profiles.away(self.uid)["satz"])
+        self.evs = [{"start": self.at(11, 30), "end": self.at(12, 0, ), "allday": False}]
+        self.tick(60)
+        self.assertFalse(self.b.busy(self.uid, self.NOW + 60))
+        self.assertEqual([h["held"] for h in self.sent], [["Neue Mail"]])                    # one summary after
+        self.assertIsNone(profiles.away(self.uid))
+
+    def test_off_never(self):
+        helpers.set_config(calendar_busy=False)
+        self.evs = [{"start": self.at(11), "end": self.at(13), "allday": False}]
+        self.assertEqual(self.tick(), 0)
+        self.assertFalse(self.b.busy(self.uid, self.NOW))
+
+    def test_the_begleiters_own_busy_time_stays(self):
+        self.b.set_busy(self.uid, True, "call", self.NOW)
+        self.evs = [{"start": self.at(11), "end": self.at(13), "allday": False}]
+        self.tick()
+        self.assertEqual(self.b.quiet_why(self.uid, self.NOW), "call")
+        self.evs = []
+        self.tick(30)
+        self.assertEqual(self.b.quiet_why(self.uid, self.NOW + 30), "call")   # never ended by the calendar
 
 
 if __name__ == "__main__":

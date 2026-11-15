@@ -285,6 +285,7 @@ FEATURES = (
     F(**steckbrief.feature("calserver")),
     F(**steckbrief.feature("calbday")),
     F(**steckbrief.feature("abwesend")),
+    F(**steckbrief.feature("beschaeftigt")),
     F(**steckbrief.feature("weather")),
     # mail and contacts
     F(**steckbrief.feature("mail")),

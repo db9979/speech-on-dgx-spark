@@ -6194,6 +6194,13 @@
 "titel": "Abwesenheit eintragen",
 "text": "Admin: Funktionen → Kalender und Tagesbriefing → „Abwesenheit“ an. Kalender → Einstellungen → Abwesenheit: Von gestern, Bis übermorgen, Text und Vertretung „Sabine“ eintragen, Speichern. Oben steht „aktiv bis …“. Seite Kalender: links der Kalender „Abwesenheit“ mit Schloss und ein ganztägiger Eintrag „Abwesend · Vertretung Sabine“. Ein anderes Profil sieht in Chats neben deinem Namen „abwesend bis …“; ruft es dich per Spark-Anruf an, klingelt nichts, der Anruf steht als verpasst im Chat. Sagt es „Ruf <dein Name> an“, hört es vorher „… ist bis … weg, Vertretung Sabine.“ „Abwesenheit beenden“: alles sofort weg. iPhone-App (nach dem nächsten TestFlight): Kalender → Flugzeug-Knopf zeigt und ändert dieselbe Abwesenheit.",
 "thread": "Ideen aus Nextcloud übernehmen"
+},
+{
+"id": "P903",
+"v": 1461,
+"titel": "Beschäftigt im Termin",
+"text": "Admin: Funktionen → Kalender und Tagesbriefing → „Beschäftigt im Termin“ an. Im eigenen Kalender einen Termin mit Uhrzeit von jetzt bis in 15 Minuten eintragen, die Seite Kalender einmal öffnen und eine Minute warten. Dann: eine Durchsage an deinen Lautsprecher kommt nicht an („Ruhezeit“), eine Mitteilung (z. B. eine Erinnerung von „Von selbst“, keine Alarm-Erinnerung) kommt erst nach dem Termin als „Während du beschäftigt warst“, ein anderes Profil sieht in Chats neben deinem Namen „beschäftigt“ und ein Spark-Anruf klingelt nicht. Ganztägige Termine machen nicht beschäftigt. Nach dem Termin ist innerhalb einer Minute alles wie vorher.",
+"thread": "Ideen aus Nextcloud übernehmen"
 }
 ]
 }

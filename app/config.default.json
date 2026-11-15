@@ -302,6 +302,7 @@
     "calendar_server": false,
     "calendar_bdays": false,
     "away": false,
+    "calendar_busy": false,
     "mail": false,
     "mail_tidy": false,
     "mail_manage": false,

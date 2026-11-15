@@ -10,6 +10,14 @@ Regeln des Panels, nie des Modells:
   vorher „Dominik ist bis 4. Januar weg, Vertretung Sabine.“ (rufen._spark_offer);
 - E-Mail: aktiv() gibt dem Mail-Thread {von, bis, text}, wenn „Mail-Antwort“ an ist; die Antwort selbst baut mail.py.
 
+Beschäftigt im Termin (Stufe 2b, eigener Admin-Schalter chat.calendar_busy, aus, baut auf Kalender): läuft gerade ein
+Termin mit Uhrzeit in einem eigenen Kalender des Profils (nie ganztägig, nie ein geteilter), ist das Profil
+„beschäftigt“ wie beim „Nicht stören“ des Begleiters (begleiter.set_busy, Grund "termin"): keine Durchsagen an seine
+Lautsprecher, Mitteilungen warten und kommen danach als eine Zusammenfassung (Alarme, Erinnerungen und
+Sicherheitshinweise immer, begleiter.URGENT), Spark-Anrufe klingeln nicht, in Chats steht nur das Wort „beschäftigt“,
+nie der Termin. minute() prüft das jede Minute aus der Kopie der Kalender (calendars.events, stale) für die Profile,
+deren Kalender der Spark ohnehin frisch hält (calendars._used); höchstens BUSY_WAIT Sekunden je Profil.
+
 Nur mit dem Admin-Schalter chat.away (aus, baut auf Kalender auf), für jedes Profil, das der Admin nicht sperrt; nie
 für Gäste, nie ein Werkzeug fürs Modell. Gespeichert versiegelt im Ordner des Profils (abwesenheit.bin, vorrat.Vorrat):
 die Tage, der Text (höchstens MAX_TEXT Zeichen), die Vertretung (ein Name, höchstens MAX_NAME Zeichen), die Schalter
@@ -20,11 +28,13 @@ Schnittstelle zum Mail-Thread (abgesprochen 2026-11-15): aktiv(uid, now=None) �
 None; ON_CHANGE: Funktionen f(uid), gerufen nach jedem Speichern und Löschen.
 Journal (Bereich Listen): „calendar: away saved | <Profil>“, „calendar: away deleted …“, „calendar: away refused …“.
 """
+import asyncio
 import datetime
 import re
 import threading
 import time
 
+import begleiter
 import calendars
 import features
 import profiles
@@ -33,6 +43,8 @@ from common import DayCounter
 from vorrat import Vorrat
 
 KEY = "abwesend"
+BUSY_KEY = "beschaeftigt"
+BUSY_WAIT = 5                # seconds per profile for the calendar copy
 NAME = "abwesenheit.bin"
 CAL = "Abwesenheit"          # the calendar's name (the page and the app say it in their language, "made": "abwesend")
 MAX_TEXT = 2000
@@ -44,7 +56,8 @@ DATE = re.compile(r"\d{4}-\d{2}-\d{2}")
 ZONE = re.compile(r"[A-Za-z_]+(?:/[A-Za-z0-9_+\-]+){0,2}")
 MONATE = ("Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November",
           "Dezember")
-_count = DayCounter(gespeichert=0, geloescht=0, anrufe=0)
+_count = DayCounter(gespeichert=0, geloescht=0, anrufe=0, termine=0)
+_termin = set()              # profiles busy now because of an appointment (minute())
 _lock = threading.Lock()
 
 
@@ -106,9 +119,55 @@ def satz(uid, now=None):
 
 
 def away(uid, now=None):
-    """profiles.AWAY: {"bis": last day (ISO), "satz": …} while away, else None."""
+    """profiles.AWAY: {"bis": last day (ISO), "satz": …} while away; {"busy": True, "satz": …} while in an appointment
+    (only that, never which); else None."""
     a = jetzt(uid, now)
-    return {"bis": a["bis"], "satz": satz(uid, now)} if a else None
+    if a:
+        return {"bis": a["bis"], "satz": satz(uid, now)}
+    if uid in _termin and features.allowed(BUSY_KEY, uid):
+        return {"bis": "", "busy": True,
+                "satz": f"{(profiles.by_id(uid) or {}).get('name') or 'Die Person'} ist gerade in einem Termin."}
+    return None
+
+
+def im_termin(evs, now):
+    """True when one of the events (calendars.events) with a time of day runs at now (an aware datetime)."""
+    return any(not x.get("allday") and x["start"] <= now < x["end"] for x in evs)
+
+
+async def minute(now=None):
+    """Every minute (panel.every_minute): busy while an appointment runs (begleiter.set_busy "termin"), and not any
+    more after it, then the held notes come as one summary. Returns how many profiles are busy because of one."""
+    now = time.time() if now is None else now
+    t = datetime.datetime.fromtimestamp(now, datetime.timezone.utc)
+    for uid in set(calendars._used) | _termin:
+        busy = False
+        if features.allowed(BUSY_KEY, uid):
+            try:
+                r = await asyncio.wait_for(calendars.events(uid, t - datetime.timedelta(hours=12),
+                                                            t + datetime.timedelta(minutes=1), datetime.timezone.utc,
+                                                            stale=True), BUSY_WAIT)
+            except (asyncio.TimeoutError, OSError, ValueError):
+                continue                      # the calendar is slow: as it was, asked again next minute
+            busy = bool(r) and im_termin(r[0], t)
+        why = begleiter.quiet_why(uid, now)
+        if busy:
+            if why and why != "termin":       # the Begleiter's own „Nicht stören“ already holds everything
+                continue
+            held = begleiter.set_busy(uid, True, "termin", now)
+            if held:                          # a busy time that ran out: its summary first, then busy again
+                await begleiter.release(uid, held)
+                begleiter.set_busy(uid, True, "termin", now)
+            if uid not in _termin:
+                _termin.add(uid)
+                _count.bump("termine")
+                print(f"calendar: busy on, appointment | {_who(uid)}", flush=True)
+        elif uid in _termin:
+            _termin.discard(uid)
+            if why == "termin":
+                await begleiter.release(uid, begleiter.set_busy(uid, False, "termin", now))
+            print(f"calendar: busy off | {_who(uid)}", flush=True)
+    return len(_termin)
 
 
 def _clean(text, n):
@@ -200,7 +259,9 @@ def for_live():
         if a:
             t0, t1 = span(a)
             n += t0 <= now < t1
-    return {"on": bool(features.chat_cfg().get("away")), "weg": n, "anrufe": _count.counts()["anrufe"]}
+    return {"on": bool(features.chat_cfg().get("away")), "weg": n, "anrufe": _count.counts()["anrufe"],
+            "busy_on": bool(features.chat_cfg().get("calendar_busy")), "termin": len(_termin),
+            "termine": _count.counts()["termine"]}
 
 
 calendars.EXTRA.append(kalender)

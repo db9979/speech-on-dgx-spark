@@ -27,6 +27,8 @@ struct ChatSummary: Identifiable, Hashable {
     var date: Date?
     /// Abwesend (abwesenheit.py): the other one is away until this day
     var away: Date?
+    /// Beschäftigt im Termin: only the word, never the appointment
+    var busy = false
 }
 
 /// A photo, file or voice message of a chat message.
@@ -203,6 +205,7 @@ extension SparkAPI {
             c.muted = ((x["mute"] as? NSNumber)?.doubleValue ?? 0) != 0
             c.fixed = x["fixed"] as? Bool ?? false
             c.away = (x["away"] as? String).flatMap { AbwesenheitModel.day($0) }
+            c.busy = x["busy"] as? Bool ?? false
             if let l = x["last"] as? [String: Any] {
                 c.date = Date(timeIntervalSince1970: (l["t"] as? NSNumber)?.doubleValue ?? 0)
                 c.preview = Self.preview(l, group: c.group)
@@ -833,7 +836,9 @@ private struct ChatRow: View {
                     if c.priv { Image(systemName: "lock.fill").font(.caption).foregroundStyle(.secondary) }
                     if c.far { Image(systemName: "globe").font(.caption).foregroundStyle(.secondary) }
                     Text(verbatim: c.title).font(.headline).lineLimit(1)
-                    if let a = c.away {
+                    if c.busy {
+                        Text("beschäftigt").font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                    } else if let a = c.away {
                         Text("abwesend bis \(a.formatted(.dateTime.day().month(.defaultDigits)))").font(.caption).foregroundStyle(.secondary).lineLimit(1)
                     }
                 }
