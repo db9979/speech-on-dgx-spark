@@ -114,6 +114,9 @@ function render(){if(!ON)return;if(manage.classList.contains('on')&&manageSig()!
   else if(TAB==='manage'&&!page&&!pm&&!ownSec()){show=true;const n=manageNav();title=n.title;bl=n.back}
   if(bl&&bl.trim()===title.trim())bl=t('Zurück','Back');
   // Käfer-Symbol (melden.js rpBug): in the bar on top of every page that has the bar, else it stays in the page
+  // the notes of the page (admin.js showAlerts, Dominik 2026-11-15 Variante 2): „● N“ in the bar beside the Käfer; a tap
+  // lays the rows under it (hinweiseAuf, the same rows as the panel's pill)
+  if(show&&typeof ALERTS_N==='number'&&ALERTS_N)th+=`<button type="button" class="apib aphinw${ALERTS_BAD?' bad':''}" data-ap="hinw" data-hinw aria-expanded="false" aria-controls="alerts" aria-label="${esc(hinwWort(ALERTS_N))}"><span class="adot"></span>${ALERTS_N}</button>`;
   if(show&&window.rpMay)th+=`<button type="button" class="apib" data-ap="bug" aria-label="${esc(t('Fehler oder Wunsch melden','Report a fault or a wish'))}">${SV('bug')}</button>`;
   B.classList.toggle('apbaron',show);   // „Funktionen ‹ Funktionen“
   bar.hidden=!show;$('aptitle').textContent=title;back.hidden=!bl;back.querySelector('span').textContent=bl;

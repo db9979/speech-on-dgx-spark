@@ -210,17 +210,21 @@ struct StatusView: View {
     var body: some View {
         List {
             let alerts = d["alerts"] as? [[String: Any]] ?? []
-            // like the panel's notes on top (admin.js showAlerts): "bad" always open, from two others on they fold into
-            // one line with the count, folded by default and remembered on this device
+            // like the panel's pill „● N Hinweise“ (admin.js showAlerts, Dominik 2026-11-15 „meldungen oben sind zu arg“):
+            // one folded line with the count, red with a "bad" one; opened the red ones come first. Folded by default and
+            // remembered on this device; services gone on the same device are already one row (dienstwacht.alerts)
             let bad = alerts.filter { $0["level"] as? String == "bad" }, rest = alerts.filter { $0["level"] as? String != "bad" }
             Section("Braucht dich") {
                 if alerts.isEmpty { Label("Alles in Ordnung", systemImage: "checkmark.circle").foregroundStyle(Theme.ok) }
-                alertRows(bad)
-                if rest.count > 1 {
-                    DisclosureGroup(isExpanded: $alertsOpen) { alertRows(rest) } label: {
-                        Label("\(rest.count) Hinweise", systemImage: "exclamationmark.triangle.fill").foregroundStyle(Theme.warn)
+                else {
+                    DisclosureGroup(isExpanded: $alertsOpen) { alertRows(bad + rest) } label: {
+                        Label {
+                            Text(alerts.count == 1 ? LocalizedStringKey("1 Hinweis") : LocalizedStringKey("\(alerts.count) Hinweise"))
+                        } icon: {
+                            Image(systemName: "circle.fill").imageScale(.small).foregroundStyle(bad.isEmpty ? Theme.warn : Theme.bad)
+                        }
                     }
-                } else { alertRows(rest) }
+                }
             }
             let sys = d["system"] as? [String: Any] ?? [:], gpu = d["gpu"] as? [String: Any] ?? [:]
             // people with a request in the last 10 minutes (aktiv.py, the same number as on the case's display)

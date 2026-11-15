@@ -354,17 +354,15 @@ details.adv{margin-top:18px;border-top:1px solid var(--line);padding-top:10px}de
 .msg.elsewhere{opacity:.6}
 .msg.elsewhere .bubble{font-size:13px;font-style:italic;color:var(--mut)}
 .token{font-family:ui-monospace,monospace;word-break:break-all;user-select:all}
-#alerts:empty{display:none}#alerts .note.bad{background:color-mix(in srgb,var(--bad) 12%,transparent);border-color:color-mix(in srgb,var(--bad) 30%,transparent)}
-body.guest #alerts,body.inchat #alerts{display:none}
-/* the alerts: one slim line each, the rest folded into one line with the count (admin.js showAlerts) */
-#alerts .note.anote{padding:5px 6px 5px 12px;margin-bottom:6px;font-size:14px;border-radius:10px;min-height:36px;box-sizing:border-box}
-#alerts .note.anote>span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#alerts .note.anote>.b{padding:3px 10px;font-size:13px;min-height:0}
-#alerts details.afold{margin-bottom:10px;border-radius:10px;border:1px solid color-mix(in srgb,var(--warn) 25%,transparent);background:color-mix(in srgb,var(--warn) 7%,transparent)}
-#alerts details.afold>summary{display:flex;gap:8px;align-items:center;cursor:pointer;padding:7px 12px;font-size:14px;min-height:36px;box-sizing:border-box}
-#alerts details.afold>summary>span{flex:1;min-width:0;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#alerts details.afold>.note.anote{margin:0 6px 6px;background:transparent}
-#alerts details.afold>summary{list-style:none}#alerts details.afold>summary::-webkit-details-marker{display:none}
-#alerts details.afold>summary::after{content:'▸';flex:none;color:var(--mut);transition:transform .15s}#alerts details.afold[open]>summary::after{transform:rotate(90deg)}
+/* Hinweise oben (Dominik 2026-11-15, Variante 2): only the pill „● N Hinweise“ beside the Käfer; a tap lays the rows
+   over the page under it (admin.js hinweiseAuf), nothing moves; red is only the dot */
+#alerts{display:none}body.alertsauf #alerts:not(:empty){display:block;position:fixed;z-index:30;width:min(460px,calc(100vw - 16px));max-height:60vh;overflow:auto;box-sizing:border-box;padding:8px 8px 2px;background:var(--card);border:1px solid var(--line);border-radius:var(--r-box);box-shadow:var(--shadow-pop)}
+body.guest #alerts,body.inchat #alerts{display:none!important}
+#alerts .note.anote{display:flex;align-items:center;gap:8px;margin:0 0 6px;padding:6px 6px 6px 10px;font:var(--t-sub);border-radius:10px;box-sizing:border-box}#alerts .note.anote>span{flex:1;min-width:0}
+#alerts .note.anote>.b{padding:3px 10px;font-size:13px;min-height:0;flex:none}#alerts .note.bad{background:color-mix(in srgb,var(--bad) 8%,transparent);border-color:color-mix(in srgb,var(--bad) 22%,transparent)}
+#apill{position:fixed;top:calc(20px + env(safe-area-inset-top));right:58px;z-index:7;display:inline-flex;align-items:center;gap:6px;min-height:28px;padding:0 11px;border:1px solid var(--line);border-radius:var(--r-pill);background:var(--card);color:var(--fg);font:var(--t-cap);cursor:pointer;box-shadow:var(--shadow-1,none)}
+#apill[hidden],body.guest #apill,body.inchat #apill,body.mitleiste #apill,body.fzterminal #apill,body.appview.apbaron #apill{display:none!important}
+#aptrail .aphinw{display:inline-flex;align-items:center;gap:5px;width:auto;padding:0 8px;font:var(--t-cap);font-weight:600;color:var(--fg)}.adot{width:8px;height:8px;border-radius:50%;background:var(--warn);flex:none}.bad>.adot{background:var(--bad)}
 a.b{text-decoration:none;color:inherit;display:inline-flex;align-items:center}
 .findcard{width:min(640px,94vw);max-height:86vh;display:flex;flex-direction:column}.finds{overflow:auto;margin-top:6px}
 /* "Was ist neu" (changelog.js): the version line at the bottom opens it; one line per version, a date line per day */
@@ -3291,7 +3289,7 @@ body.fzterminal .fztop{height:30px}   /* with a terminal open more lines (reconn
 .fzbschild .ic{width:var(--ic-sm);height:var(--ic-sm)}.fzbschild:hover,.fzbschild[aria-expanded="true"]{background:var(--on-acc);color:var(--bad)}.fzbschild.bad{outline:1.5px solid var(--on-acc)}
 body.fzterminal .fzbschild:not([hidden]){display:inline-flex}
 body.fzterminal #confbar,body.fzterminal:not(.fzhinauf) #alerts{display:none}
-body.fzterminal.fzhinauf #alerts{position:fixed;z-index:9600;width:min(720px,calc(100vw - 16px));max-height:60vh;overflow:auto;box-sizing:border-box;padding:8px 8px 2px;background:var(--card);border:1px solid var(--line);border-radius:var(--r-win);box-shadow:var(--shadow-pop)}
+body.fzterminal.fzhinauf #alerts:not(:empty){display:block}body.fzterminal.fzhinauf #alerts{position:fixed;z-index:9600;width:min(720px,calc(100vw - 16px));max-height:60vh;overflow:auto;box-sizing:border-box;padding:8px 8px 2px;background:var(--card);border:1px solid var(--line);border-radius:var(--r-win);box-shadow:var(--shadow-pop)}
 body.fzterminal main{max-width:none;padding-top:8px;padding-left:8px;padding-right:8px}
 body.fzterminal #fzbox{border:0;border-radius:0;background:none;padding:0;box-shadow:none;overflow:visible}
 .fzinfopop{position:fixed;z-index:9600;width:min(360px,calc(100vw - 16px));box-sizing:border-box;padding:10px 12px;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
@@ -3740,7 +3738,7 @@ main{position:relative}#rpbug{position:fixed;top:14px;left:calc(var(--side-w) - 
 @keyframes kfcrawl{15%{transform:translate(-8px,1px) rotate(-90deg)}45%{transform:translate(-18px,1px) rotate(-90deg)}55%{transform:translate(-18px,1px) rotate(90deg)}90%{transform:translate(0,0) rotate(90deg)}100%{transform:none}}
 @media(prefers-reduced-motion:reduce){.kf-wig svg,.kf-shake svg,.kf-crawl svg{animation:none}}
 .rpkind{display:flex;gap:6px;margin-bottom:8px}.rpkind .b.on{background:var(--acc);color:var(--on-acc);border-color:var(--acc)}
-body.appview:not(.prof):not(.guest):not(.inchat) #aptrail [data-ap=bug]{margin-right:48px}   /* neben dem Mikrofon (#fab), mit Abstand */
+body.appview:not(.prof):not(.guest):not(.inchat) #aptrail [data-ap=bug]{margin-right:48px}body.appview:not(.prof):not(.guest):not(.inchat) #aptrail .aphinw:last-child{margin-right:48px}   /* neben dem Mikrofon (#fab), mit Abstand */
 /* Ein Programm verbinden (sparkverbinden.js) */
 .spv{padding-left:20px;line-height:1.6}.spv li{margin:6px 0}.spvt{margin-top:6px;border-collapse:collapse}.spvt td{vertical-align:top;padding:4px 8px}.spv-box code{font-family:var(--mono);font-size:12.5px;word-break:break-all}
 .spg input[type=number]{width:140px}

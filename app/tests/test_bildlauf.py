@@ -68,6 +68,7 @@ FENSTER = {
     ".fzgnaslist": "Fernzugang, große Dateien: the files of one NAS folder to pick from, beside the transfer card",
     ".shchatlist": "Spontanhilfe: the chat with the person in its card beside the screen; the newest message stays in view",
     ".fzflist": "Fernzugang, Dateien: the entries of one remote folder (up to 1000) beside the upload card",
+    "body.alertsauf #alerts:not(:empty)": "the notes laid over the page from the pill „● N Hinweise“ beside the Käfer (at most 60 % of the window); the page keeps its place",
     "body.fzterminal.fzhinauf #alerts": "Fernzugang, the session's page: the notes laid over the page from the pill „N Hinweise“ (at most 60 % of the window); the terminal keeps its place",
     ".fzwahlliste": "Fernzugang: the system picker over the page (Strg+Umschalt+O); its list scrolls when there are many systems",
     ".fzterm.fzkachelnan": "Fernzugang, Übersicht: the tiles of all sessions in the terminal area; the page itself fits the window",

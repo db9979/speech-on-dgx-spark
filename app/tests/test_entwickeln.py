@@ -1621,7 +1621,7 @@ class TerminalKompakt(unittest.TestCase):
                     await pg.wait_for_function("!document.fullscreenElement", timeout=10000)
                 await pg.evaluate("goSec('mon')")
                 await pg.wait_for_timeout(200)
-                weg = await pg.evaluate("[document.body.classList.contains('mitleiste'),getComputedStyle($('alerts')).display]")
+                weg = await pg.evaluate("[document.body.classList.contains('mitleiste'),getComputedStyle($('apill')).display!=='none']")
                 await br.close()
                 return a, erste, pop, zu, fertig, voll, weg
         a, erste, pop, zu, fertig, voll, weg = asyncio.run(go())
@@ -1649,7 +1649,7 @@ class TerminalKompakt(unittest.TestCase):
         self.assertTrue(fertig[1], "Fernzugang is a jump link")
         if voll:
             self.assertGreater(voll[0], voll[1] - 60, voll)                       # full screen: the box alone
-        self.assertEqual(weg, [False, "block"], "another page: the alerts back above it")
+        self.assertEqual(weg, [False, True], "another page: the pill „N Hinweise“ back beside the Käfer")
 
     def test_on_the_phone_the_tab_shows_after_a_detail(self):
         from tests.test_ui_browser import PAGE_READY, async_playwright, chromium

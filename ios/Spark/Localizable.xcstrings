@@ -641,6 +641,16 @@
         }
       }
     },
+    "1 Hinweis": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 note"
+          }
+        }
+      }
+    },
     "%lld Hinweise": {
       "localizations": {
         "en": {

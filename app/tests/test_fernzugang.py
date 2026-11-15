@@ -3856,10 +3856,10 @@ class ShellForReal(_ShellPage):
             await pg.evaluate("$('fzschirm').checked=true;$('fzfrage').value='Platz schaffen';FZ.ziel=null")
             await pg.evaluate("FZ.ziel={text:'x',last:'',zeiten:[],ctl:null,t:null,wartet:false};$('fzziel').hidden=false;fzZielEnde('')")
             self.assertFalse(await pg.evaluate("getComputedStyle($('fzziel')).display!=='none'"))
-            # another page: the notes stand above it as before, no pills there
+            # another page: the notes stand behind the page's pill „● N Hinweise“ as everywhere, not the session's pill
             await pg.evaluate("showAlerts([{level:'bad',text:'Das Änderungsprotokoll wurde nachträglich verändert.'}]);goSec('feat')")
             await pg.wait_for_function("!document.body.classList.contains('fzterminal')", timeout=10000)
-            self.assertEqual(await pg.evaluate("[getComputedStyle($('alerts')).display!=='none',getComputedStyle($('fzbhinw')).display]"), [True, "none"])
+            self.assertEqual(await pg.evaluate("[getComputedStyle($('apill')).display!=='none',getComputedStyle($('fzbhinw')).display]"), [True, "none"])
         self.run_page(body, size=(1500, 900))
 
     def test_the_bar_and_the_head_on_a_phone(self):

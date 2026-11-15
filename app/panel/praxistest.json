@@ -6299,6 +6299,14 @@
 "text": "Funktionen → Zugang → Probleme melden ist an. Am Rechner: der Käfer sitzt oben im Seitenmenü links neben dem Mikrofon, auch im Chat und bei Fernzugang liegt er über keinem Knopf. Am Handy auf Heute, Ich, Kalender und im Chat: zwischen Käfer und Mikrofon ist Platz, nichts liegt übereinander.",
 "thread": "Fehler und Wünsche als Issue melden",
 "test": "test_ui_browser.Browser.test_report_bug_covers_nothing"
+},
+{
+"id": "P917",
+"v": 1475,
+"titel": "Hinweise oben ruhig",
+"text": "Mit mindestens einem Hinweis (z. B. NAS aus oder offene Schwachstellen) eine Admin-Seite öffnen: über der Seite steht keine Zeile mehr, oben rechts neben dem Käfer nur „● N Hinweise“ (Punkt rot bei einem roten Hinweis), der Käfer bleibt frei. Antippen: die Hinweise liegen als Blase darüber, die Seite rückt nicht; „Ansehen“ springt und schließt sie, ein Tipp daneben oder Esc schließt sie. Fällt die NAS aus, steht „Die NAS antwortet seit … nicht. Betroffen: …“ als eine Zeile statt drei. In der Android-App steht „● N“ in der Leiste oben, im iPhone unter Spark verwalten → Monitoring → Braucht dich eine zugeklappte Zeile „N Hinweise“.",
+"thread": "Meldungen oben ruhiger machen",
+"test": "test_sprunglinks.Browser.test_alerts_fold_and_still_jump"
 }
 ]
 }

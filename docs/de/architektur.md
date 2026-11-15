@@ -3107,6 +3107,7 @@ Gilt bei: [Schritt 4](#kn-betrieb-s4)
 
 - Eine Schleife prüft Sprachmodell, Hören, Sprechen, Internet, SearXNG, Kiwix, Home Assistant, Mail, Kalender und NAS, je nach Dienst jede Minute oder alle 5 Minuten, ohne Anmeldung: eine HTTP-Antwort unter 500 gilt als „antwortet“. Home Assistant wird unter /manifest.json gefragt, das es ohne Token beantwortet; /api/ ohne Token zählte dort als falsche Anmeldung.
 - Weg ist ein Dienst nach 3 Fehlproben über mindestens 3 Minuten, zurück nach 2 guten. Ist das Internet weg, gibt es eine Meldung für alles dahinter. Während Update, Start und Notaus Stufe 2 zählt nichts, ebenso nicht für einen Teil in der Wartungspause, bis deren Zeit um ist.
+- Was weg ist, zeigt der Hinweis oben auf den Admin-Seiten, nur hinter dem Zeichen „● N Hinweise“ neben dem Käfer. Dienste am selben Gerät werden eine Zeile (dienstwacht.gruppen): gleicher Rechner nach einem kurzen Hash des Hosts, die NAS-Dienste (Sicherung, Wissensordner, Ablage, Zustand der NAS) immer; nie mit Adresse.
 - Die Proben gehen über den Wächter, zählen aber nicht auf der Live-Liste und lösen nie „Notaus von selbst“ aus.
 
 #### Sicherung

@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.475** Quiet notes on top: only a small sign "● N notes" beside the bug, one cause in one line
 - **V01.1.474** ROT-FIX Dungeon phone bar: the bar no longer grows with the text (status one line with "…", suggestions one row to swipe); with GitHub's wider font it took more than half the height, which made test_the_phone_table_head_fight_field_group_and_hero a lasting flake, now checked with wide letters
 - **V01.1.473** The ladybug covers nothing: on the computer in the side menu beside the microphone, on the phone with room beside it; a guard test checks every page
 - **V01.1.472** Dungeon Master: fights of 6 to 7 turns at most at the same win rate, bosses measured again, no checks question to the model where the panel already decides
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.468** Ideas from OpenFuse: page change when watching without the language model, questions wait in the chat
 - **V01.1.467** Nextcloud ideas 3b: find a time in a chat
 - **V01.1.466** The ladybug fills in what the page noticed (kind, status and path only), stays in place while scrolling and shows on Me too
-- **V01.1.465** Attack via document search stopped: no program folders, no garbled signs, no cookie values, errors without paths
 
 
 

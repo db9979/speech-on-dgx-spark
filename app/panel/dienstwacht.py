@@ -223,6 +223,13 @@ def _key(x):
     return hashlib.sha256(str(x).encode()).hexdigest()[:12]
 
 
+def _wo(p):
+    """The device of a part as a short hash: the host of its address (lower case), "" for the Spark's own parts."""
+    p = p if isinstance(p, dict) else {}
+    h = urlsplit(str(p.get("url") or "")).hostname or str(p.get("host") or "")
+    return _key(h.strip().lower()) if h.strip() else ""
+
+
 def _json(path):
     import json
     try:
@@ -667,6 +674,9 @@ async def round_once(now=None, force=False):
         else:
             good = not x["bad"]
         e["parts"] = {k: (k not in x["bad"]) for k in parts}
+        # which devices (a short hash of the host, never the address) the gone parts are on: alerts() puts services
+        # gone on the same device into one row
+        e["wo"] = sorted({_wo(parts[k]) for k in x["bad"] if k in parts} - {""})
         if not good and (held and ("notaus" in x["why"] or sid == "inet") or x["why"] == {"blocked"}):
             if e["st"] == "down":              # no longer looked at: the outage ends here, nobody waits for "back"
                 _close(sid, now)
@@ -940,15 +950,45 @@ def down(sid):
     return bool(e and e.get("st") == "down" and admin_on())
 
 
+# services that hang on the NAS by their nature (offsite, naszustand, nasquelle, nasablage: all reach it through nas.py):
+# gone together they are one row even when one names the NAS by its address and another by its name
+NAS_SVC = ("nas", "naszustand", "wissen", "ablage")
+
+
+def gruppen(down):
+    """Services gone on the same device (Dominik 2026-11-15 „meldungen oben sind zu arg“): lists of ids, in the order
+    of SVC; two belong together when they share a device (e["wo"]) or both hang on the NAS (NAS_SVC)."""
+    out = []
+    for sid in [s for s in SVC if s in down]:
+        wo, hit = set(down[sid].get("wo") or ()), None
+        for g in out:
+            if any(wo & set(down[o].get("wo") or ()) or (sid in NAS_SVC and o in NAS_SVC) for o in g):
+                hit = g
+                break
+        if hit is None:
+            out.append([sid])
+        else:
+            hit.append(sid)
+    return out
+
+
 def alerts(now=None):
-    """The banner on every admin page (health.alerts): what is gone and what does not work."""
+    """The notes of every admin page (health.alerts): what is gone and what does not work; services gone on the same
+    device as one row with what they take along."""
     if not admin_on():
         return []
     out = []
-    for sid, e in _read()["svc"].items():
-        if e.get("st") == "down":
-            out.append({"kind": "service", "level": "bad", "go": "Zustand → Dienste",
-                        "text": f"Gerade eingeschränkt: {SVC[sid][0]} antwortet seit {_hm(e.get('since') or 0)} nicht. {impact(sid, e)}"})
+    down = {sid: e for sid, e in _read()["svc"].items() if e.get("st") == "down" and sid in SVC}
+    for g in gruppen(down):
+        since = min(down[s].get("since") or 0 for s in g)
+        if len(g) == 1:
+            sid = g[0]
+            text = f"Gerade eingeschränkt: {SVC[sid][0]} antwortet seit {_hm(since)} nicht. {impact(sid, down[sid])}"
+        else:
+            wer = "Die NAS" if all(s in NAS_SVC for s in g) else "Ein Server"
+            text = (f"Gerade eingeschränkt: {wer} antwortet seit {_hm(since)} nicht. Betroffen: "
+                    + ", ".join(SVC[s][0] for s in g) + ".")
+        out.append({"kind": "service", "level": "bad", "go": "Zustand → Dienste", "text": text})
     try:          # what a service reports by itself and the admins were told of (naszustand.py)
         import naszustand
         if "naszustand" not in _read()["skip"]:

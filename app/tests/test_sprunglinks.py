@@ -492,7 +492,7 @@ class Browser(unittest.TestCase):
                 # drawn and clicked in one step: the refresh every 3 s draws the real notes again (here the open
                 # hands-on tests, Zustand → Praxistest), between two steps the click hit that note's button
                 shown = await pg.evaluate("""()=>{TRACE_ON=true;showAlerts([{kind:'latency',level:'warn',text:'Antworten sind langsamer geworden.',go:'Zustand → Logs → Anfragen'}]);
-                  const b=document.querySelector('#alerts .gonote button'),r=b&&b.getBoundingClientRect();
+                  hinweiseAuf($('apill'),true);const b=document.querySelector('#alerts .gonote button'),r=b&&b.getBoundingClientRect();
                   const top=r&&document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);
                   if(!b||b.title!=='Zustand → Logs → Anfragen'||!r.width||!r.height||!(top===b||b.contains(top)))return false;
                   b.click();return true}""")
@@ -503,35 +503,44 @@ class Browser(unittest.TestCase):
         asyncio.run(go())
 
     def test_alerts_fold_and_still_jump(self):
-        """The notes on top (Dominik 16.10.2026: „zu groß, muss einklappbar sein“): a red one stays open, two or more
-        others fold into one slim line with the count, folded by default; opened, each button still jumps."""
+        """The notes on top (Dominik 2026-11-15 „meldungen oben sind zu arg und nehmen viel zu viel platz ein“,
+        Variante 2): no line above the page, only the pill „● N Hinweise“ beside the Käfer, red dot with a red note,
+        not covering the Käfer; a tap lays the rows over the page (nothing moves, red first), each button still jumps
+        and closes them; a tap outside closes them."""
         async def go():
             async with async_playwright() as p:
                 br, pg, errors = await self.page(p, profile=False)
-                await pg.evaluate("try{localStorage.removeItem('alertsopen')}catch{}")
                 await pg.evaluate("goSec('mon')")
                 await self.until(pg, "ALERTS_LAST!==''")
-                await pg.evaluate("TRACE_ON=true;$('logreqtab').hidden=false;SA=showAlerts;showAlerts=()=>{};SA(["
+                await pg.evaluate("TRACE_ON=true;$('logreqtab').hidden=false;$('rpbug').hidden=false;SA=showAlerts;showAlerts=()=>{};SA(["
+                                  "{kind:'latency',level:'warn',text:'Antworten sind langsamer geworden.',go:'Zustand → Logs → Anfragen'},"
                                   "{kind:'service',level:'bad',text:'Sprachausgabe ist weg.'},"
-                                  "{kind:'latency',level:'warn',text:'Antworten sind langsamer geworden.',go:'Zustand → Logs → Anfragen'},"
                                   "{kind:'praxistest',level:'info',text:'25 Praxistests sind jetzt wichtig.',go:'Zustand → Praxistest'}])")
-                r = await pg.evaluate("(()=>{const f=$('alerts').querySelector('details.afold');return {open:f.open,"
-                                      "first:$('alerts').firstElementChild.classList.contains('bad'),"
-                                      "sum:f.querySelector('summary').textContent,h:f.getBoundingClientRect().height}})()")
-                self.assertFalse(r["open"])
-                self.assertTrue(r["first"])
-                self.assertTrue(r["sum"].startswith("2 "), r["sum"])
-                self.assertLess(r["h"], 60)
-                # drawn again (the refresh every 3 s, here held off) it stays open: the browser remembers it
-                await pg.click("#alerts details.afold>summary")
-                await self.until(pg, "localStorage.getItem('alertsopen')==='1'")
-                await pg.evaluate("ALERTS_LAST='';SA(["
-                                  "{kind:'latency',level:'warn',text:'Antworten sind langsamer geworden.',go:'Zustand → Logs → Anfragen'},"
-                                  "{kind:'praxistest',level:'info',text:'25 Praxistests sind jetzt wichtig.',go:'Zustand → Praxistest'}])")
-                self.assertTrue(await pg.evaluate("$('alerts').querySelector('details.afold').open"))
-                await pg.click("#alerts details.afold .gonote button")
-                await self.until(pg, "LG.tab==='req'&&getComputedStyle($('logs')).display!=='none'")
-                await pg.evaluate("try{localStorage.removeItem('alertsopen')}catch{}showAlerts=SA")
+                await self.until(pg, "!$('apill').hidden&&$('rpbug').getBoundingClientRect().width>0")
+                r = await pg.evaluate("""(()=>{const p=$('apill'),r=p.getBoundingClientRect(),k=$('rpbug').getBoundingClientRect(),m=document.querySelector('main>section.on').getBoundingClientRect();
+                  return {txt:p.textContent,bad:p.classList.contains('bad'),h:r.height,box:getComputedStyle($('alerts')).display,
+                  free:r.right+6<=k.left||k.right+6<=r.left||r.bottom+6<=k.top||k.bottom+6<=r.top,top:Math.round(m.top)}})()""")
+                self.assertEqual(r["txt"], "3 Hinweise")      # on Zustand the info ones count too
+                self.assertTrue(r["bad"])
+                self.assertLess(r["h"], 36)
+                self.assertEqual(r["box"], "none")
+                self.assertTrue(r["free"], "the pill covers the Käfer")
+                await pg.click("#apill")
+                r2 = await pg.evaluate("""(()=>{const b=$('alerts'),m=document.querySelector('main>section.on').getBoundingClientRect();
+                  return {pos:getComputedStyle(b).position,first:b.firstElementChild.classList.contains('bad'),n:b.children.length,
+                  top:Math.round(m.top),exp:$('apill').getAttribute('aria-expanded')}})()""")
+                self.assertEqual(r2["pos"], "fixed")
+                self.assertTrue(r2["first"])
+                self.assertEqual(r2["n"], 3)
+                self.assertEqual(r2["top"], r["top"])          # nothing moves
+                self.assertEqual(r2["exp"], "true")
+                await pg.evaluate("document.querySelector('main>section.on').click()")   # beside it: closed
+                await self.until(pg, "!document.body.classList.contains('alertsauf')")
+                await pg.click("#apill")
+                await pg.click("#alerts .gonote button")
+                await self.until(pg, "LG.tab==='req'&&getComputedStyle($('logs')).display!=='none'&&!document.body.classList.contains('alertsauf')")
+                await pg.evaluate("showAlerts=SA;SA([])")
+                self.assertTrue(await pg.evaluate("$('apill').hidden"))
                 self.assertEqual(errors, [])
                 await br.close()
         asyncio.run(go())

@@ -1480,7 +1480,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Betrieb: Logs und Live
     "betrieb": {
-        "stand": "013b5146d8",
+        "stand": "4d8150e7c9",
         "bezug": {
             "dienstwacht.FAIL_N": ["s5"], "dienstwacht.REPEAT": ["s5"], "backup.KEEP": ["s9"],
             "tracelog.safe": ["s3"], "tracelog.Rec": ["s3", "s6"], "tracelog.finish": ["s8", "s9"],
@@ -1664,6 +1664,14 @@ SEITEN = {
                  "minutes, back after {dienstwacht.OK_N} good ones. With the internet gone there is one note for "
                  "everything behind it. During update, start and kill switch stage 2 nothing counts, nor for a part in "
                  "the maintenance pause until its time is up."),
+                ("Was weg ist, zeigt der Hinweis oben auf den Admin-Seiten, nur hinter dem Zeichen „● N Hinweise“ neben "
+                 "dem Käfer. Dienste am selben Gerät werden eine Zeile (dienstwacht.gruppen): gleicher Rechner nach einem "
+                 "kurzen Hash des Hosts, die NAS-Dienste (Sicherung, Wissensordner, Ablage, Zustand der NAS) immer; nie "
+                 "mit Adresse.",
+                 "What is gone shows as the note on top of the admin pages, only behind the sign „● N notes“ beside the "
+                 "bug. Services on the same device become one line (dienstwacht.gruppen): the same computer by a short "
+                 "hash of the host, the NAS services (backup, knowledge folders, filing, NAS status) always; never with "
+                 "an address."),
                 ("Die Proben gehen über den Wächter, zählen aber nicht auf der Live-Liste und lösen nie „Notaus von "
                  "selbst“ aus.",
                  "The probes go through the guard but do not count on the live list and never trigger the automatic "

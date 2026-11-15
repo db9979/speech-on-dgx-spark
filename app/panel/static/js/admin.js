@@ -75,8 +75,8 @@ function zustand(s){if(s)ZLAST=s;s=ZLAST;if(!s)return;
   $('ztext').textContent=(bad.length?t('Fehler: ','Errors: ')+bad.join(', ')+'. ':'')+(run.length?run.join(t(' und ',' and '))+(run.length>1?t(' laufen. ',' are running. '):t(' läuft. ',' is running. ')):'')+(unk.length?t('Ohne Rückmeldung: ','No answer from: ')+unk.join(', ')+'. ':'')
     +(sy.mem_avail_gib!=null?t(`${fmt(sy.mem_avail_gib,' GiB',1)} Speicher frei`,`${fmt(sy.mem_avail_gib,' GiB',1)} memory free`)+(low?t(' (wenig)',' (low)'):'')+'.':'')+(al.length?' ':'');
   // the notes above, one tap away (they hold the way to the place each is about)
-  if(al.length){const a=document.createElement('a');a.href='#';a.className='wayl';a.textContent=t('Hinweise stehen oben.','Notes are shown above.');
-    a.onclick=e=>{e.preventDefault();const f=$('alerts').querySelector('details.afold');if(f)f.open=true;const n=$('alerts').firstElementChild;if(n)sFlash(n)};$('ztext').appendChild(a)}
+  if(al.length){const a=document.createElement('a');a.href='#';a.className='wayl';a.textContent=t('Hinweise ansehen.','View the notes.');
+    a.onclick=e=>{e.preventDefault();e.stopPropagation();hinweiseAuf(hinwKnopf(),true)};$('ztext').appendChild(a)}
   zCards(s);$('zhead').dataset.lvl=lvl;$('zicon').textContent='';$('zgo').hidden=!need.length;
   document.querySelectorAll('.hdot').forEach(d=>d.className='hdot '+lvl);
   $('zneed').hidden=!need.length;const L=$('zlist');L.textContent='';
@@ -1158,34 +1158,52 @@ $('bakmove').onclick=async()=>{const pw=$('bakpw').value;if(pw.length<12){$('bak
   $('bakmsg').textContent=t('sichere …','backing up …');
   try{const b=await (await api('/api/backups/move',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw})})).json();$('bakpw').value='';
     $('bakmsg').textContent=t('Umzugs-Sicherung angelegt: ','Move backup made: ')+mb(b.size)+t('. Mit „Laden“ herunterladen und das Passwort gut aufheben.','. Download it with "Download" and keep the password safe.');loadBak()}catch(e){$('bakmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
-// alerts on top of every admin page: memory, watchdog, failed live check, slow answers, a service gone. Each names
-// with go (health.alerts, a way like "Zustand → Logs → Anfragen") where to look or act: the button jumps there
-// (way.js, Dominik 12.10.2026). Drawn again only when something changed (refresh runs every 3 s).
-// One slim line each; from two on, everything but "bad" folds into one line with the count, folded by default
-// and remembered per browser (Dominik 16.10.2026: „zu groß, muss einklappbar sein“). "bad" always stays open.
-let ALERTS_LAST='';
-function alertsOpen(){try{return localStorage.getItem('alertsopen')==='1'}catch{return false}}
+// alerts of every admin page: memory, watchdog, failed live check, slow answers, a service gone. Each names with go
+// (health.alerts, a way like "Zustand → Logs → Anfragen") where to look or act: the button jumps there (way.js, Dominik
+// 12.10.2026). Drawn again only when something changed (refresh runs every 3 s).
+// Hinweise oben (Dominik 2026-11-15 „meldungen oben sind zu arg und nehmen viel zu viel platz ein“, Variante 2): no line
+// above the page any more, only the small pill „● N Hinweise“ beside the Käfer (#apill; in the app's bar a button of
+// its own, appview.js). A tap lays the rows over the page under the pill (#alerts, body.alertsauf): nothing moves, the
+// dot is red with a "bad" one. Services gone on the same device come as one row (dienstwacht.alerts).
+let ALERTS_LAST='',ALERTS_N=0,ALERTS_BAD=false,HINW_BTN=null;
 function alertRow(x){const n=document.createElement('div');n.className='note anote'+(x.level==='bad'?' bad':'')+(x.go?' gonote':'');
   const s=document.createElement('span');s.textContent=x.text;s.title=x.text;n.appendChild(s);
   if(x.go&&typeof wayGo==='function'){const b=document.createElement('button');b.type='button';b.className='b';b.textContent=t('Ansehen','View');
-    b.title=x.go;b.onclick=()=>wayGo(x.go);n.appendChild(b)}
+    b.title=x.go;b.addEventListener('click',()=>hinweiseAuf(null,false));b.onclick=()=>wayGo(x.go);n.appendChild(b)}
   return n}
+// the pill's place: top right, left of whatever else sits there (the Käfer #rpbug, the microphone #fab), 8 px apart;
+// measured, so it follows when those move (test_ui_browser test_report_bug_covers_nothing)
+function hinwPlatz(){const p=$('apill');if(!p||p.hidden)return;let x=innerWidth-14;
+  for(const id of ['rpbug','fab']){const e=$(id);if(!e||!e.getClientRects().length)continue;const r=e.getBoundingClientRect();
+    if(r.width&&r.top<70&&r.left>innerWidth/2)x=Math.min(x,r.left-8)}
+  p.style.right=Math.round(innerWidth-x)+'px'}
+addEventListener('resize',()=>hinwPlatz());
+function hinwWort(n){return n===1?t('1 Hinweis','1 note'):n+' '+t('Hinweise','notes')}
 // notes only to know (level "info", e.g. open hands-on tests) stand on Zustand only, not above every page (code check 19.10. D12)
 let ALERTS_RAW=[];
 function showAlerts(a){a=a||[];ALERTS_RAW=a;leisteDinge();const mon=!!document.querySelector('section#mon.on');if(!mon)a=a.filter(x=>x.level!=='info');
   if(typeof fzHinweise==='function')fzHinweise(a);   // the remote session's page shows them as a pill in its red line (fernzugang.js)
+  hinwPlatz();   // the Käfer or the microphone may have come or moved since (every round, 3 s)
   const k=JSON.stringify(a);if(k===ALERTS_LAST)return;ALERTS_LAST=k;const box=$('alerts');box.textContent='';
-  const bad=a.filter(x=>x.level==='bad'),rest=a.filter(x=>x.level!=='bad');
-  for(const x of bad)box.appendChild(alertRow(x));
-  if(rest.length===1){box.appendChild(alertRow(rest[0]));return}
-  if(!rest.length)return;
-  const d=document.createElement('details');d.className='afold';d.open=alertsOpen();
-  const sm=document.createElement('summary'),c=document.createElement('b'),l=document.createElement('span');
-  c.textContent=rest.length+' '+t('Hinweise','notes');l.textContent=rest.map(x=>x.text.replace(/[.:].*$/,'')).join(' · ');
-  sm.appendChild(c);sm.appendChild(l);d.appendChild(sm);
-  for(const x of rest)d.appendChild(alertRow(x));
-  d.ontoggle=()=>{try{localStorage.setItem('alertsopen',d.open?'1':'0')}catch{}};
-  box.appendChild(d)}
+  const bad=a.filter(x=>x.level==='bad');for(const x of bad.concat(a.filter(x=>x.level!=='bad')))box.appendChild(alertRow(x));
+  ALERTS_N=a.length;ALERTS_BAD=bad.length>0;const p=$('apill');
+  if(p){p.hidden=!ALERTS_N;p.classList.toggle('bad',ALERTS_BAD);$('apilln').textContent=hinwWort(ALERTS_N);p.title=a.map(x=>x.text).join('\n')}
+  hinwPlatz();
+  if(!ALERTS_N)hinweiseAuf(null,false);else if(HINW_BTN)hinweiseAuf(HINW_BTN,true);
+  if(typeof window.apRender==='function')apRender()}
+// the rows under the pill that was tapped (#apill or the app bar's button): a second tap, a tap outside, Esc or
+// „Ansehen“ closes them; hinweiseAuf(null,false) closes from anywhere
+function hinweiseAuf(btn,open){const box=$('alerts'),B=document.body;btn=btn||HINW_BTN;
+  open=open===undefined?!(HINW_BTN&&btn===HINW_BTN):!!open;if(!ALERTS_N||!btn||!btn.isConnected)open=false;
+  const was=!!HINW_BTN;HINW_BTN=open?btn:null;B.classList.toggle('alertsauf',open);
+  document.querySelectorAll('[data-hinw]').forEach(b=>b.setAttribute('aria-expanded',String(open&&b===btn)));
+  if(!open){if(was)['top','right','left'].forEach(x=>box.style.removeProperty(x));return}
+  const r=btn.getBoundingClientRect(),w=box.offsetWidth;box.style.top=Math.round(r.bottom+6)+'px';
+  box.style.right=Math.round(Math.max(8,Math.min(innerWidth-r.right,innerWidth-w-8)))+'px'}
+function hinwKnopf(){return [...document.querySelectorAll('[data-hinw]')].find(b=>b.getClientRects().length)||null}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-hinw]');if(b){hinweiseAuf(b);return}
+  if(HINW_BTN&&!e.target.closest('#alerts'))hinweiseAuf(null,false)});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&HINW_BTN)hinweiseAuf(null,false)});
 // A page with its own bar (Zustand → Werkstatt → Entwickeln → Terminal, Dominik 2026-11-04 „nimmt alles zu viel Platz
 // ein“): body.mitleiste hides the alerts, the code bar and the page head above it, and the bar carries both as small
 // pills (leisteSetzen with the pills' box): „Code 10 min“ and „2 Hinweise“ (red with a "bad" one). Their popover

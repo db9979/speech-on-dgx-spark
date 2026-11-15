@@ -428,6 +428,33 @@ class Shown(Base):
             c["logs"] = old
             helpers.write_config(c)
 
+    def test_one_row_per_device(self):
+        """Dominik 2026-11-15 „meldungen oben sind zu arg“: services gone on the same device are one row (the NAS ones
+        always, others when their parts share a host); a lone one keeps its sentence; never an address in the text."""
+        self.assertEqual(dw._wo({"url": "https://NAS.fritz.box:5006/x"}), dw._wo({"host": "nas.fritz.box"}))
+        self.assertEqual(dw._wo({"own": {"name": "asr"}}), "")
+        a, b = dw._wo({"host": "nas.fritz.box"}), dw._wo({"host": "mail.example.org"})
+        down = {"wissen": {"since": 2, "wo": [a]}, "naszustand": {"since": 3, "wo": ["x"]}, "nas": {"since": 1, "wo": [a]},
+                "mail": {"since": 1, "wo": [b]}, "cal": {"since": 1, "wo": [b]}, "kiwix": {"since": 1, "wo": ["k"]}}
+        self.assertEqual(dw.gruppen(down), [["kiwix"], ["mail", "cal"], ["nas", "wissen", "naszustand"]])
+        svc = dw._read()["svc"]
+        was = dict(svc)
+        try:
+            t0 = local(15, 44)
+            svc.clear()
+            svc.update({s: {"st": "down", "since": t0 + i * 60, "wo": [a]} for i, s in enumerate(("naszustand", "nas", "wissen"))})
+            svc["kiwix"] = {"st": "down", "since": t0, "wo": ["k"]}
+            svc["web"] = {"st": "ok", "wo": [a]}
+            rows = [x for x in dw.alerts() if x["kind"] == "service"]
+            self.assertEqual([x["text"] for x in rows], [
+                "Gerade eingeschränkt: Archiv (Kiwix) antwortet seit 15:44 nicht. Fragen ans Archiv gehen gerade nicht.",
+                "Gerade eingeschränkt: Die NAS antwortet seit 15:44 nicht. Betroffen: NAS (Sicherung), Wissensordner, Zustand der NAS."])
+            self.assertTrue(all(x["level"] == "bad" and x["go"] == "Zustand → Dienste" for x in rows))
+            self.assertNotIn("fritz", json.dumps(rows))
+        finally:
+            svc.clear()
+            svc.update(was)
+
     def test_banner_live_and_zustand_in_fixed_words(self):
         t0 = local(10, 0)
         self.up["kiwix"] = False

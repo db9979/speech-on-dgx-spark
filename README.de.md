@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.475** Hinweise oben ruhig: nur noch ein kleines Zeichen „● N Hinweise“ neben dem Käfer, gleiche Ursache in einer Zeile
 - **V01.1.474** ROT-FIX Dungeon-Handyleiste: die Leiste wächst nicht mehr mit dem Text (Zustand eine Zeile mit „…“, Vorschläge eine Reihe zum Wischen); auf GitHub nahm sie mit breiterer Schrift über die halbe Höhe ein, test_the_phone_table_head_fight_field_group_and_hero war dadurch ein Dauer-Wackler, jetzt mit breiter Schrift geprüft
 - **V01.1.473** Käfer überdeckt nichts mehr: am Rechner im Seitenmenü neben dem Mikrofon, am Handy mit Abstand; Wächter-Test prüft alle Seiten
 - **V01.1.472** Dungeon-Master: Kämpfe höchstens 6 bis 7 Züge bei gleicher Siegquote, Bosse nachgemessen, keine Proben-Frage an das Modell, wo das Panel schon entscheidet
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.468** Ideen aus OpenFuse: Seitenänderung beim Beobachten ohne Sprachmodell, Fragen warten im Chat
 - **V01.1.467** Nextcloud-Ideen 3b: Termin finden im Chat
 - **V01.1.466** Käfer füllt vor, was die Seite bemerkt hat (nur Art, Status und Pfad), bleibt beim Scrollen stehen und steht auch auf Ich
-- **V01.1.465** Angriff über die Dokumentensuche abgewehrt: keine Programmordner, kein Zeichensalat, keine Cookie-Werte, Fehler ohne Pfade
 
 
 
