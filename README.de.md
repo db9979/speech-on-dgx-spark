@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.477** Dungeon-Prüfung 15.11., Punkt 7: Neue Runde Schritt für Schritt (Welt, Geschichte, Die Runde, Dein Held; oben eine Leiste, „Weiter“ und „Zurück“, „Runde starten“ erst beim Helden, ohne Titel zurück zu Schritt 3) und die Karte „Wie letztes Mal“: ein Tipp startet eine frei erzählte Runde mit Welt, Ton, Zeiten, Erzählweise, Regeltiefe und Vorlesen der letzten Runde und ihrem Helden (dungeon.quick, feste Regeln, nur freie lebende Helden); dazu ist der Heiler-Test nicht mehr von der Uhrzeit abhängig (P919)
 - **V01.1.476** Dungeon-Prüfung 15.11., Punkte 6 und 8: kleinere Handeln-Leiste am Handy (Zustand mit „wartet auf …“ in einer Zeile, Wunsch und weitere Knöpfe hinter „⋯ Mehr“, ▾ klappt auf Feld und Senden-Pfeil zusammen, je Gerät gemerkt), Datum, Monde und Tageszeit in einer Zeile über der Geschichte, „Gewölbe würfeln“ und „Karte neu würfeln“ im Spielleiter-Pult unter „Karte“ statt unter der Karte (P918)
 - **V01.1.475** Hinweise oben ruhig: nur noch ein kleines Zeichen „● N Hinweise“ neben dem Käfer, gleiche Ursache in einer Zeile
 - **V01.1.474** ROT-FIX Dungeon-Handyleiste: die Leiste wächst nicht mehr mit dem Text (Zustand eine Zeile mit „…“, Vorschläge eine Reihe zum Wischen); auf GitHub nahm sie mit breiterer Schrift über die halbe Höhe ein, test_the_phone_table_head_fight_field_group_and_hero war dadurch ein Dauer-Wackler, jetzt mit breiter Schrift geprüft
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.470** Zertifikat der NAS: Let's-Encrypt-Erneuerungen gehen von selbst durch
 - **V01.1.469** Dungeon-Master: Eingabefeld am Handy über die ganze Breite, Wartezeit je Zug unter Zustand, schnellere Erzählung durch festen Anfang der Anweisung
 - **V01.1.468** Ideen aus OpenFuse: Seitenänderung beim Beobachten ohne Sprachmodell, Fragen warten im Chat
-- **V01.1.467** Nextcloud-Ideen 3b: Termin finden im Chat
 
 
 

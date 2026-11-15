@@ -2499,6 +2499,43 @@ class Keep(Base):
         self.assertIsNone(dungeon.take_figure(fig2, 0))                              # used once
         self.assertEqual(len(dungeon.heroes(self.uid)), 2)                           # Arvid from the first round stays
 
+    def test_quick_start_like_last_time(self):
+        """Prüfung 15.11., Punkt 7: „Wie letztes Mal“ (dungeon.quick) takes world, tone, time per turn, hours, way of
+        telling, rule depth and read aloud of the host's newest round and its hero of then; a hero who plays elsewhere
+        or is dead is never offered, only what the rules still have counts, and without a free hero there is none (a new
+        hero needs the steps of the form). The tone the form starts with is the same one source (ton_standard)."""
+        r, g = dungeon.rules(), dungeon.rules()["grenzen"]
+        look = lambda: self.c.get("/api/profile/dungeon").json()     # noqa: E731
+        self.assertIsNone(look()["schnell"])                           # no hero yet
+        self.assertEqual(look()["wahl"]["ton_standard"], dungeon.ton_standard(r))
+        v = self.new_round(welt="piraten", ton=8, zug_s=g["zug_s"][-1], stunden=g["stunden"][-1], erzaehlweise="knapp", vorlesen=True)
+        self.assertIsNone(look()["schnell"])                           # Arvid plays in that round
+        hid = dungeon.heroes(self.uid)[0]["hid"]
+
+        def edit(**k):
+            with dungeon._lock:
+                d = dungeon._read()
+                d["runden"][v["rid"]].update(k)
+                dungeon._write(d)
+        edit(status="ende", tiefe="voll")
+        q = look()["schnell"]
+        self.assertEqual(q, {"welt": "piraten", "ton": 8, "zug_s": g["zug_s"][-1], "stunden": g["stunden"][-1], "erzaehlweise": "knapp",
+                             "vorlesen": True, "tiefe": "voll", "held": hid, "held_name": "Arvid", "wie_zuletzt": True})
+        edit(welt="weg", ton=99, zug_s=7, erzaehlweise="laut", tiefe="x")   # gone from the rules: the form's defaults
+        q = look()["schnell"]
+        self.assertEqual([q["welt"], q["ton"], q["zug_s"], q["erzaehlweise"], q["tiefe"]],
+                         [r["welten"][0]["id"], dungeon.ton_standard(r), g["zug_standard"], "normal", dungeon.dungeon_tiefe.standard()])
+        b = {k: q[k] for k in ("welt", "ton", "zug_s", "stunden", "held", "vorlesen", "erzaehlweise", "tiefe")}
+        r2 = self.c.post("/api/profile/dungeon/runde", json=dict(b, titel="Schnell"))   # the card's tap: the same body
+        self.assertEqual(r2.status_code, 200, r2.text)
+        self.assertEqual(self.state(r2.json()["rid"])["plaetze"][r2.json()["pid"]]["held"]["hid"], hid)
+        self.assertIsNone(look()["schnell"])                           # Arvid plays again
+        self.c.delete(f"/api/profile/dungeon/{r2.json()['rid']}")
+        hs = dungeon.heroes(self.uid)
+        hs[0]["tot"] = True
+        dungeon._save_heroes(self.uid, hs)
+        self.assertIsNone(look()["schnell"])                           # the fallen are never offered
+
     def test_own_data_delete(self):
         v = self.new_round()
         self.assertGreater(dungeon.own_count(self.uid), 0)
@@ -6634,6 +6671,84 @@ class Windows(unittest.TestCase):
                         fh.write(old)
             self.addCleanup(back)
 
+    def test_new_round_in_four_steps_and_like_last_time(self):
+        """Prüfung 15.11., Punkt 7: the new round shows one of its four steps at a time (bar on top, Zurück/Weiter, „Runde
+        starten“ only at the hero); a missing title leads back to step 3; „Wie letztes Mal“ starts a round with one tap
+        in the last round's world with its hero. The bar fits the phone."""
+        from tests.test_ui_browser import Browser, async_playwright
+        import profiles
+        helpers.keep_chat(self, "dungeon")
+        helpers.set_config(dungeon=True)
+        uid = next(u for u in profiles.user_ids() if (profiles.by_id(u) or {}).get("name") == "Uitest")
+        old_ask, old_spawn = dungeon.ask_model, dungeon.spawn
+
+        async def silent(*a, **k):
+            raise TimeoutError("test")
+        dungeon.ask_model = silent
+        dungeon.spawn = lambda coro, name="": coro.close()
+        self.addCleanup(setattr, dungeon, "ask_model", old_ask)
+        self.addCleanup(setattr, dungeon, "spawn", old_spawn)
+        rid = dungeon.make_round(uid, {"titel": "Letztes Mal", "welt": "piraten", "ton": 8, "held": dict(HERO, name="Uma")}, "de")
+        dungeon._running.discard(rid)
+        made = [rid]
+
+        def drop():
+            with dungeon._lock:
+                d = dungeon._read()
+                for x in made:
+                    d["runden"].pop(x, None)
+                dungeon._write(d)
+        self.addCleanup(drop)
+        with dungeon._lock:
+            d = dungeon._read()
+            d["runden"][rid].update(status="ende", made=d["runden"][rid]["made"] + 10 ** 6)   # the newest of Uitest's rounds
+            dungeon._write(d)
+        b = Browser("run")
+        b.port = self.port
+        shown = "[...document.querySelectorAll('#dmview .dm-schritt')].filter(x=>x.offsetParent).map(x=>x.dataset.s).join()"
+        navs = "['.dm-szur','.dm-sweiter','.dm-sstart'].map(c=>!!document.querySelector('#dmview .dm-snav '+c).offsetParent)"
+
+        async def go():
+            async with async_playwright() as p:
+                for w, ht in ((1280, 900), (390, 844)):
+                    br, pg, errors = await b.page(p, w, ht)
+                    try:
+                        await pg.evaluate("goSec('dungeon')")
+                        await b.until(pg, "typeof DM!=='undefined'&&!!DM.data&&!!document.querySelector('#dmview .dm-schritte')")
+                        self.assertEqual(await pg.evaluate(shown), "1", w)
+                        self.assertEqual(await pg.evaluate(navs), [False, True, False], w)
+                        self.assertTrue(await pg.evaluate("document.querySelector('#dmview .dm-sbar').getBoundingClientRect().right<=innerWidth+0.5"), w)
+                        for n in ("2", "3", "4"):
+                            await pg.click("#dmview .dm-snav .dm-sweiter")
+                            self.assertEqual(await pg.evaluate(shown), n, w)
+                        self.assertEqual(await pg.evaluate(navs), [True, False, True], w)
+                        self.assertEqual(await pg.evaluate("document.querySelector('#dmview .dm-sbar [aria-current=step]').dataset.dmschritt"), "4")
+                        await pg.click("#dmview .dm-snav .dm-szur")
+                        self.assertEqual(await pg.evaluate(shown), "3", w)
+                        await pg.fill("#dmview .dmf-titel", "")
+                        await pg.click("#dmview .dm-sbar [data-dmschritt='4']")
+                        await pg.click("#dmview .dm-snav .dm-sstart")
+                        self.assertEqual(await pg.evaluate(shown), "3", w)              # back to the missing title
+                        self.assertTrue(await pg.evaluate("document.activeElement===document.querySelector('#dmview .dmf-titel')"))
+                        self.assertEqual(await pg.evaluate("document.querySelector('#dmview .dmmsg').className"), "dmmsg err")
+                        q = await pg.evaluate("DM.data.schnell")
+                        self.assertEqual([q["welt"], q["ton"], q["wie_zuletzt"]], ["piraten", 8, True], w)
+                        self.assertIn("Wie letztes Mal", await pg.evaluate("document.querySelector('#dmview .dm-schnell').textContent"))
+                        await pg.click("#dmview .dm-schnell [data-dmschnell]")
+                        await b.until(pg, "!!DM.v&&!!DM.rid")
+                        made.append(await pg.evaluate("DM.rid"))
+                        self.assertEqual(await pg.evaluate("DM.schritt"), 1, w)
+                        with dungeon._lock:
+                            d = dungeon._read()
+                            self.assertEqual([d["runden"][made[-1]][k] for k in ("welt", "ton")], ["piraten", 8], w)
+                            d["runden"][made[-1]]["status"] = "ende"                 # Uma is free again for the next width
+                            d["runden"][made[-1]]["made"] = 0
+                            dungeon._write(d)
+                        self.assertEqual(errors, [])
+                    finally:
+                        await br.close()
+        asyncio.run(go())
+
     def test_own_stories_menu_copy_and_new_story_sheet(self):
         """Eigene Geschichten in the page: „＋ Neue Geschichte“ first, „⋯“ beside a story opens Bearbeiten, Kopieren and
         Ausblenden; Kopieren puts the own copy among the cards; ＋ opens its sheet with the tones, „Selbst schreiben“ the
@@ -6661,6 +6776,7 @@ class Windows(unittest.TestCase):
                     try:
                         await pg.evaluate("goSec('dungeon')")
                         await b.until(pg, "typeof DM!=='undefined'&&!!DM.data&&!!document.querySelector('#dmview .dmf-gesch [data-dmgneu]')")
+                        await pg.click("#dmview .dm-sbar [data-dmschritt='2']")                  # the stories are step 2 (Punkt 7)
                         self.assertTrue(await pg.evaluate("document.querySelector('#dmview .dmf-gesch').firstElementChild.matches('[data-dmgneu]')"))
                         n = await pg.evaluate("document.querySelectorAll('#dmview .dmf-gesch .dm-gwrap').length")
                         self.assertGreater(n, 0)
@@ -7835,6 +7951,7 @@ class Windows(unittest.TestCase):
                     try:
                         await pg.evaluate("try{localStorage.removeItem('dm-seite')}catch(e){};goSec('dungeon')")
                         await b.until(pg, "typeof DM!=='undefined'&&!!DM.data&&!!document.querySelector('.dmf-kdet')")
+                        await pg.click("#dmview .dm-sbar [data-dmschritt='4']")                  # the hero is step 4 (Punkt 7)
                         self.assertNotIn("kann:", await pg.evaluate("document.querySelector('.dmf-klasse ~ .dm-vk, .dm-vk[data-dmvkk=klasse]').textContent"))
                         await pg.click(".dm-vk[data-dmvkk=klasse] [data-dmvk=magier]")
                         await b.until(pg, "/Licht/.test(document.querySelector('.dmf-kdet').textContent)")
@@ -12049,6 +12166,9 @@ class Fight(Turns):
         rd.pop("kampf", None)
         rd["markt"] = {"name": "Marktplatz", "ware": []}
         h["gold"] = 500
+        import dungeon_kalender as kal                                   # no festival today: its surcharge is not this test's
+        k = kal.ensure(rd)                                               # (the first day hangs on „made“, the clock)
+        k["start"] = next(d for d in range(kal.JAHR) if not kal.heute(r, dict(rd, kalender=dict(k, start=d)))["fest"])
         v = gold.view(dungeon, r, rd, self.host)
         heiler = next(x_ for x_ in v["dienste"] if x_["id"] == gold.HEILER)
         self.assertTrue(heiler["frei"])

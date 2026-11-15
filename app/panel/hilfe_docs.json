@@ -7844,6 +7844,14 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Neue Runde Schritt für Schritt und „Wie letztes Mal“ (Prüfung 15.11., Punkt 7): Ohne eigenen Schalter. Die Neue Runde zeigt immer nur einen ihrer vier Schritte (Welt, Geschichte, Die Runde, Dein Held); oben eine Leiste mit den vier Schritten zum Antippen, unten „← Zurück“ und „Weiter →“, „Runde starten“ erst beim Helden. Fehlt der Titel, springt die Seite zurück zu Schritt 3. Darüber steht die Karte „Wie letztes Mal“, sobald du einen Helden hast, der lebt und in keiner anderen Runde spielt: ein Tipp auf „Gleich starten“ legt eine Runde frei erzählt an, mit Welt, Ton, Zeit je Zug, Dauer, Erzählweise, Regeltiefe und Vorlesen deiner letzten Runde und ihrem Helden (sonst deinem ersten freien), der Titel ist Welt und Tag. Ohne letzte Runde heißt die Karte „Schnellstart“ und nimmt die Vorgaben des Formulars. Das Panel wählt nach festen Regeln (dungeon.quick), nur was die Regeln noch kennen; für einen neuen Helden bleiben die Schritte. Selbsttests test_quick_start_like_last_time und test_new_round_in_four_steps_and_like_last_time in test_dungeon."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "KI-Dungeon-Master: Leben nur mit Grund",
 "text": "KI-Dungeon-Master: Leben nur mit Grund: dungeon.grounded: Schaden außerhalb des Kampfs gilt nur nach einer misslungenen Probe dieses Zugs auf KOERPER_WERTE (Stärke, Geschick, Konstitution), etwa Sprung, Klettern, zuschnappendes Schloss; die Zeile nennt „Probe „…“ misslungen“. Anderer Schaden fällt weg (dungeon: folgen | schaden | ohne grund, Zähler schaden_ohne_grund). Heilung und Gegnertreffer bleiben. Selbsttest LifeLossReason."
 },
@@ -8685,7 +8693,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "KI-Dungeon-Master: Neue Runde, fertige Geschichten, hell oder dunkel",
-"text": "KI-Dungeon-Master: Neue Runde, fertige Geschichten, hell oder dunkel: Die Seite *Dungeon-Master* (Runden, Kampagnen, Neue Runde, Helden) und das Einladungsfenster eines Gasts haben den Look des Spieltischs in den Farben der Welt. Neue Runde in vier Schritten: 1 Welt, 2 Geschichte, 3 Die Runde (Titel, Einstieg, Ton, Zeit je Zug, Dauer), 4 Dein Held. Welt, Ton, Volk und Klasse wählt man als Karten mit Bildzeichen (zeichen in den Regeln, nur ein Bildzeichen ohne Buchstaben, höchstens 8 Zeichen, geprüft von check_rules; ohne eigenes ◆); die Volkskarte nennt den Bonus (etwa „GES +2 · INT +1“), die Klassenkarte die zwei wichtigsten Werte und das Leben. Eine angetippte Welt färbt die Seite sofort. Fertige Geschichten: Je Welt kommen 10 Geschichten mit (dungeon_geschichten.json, Deutsch und Englisch, je 3 Akte mit Wendepunkt, Ziel, Gegenspieler und Schauplätzen, verschiedene Töne). Sie stehen in Schritt 2 als Karten mit Titel, Kurzinhalt, Ton und Zahl der Akte, neben den Geschichten des Admins („vom Admin“) und „Frei erzählen“. Das Panel prüft jede beim Lesen wie eine Admin-Geschichte (check_plan) und lässt eine weg, die die Regeln ablehnen (etwa wenn der Admin eine Welt herausnimmt). Eine"
+"text": "KI-Dungeon-Master: Neue Runde, fertige Geschichten, hell oder dunkel: Die Seite *Dungeon-Master* (Runden, Kampagnen, Neue Runde, Helden) und das Einladungsfenster eines Gasts haben den Look des Spieltischs in den Farben der Welt. Neue Runde in vier Schritten, von denen immer einer zu sehen ist: 1 Welt, 2 Geschichte, 3 Die Runde (Titel, Einstieg, Ton, Zeit je Zug, Dauer), 4 Dein Held. Welt, Ton, Volk und Klasse wählt man als Karten mit Bildzeichen (zeichen in den Regeln, nur ein Bildzeichen ohne Buchstaben, höchstens 8 Zeichen, geprüft von check_rules; ohne eigenes ◆); die Volkskarte nennt den Bonus (etwa „GES +2 · INT +1“), die Klassenkarte die zwei wichtigsten Werte und das Leben. Eine angetippte Welt färbt die Seite sofort. Fertige Geschichten: Je Welt kommen 10 Geschichten mit (dungeon_geschichten.json, Deutsch und Englisch, je 3 Akte mit Wendepunkt, Ziel, Gegenspieler und Schauplätzen, verschiedene Töne). Sie stehen in Schritt 2 als Karten mit Titel, Kurzinhalt, Ton und Zahl der Akte, neben den Geschichten des Admins („vom Admin“) und „Frei erzählen“. Das Panel prüft jede beim Lesen wie eine Admin-Geschichte (check_plan) und lässt eine weg, die die Regeln ablehnen (etwa wenn de"
 },
 {
 "lang": "de",
@@ -8693,7 +8701,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "KI-Dungeon-Master: Neue Runde, fertige Geschichten, hell oder dunkel",
-"text": " gewählte Geschichte gibt den Ton vor (andere Tonkarten gesperrt) und trägt ihren Titel ein, solange man keinen eigenen tippt. Ein Gast sieht keine Geschichten. Hell oder dunkel: „☀ Hell“ oder „☾ Dunkel“ oben auf der Seite, am Tisch und im Gast-Fenster schaltet um; beide nehmen die Farben der Welt. Anfangs folgt das Spiel Panel oder Gerät, die Wahl merkt sich nur dieser Browser. Helden stehen als Karten mit Lebensbalken, sechs Werten mit Bonus, Stufe, EP und Gold. Das Wort „Leiche“ der Liste des Tons „ab 8“ trifft nur den Wortanfang („schleichen“, „Federleicht“ sind kein Treffer)."
+"text": "r Admin eine Welt herausnimmt). Eine gewählte Geschichte gibt den Ton vor (andere Tonkarten gesperrt) und trägt ihren Titel ein, solange man keinen eigenen tippt. Ein Gast sieht keine Geschichten. Hell oder dunkel: „☀ Hell“ oder „☾ Dunkel“ oben auf der Seite, am Tisch und im Gast-Fenster schaltet um; beide nehmen die Farben der Welt. Anfangs folgt das Spiel Panel oder Gerät, die Wahl merkt sich nur dieser Browser. Helden stehen als Karten mit Lebensbalken, sechs Werten mit Bonus, Stufe, EP und Gold. Das Wort „Leiche“ der Liste des Tons „ab 8“ trifft nur den Wortanfang („schleichen“, „Federleicht“ sind kein Treffer)."
 },
 {
 "lang": "de",
@@ -25628,6 +25636,14 @@
 "src": "assistant",
 "file": "Assistant and panel",
 "head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: new round step by step and \"Like last time\" (review 15 Nov, point 7): No switch of its own. The new round shows only one of its four steps at a time (World, Story, The round, Your hero); on top a bar with the four steps to tap, below \"← Back\" and \"Next →\", \"Start the round\" only at the hero. Without a title the page jumps back to step 3. Above it stands the card \"Like last time\" as soon as you have a hero who is alive and plays in no other round: a tap on \"Start now\" makes a freely told round with world, tone, time per turn, duration, way of telling, rule depth and reading aloud of your last round and its hero (else your first free one), the title is the world and the day. Without a last round the card is called \"Quick start\" and takes the form's defaults. The panel chooses by fixed rules (dungeon.quick), only what the rules still know; a new hero still needs the steps. Self-tests test_quick_start_like_last_time and test_new_round_in_four_steps_and_like_last_time in test_dungeon."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
 "title": "AI Dungeon Master: life only with a reason",
 "text": "AI Dungeon Master: life only with a reason: dungeon.grounded: damage outside a fight counts only after a failed check this turn on KOERPER_WERTE (strength, dexterity, constitution), such as a jump, a climb, a lock that snaps; the line names „check „…“ failed“. Other damage is dropped (dungeon: folgen | schaden | ohne grund, counter schaden_ohne_grund). Healing and foes' hits stay. Self-test LifeLossReason."
 },
@@ -26453,7 +26469,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "AI Dungeon Master: new round, ready-made stories, light or dark",
-"text": "AI Dungeon Master: new round, ready-made stories, light or dark: The *Dungeon Master* page (rounds, campaigns, new round, heroes) and a guest's invitation window have the table's look in the world's colours. New round in four steps: 1 World, 2 Story, 3 The round (title, opening, tone, time per turn, duration), 4 Your hero. World, tone, people and class are chosen as cards with pictures (zeichen in the rules, only a picture without letters, at most 8 characters, checked by check_rules; without one ◆); the people's card names the bonus (for example \"DEX +2 · INT +1\"), the class card its two main values and life. Tapping a world tints the page at once. Ready-made stories: 10 stories per world ship with the Spark (dungeon_geschichten.json, German and English, 3 acts each with turning point, goal, foe and places, different tones). They stand in step 2 as cards with title, summary, tone and number of acts, next to the admin's stories (\"by the admin\") and \"Tell freely\". The panel checks each when reading like an admin's story (check_plan) and leaves out one the rules refuse (for example when the admin takes a world out). A chosen story sets the tone (other tone cards locked) and fills in "
+"text": "AI Dungeon Master: new round, ready-made stories, light or dark: The *Dungeon Master* page (rounds, campaigns, new round, heroes) and a guest's invitation window have the table's look in the world's colours. New round in four steps, one shown at a time: 1 World, 2 Story, 3 The round (title, opening, tone, time per turn, duration), 4 Your hero. World, tone, people and class are chosen as cards with pictures (zeichen in the rules, only a picture without letters, at most 8 characters, checked by check_rules; without one ◆); the people's card names the bonus (for example \"DEX +2 · INT +1\"), the class card its two main values and life. Tapping a world tints the page at once. Ready-made stories: 10 stories per world ship with the Spark (dungeon_geschichten.json, German and English, 3 acts each with turning point, goal, foe and places, different tones). They stand in step 2 as cards with title, summary, tone and number of acts, next to the admin's stories (\"by the admin\") and \"Tell freely\". The panel checks each when reading like an admin's story (check_plan) and leaves out one the rules refuse (for example when the admin takes a world out). A chosen story sets the tone (other tone cards "
 },
 {
 "lang": "en",
@@ -26461,7 +26477,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "AI Dungeon Master: new round, ready-made stories, light or dark",
-"text": "its title as long as you do not type your own. A guest sees no stories. Light or dark: \"☀ Light\" or \"☾ Dark\" at the top of the page, at the table and in the guest's window switches; both take the world's colours. At first the game follows panel or device, the choice is kept only in this browser. Heroes stand as cards with a life bar, six values with bonus, level, XP and gold. The word \"leiche\" in the list of the tone \"from 8\" only matches the start of a word (\"schleichen\", \"Federleicht\" are no hit)."
+"text": "locked) and fills in its title as long as you do not type your own. A guest sees no stories. Light or dark: \"☀ Light\" or \"☾ Dark\" at the top of the page, at the table and in the guest's window switches; both take the world's colours. At first the game follows panel or device, the choice is kept only in this browser. Heroes stand as cards with a life bar, six values with bonus, level, XP and gold. The word \"leiche\" in the list of the tone \"from 8\" only matches the start of a word (\"schleichen\", \"Federleicht\" are no hit)."
 },
 {
 "lang": "en",

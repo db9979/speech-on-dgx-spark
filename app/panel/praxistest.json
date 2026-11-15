@@ -6315,6 +6315,14 @@
 "text": "Am Handy eine Runde öffnen: unten steht der Zustand in einer Zeile („Du bist dran“, wie viele gehandelt haben, auf wen gewartet wird), darunter das Feld über die ganze Breite mit Mikrofon und „Handeln“, darunter die Vorschläge als eine Reihe zum Wischen mit „⋯ Mehr“ am Ende (zeigt den Wunsch an den Erzähler). ▾ oben rechts klappt die Leiste auf Feld und Pfeil zusammen, nach dem Neuladen bleibt sie zu, ▴ öffnet sie. Über der Geschichte stehen Datum, Monde und Tageszeit in einer Zeile. Als Gastgeber mit Karte: „Gewölbe würfeln“ und „Karte neu würfeln“ stehen nicht mehr unter der Karte, sondern im Spielleiter-Pult unter „Karte“.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler",
 "test": "test_dungeon.Windows.test_the_phone_table_head_fight_field_group_and_hero"
+},
+{
+"id": "P919",
+"v": 1477,
+"titel": "Dungeon: Neue Runde in vier Schritten und „Wie letztes Mal“",
+"text": "Dungeon-Master öffnen, unter Neue Runde: oben eine Leiste mit 1 Welt, 2 Geschichte, 3 Die Runde, 4 Dein Held, immer nur ein Schritt zu sehen. „Weiter →“ und „← Zurück“ blättern, „Runde starten“ steht erst beim Helden. Den Titel leeren und starten: die Seite springt zu Schritt 3. Mit einem Helden, der lebt und gerade nicht spielt, steht darüber „Wie letztes Mal“ mit Welt, Ton und Held; „Gleich starten“ öffnet sofort eine neue Runde in der Welt deiner letzten Runde mit diesem Helden. Am Handy passt die Leiste in die Breite.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler",
+"test": "test_dungeon.Windows.test_new_round_in_four_steps_and_like_last_time"
 }
 ]
 }

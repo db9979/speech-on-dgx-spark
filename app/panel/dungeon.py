@@ -6757,6 +6757,7 @@ def _choices(lang, stories=True, welt="", uid=None):
     return {"welten": [{"id": x["id"], "name": x["name"][li], "satz": x["satz"][li], "zeichen": z(x), "bild": db.world_pic(r, x, have),
                         "farben": {k: v for k, v in (x.get("farben") or {}).items() if k in FARBEN}} for x in r["welten"]],
             "toene": [{"id": x["id"], "name": x["name"][li], "zeichen": z(x)} for x in r["toene"]],
+            "ton_standard": ton_standard(r),
             "voelker": [{"id": x["id"], "name": x["name"][li], "werte": x["werte"], "zeichen": z(x), "satz": satz(x), **pic("volk", x)}
                         for x in r["voelker"]],
             "klassen": [{"id": x["id"], "name": x["name"][li], "reihe": x["reihe"], "zeichen": z(x), "satz": satz(x), **pic("klasse", x),
@@ -6769,11 +6770,38 @@ def _choices(lang, stories=True, welt="", uid=None):
             "geschichten": geschichten.cards(r, uid, lang) if stories else []}
 
 
+def quick(r, uid, d):
+    """Schnellstart (Prüfung 15.11., Punkt 7): a new round like the host's last one (world, tone, time per turn, hours,
+    way of telling, rule depth, read aloud) with their hero of then, or else their first hero who is up and free;
+    without a last round the form's defaults. None without such a hero: a new hero needs the steps of the form."""
+    own = sorted((v for v in d["runden"].values() if v.get("owner") == uid), key=lambda v: -v.get("made", 0))
+    last = own[0] if own else {}
+    p = seat_of(last, uid)[1] if last else None
+    then = ((p or {}).get("held") or {}).get("hid")
+    free = [h for h in heroes(uid) if not zustand(h) and not _in_play(d, h["hid"])]
+    h = next((x for x in free if x["hid"] == then), free[0] if free else None)
+    if not h:
+        return None
+    g = r["grenzen"]
+    pick = lambda k, ok, std: last.get(k) if last.get(k) in ok else std     # noqa: E731 - only what the rules still have
+    tiefe = last.get("tiefe") if dungeon_tiefe.gueltig(last.get("tiefe")) else dungeon_tiefe.standard()
+    return {"welt": pick("welt", _by(r, "welten"), r["welten"][0]["id"]), "ton": pick("ton", _by(r, "toene"), ton_standard(r)),
+            "zug_s": pick("zug_s", g["zug_s"], g["zug_standard"]), "stunden": pick("stunden", g["stunden"], g["stunden"][0]),
+            "erzaehlweise": pick("erzaehlweise", WEISEN, "normal"), "vorlesen": bool(last.get("vorlesen")), "tiefe": tiefe,
+            "held": h["hid"], "held_name": h["name"], "wie_zuletzt": bool(last)}
+
+
+def ton_standard(r):
+    """The tone a new round starts with: the second of the list (the first is the gentlest), the only one if one."""
+    return r["toene"][min(1, len(r["toene"]) - 1)]["id"]
+
+
 def _mine(uid, lang):
     r = rules()
     now = time.time()
     out = []
-    for rid, v in _read()["runden"].items():
+    d = _read()
+    for rid, v in d["runden"].items():
         pid, p = seat_of(v, uid)
         if pid and uid not in (v.get("weg") or []) and (v.get("status") != "ende" or now - v.get("ende_t", 0) < ENDE_H * 3600):
             out.append({"rid": rid, "titel": v["titel"], "welt": v["welt"], "status": v["status"], "zug": v["zug"], "gastgeber": v["owner"] == uid,
@@ -6783,7 +6811,8 @@ def _mine(uid, lang):
                         "spieler": len(seated(v)), "made": v["made"], "held": p["held"]["name"] if p.get("held") else ""})
     return {"on": True, "runden": sorted(out, key=lambda x: -x["made"]), "helden": [hero_view(r, h, lang) for h in heroes(uid)],
             "wahl": dict(_choices(lang, uid=uid), bilder_an=pictures_on(uid), **_own_stories(uid)), "runden_max": RUNDEN_MAX, "helden_max": HELDEN_MAX,
-            "kampagnen": campaign_view(r, uid, lang), "kampagnen_max": KAMPAGNEN_MAX, "bisher_max": BISHER_MAX}
+            "kampagnen": campaign_view(r, uid, lang), "kampagnen_max": KAMPAGNEN_MAX, "bisher_max": BISHER_MAX,
+            "schnell": quick(r, uid, d)}
 
 
 KNOWN = (ValueError, LookupError, OverflowError, FileExistsError, NameError, TimeoutError, PermissionError, ConnectionError)

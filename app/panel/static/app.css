@@ -2964,6 +2964,19 @@ body.dg-gast>*:not(#dgmodal){display:none!important}   /* a guest without a prof
 /* the page around the table in the same look: rounds, campaigns, the new round, the heroes and a guest's invitation */
 .dm-tisch h3.sec,.dm-tisch .dm-step{font:var(--t-head);color:var(--t-text);margin:var(--s6) 0 var(--s2);border:0;padding:0;display:flex;align-items:center;gap:10px}
 .dm-step{font-size:15px}.dm-step span{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;border:1px solid var(--t-gold);font-size:13px;font-variant:normal}
+/* Prüfung 15.11., Punkt 7: the new round in four steps, one shown at a time, and „Wie letztes Mal“ above */
+.dm-schritte .dm-schritt{display:none;flex-direction:column;gap:6px}.dm-schritte .dm-schritt>.dm-step{display:none}
+.dm-schritte[data-s="1"] .dm-schritt[data-s="1"],.dm-schritte[data-s="2"] .dm-schritt[data-s="2"],.dm-schritte[data-s="3"] .dm-schritt[data-s="3"],.dm-schritte[data-s="4"] .dm-schritt[data-s="4"]{display:flex}
+.dm-schritte[data-s="1"] .dm-szur,.dm-schritte[data-s="4"] .dm-sweiter,.dm-schritte:not([data-s="4"]) .dm-sstart{display:none}
+.dm-snav{justify-content:space-between;margin-top:var(--s3)}.dm-snav .dm-sweiter,.dm-snav .dm-sstart{margin-left:auto}
+.dm-sbar{list-style:none;margin:0 0 var(--s2);padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.dm-sb{width:100%;display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:var(--r-box);background:var(--card);color:var(--mut);font:inherit;cursor:pointer;text-align:left}
+.dm-sb span{display:inline-grid;place-items:center;flex:0 0 22px;height:22px;border-radius:50%;border:1px solid var(--line);font-size:12px}
+.dm-sb[aria-current=step]{border-color:var(--acc);color:var(--fg);font-weight:600}.dm-sb[aria-current=step] span{background:var(--acc);border-color:var(--acc);color:var(--on-acc)}
+.dm-schnell{display:flex;align-items:center;gap:12px;padding:12px 14px;margin:0 0 var(--s3);border:1px solid var(--acc);border-radius:var(--r-box);background:var(--card)}
+.dm-schnell .ic-mid{flex:1;min-width:0;display:flex;flex-direction:column}.dm-schnell-i{font-size:22px}
+@media (max-width:760px){.dm-sbar{gap:4px}.dm-sb{flex-direction:column;gap:2px;padding:6px 2px;font-size:12px;text-align:center}
+  .dm-schnell{flex-wrap:wrap}.dm-schnell .b{width:100%}}
 .dm-tisch label,.dm-tisch .lbl{color:var(--t-mut)}.dm-tisch .dm-check{font-variant:normal;letter-spacing:0;color:var(--t-text)}
 /* the lists of the game (your rounds, stories, kept heroes, hero books) in the list pattern ld- (Redesign Stufe 7): one group
    with hairlines, the name never wraps letter by letter; where the row gets narrow its buttons go to their own line under
