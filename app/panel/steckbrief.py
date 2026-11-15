@@ -1305,6 +1305,13 @@ STECKBRIEFE = {
         werkzeuge={"document_plan": ("Dokument planen", "Plan document"), "document_change": ("Dokument ändern", "Change document"), "document_status": ("Dokument-Stand", "Document status"), "document_send": ("Dokument senden", "Send document")},
         knoten={"document_plan": "make", "document_change": "make", "document_status": "make", "document_send": "make"},
         saetze={"document_plan": ("Mach eine Präsentation über den Mauerfall", "Make a presentation about the fall of the Berlin Wall")}),
+    # formular.py (Ideen aus OpenFuse 3, Dominik 2026-11-15 „1a 2 ja 3a“): fields of an own PDF form filled by fixed
+    # rules from the profile, the memory's places, the mailbox and the date; saved as a new document, sent as an answer
+    "formular": Steckbrief(de="PDF-Formulare ausfüllen", en="Fill PDF forms", gruppe="data",
+        schalter=("pdf_forms", "documents"), anleitung="formular", parent="documents", me="docbox",
+        ohne_werkzeug=("ohne", "nur Knöpfe am Dokument und am PDF-Anhang einer Mail, nie per Sprache"),
+        begleiter="panel",
+        modul=("formular", "wissen", "PDF-Formulare: Felder lesen, Vorschläge nach festen Regeln, ausgefüllt als neues Dokument")),
     "erstellenvorlagen": Steckbrief(de="Eigene Vorlagen", en="Own templates", gruppe="data",
         schalter=("doc_make_templates",), anleitung="erstellenvorlagen", parent="erstellen", me="docbox",
         auch=("document_plan",)),

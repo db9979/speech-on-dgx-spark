@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.471** Ideas from OpenFuse 3: fill PDF forms, save them as a new document and mail them as an answer
 - **V01.1.470** NAS certificate: Let's Encrypt renewals pass on their own
 - **V01.1.469** Dungeon Master: input field across the whole phone width, wait per turn under Status, faster narration through a fixed start of the instruction
 - **V01.1.468** Ideas from OpenFuse: page change when watching without the language model, questions wait in the chat
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.464** Nextcloud ideas 3a: polls in chats
 - **V01.1.463** The ladybug stands out: wiggles on a page change, crawls a bit now and then, turns orange with a number on page errors; nothing jumps
 - **V01.1.462** Measure Gemma 4 in NVIDIA's own version, with MTP and a faster start on long questions
-- **V01.1.461** Nextcloud ideas 2b: busy in an appointment, quiet until after
 
 
 

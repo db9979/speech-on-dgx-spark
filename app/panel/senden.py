@@ -23,6 +23,8 @@ In-Reply-To/References from the original in the own inbox. Weiterleiten (Mailcli
 original's sender, date, subject and text below a fixed line, with its attachments if wanted (together at most
 FORWARD_FILES), subject "Fwd: …"; the recipients are typed like for a new mail. The Notaus holds sending off. Logs carry fixed words, numbers and the profile's log
 name only, never an address, a subject or the text.
+PDF-Formulare (formular.py, chat.pdf_forms): a form the profile filled may go along as the one attachment of an
+answer or a new mail (body "doc", formular.attachment: only an own document made by „Ausgefüllt speichern“).
 """
 import base64
 import email
@@ -51,6 +53,8 @@ MAX_DAY = 30
 MAX_SUBJECT = 200
 MAX_TEXT = 20000
 FORWARD_FILES = 20 * 1024 * 1024   # the attachments of a forwarded mail together
+# body key -> function(uid, value) -> (name, ctype, bytes): one more attachment a module hooks in (formular.py: "doc")
+ANHAENGE = {}
 PREVIEW_SECONDS = 600
 TIMEOUT = 30
 # the outgoing server of the known providers (host of the incoming one → host, port); 465 = TLS, 587 = STARTTLS
@@ -181,6 +185,10 @@ def _preview(uid, body):
     if fwd:
         text, subject, attached = _forward(uid, fwd, str(body.get("folder") or "INBOX")[:200], text, subject,
                                            bool(body.get("files")))
+    if body.get("doc") and "doc" in ANHAENGE:   # a form this profile filled (PDF-Formulare, formular.attachment)
+        attached.append(ANHAENGE["doc"](uid, body["doc"]))
+        if sum(len(d) for _, _, d in attached) > FORWARD_FILES:
+            raise ValueError(f"attachments together at most {FORWARD_FILES // (1024 * 1024)} MB")
     msg["Subject"] = subject
     msg["Date"] = email.utils.formatdate(localtime=True)
     msg["Message-ID"] = email.utils.make_msgid(domain=acct["user"].rsplit("@", 1)[1])

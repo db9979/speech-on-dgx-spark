@@ -1050,6 +1050,8 @@ def _svc_now(now):
 # ------------------------------------------------------------------ the Spark's own warnings (health.alerts)
 _hint_cache = [0.0, []]
 _hint_seen = set()
+# name -> for_live() of a module that hooks its numbers into a line here, so live.py imports none of them (formular.py)
+TEILE = {}
 LIVECHECK_AT = {"llm": "llm", "tools": "tool", "search": "web", "tts": "tts", "asr": "asr"}
 
 
@@ -1572,6 +1574,10 @@ def snapshot(view="admin", now=None):
     if tel.get("on"):
         used.add("telefon")
     try:
+        fm = TEILE["formular"]() if "formular" in TEILE else {"on": False}
+    except Exception:
+        fm = {"on": False}
+    try:
         import doclingdienst
         dlg = doclingdienst.for_live()
     except Exception:
@@ -1858,6 +1864,11 @@ def snapshot(view="admin", now=None):
             x["sub"] += f" · {weg['weg']} abwesend, heute {weg['anrufe']} Anrufe nicht geklingelt"
         if x["id"] == "cal" and weg.get("busy_on"):   # Beschäftigt im Termin: profiles busy now, times today (numbers)
             x["sub"] += f" · {weg['termin']} gerade im Termin, heute {weg['termine']}-mal beschäftigt"
+        if x["id"] == "mem" and fm.get("on"):   # PDF-Formulare: forms read, saved, refused today, open now (numbers)
+            x["sub"] += (f" · Formulare heute {fm['gelesen']} gelesen, {fm['gespeichert']} ausgefüllt"
+                         + (f", {fm['ohne']} ohne Felder" if fm.get("ohne") else "")
+                         + (f", {fm['abgelehnt']} abgelehnt" if fm.get("abgelehnt") else "")
+                         + (f" · {fm['offen']} offen" if fm.get("offen") else ""))
         if x["id"] == "cal" and tf.get("on"):   # Termin finden: searches, polls, appointments entered today (numbers)
             x["sub"] += f" · Termin finden heute {tf['gesucht']}-mal gesucht, {tf['gestellt']} Umfragen, {tf['eingetragen']} eingetragen"
         if x["id"] == "cal" and kal.get("on"):   # Kalender teilen: shares in numbers (never a name or an appointment)

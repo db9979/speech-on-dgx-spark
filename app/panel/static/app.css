@@ -2311,6 +2311,16 @@ body.adm .post .postfoot{bottom:calc(59px + env(safe-area-inset-bottom))}
 .post .postfile{display:inline-flex;align-items:center;gap:8px;max-width:260px;padding:8px 12px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--fg);text-decoration:none;min-width:0}
 .post .postfile span{display:grid;min-width:0}.post .postfile b{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.post .postfile small{color:var(--mut);font-size:11.5px}
 .post .postfile svg{flex:none;width:17px;height:17px;color:var(--mut)}.post a.postfile:hover{border-color:var(--acc)}
+/* PDF-Formulare ausfüllen (formular.js): the sheet with fields and the picture of the filled page */
+.post .postfm{align-self:center}.post .postfmatt{align-items:center;gap:8px;color:var(--mut)}.post .postfmatt svg{width:16px;height:16px}
+.fmcard{width:min(420px,100%)}.fmcard.fmwide{width:min(1040px,100%)}.fmhead{display:flex;align-items:center;gap:8px}.fmhead h2{margin:0;overflow-wrap:anywhere}
+.fmgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:16px;margin-top:10px}
+.fmfields{display:grid;gap:10px;align-content:start}
+.fmrow{display:grid;gap:4px}.fmrow .fmlab{font-weight:600}.fmrow .fmsrc{justify-self:start;cursor:default}
+.fmchk{grid-template-columns:auto 1fr;align-items:center}.fmlock .mut{display:flex;align-items:center;gap:6px}.fmlock svg{width:15px;height:15px}
+.fmprev{display:grid;gap:8px;align-content:start;position:sticky;top:0}.fmprev img{width:100%;border:1px solid var(--line);border-radius:12px;background:var(--card);min-height:200px}
+.fmpages{justify-content:center;align-items:center;gap:10px}.fmacts{margin-top:12px}
+@media (max-width:760px){.fmgrid{grid-template-columns:1fr}}
 .post .postpics{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:0 0 10px;padding:8px 12px;border-radius:12px;font-size:13px;color:var(--mut);
   background:color-mix(in srgb,var(--line) 35%,transparent)}.post .postpics svg{flex:none;width:16px;height:16px}.post .postpics span{flex:1 1 200px}
 .post .postframe{display:block;width:100%;height:120px;border:0;border-radius:10px;background:#fff;color-scheme:light}

@@ -269,6 +269,7 @@ Eigene Dokumente, Gedächtnis, frühere Gespräche, Kiwix und Wikipedia, erstell
 | `app/panel/doklink.py` | Links als Dokument: öffentliche Seiten und Dateien über netguard.hole_oeffentlich, Neu abrufen mit ETag und SHA |
 | `app/panel/embed_worker.py` | Das Vektormodell im eigenen Prozess |
 | `app/panel/folien.py` | Folientypen und feste Regeln für erstellte Dokumente |
+| `app/panel/formular.py` | PDF-Formulare: Felder lesen, Vorschläge nach festen Regeln, ausgefüllt als neues Dokument |
 | `app/panel/fund.py` | Finden: Suchindex über die eigenen Daten, Felder und Schlagworte nach festen Regeln, Blind-Marken je Profil |
 | `app/panel/fundmail.py` | Finden: alle Mails und Anhänge in Scheiben eingelesen, versiegelt (AES-GCM) mit Blind-Marken je Profil |
 | `app/panel/fundmessung.py` | Finden messen: Messteil „fund“ von Wissen messen, versiegelte erfundene Mails im Wegwerf-Ordner |

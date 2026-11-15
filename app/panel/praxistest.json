@@ -6276,6 +6276,14 @@
 "text": "Nach dem Update, ohne etwas zu tun: Zustand → Logs, Suche „nasquelle: fehler“ zeigt keine neue Zeile mit art=cert mehr, und die Meldungen „NAS (Sicherung)“ und „Wissensordner antwortet nicht“ sind nach ein paar Minuten weg (das schon angenommene Let's-Encrypt-Zertifikat gilt jetzt auch für seine Erneuerung). Ich → Speicher → „Verbindung prüfen“ zeigt „verbunden“, Einstellungen → Sicherung → „Jetzt senden“ klappt. Beim nächsten Erneuern auf der Synology (etwa in einem Monat) kommt keine Meldung mehr.",
 "thread": "NAS-Ausfall seit 10:54 klären",
 "test": "test_zertpin.Renewal.test_renewal_under_the_same_name_passes"
+},
+{
+"id": "P914",
+"v": 1471,
+"titel": "PDF-Formular ausfüllen und als Antwort mailen",
+"text": "Admin: Funktionen → Eigene Dokumente → „PDF-Formulare ausfüllen“ an. Ein PDF-Formular mit Feldern (z. B. eine Anmeldung der Schule oder ein Antrag als PDF zum Ausfüllen) an dich selbst mailen. Auf der Seite E-Mail die Mail öffnen: am PDF-Anhang steht „Ausfüllen“. Antippen: links jedes Feld, bei Vorname, Nachname, E-Mail, Wohnort und „Ort, Datum“ steht schon etwas mit der Quelle darunter (aus deinem Profil, Gedächtnis, Postfach, heute); IBAN, Unterschrift und Kästchen bleiben leer, ein Feld für den Namen des Kindes ebenso. Rechts das Bild der Seite, es ändert sich kurz nach jeder Eingabe. Ein Feld ändern, „Ausgefüllt speichern“: unter Ich → Dokumente steht „… (ausgefüllt).pdf“, „PDF öffnen“ zeigt die Werte, das Original in der Mail ist unverändert. „Als Antwort …“: das Schreibfenster hat den Anhang, An und Betreff passen; erst „Senden“ schickt. Dasselbe einmal über Ich → Dokumente → ein hochgeladenes PDF-Formular → „Ausfüllen“.",
+"thread": "Seitenänderung, Nachschieben und PDF-Formulare bauen",
+"test": "test_formular.Api.test_read_check_save"
 }
 ]
 }

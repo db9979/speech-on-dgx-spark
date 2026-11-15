@@ -208,6 +208,7 @@ FEATURES = (
     F(**steckbrief.feature("rmaufraeumen")),
     F(**steckbrief.feature("rmaufgaben")),
     F(**steckbrief.feature("erstellen")),
+    F(**steckbrief.feature("formular")),
     F(**steckbrief.feature("erstellenvorlagen")),
     F(**steckbrief.feature("erstellenbilder")),
     F(**steckbrief.feature("bilder")),

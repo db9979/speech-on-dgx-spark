@@ -311,7 +311,8 @@ function postDetail(w){const box=w.querySelector('.postdet'),m=POST.msg;if(!box)
       `<div class="ld-mid"><span class="postl1"><b>${esc(postName(m.from))}</b><span class="ld-when">${esc(when)}</span></span>`+
       `<small>${esc(postAddr(m.from))}</small>${m.to?`<small>${esc(t('An: ','To: ')+m.to)}</small>`:''}</div></div>`+
       `<h3 class="postsubjbig">${esc(m.subject||t('(ohne Betreff)','(no subject)'))}</h3>`+postWhy(m)+
-      (m.files&&m.files.length?`<div class="postfiles">${ORD_ON&&m.parts&&m.parts.length?m.parts.map(f=>`<a class="postfile" download href="/api/profile/mail/file?${esc(new URLSearchParams({id:POST.sel,folder:postSrc(),n:f.n}).toString())}">${postIc('clip')}<span><b>${esc(f.name)}</b><small>${f.kb} KB</small></span></a>`).join('')
+      (m.files&&m.files.length?`<div class="postfiles">${ORD_ON&&m.parts&&m.parts.length?m.parts.map(f=>`<a class="postfile" download href="/api/profile/mail/file?${esc(new URLSearchParams({id:POST.sel,folder:postSrc(),n:f.n}).toString())}">${postIc('clip')}<span><b>${esc(f.name)}</b><small>${f.kb} KB</small></span></a>`+
+        (typeof FM_ON!=='undefined'&&FM_ON&&/\.pdf$/i.test(f.name)?`<button class="b postfm" type="button" data-fmmail="${esc(POST.sel)}" data-folder="${esc(postSrc())}" data-n="${f.n}" title="${esc(t('Das PDF-Formular ausfüllen; das Original in der Mail bleibt','Fill the PDF form; the original in the mail stays'))}">${ic('doc')} ${esc(t('Ausfüllen','Fill in'))}</button>`:'')).join('')
         :m.files.map(n=>`<span class="postfile">${postIc('clip')}<span><b>${esc(n)}</b></span></span>`).join('')}</div>`:'')+
       (m.html?(m.remote?`<div class="postpics">${postIc('lock')}<span>${esc(POST.pics===POST.sel?t('Bilder von außen geladen, über den Spark.','Pictures from outside loaded, through the Spark.')
           :t('Bilder von außen sind aus, damit der Absender nicht sieht, dass du die Mail liest.','Pictures from outside stay off, so the sender does not learn that you read the mail.'))}</span>${POST.pics===POST.sel?'':`<button class="b" type="button" data-k="pics">${esc(t('Bilder laden','Load pictures'))}</button>`}</div>`:'')+
@@ -625,6 +626,7 @@ function postWriteBox(w){const box=w.querySelector('.postcmp'),f=POST.write,p=PO
       line('cc','Kopie','Copy','<input data-f="cc" type="email" multiple maxlength="2000" autocomplete="off">')+
       line('subject','Betreff','Subject','<input data-f="subject" maxlength="200">')+
       `<textarea data-f="text" rows="10" maxlength="20000" aria-label="${esc(t('Text','Text'))}" placeholder="${esc(f.forward?t('Deine Zeilen über der weitergeleiteten Mail (darf leer bleiben)','Your lines above the forwarded mail (may stay empty)'):'')}"></textarea>`+
+      (f.doc?`<div class="row postfmatt">${postIc('clip')}<span>${esc(t('Anhang: ','Attachment: ')+(f.docName||''))}</span><button type="button" class="pib" data-f="nodoc" aria-label="${esc(t('Anhang entfernen','Remove attachment'))}">${ic('x')}</button></div>`:'')+
       (f.forward&&POST.msg&&POST.msg.files&&POST.msg.files.length?`<label class="chk"><input type="checkbox" data-f="files"${f.files?' checked':''}> ${esc(t('Anhänge mitschicken','Send the attachments along'))} (${esc(POST.msg.files.join(', '))})</label>`:'')+
       (f.reply?postSugBox(f)+`<div class="row posttone">${POST_TONE.map(([a,de,en])=>`<button class="ld-chip" type="button" data-r="${a}">${ic('spark')} ${esc(t(de,en))}</button>`).join('')}</div>`:'')+
       `<div class="row postord postsendrow"><button class="b p" type="button" data-s="go">${postIc('sent')}<span>${esc(t('Senden','Send'))}</span></button>`+
@@ -633,6 +635,7 @@ function postWriteBox(w){const box=w.querySelector('.postcmp'),f=POST.write,p=PO
     for(const k of ['to','cc','subject','text']){const el=box.querySelector(`[data-f=${k}]`);el.value=f[k]||'';el.oninput=()=>{f[k]=el.value;if(k==='subject')box.querySelector('.postcmph b').textContent=el.value||title}}
     const ac=box.querySelector('[data-f=account]');if(ac)ac.onchange=()=>{f.account=ac.value};
     const fi=box.querySelector('[data-f=files]');if(fi)fi.onchange=()=>{f.files=fi.checked};
+    const nd=box.querySelector('[data-f=nodoc]');if(nd)nd.onclick=()=>{delete f.doc;delete f.docName;box._f=null;postDraw()};
     if(f.reply){postSuggest(f.reply);postSugBind(box,f);
       box.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>postTone(b.dataset.r,box))}
     box.querySelector('[data-s=go]').onclick=e=>postGo(e.currentTarget,box.querySelector('.postordmsg'));

@@ -269,6 +269,7 @@ Own documents, memory, earlier conversations, Kiwix and Wikipedia, created docum
 | `app/panel/doklink.py` | Links als Dokument: a public web page or file behind an address becomes a document. |
 | `app/panel/embed_worker.py` | The embedding model in its own process (started by docembed.py with python -I as `embed_worker.py embed REPO COMMIT`, never by hand; repository and pinned co … |
 | `app/panel/folien.py` | Slide types and the fixed rules for documents the Spark writes. |
+| `app/panel/formular.py` | PDF-Formulare ausfüllen. |
 | `app/panel/fund.py` | Finden: one index over the own data, its fields and tags, one list of hits for the page Finden, Strg K and the assistant's tool fund_suche. |
 | `app/panel/fundmail.py` | Finden: Mails und Anhänge: every mail of the profile's mailboxes in the search index of Finden (fund.py), with the text and the fields of its attachments. |
 | `app/panel/fundmessung.py` | Finden messen: how fast the search index stays with many own data, on synthetic data only, in an index of its own that nobody else sees. |

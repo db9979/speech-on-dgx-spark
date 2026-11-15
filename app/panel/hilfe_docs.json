@@ -6476,6 +6476,22 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "PDF-Formulare ausfüllen (Idee aus OpenFuse, standardmäßig aus)",
+"text": "PDF-Formulare ausfüllen (Idee aus OpenFuse, standardmäßig aus): Admin-Schalter *Funktionen → Eigene Dokumente → PDF-Formulare ausfüllen* (chat.pdf_forms, aus; braucht „Eigene Dokumente“); freigegeben gilt er für jedes Profil, nie für Gäste, nie per Sprache oder über ein Werkzeug des Modells. Ein PDF mit Formularfeldern (AcroForm) unter *Ich → Dokumente* (Original aufbewahrt) oder als Anhang einer eigenen Mail auf der Seite *E-Mail*: „Ausfüllen“ öffnet ein Blatt mit jedem Feld, daneben das Bild der ausgefüllten Seite (pypdfium2, neu nach jeder Änderung). Vorschläge kommen nur nach festen Regeln aus Feldname und Beschriftung (formular.py): Vorname, Nachname und Name aus dem Profil, E-Mail aus dem ersten eigenen Postfach (nur mit E-Mail), Wohnort, Beruf und Arbeitgeber aus den festen Themen des Gedächtnisses, „Datum“ und „Ort, Datum“ mit heute; jedes Feld zeigt seine Quelle. Nie ausgefüllt: Unterschrift (das Feld bleibt für den Stift), IBAN, Konto-, Steuer-, Ausweis-, Pass-, Versicherungs- und Kartennummern, PIN und Passwörter (nur von Hand); Kästchen und Auswahllisten kreuzt der Spark nie an; ein Feld für eine andere Person (Kind, Partner, Schüler …) bekommt nie den eigenen Namen, ei"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "PDF-Formulare ausfüllen (Idee aus OpenFuse, standardmäßig aus)",
+"text": "n Geburtsdatum nie „heute“. „Ausgefüllt speichern“ legt ein neues Dokument „… (ausgefüllt).pdf“ an (Quelle „formular“), das Original bleibt unverändert; beim Schreiben nimmt der Spark alle Skripte und Aktionen aus der Datei (OpenAction, AA, JavaScript, Launch, SubmitForm, ImportData, XFA, eingebettete Dateien). Danach „Als Antwort …“ (bei einem Mail-Anhang) oder „Als Mail senden …“: das Schreibfenster der Seite E-Mail öffnet sich mit dem Formular als Anhang (senden.ANHAENGE, nur ein eigenes Dokument der Quelle „formular“), gesendet wird erst mit „Senden“ und braucht „Mails senden“. Entwürfe liegen nur im Speicher, höchstens 3 pro Profil und 30 Minuten; Grenzen: 10 MB, 40 Seiten, 200 Felder, 500 Zeichen pro Feld. Zustand → Live zeigt bei „Spark-Speicher“ nur Anzahlen (gelesen, ausgefüllt, ohne Felder, abgelehnt, offen). Logs: formular: gelesen | felder 8 | vorgeschlagen 4 | Profil …, formular: gespeichert | felder 5 | offen 2 | …, formular: abgelehnt | fehlt | …. API (Profil, CSRF, Rate-Limit „doc“): POST /api/profile/formular/lesen ({\"doc\"} oder {\"mail\",\"folder\",\"n\"}), …/vorschau (PNG), …/speichern."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Präsentationen professionell",
 "text": "Präsentationen professionell: Das Sprachmodell wählt pro Folie einen von zehn Typen und füllt nur dessen Felder: Kapiteltrenner, Kernaussage (ein großer Satz), Symbol-Raster (3 bis 6 Punkte mit Symbol), große Zahlen, Zeitstrahl oder Ablauf, Vergleich in zwei Spalten, Bild und Text, Diagramm mit Aussage, Fazit und Stichpunkte. Feste Regeln (folien.py) sorgen für Abwechslung: nie zweimal derselbe Typ hintereinander, höchstens ein Drittel Listen. Pro Folie höchstens 4 Punkte mit je höchstens 8 Wörtern; die Überschrift ist eine Aussage. Ist ein Teil zu lang, fragt der Spark das Modell einmal nach, dann kürzt er an einer natürlichen Stelle und legt den vollen Text in die Sprechernotizen. Diagramme nur mit mindestens 3 verschiedenen, belegten Werten; die Quelle steht darunter, der wichtigste Wert ist hervorgehoben, sonst werden daraus große Zahlen. Die Symbole (161 aus Lucide, ISC-Lizenz) liegen fest im Repo. Mit dem Admin-Schalter *Bilder aus dem Kiwix* (aus; dann für jedes Profil) holt der Spark für Titelfolie und „Bild und Text“-Folien ein Bild aus der Wikipedia im eigenen Kiwix, prüft es und speichert es neu (höchstens 3 MB), mit Quelle und Lizenzhinweis auf der Folie. Vor dem Schrei"
 },
@@ -13422,6 +13438,14 @@
 "head": "Meine Daten",
 "title": "Meine Daten",
 "text": "- Dokumente erstellen (Funktionen → Meine Daten → „Dokumente erstellen“; baut auf „Eigene Dokumente“; Ich → Dokumente): Der Spark schreibt auf Bitte einen Brief, Bericht, ein Protokoll, eine Notiz, Einladung, Präsentation oder Tabelle und legt die Datei unter Ich → Dokumente ab (Word, PDF, PowerPoint, Excel, Markdown, Text oder CSV)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
+"text": "- PDF-Formulare ausfüllen (Funktionen → Meine Daten → „PDF-Formulare ausfüllen“; baut auf „Eigene Dokumente“; Ich → Dokumente): Ein PDF-Formular (Anmeldung, Antrag, Einverständnis) unter Ich → Dokumente oder als Anhang einer Mail: „Ausfüllen“ zeigt jedes Feld mit dem, was der Spark nach festen Regeln vorschlägt (Vorname, Nachname, E-Mail aus dem Profil und dem Po …"
 },
 {
 "lang": "de",
@@ -24228,6 +24252,22 @@
 "src": "assistant",
 "file": "Assistant and panel",
 "head": "Voice chat",
+"title": "Fill PDF forms (idea from OpenFuse, off by default)",
+"text": "Fill PDF forms (idea from OpenFuse, off by default): admin switch *Features → Own documents → Fill PDF forms* (chat.pdf_forms, off; needs \"Own documents\"); once released it works for every profile, never for guests, never by voice or through a tool of the model. A PDF with form fields (AcroForm) under *Me → Documents* (original kept) or attached to an own mail on the *E-mail* page: \"Fill in\" opens a sheet with every field, next to it the picture of the filled page (pypdfium2, new after every change). Proposals come only by fixed rules from the field's name and label (formular.py): first name, last name and name from the profile, e-mail from the first own mailbox (only with e-mail), town, job and employer from the fixed topics of the memory, \"date\" and \"place, date\" with today; every field shows its source. Never filled: signature (the field stays for the pen), IBAN, account, tax, ID card, passport, insurance and card numbers, PIN and passwords (by hand only); the Spark never ticks a box or picks from a list; a field for another person (child, partner, pupil …) never gets the own name, a birth date never \"today\". \"Save filled in\" makes a new document \"… (ausgefüllt).pdf\" (source \"fo"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Fill PDF forms (idea from OpenFuse, off by default)",
+"text": "rmular\"), the original stays as it was; when writing, the Spark takes every script and action out of the file (OpenAction, AA, JavaScript, Launch, SubmitForm, ImportData, XFA, embedded files). Then \"As an answer …\" (for a mail attachment) or \"Send as mail …\": the compose window of the E-mail page opens with the form attached (senden.ANHAENGE, only an own document of source \"formular\"); it goes out only with \"Send\" and needs \"Send mails\". Drafts are kept in memory only, at most 3 per profile and 30 minutes; limits: 10 MB, 40 pages, 200 fields, 500 characters per field. Status → Live shows only counts at \"Spark-Speicher\" (read, filled, without fields, refused, open). Logs: formular: gelesen | felder 8 | vorgeschlagen 4 | Profil …, formular: gespeichert | felder 5 | offen 2 | …, formular: abgelehnt | fehlt | …. API (profile, CSRF, rate limit \"doc\"): POST /api/profile/formular/lesen ({\"doc\"} or {\"mail\",\"folder\",\"n\"}), …/vorschau (PNG), …/speichern."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
 "title": "Professional presentations",
 "text": "Professional presentations: the language model picks one of ten types per slide and fills only its fields: section divider, key statement (one big sentence), icon grid (3 to 6 points with a symbol), big numbers, timeline or process, comparison in two columns, picture and text, chart with a message, conclusion and bullet points. Fixed rules (folien.py) keep the variety: never the same type twice in a row, at most a third lists. A slide has at most 4 points of at most 8 words; the heading is a statement. When a part is too long the Spark asks the model once more, then shortens at a natural break and puts the full text into the speaker notes. Charts only with at least 3 different values that all have a source; the source stands below and the key value is highlighted, otherwise they become big numbers. The symbols (161 from Lucide, ISC license) are part of the repository. With the admin switch *Pictures from the Kiwix* (off; then for every profile) the Spark fetches a picture for the title slide and \"picture and text\" slides from the Wikipedia in the own Kiwix, checks it and saves it anew (at most 3 MB), with source and license note on the slide. Before writing the Spark looks the titl"
 },
@@ -31038,6 +31078,14 @@
 "head": "My data",
 "title": "My data",
 "text": "- Creating documents (Features → My data → \"Creating documents\"; builds on \"Own documents\"; Me → Documents): On request the Spark writes a letter, report, minutes, a note, invitation, presentation or spreadsheet and puts the file under Me → Documents (Word, PDF, PowerPoint, Excel, Markdown, text or CSV)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
+"text": "- Fill PDF forms (Features → My data → \"Fill PDF forms\"; builds on \"Own documents\"; Me → Documents): A PDF form (registration, application, consent) under Me → Documents or attached to a mail: \"Fill in\" shows every field with what the Spark proposes by fixed rules (first name, last name, e-mail from the profile and the mailbox, town, jo …"
 },
 {
 "lang": "en",

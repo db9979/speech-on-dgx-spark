@@ -171,6 +171,7 @@
       <div data-show="chat.doc_night" style="margin-left:36px"><label>Nachtfenster</label><div class="rowin"><input type="time" id="chat.doc_night_from" style="max-width:140px"><span>bis</span><input type="time" id="chat.doc_night_to" style="max-width:140px"></div></div>
       <div class="setrow" data-show="chat.documents" style="margin-left:18px"><div class="lbl"><b>Bedeutungssuche</b><span>Ein kleines Modell auf dem Prozessor findet auch Stellen mit anderen Worten („Auto“ findet „Kfz“); etwa 300 MB, nur bei Bedarf.</span></div><label class="tgl"><input type="checkbox" id="chat.doc_semantic"><i></i></label></div>
       <div class="setrow" data-show="chat.documents" style="margin-left:18px"><div class="lbl"><b>Originale aufbewahren</b><span>Die hochgeladene Datei bleibt auf dem Spark, lässt sich wieder öffnen und kommt in die Sicherung.</span></div><label class="tgl"><input type="checkbox" id="chat.doc_originals"><i></i></label></div>
+      <div class="setrow" data-show="chat.documents" style="margin-left:18px"><div class="lbl"><b>PDF-Formulare ausfüllen</b><span>PDF-Formulare nach festen Regeln vorausfüllen, prüfen, als neues Dokument speichern oder mailen. Nie Unterschrift oder IBAN.</span></div><label class="tgl"><input type="checkbox" id="chat.pdf_forms"><i></i></label></div>
       <div data-show="chat.documents" style="margin-left:18px"><label>Größte PDF-Datei (MB)</label><input class="num" id="chat.doc_max_mb" type="number" min="20" max="300"><div class="fh">20 bis 300, Standard 100. Andere Dateiarten bis 20 MB. Große Scans brauchen beim Hochladen kurz etwa das Dreifache an Arbeitsspeicher.</div></div>
       <div data-show="chat.documents" style="margin-left:18px"><label>Speicher pro Profil (MB)</label><input class="num" id="chat.doc_quota_mb" type="number" min="50" max="5000"><div class="fh">50 bis 5000, für alle Uploads eines Profils zusammen. Einzelnen Profilen gibst du unter Personen und Geräte beim Profil → Details → Platz für Uploads mehr oder weniger. Ist er voll, nimmt der Spark nichts Neues an; Originale nur, solange Platz ist.</div></div>
       <div class="setrow" data-show="chat.documents" style="margin-left:18px"><div class="lbl"><b>Gemeinsame Dokumente</b><span>Ein Profil gibt einzelne Dokumente „Für alle“ frei, die anderen Profile finden und öffnen sie. Gäste und unbekannte Stimmen nie.</span></div><label class="tgl"><input type="checkbox" id="chat.doc_shared"><i></i></label></div>
@@ -1633,6 +1634,7 @@
 <script src="/static/js/phone.js"></script>
 <script src="/static/js/me.js"></script>
 <script src="/static/js/auswertung.js"></script>
+<script src="/static/js/formular.js"></script>
 <script src="/static/js/tidy.js"></script>
 <script src="/static/js/mailstil.js"></script>
 <script src="/static/js/fuerdich.js"></script>

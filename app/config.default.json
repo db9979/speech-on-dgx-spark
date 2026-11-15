@@ -203,6 +203,7 @@
     "doc_shared": false,
     "doc_brief": false,
     "doc_make": false,
+    "pdf_forms": false,
     "doc_make_templates": false,
     "doc_make_wikipics": false,
     "bilder": false,
