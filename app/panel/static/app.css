@@ -2658,6 +2658,8 @@ body.dg-offen{overflow:hidden}body.dg-offen #fab{display:none}
   .dm-grid:not([data-dmpane=geschichte])>.dm-story{padding:0;border:0;margin:0;min-height:0}
   .dm-tisch .dm-handeln{position:fixed;left:0;right:0;bottom:var(--dm-uh,56px);z-index:44;max-height:45vh;overflow:auto;background:var(--t-grund,var(--bg));border-top:1px solid var(--t-linie,var(--line));padding:4px max(10px,env(safe-area-inset-right)) 6px max(10px,env(safe-area-inset-left));box-sizing:border-box}
   .dm-tisch .dm-story .dm-handeln .dm-inp{border-top:0;padding-top:2px}
+  /* the field over the whole width in a row of its own, microphone, heroic courage and „Handeln“ below (Prüfung 15.11., Punkt 5) */
+  .dm-tisch .dm-handeln .dm-inp{flex-wrap:wrap}.dm-tisch .dm-handeln .dm-inp textarea{flex:1 1 100%}.dm-tisch .dm-handeln .dm-inp [data-dmsend]{flex:1}
   body:has(#dmview.dm-amtisch) #dungeon .ic-tabs{display:none}
   body:has(#dmview.dm-amtisch) main,body:has(#dmview.dm-amtisch) #dungeon,body:has(#dmview.dm-amtisch) #dungeon :is(#dmroot,.ic-tabwrap,.ic-tabbody){padding-left:0;padding-right:0;margin-left:0;margin-right:0;border:0;border-radius:0;box-shadow:none;background:none}
   #dmview.dm-tisch.dm-amtisch{margin:0;border-radius:0}

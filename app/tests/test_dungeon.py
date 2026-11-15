@@ -5335,6 +5335,34 @@ class BetterStories(Base):
         self.assertIn("Bela", erz[1].split("Hinweis:")[1])                                 # the fixed hint names who is missing
         self.assertEqual(dungeon.for_live()["nachgebessert"], before + 1)
 
+    def test_the_wait_per_turn_and_the_rewrites_as_numbers(self):
+        """Prüfung 2026-11-15, Punkt 2 (Dominik „1-11“): every told turn counts its wait from the close to the narration,
+        each answer of the model for the checks and the narration (rewrites too), and whether it was rewritten; Live
+        shows means, the longest and the share, numbers only. The Erzähler-Prüfstand (count=False) never counts."""
+        import dungeon_tempo
+        import live
+        teil_aus(self, "dungeonanleiten")
+        tick = iter(x * 1.5 for x in range(100))
+        p = [mock.patch.object(dungeon_tempo, "_day", dungeon.DayCounter(**dungeon_tempo._day._zero)),
+             mock.patch.object(dungeon_tempo, "uhr", lambda: next(tick))]
+        for x in p:
+            x.start()
+            self.addCleanup(x.stop)
+        self.assertEqual(live._dungeon_tempo(dungeon.for_live()), "")                    # nothing told today: no words
+        self.act_all()
+        self.play([{"proben": []},
+                   {"erzaehlung": "Arvid lauscht an der Tür, dahinter klirrt leise Metall, als würde jemand Münzen zählen.", "frage_an": "Arvid"},
+                   {"erzaehlung": "Arvid und Bela lauschen, hinter der Tür zählt jemand Münzen und summt dabei ein altes Lied.", "frage_an": "Bela"}])
+        d = dungeon.for_live()
+        self.assertEqual({k: v for k, v in d.items() if k.startswith("tempo_")},
+                         {"tempo_zuege": 1, "tempo_mittel_ms": 10500, "tempo_laengste_ms": 10500, "tempo_neu_pct": 100, "tempo_proben_n": 1,
+                          "tempo_proben_ms": 1500, "tempo_erzaehlen_n": 2, "tempo_erzaehlen_ms": 1500})
+        self.assertEqual(live._dungeon_tempo(d), " · heute Wartezeit je Zug Ø 10.5 s, längste 10.5 s (Proben Ø 1.5 s bei 1, "
+                                                 "Erzählen Ø 1.5 s bei 2), 100 % der Züge nachgebessert")
+        with contextlib.redirect_stdout(io.StringIO()):
+            asyncio.run(dungeon.ask_checks(dungeon.rules(), self.state(self.rid), count=False))
+        self.assertEqual(dungeon_tempo.for_live()["proben_n"], 1)                           # the bench: never counted
+
     def test_the_first_stays_when_the_rewrite_fails_too(self):
         self.act_all()
         rd = self.play([{"proben": []}, {"erzaehlung": "Arvid lauscht, und hinter der Tür ist es plötzlich still wie in einem Grab.", "frage_an": "Arvid"},
@@ -7412,6 +7440,12 @@ class Windows(unittest.TestCase):
                             above = ("(()=>{const f=document.querySelector('#dmview .dm-handeln'),u=document.querySelector('#dmview .dm-unten');"
                                      "if(!f||!f.getClientRects().length)return false;const a=f.getBoundingClientRect(),c=u.getBoundingClientRect();return a.bottom<=c.top+1&&a.top>innerHeight/2})()")
                             self.assertTrue(await pg.evaluate(above))
+                            # the field over the whole width, its buttons in the row below (Prüfung 15.11., Punkt 5)
+                            row = ("(()=>{const a=document.querySelector('#dmview .dm-handeln .dm-in').getBoundingClientRect(),"
+                                   "s=document.querySelector('#dmview .dm-handeln [data-dmsend]').getBoundingClientRect();return [Math.round(a.width),s.top>=a.bottom-1]})()")
+                            wide, below = await pg.evaluate(row)
+                            self.assertGreater(wide, 300)
+                            self.assertTrue(below)
                             await pg.evaluate("window.scrollTo(0,document.documentElement.scrollHeight)")
                             await pg.wait_for_timeout(200)
                             self.assertTrue(await pg.evaluate("document.querySelector('#dmview .dm-feed').getBoundingClientRect().bottom<=document.querySelector('#dmview .dm-handeln').getBoundingClientRect().top+1"))

@@ -7772,6 +7772,22 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "KI-Dungeon-Master: Tempo und Tisch am Handy (Prüfung 15.11.)",
+"text": "KI-Dungeon-Master: Tempo und Tisch am Handy (Prüfung 15.11.): Ohne eigenen Schalter. 1. Wartezeit je Zug: dungeon_tempo.py misst je erzähltem Zug am Tisch die Zeit vom Abschluss des Zugs bis zur Erzählung, dazu jeden Modellaufruf für die Proben („proben“) und jeden Versuch der Erzählung („erzaehlen“, auch Nachbesserungen), und zählt die Züge mit mindestens einer Nachbesserung. Zustand → Überblick zeigt im Kasten Dungeon-Master „heute Wartezeit je Zug Ø … s, längste … s (Proben Ø … s bei N, Erzählen Ø … s bei N), … % der Züge nachgebessert“, nur Zahlen, nur im Speicher je Tag. Der Erzähler-Prüfstand zählt nicht mit (count=False). 2. Zwischenspeicher des Modells: Die Anweisung an den Erzähler hat vorn den festen Teil (Rolle, Regeln, Aufgabe, Beispiele, Stil der Runde) und erst am Ende unter „Dieser Zug:“ (dungeon.ZUG_KOPF) alles, was von Zug zu Zug wechselt: Längenvorgabe (LAENGE), Tageszeit, Anleiten, Zeugen, Gedanken, Aufträge, Wandern, Mitkommen, Moment, Weg und Fund. So bleibt der lange Anfang gleich und das Modell nimmt ihn aus dem Zwischenspeicher. 3. Eingabefeld am Handy: Unter 760 px steht das Feld für die Aktion in einer eigenen Zeile über die ganze Breite, Mikrofon, Heldenm"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "KI-Dungeon-Master: Tempo und Tisch am Handy (Prüfung 15.11.)",
+"text": "ut und „Handeln“ darunter. Selbsttests test_the_wait_per_turn_and_the_rewrites_as_numbers, test_the_phone_table_head_fight_field_group_and_hero in test_dungeon und test_the_system_text_in_its_fixed_order in test_dungeon_erzaehlstand."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "KI-Dungeon-Master: Leben nur mit Grund",
 "text": "KI-Dungeon-Master: Leben nur mit Grund: dungeon.grounded: Schaden außerhalb des Kampfs gilt nur nach einer misslungenen Probe dieses Zugs auf KOERPER_WERTE (Stärke, Geschick, Konstitution), etwa Sprung, Klettern, zuschnappendes Schloss; die Zeile nennt „Probe „…“ misslungen“. Anderer Schaden fällt weg (dungeon: folgen | schaden | ohne grund, Zähler schaden_ohne_grund). Heilung und Gegnertreffer bleiben. Selbsttest LifeLossReason."
 },
@@ -25470,6 +25486,22 @@
 "head": "Voice chat",
 "title": "AI Dungeon Master: the check catches everything",
 "text": "AI Dungeon Master: the check catches everything: 1. dungeon_erzaehler.faults returns every fault of a try (judge the first), hints names all, the mildest try is kept (milder). 2. When every try fails, repair_all works through all faults (strikes first, then fixed sentences) and checks again: a missing hero gets a sentence from their roll („Silas tries: open the lock, it fails.“) or „… waits“; an ort_id to a place not named keeps the group (dungeon: nachbessern | nachgeprueft | namen or | neuer_ort). 3. A failed check told as done is caught and struck; the turn's loot is lost (| beute verfallen). 4. When a hero asks, an npc line with at least ZITAT_WOERTER words counts as an answer. Nothing to repair: | bleibt | <fault>. 5. Retelling after 👎: with a hard fault (HART) the old text stays. The narrator bench counts no day counters (faults(…, count=False)). Self-tests ReviewPruefung."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "AI Dungeon Master: pace and the table on the phone (review 15 Nov)",
+"text": "AI Dungeon Master: pace and the table on the phone (review 15 Nov): No switch of its own. 1. Wait per turn: dungeon_tempo.py measures for every told turn at the table the time from the close of the turn to the narration, each model call for the checks („proben“) and each try of the narration („erzaehlen“, rewrites too), and counts the turns with at least one rewrite. Status → Live shows in the Dungeon Master box „heute Wartezeit je Zug Ø … s, längste … s (Proben Ø … s bei N, Erzählen Ø … s bei N), … % der Züge nachgebessert“, numbers only, in memory per day. The narrator bench does not count (count=False). 2. The model's cache: the narrator's instruction has the fixed part first (role, rules, task, examples, style of the round) and only at the end under „This turn:“ (dungeon.ZUG_KOPF) everything that changes from turn to turn: length (LAENGE), time of day, guiding, witnesses, thoughts, quests, wandering, coming along, moment, way and find. So the long start stays the same and the model takes it from its cache. 3. Input field on the phone: below 760 px the action field stands in a row of its own over the whole width, microphone, heroic courage and „Handeln“ below. Self-tests test_th"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "AI Dungeon Master: pace and the table on the phone (review 15 Nov)",
+"text": "e_wait_per_turn_and_the_rewrites_as_numbers, test_the_phone_table_head_fight_field_group_and_hero in test_dungeon and test_the_system_text_in_its_fixed_order in test_dungeon_erzaehlstand."
 },
 {
 "lang": "en",

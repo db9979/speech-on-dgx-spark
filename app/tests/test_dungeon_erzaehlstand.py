@@ -285,7 +285,13 @@ class Bench(Base):
         self.assertTrue(t.startswith("You are the narrator"))
         self.assertLess(t.index("Fixed rules:"), t.index("Task:"))
         self.assertLess(t.index(dungeon.KANN_REGEL["en"]), t.index("Task:"))
-        self.assertTrue(t.endswith(dungeon.STIL_KOPF["en"] + "\n" + r["prompt_en"]))
+        stil = dungeon.STIL_KOPF["en"] + "\n" + r["prompt_en"] + "\n\n" + dungeon.ZUG_KOPF["en"] + "\n"
+        self.assertIn(stil, t)                                  # the style after the rules, then this turn's own part
+        fest, zug = t.split(stil)
+        self.assertTrue(zug.startswith("Length: "), zug)        # Prüfung 15.11., Punkt 4: the length in this turn's part
+        self.assertNotIn("characters.", fest.split("Task:")[1][:200])   # no length in the fixed part
+        rd2 = dict(rd, zug=rd["zug"] + 7, _moment="ort", tageszeit="nacht")
+        self.assertEqual(dungeon.system_text(r, rd2, "erzaehlen").split(stil)[0], fest)   # another turn: the same fixed part
         self.assertNotIn(r["prompt"], t)
         self.assertLessEqual(len(es.DEUTSCH.findall(t)), es.ENGLISCH_MAX)
         p = dungeon.system_text(r, rd, "proben")

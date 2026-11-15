@@ -6261,6 +6261,13 @@
 "text": "Im Chat eine längere Frage stellen und, während die Antwort noch kommt, eine zweite tippen und senden. Die erste Antwort läuft weiter, die zweite Frage steht über dem Textfeld unter „Wartet, bis die Antwort fertig ist“ und geht von selbst raus, sobald die erste Antwort samt Stimme fertig ist. Noch einmal mit zwei wartenden Fragen: ✕ nimmt eine heraus, „Jetzt senden“ bricht die laufende Antwort ab und schickt sie sofort. Stopp drücken: die Zeile sagt „Angehalten“, nichts geht mehr von selbst raus.",
 "thread": "Seitenänderung, Nachschieben und PDF-Formulare bauen",
 "test": "test_seitenaenderung.Waiting.test_queue"
+},
+{
+"id": "P912",
+"v": 1469,
+"titel": "Dungeon: Eingabefeld am Handy und Wartezeit je Zug",
+"text": "Am iPhone eine Runde öffnen (KI-Dungeon-Master): das Feld für die Aktion geht über die ganze Breite, Mikrofon, Heldenmut und „Handeln“ stehen darunter, der Hinweistext bricht nicht mehr um. Zwei, drei Züge spielen. Danach Zustand → Überblick, Kasten Dungeon-Master: dort steht „heute Wartezeit je Zug Ø … s, längste … s (Proben Ø … s bei N, Erzählen Ø … s bei N), … % der Züge nachgebessert“; die Zahlen passen ungefähr zu dem, was du am Tisch gewartet hast. Ab dem zweiten Zug kommt die Erzählung gefühlt nicht langsamer als vorher.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

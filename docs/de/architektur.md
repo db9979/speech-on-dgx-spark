@@ -372,6 +372,7 @@ Home Assistant, Aufgaben, Für dich, Wetter, reMarkable, MCP und was der Spark v
 | `app/panel/dungeon_stimmen.py` | Dungeon-Master-Stimmen: Erzähler je Geschichte, eigene NSC-Stimmen aus festen Merkmalen |
 | `app/panel/dungeon_tabellen.py` | Dungeon-Master-Tabellen: Würfel auf die festen Tabellen des Katalogs und Namen aus Silben |
 | `app/panel/dungeon_tageszeit.py` | Dungeon-Master: Tageszeit vom Panel, Morgen bis Nacht nach Kalender und Zügen, nachts Läden zu und Dunkelheit ohne Licht |
+| `app/panel/dungeon_tempo.py` | Dungeon-Master-Tempo: Wartezeit je Zug und je Modellaufruf, Anteil nachgebesserter Züge, nur Tageszahlen |
 | `app/panel/dungeon_tiefe.py` | Dungeon-Master-Regeltiefe: welcher Spielteil am Spiel, an „voll“ oder an einem der sechs Schalter hängt |
 | `app/panel/dungeon_umgebung.py` | Dungeon-Master: Umgebung nutzen, Kronleuchter, Fässer und Säulen im Kampf, eine Probe, eine feste Wirkung |
 | `app/panel/dungeon_vorlesen.py` | Dungeon-Master-Vorlesen: Stück für Stück, Rede in der Stimme der Figur, die Uhr wartet |

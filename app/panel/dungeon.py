@@ -178,6 +178,7 @@ import dungeon_knapp as knapp
 import dungeon_helfen as helfen
 import dungeon_schrift as schrift
 import coadmin
+import dungeon_tempo
 import dungeon_tiefe
 import features
 import guard
@@ -3508,6 +3509,10 @@ PROBEN_OHNE = ("angebot", "freie_namen", "nsc_fern", "nsc_ziel_erreicht", "chron
                "faeden", "dinge", "fraktionen", "fraktion_voll", "rast", "reise")   # facts only the narration needs
 # the tone's refused words (German stems) for a German round's narrator (Erzähler-Prüfstand 28.10., Kinderton 1 point)
 NIE_WORTE = " Diese Wörter kommen in keinem Text vor, auch nicht als Teil eines Worts: {w}."
+# what changes from turn to turn stands last, after the round's style, so the model keeps the long fixed part in its
+# cache (Prüfung 2026-11-15, Punkt 4: the length at character 1647 made it read the other 6 KB anew every turn)
+ZUG_KOPF = {"de": "Dieser Zug:", "en": "This turn:"}
+LAENGE = {"de": "Länge: {m}höchstens {n} Zeichen.", "en": "Length: {m}at most {n} characters."}
 STIL_KOPF = {"de": "Stil der Runde (nur Ton und Erzählweise; die Regeln oben gelten immer):",
              "en": "Style of the round (only tone and manner; the rules above always hold):"}
 # who is where (Dominik 2026-10-24 „1-5 umsetzten“ to „wieder am alten Ort, die Figuren von dort sind auch wieder da“)
@@ -3590,7 +3595,7 @@ ERGEBNIS = {True: ("gelungen", "passed"),
             False: ("misslungen: das gelingt in diesem Zug nicht, niemand holt es nach; wer etwas untersucht oder wissen will, erfährt nichts Neues",
                     "failed: it does not happen this turn, nobody makes up for it; whoever examines or wants to know something learns nothing new")}
 AUFGABE_ERZAEHLEN = {
-    "de": "Aufgabe: Erzähle, was nach den Aktionen und den gewürfelten Proben geschieht ({m}höchstens {n} Zeichen); eine "
+    "de": "Aufgabe: Erzähle, was nach den Aktionen und den gewürfelten Proben geschieht (die Länge steht unter „Dieser Zug“); eine "
           "Probe gilt so, wie ergebnis sagt, eine misslungene gelingt nicht. Lass "
           "NPCs sprechen (was ein NPC wörtlich sagt, steht mit seinem Namen in npc, nicht in Anführungszeichen in der "
           "Erzählung), heilen tun nur Rast, Trank und Zauber (keine Heilung in folgen), Schaden nur nach einer misslungenen Probe auf Stärke, Geschick oder Konstitution und mit dem Grund in der Erzählung, melde Beute nur als Anlass ({anlaesse}) "
@@ -3598,15 +3603,15 @@ AUFGABE_ERZAEHLEN = {
           "frage_an ist eine Figur, die gerade wenig gesagt hat. Ist eine Aktion unklar oder gar kein Spielzug "
           "(Meta-Kommentar), erzähle sie nicht, sondern schreib dieser Figur in ooc eine kurze Zeile (höchstens {ooc} "
           "Zeichen), was sie stattdessen tun kann. Trifft die Gruppe in einer Siedlung einen Händler, melde ihn in "
-          "haendler (Name und ein Satz); Waren und Preise legt das Panel fest, nenne keine.{zeit} {bild}",
-    "en": "Task: narrate what happens after the actions and the rolled checks ({m}at most {n} characters); a check holds "
+          "haendler (Name und ein Satz); Waren und Preise legt das Panel fest, nenne keine. {bild}",
+    "en": "Task: narrate what happens after the actions and the rolled checks (the length stands under \"This turn\"); a check holds "
           "as ergebnis says, a failed one does not happen. Let NPCs "
           "speak (what an NPC says word for word goes with its name into npc, not in quotes into the narration), only rest, potions and spells heal (no healing in folgen), damage only after a failed check on strength, dexterity or constitution and with its reason in the narration, report loot only as an occasion ({anlaesse}) with a "
           "name and one sentence, a goal reached as ziel in erfolg. End with a question to the group; "
           "frage_an is a character that said little. When an action is unclear or no move at all (a meta comment), "
           "do not narrate it but write that character a short line in ooc (at most {ooc} characters) on what it could "
           "do instead. When the group meets a merchant in a settlement, report it in haendler (a name and one "
-          "sentence); the panel sets goods and prices, name none.{zeit} {bild}"}
+          "sentence); the panel sets goods and prices, name none. {bild}"}
 
 
 def schema_proben(r):
@@ -3765,8 +3770,10 @@ def facts(r, rd, wuerfe=None, zuege=None, proben=False):
 
 def system_text(r, rd, task):
     """The system text of a step in a fixed order (Review 27.10. E8/T20): the role and the numbered fixed rules, the
-    task, only the extra rules whose data this turn holds, the examples, the host's style last under STIL_KOPF; the
-    checks step its own short text (PROBEN_REGELN) without the style."""
+    task, only the extra rules whose data this turn holds, the examples, the host's style under STIL_KOPF, and last
+    under ZUG_KOPF what changes from turn to turn (length, time of day, the moment, ways asked, the find; Prüfung
+    2026-11-15, Punkt 4: the long fixed part stays the same for the model's cache); the checks step its own short text
+    (PROBEN_REGELN) without the style."""
     lang = "en" if rd["lang"] == "en" else "de"
     if task == "proben":
         werte = ", ".join(w["id"] for w in r["werte"])
@@ -3779,11 +3786,16 @@ def system_text(r, rd, task):
     bild = AUFGABE_BILD[lang].format(n=BILD_MAX) if pictures_on(rd["owner"]) else ""
     t += "\n\n" + (erz.AUFGABE_WAHRHEIT[lang] if task == "wahrheit" else
                    AUFGABE_PROLOG[lang].format(n=erz_max(dict(rd, zug=1)), bild=bild, min=PROLOG_MIN, wmin=WEGE[0], wmax=WEGE[1], wl=WEG_MAX) if task == "prolog" else
-                   AUFGABE_ERZAEHLEN[lang].format(n=erz_max(rd), m=((f"mindestens {erz_min(rd)}, ", f"at least {erz_min(rd)}, ")[lang == "en"] if erz_min(rd) else ""), anlaesse=", ".join(ANLAESSE), ooc=OOC_MAX, bild=bild, zeit=tageszeit.task(rd, lang) + anleiten.task(rd, lang) + zeugen.task(rd, lang) + gedanken.task(rd, lang) + auftraege.task(rd, lang) + wandern.task(rd, lang) + mitkommen.task(rd, lang) + (AUFGABE_GETIPPT[lang] if rd.get("_getippt") else ""))).rstrip()
+                   AUFGABE_ERZAEHLEN[lang].format(anlaesse=", ".join(ANLAESSE), ooc=OOC_MAX, bild=bild)).rstrip()
+    zug = ""                                     # this turn's own part, last (ZUG_KOPF)
+    if task == "erzaehlen":
+        zug = (LAENGE[lang].format(n=erz_max(rd), m=((f"mindestens {erz_min(rd)}, ", f"at least {erz_min(rd)}, ")[lang == "en"] if erz_min(rd) else ""))
+               + tageszeit.task(rd, lang) + anleiten.task(rd, lang) + zeugen.task(rd, lang) + gedanken.task(rd, lang) + auftraege.task(rd, lang)
+               + wandern.task(rd, lang) + mitkommen.task(rd, lang) + (AUFGABE_GETIPPT[lang] if rd.get("_getippt") else ""))
     if task == "erzaehlen" and WEISE_STIL.get(rd.get("erzaehlweise"), ("", ""))[0]:
         t += " " + WEISE_STIL[rd["erzaehlweise"]][1 if lang == "en" else 0]
     if task == "erzaehlen" and rd.get("_moment") in AUFGABE_MOMENT:
-        t += " " + AUFGABE_MOMENT[rd["_moment"]][1 if lang == "en" else 0]
+        zug += " " + AUFGABE_MOMENT[rd["_moment"]][1 if lang == "en" else 0]
     if task == "erzaehlen":                      # the world's often reported errors as fixed hints (Erzähler-Fehler beheben)
         import dungeon_erzaehlstand
         t += dungeon_erzaehlstand.world_task(rd, lang)
@@ -3792,9 +3804,9 @@ def system_text(r, rd, task):
     if task in ("prolog", "erzaehlen") and rd.get("karte"):
         t += " " + ORTE_REGEL[lang]
     if task == "erzaehlen" and dungeon_karte.asked_ways(rd):
-        t += " " + WEG_REGEL[lang]
+        zug += " " + WEG_REGEL[lang]
     if task == "erzaehlen" and rd.get("_fund"):
-        t += FUND_AUFGABE[lang]
+        zug += FUND_AUFGABE[lang]
     if task in ("prolog", "erzaehlen"):
         t += " " + erz.AUFGABE_FAEDEN[lang] + " " + erz.AUFGABE_DINGE[lang] + stimmen.AUFGABE[lang]
         t += grenzen.task(rd, lang) + nsc.task(rd, lang) + orakel.task(rd, lang) + geben.task(rd, lang) + fraktionen.task(rd, lang) + quest.task(rd, lang) + schrift.task(rd, lang) + rast.task(rd, lang) + reise.task(rd, lang) + kommentar.task(rd, lang) + sprachen.task(rd, lang) + kalender.task(rd, lang) + haltung.task(rd, lang) + umgebung.task(rd, lang) + fluestern.task(rd, lang) + wunsch.task(_me, rd, lang) + gefaehrte.task(rd, lang) + personen.task(_me, r, rd, lang)
@@ -3805,7 +3817,8 @@ def system_text(r, rd, task):
     t += dungeon_karte.task(rd)
     if task in ("prolog", "erzaehlen"):          # Review 27.10. E7: the examples last, in their own bounded block, after every rule
         t += erz.style_text(_me, r, rd, lang)
-    return t + "\n\n" + STIL_KOPF[lang] + "\n" + (rd.get("prompt") or default_prompt(r, lang))
+    t += "\n\n" + STIL_KOPF[lang] + "\n" + (rd.get("prompt") or default_prompt(r, lang))
+    return t + "\n\n" + ZUG_KOPF[lang] + "\n" + zug.strip() if zug.strip() else t
 
 
 def default_prompt(r, lang):
@@ -4673,7 +4686,10 @@ async def _ask_json(system, user, schema, name, tokens):
 async def ask_checks(r, rd, count=True):
     """The checks the model asks for this turn, by fixed rules (check_proben). Returns (checks, dropped); count=False
     for the Erzähler-Prüfstand (no day counters)."""
+    t0 = dungeon_tempo.uhr()
     obj = await _ask_json(system_text(r, rd, "proben"), facts(r, rd, proben=True), schema_proben(r), "proben", 300)
+    if count:
+        dungeon_tempo.took("proben", dungeon_tempo.uhr() - t0)   # the wait at the table (Prüfung 15.11., Punkt 2)
     return check_proben(r, rd, obj, count)
 
 
@@ -4716,7 +4732,10 @@ async def tell(r, rd, wuerfe, hits, zuege, step=None, count=True):
     for n in range(3):                    # a second try when the first fails the checks (erz.faults: one rewrite),
         if n == 2 and not (best and any(w in erz.HART for w, _ in best[1])):   # a third only for a hard one (erz.HART)
             break
+        t0 = dungeon_tempo.uhr()
         obj = await _ask_json(system_text(r, rd, "erzaehlen") + extra, facts(r, rd, facts_w, facts_z), SCHEMA_ERZAEHLEN, "erzaehlen", 900)
+        if count:
+            dungeon_tempo.took("erzaehlen", dungeon_tempo.uhr() - t0)
         s, d2 = check_story(r, rd, obj)
         drop += d2
         if not s:
@@ -4757,14 +4776,14 @@ async def run_turn(rid, turn):
     """The Dungeon Master's answer to a closed turn: checks, the panel's rolls, the narration, the panel's rules."""
     import wartung
     r = rules()
-    t0 = time.perf_counter()
+    t0 = dungeon_tempo.uhr()
     try:
         d = await asyncio.to_thread(_read)
         rd = d["runden"].get(rid)
         if not rd or rd["zug"] != turn:
             return
         why = "ok"
-        wuerfe, story, hits, zuege = [], None, [], []
+        wuerfe, story, hits, zuege, tries = [], None, [], [], []
         if wartung.paused("llm"):
             why = "pause"
         else:
@@ -4788,7 +4807,7 @@ async def run_turn(rid, turn):
             await asyncio.to_thread(wait_step, rid, turn, "erzaehlen")
             fund = first_find(r, rd, wuerfe)          # the panel's find before the narration (Review 27.10. Paket 9)
             rd["_fund"] = fund                        # only on this copy: the fact and the check of the narration
-            story, d2, _ = await tell(r, rd, wuerfe, hits, zuege, lambda s: asyncio.to_thread(wait_step, rid, turn, s))
+            story, d2, tries = await tell(r, rd, wuerfe, hits, zuege, lambda s: asyncio.to_thread(wait_step, rid, turn, s))
             if story and fund:
                 story.update(fund=fund, beute=None)   # the model's loot waits: the turn has the panel's
             drop += d2
@@ -4865,7 +4884,10 @@ async def run_turn(rid, turn):
         if why != "ok":
             _day.bump("ausfall")
         _day.bump("zuege")
-        print(f"dungeon: zug | {why} | {len(wuerfe)} proben | {round((time.perf_counter() - t0) * 1000)} ms", flush=True)
+        took = dungeon_tempo.uhr() - t0
+        if story:
+            dungeon_tempo.zug(took, len(tries) > 1)    # from the turn's close to the narration at the table (Punkt 2)
+        print(f"dungeon: zug | {why} | {len(wuerfe)} proben | {round(took * 1000)} ms", flush=True)
     finally:
         _running.discard(rid)
         await asyncio.to_thread(_clear_dm, rid)
@@ -6639,6 +6661,7 @@ def for_live():
             **grenzen.for_live(rs), **zufall.for_live(rs), **nsc.for_live(rs), **orakel.for_live(rs), **fraktionen.for_live(rs), **quest.for_live(rs),
             "kampfstufen": sum(1 for v in rs if v.get("kampfstufe") not in (None, "mittel")),
             **{"tiefe_" + k: v for k, v in dungeon_tiefe.counts(rs).items()},
+            **{"tempo_" + k: v for k, v in dungeon_tempo.for_live().items()},
             "neu_laeuft": sum(1 for v in rs if erz.running(v)),
             **{k: t[k] for k in ("rand", "held_geflohen", "neu_gesperrt", "geraet", "rettungswurf", "gnade", "stabil", "verschnauft", "getippt", "gegeben", "schaden_ohne_grund", "probe_wert_fest", "akt_ohne_wende", "ziel_zu_frueh", "beute_vorab", "beute_ort", "oel", "beleg_falsch", "hoer_namen",
                                  "grenzen", "x_karte", "schleier", "schreiber_an", "schreiber_weg", "zufall_treffer", "zufall_daneben",

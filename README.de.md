@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.469** Dungeon-Master: Eingabefeld am Handy über die ganze Breite, Wartezeit je Zug unter Zustand, schnellere Erzählung durch festen Anfang der Anweisung
 - **V01.1.468** Ideen aus OpenFuse: Seitenänderung beim Beobachten ohne Sprachmodell, Fragen warten im Chat
 - **V01.1.467** Nextcloud-Ideen 3b: Termin finden im Chat
 - **V01.1.466** Käfer füllt vor, was die Seite bemerkt hat (nur Art, Status und Pfad), bleibt beim Scrollen stehen und steht auch auf Ich
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.462** Gemma 4 in NVIDIAs eigener Fassung messen, mit MTP und schnellerem Anlauf bei langen Fragen
 - **V01.1.461** Nextcloud-Ideen 2b: beschäftigt im Termin, still bis danach
 - **V01.1.460** Fix: die nächtliche Paketprüfung auf GitHub läuft wieder
-- **V01.1.459** Nextcloud-Ideen 2a: Abwesenheit mit Vertretung, im Kalender und in Chats, Anrufe klingeln nicht
 
 
 

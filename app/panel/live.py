@@ -1278,6 +1278,19 @@ def ruhe(targets, busy, now=None):
         x["quiet"] = not (x["id"] in ALWAYS or x["id"] in busy or a)
 
 
+def _dungeon_tempo(dgn):
+    """How long the table waits today (dungeon_tempo.for_live, the keys tempo_… of the Dungeon-Master's numbers): mean
+    and longest wait of a told turn, the model's mean for checks and narration with their counts, the share of turns
+    rewritten; seconds with one decimal (numbers only)."""
+    t = {k[6:]: v for k, v in dgn.items() if k.startswith("tempo_")}
+    if not t.get("zuege"):
+        return ""
+    s = lambda ms: round(ms / 1000, 1)      # noqa: E731
+    return (f" · heute Wartezeit je Zug Ø {s(t['mittel_ms'])} s, längste {s(t['laengste_ms'])} s"
+            f" (Proben Ø {s(t['proben_ms'])} s bei {t['proben_n']}, Erzählen Ø {s(t['erzaehlen_ms'])} s bei {t['erzaehlen_n']}),"
+            f" {t['neu_pct']} % der Züge nachgebessert")
+
+
 def _dungeon_musik(m):
     """The Dungeon-Master's music made ahead (dungeon_musik.for_live): pieces, full fields, making, today, marked annoying, outdated, changed sound templates, liked, probes (numbers only)."""
     if not m.get("an") and not m.get("stuecke"):
@@ -2224,6 +2237,7 @@ def snapshot(view="admin", now=None):
                         + _dungeon_regeln(dgn.get("regeln") or {})
                         + (f" · heute {dgn.get('wahrheit', 0)} Welt-Wahrheiten, {dgn.get('zusammengefasst', 0)} Zusammenfassungen, {dgn.get('nachgebessert', 0)} nachgebessert"
                            if dgn.get("wahrheit") or dgn.get("zusammengefasst") or dgn.get("nachgebessert") else "")
+                        + _dungeon_tempo(dgn)
                         + (f" · {dgn['kaempfe_laufen']} Kämpfe laufen, {dgn['gegner_stehen']} Gegner stehen" if dgn.get("kaempfe_laufen") else "")
                         + (f" · {dgn.get('gegner_erkannt', 0)} Gegner durchschaut, heute {dgn.get('geschuetzt', 0)} Treffer durch Widerstand halbiert"
                            if dgn.get("gegner_erkannt") or dgn.get("geschuetzt") else "")
