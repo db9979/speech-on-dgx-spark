@@ -163,6 +163,21 @@ class Katalog(unittest.TestCase):
                 modelle.pruefe_eintrag(dict(base, vllm=dict(base["vllm"], **bad)))
         with self.assertRaises(modelle.Fehler, msg="a pinned entry fetches no unpinned draft model"):
             modelle.pruefe_eintrag(dict(base, revision="a" * 40))
+        # Dominik 2026-11-15 „1 und 2“: NVIDIA's own NVFP4 with the draft model and 16384 tokens per step, to measure
+        self.assertEqual(modelle.messliste(["gemma4nv"]), ["gemma4-26b-a4b-nvidia-mtp"])
+        nv = modelle.katalog()["gemma4-26b-a4b-nvidia-mtp"]
+        self.assertEqual((nv["repo"], nv["revision"], nv["anteil"]), ("nvidia/Gemma-4-26B-A4B-NVFP4", "", 0.25))
+        g = modelle.vllm_args(nv, revision="a" * 40)
+        self.assertEqual(g[0], "nvidia/Gemma-4-26B-A4B-NVFP4")
+        self.assertEqual(g[g.index("--max-num-batched-tokens") + 1], "16384")
+        self.assertEqual(g[g.index("--served-model-name") + 1], "gemma4-26b-a4b-nvidia-mtp")
+        self.assertIn("--speculative-config", g)
+        self.assertNotIn("--trust-remote-code", g)
+        self.assertNotIn("--max-num-batched-tokens", modelle.vllm_args(modelle.katalog()["gemma4-26b-a4b-nvfp4-mtp"],
+                                                                      revision="a" * 40), "the others stay as they are")
+        for bad in (1024, 65536, "16384", True, 16384.0):
+            with self.assertRaises(modelle.Fehler, msg=bad):
+                modelle.pruefe_eintrag(dict(nv, vllm=dict(nv["vllm"], batched_tokens=bad)))
         # Dominik 2026-11-11: only models that run or were measured; the words of the ones gone are refused
         for gone in ("fp8", "gemma", "kolibri", "vl30", "dspark", "qwen36frei"):
             with self.assertRaises(modelle.Fehler, msg=gone):

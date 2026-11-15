@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.462** Gemma 4 in NVIDIAs eigener Fassung messen, mit MTP und schnellerem Anlauf bei langen Fragen
 - **V01.1.461** Nextcloud-Ideen 2b: beschäftigt im Termin, still bis danach
 - **V01.1.460** Fix: die nächtliche Paketprüfung auf GitHub läuft wieder
 - **V01.1.459** Nextcloud-Ideen 2a: Abwesenheit mit Vertretung, im Kalender und in Chats, Anrufe klingeln nicht
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.455** ROT-FIX: der Browser-Test der Gesprächsliste tippt auf einem Gerät ohne Zeiger auf die Antwort statt zu zeigen
 - **V01.1.454** Gespräche nach Thema: neues Gespräch nach Pause oder Themenwechsel, mit Symbol und kurzem Namen, Anheften und Archiv
 - **V01.1.453** Gespräche als Liste neben dem Gespräch statt Auswahlfeld, ruhige Antworten mit Knöpfen erst beim Zeigen
-- **V01.1.452** Spark-Clients: Kasten „Ein Programm verbinden“ im Panel und in der Spark-Konsole mit Adresse, Ports, Modellnamen, Schlüssel, Zertifikat zum Laden, Prüfbefehl und Fehlerliste; Schritt-für-Schritt-Anleitung in der Doku; Grenzen je Client beim Anlegen und später einstellbar, auch „Keine Grenzen“
 
 
 

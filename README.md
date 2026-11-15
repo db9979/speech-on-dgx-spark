@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.462** Measure Gemma 4 in NVIDIA's own version, with MTP and a faster start on long questions
 - **V01.1.461** Nextcloud ideas 2b: busy in an appointment, quiet until after
 - **V01.1.460** Fix: the nightly package check on GitHub runs again
 - **V01.1.459** Nextcloud ideas 2a: away with a stand-in, in the calendar and the chats, calls do not ring
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.455** Red fix: the browser test of the conversation list taps an answer on a device without hover instead of pointing
 - **V01.1.454** Conversations by topic: a new conversation after a pause or a change of topic, with symbol and a short name, pin and archive
 - **V01.1.453** Conversations as a list beside the conversation instead of a drop-down, calm answers with buttons only on pointing
-- **V01.1.452** Spark clients: box "Connect a program" in the panel and the Spark-Konsole with address, ports, model names, key, certificate download, check command and error list; step-by-step guide in the docs; limits per client adjustable when making it and later, also "No limits"
 
 
 

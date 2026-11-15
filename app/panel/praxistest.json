@@ -6201,6 +6201,14 @@
 "titel": "Beschäftigt im Termin",
 "text": "Admin: Funktionen → Kalender und Tagesbriefing → „Beschäftigt im Termin“ an. Im eigenen Kalender einen Termin mit Uhrzeit von jetzt bis in 15 Minuten eintragen, die Seite Kalender einmal öffnen und eine Minute warten. Dann: eine Durchsage an deinen Lautsprecher kommt nicht an („Ruhezeit“), eine Mitteilung (z. B. eine Erinnerung von „Von selbst“, keine Alarm-Erinnerung) kommt erst nach dem Termin als „Während du beschäftigt warst“, ein anderes Profil sieht in Chats neben deinem Namen „beschäftigt“ und ein Spark-Anruf klingelt nicht. Ganztägige Termine machen nicht beschäftigt. Nach dem Termin ist innerhalb einer Minute alles wie vorher.",
 "thread": "Ideen aus Nextcloud übernehmen"
+},
+{
+"id": "P904",
+"v": 1462,
+"titel": "Gemma 4 von NVIDIA messen",
+"text": "Auf tars sudo speech-spark modelle messen gemma4nv ausführen (vorher kurz auf das jetzige Gemma 4 achten: die Messung hält das Sprachmodell an). Unter Zustand → Modelle steht danach „Gemma 4 26B A4B NVFP4 von NVIDIA mit Entwurfsmodell (MTP)“ mit Tokens pro Sekunde und Zeit bis zum ersten Wort; zum Vergleich: unsloth mit MTP 63,1. Werkzeug und Bild sollen ok sein.",
+"thread": "GPU-Taktgrenze auf tars einbauen",
+"test": "test_modelle.Katalog.test_messliste"
 }
 ]
 }

@@ -62,7 +62,7 @@ MESSEN = ("immer", "auf_wunsch")
 ANTEIL_MAX = 0.80
 MESS_PORT = 31016
 VLLM_KEYS = ("reasoning_parser", "tool_call_parser", "mtp", "max_seqs", "quantization", "bilder_pro_frage", "kv_cache_dtype",
-             "venv", "docker", "entwurf")
+             "venv", "docker", "entwurf", "batched_tokens")
 # a separate draft model for speculative decoding (Gemma 4's „assistant“, Dominik 2026-11-13 „1“): only a repository
 # name; fetched and checked like the weights, only for an entry still measured (no pinned revision), its MoE on Triton
 # (the recipe for Blackwell desktops: the drafter's default fused MoE path is not built there)
@@ -210,6 +210,9 @@ def _pruefe_vllm(m):
     for key, hi in (("mtp", 8), ("max_seqs", 64), ("bilder_pro_frage", 8)):
         if key in v and (isinstance(v[key], bool) or not isinstance(v[key], int) or not 0 <= v[key] <= hi):
             raise Fehler(key)
+    if "batched_tokens" in v and (isinstance(v["batched_tokens"], bool) or not isinstance(v["batched_tokens"], int)
+                                  or not 2048 <= v["batched_tokens"] <= 32768):
+        raise Fehler("batched_tokens")
     if "quantization" in v and v["quantization"] not in QUANT:
         raise Fehler("quantization")
     if "kv_cache_dtype" in v and v["kv_cache_dtype"] not in KV:
@@ -421,13 +424,15 @@ def wahl_zeilen(art, kat=None):
 
 def messliste(was, kat=None):
     """The ids to measure, in catalog order: was = words llm, sehen, helfer (the entries marked "immer"), qwen36
-    (Qwen3.6 35B A3B NVFP4 with and without MTP), flash (Qwen3.8 Flash Next in Docker, measured only on request), gemma4 and gemma4mtp (Gemma 4 26B A4B NVFP4, the second with its draft model, on request);
+    (Qwen3.6 35B A3B NVFP4 with and without MTP), flash (Qwen3.8 Flash Next in Docker, measured only on request), gemma4 and gemma4mtp (Gemma 4 26B A4B NVFP4, the second with its draft model, on request), gemma4nv (NVIDIA's own
+    NVFP4 of it with the draft model and 16384 tokens per step, on request);
     no word means llm and sehen. Only models that run or were measured stay in the catalog (Dominik 2026-11-11)."""
     kat = katalog() if kat is None else kat
     was = list(was) or ["llm", "sehen"]
     wunsch = {"qwen36": ("qwen36-35b-a3b-nvfp4", "qwen36-35b-a3b-nvfp4-ohne-mtp"),     # Dominik 2026-10-18 „ja 1“
               "flash": ("qwen38-flash-next-fp4",),     # Docker; share 0.65 never started (tars 2026-10-21)
-              "gemma4": ("gemma4-26b-a4b-nvfp4",), "gemma4mtp": ("gemma4-26b-a4b-nvfp4-mtp",)}     # Dominik 2026-11-13 „1“: a candidate, out again if it loses
+              "gemma4": ("gemma4-26b-a4b-nvfp4",), "gemma4mtp": ("gemma4-26b-a4b-nvfp4-mtp",),
+              "gemma4nv": ("gemma4-26b-a4b-nvidia-mtp",)}     # Dominik 2026-11-15 „1 und 2“     # Dominik 2026-11-13 „1“: a candidate, out again if it loses
     wunsch.update({i: (i,) for i, m in kat.items() if m.get("eigen") or docker_bild(m)})   # an own model by its id
     if any(w not in ("llm", "sehen", "helfer") and w not in wunsch for w in was):
         raise Fehler("was")
@@ -462,6 +467,8 @@ def vllm_args(m, port=MESS_PORT, revision="", mtp=True, uds=""):
         a += ["--quantization", v["quantization"]]
     if v.get("kv_cache_dtype"):
         a += ["--kv-cache-dtype", v["kv_cache_dtype"]]
+    if v.get("batched_tokens"):      # more of a long question per step: the first word comes sooner (Dominik 2026-11-15)
+        a += ["--max-num-batched-tokens", str(v["batched_tokens"])]
     if v.get("reasoning_parser"):
         a += ["--reasoning-parser", v["reasoning_parser"]]
     if v.get("tool_call_parser"):
