@@ -6216,6 +6216,13 @@
 "titel": "Käfer fällt auf",
 "text": "Funktionen → Zugang → Probleme melden ist an. Im Panel zwischen zwei Seiten wechseln: der Käfer oben rechts wackelt kurz. Eine Minute auf einer Seite bleiben: er krabbelt ein Stück nach links und zurück, die Seite darunter bewegt sich nicht. In der iPhone-App wackelt er beim Öffnen von Assistent oder Heute und krabbelt ebenso. Am Gerät „Bewegung reduzieren“ einschalten: er bleibt ruhig.",
 "thread": "Fehler und Wünsche als Issue melden"
+},
+{
+"id": "P906",
+"v": 1464,
+"titel": "Umfragen in Chats",
+"text": "Admin: Funktionen → Chats → „Umfragen in Chats“ an. In einer Gruppe (oder einem Chat zu zweit) auf das Balken-Symbol neben dem Textfeld tippen, eine Frage mit drei Antworten stellen. Ein zweites Profil tippt eine Antwort an: Zahl, Balken und sein Name stehen bei der Antwort; noch einmal tippen nimmt die Stimme zurück. Mit „Mehrere Antworten erlaubt“ gehen mehrere. Nur wer gefragt hat, sieht „Umfrage schließen“; danach ist die Antwort mit den meisten Stimmen fett und niemand kann mehr abstimmen. In einem privaten Chat (Schloss) gibt es das Symbol nicht. Dasselbe in der iPhone-App.",
+"thread": "Ideen aus Nextcloud übernehmen"
 }
 ]
 }

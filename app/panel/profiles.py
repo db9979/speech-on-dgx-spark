@@ -821,6 +821,8 @@ APP_PATHS = ("/api/chat", "/api/test/asr", "/api/siri/ask", "/api/iphone/hello",
              "/api/chats/back", "/api/chats/react", "/api/chats/read", "/api/chats/typing", "/api/chats/opts",
              "/api/chats/members", "/api/chats/leave", "/api/chats/clear", "/api/chats/find", "/api/chats/stream",
              "/api/chats/media",
+             # Umfragen in Chats (umfrage.py): make, vote, close; each checks its own release
+             "/api/chats/poll", "/api/chats/poll/vote", "/api/chats/poll/close",
              # private chats (chatsec.py): the app's own device key in the Secure Enclave, the history for a new device
              "/api/chats/keys", "/api/chats/keys/remove", "/api/chats/private", "/api/chats/share", "/api/chats/share/done",
              # calls between two profiles (anrufe.py): the app rings through CallKit, sound and picture go device to device

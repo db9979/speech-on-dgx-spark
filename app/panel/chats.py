@@ -404,6 +404,12 @@ def _ticks(x, c, uid):
     return "sent"
 
 
+# a module's own part of a message as the page shows it (umfrage.py): f(x, cid, uid, names) -> dict or None
+PUBLIC = []
+LIVE = {}        # name -> for_live() of a module that hooks itself into the chats (umfrage.py), read by live.py
+STATE = {}       # name -> f(uid): what such a module adds to the page's state (umfrage.py: "polls")
+
+
 def _public(x, cid, c, d, uid, names):
     out = {"id": x["id"], "from": x["from"], "name": names.get(x["from"], ""), "t": x["t"],
            "kind": x.get("kind", "text"), "mine": x["from"] == uid}
@@ -433,6 +439,8 @@ def _public(x, cid, c, d, uid, names):
             out["edited"] = True
         if x.get("via"):
             out["via"] = x["via"]
+        for f in PUBLIC:
+            out.update(f(x, cid, uid, names) or {})
     if x.get("reply") and not x.get("gone"):
         r = next((y for y in d["items"] if y["id"] == x["reply"]), None)
         out["reply"] = {"id": x["reply"], "name": names.get(r["from"], "") if r else "",
@@ -447,7 +455,7 @@ def _public(x, cid, c, d, uid, names):
         if x.get("fail"):
             out["fail"] = True     # another Spark did not take it within 7 days (verbund.py)
         now = time.time()
-        out["can_edit"] = now - x["t"] < EDIT_SECS and x.get("kind") == "text"
+        out["can_edit"] = now - x["t"] < EDIT_SECS and x.get("kind") == "text" and not x.get("poll")
         out["can_back"] = now - x["t"] < BACK_SECS
     return out
 
@@ -1134,7 +1142,7 @@ def _far_pick(uid, wanted, already):
     return ok, out
 
 
-async def send(uid, cid, text, reply="", via="", now=None, media=None, box=None, blob=None):
+async def send(uid, cid, text, reply="", via="", now=None, media=None, box=None, blob=None, extra=None):
     """A message into a chat (rechecks every rule), then delivered: events to open pages, a notification to the
     devices of everybody else who has none open. media (from photo/file/voice below): {"kind", "parts": {part:
     bytes}, "info": {...}}, stored sealed beside the chat. box/blob: a private chat's message as the device made it
@@ -1197,6 +1205,10 @@ async def send(uid, cid, text, reply="", via="", now=None, media=None, box=None,
         messages._count(uid, [], "all", now)
     mid = secrets.token_hex(6)
     item = {"id": mid, "from": uid, "t": now, "kind": "text", "text": seal(text, cid, mid), "react": {}}
+    if extra:   # a module's own part of a text message (umfrage.py: the poll), made with the message's id
+        if box is not None or media or c.get("kind") not in ("one", "group") or spans(c):
+            raise ValueError("Das geht nur in einem Chat dieses Sparks.")
+        item.update(extra(mid))
     size = 0
     if box is not None:
         item = {"id": mid, "from": uid, "t": now, "kind": "box", "box": box, "react": {}}
@@ -1369,6 +1381,8 @@ def edit(uid, cid, mid, text, now=None):
         x = _own(d, uid, mid)
         if now - x["t"] >= EDIT_SECS or x.get("kind") != "text":
             raise PermissionError("Ändern geht nur in den ersten 15 Minuten.")
+        if x.get("poll"):
+            raise PermissionError("Eine Umfrage lässt sich nicht ändern.")
         x["text"], x["edited"] = seal(text, cid, mid), True
         return meta["members"]
     _tell(_mutate(cid, f, now), {"type": "chat", "id": cid})
@@ -1387,7 +1401,7 @@ def take_back(uid, cid, mid, now=None):
         x = _own(d, uid, mid)
         if now - x["t"] >= BACK_SECS:
             raise PermissionError("Zurückziehen geht nur in der ersten Stunde.")
-        for k in ("text", "reply", "edited", "via", "media", "box", "blob"):
+        for k in ("text", "reply", "edited", "via", "media", "box", "blob", "poll"):   # poll: umfrage.py
             x.pop(k, None)
         x["gone"], x["react"] = True, {}
         return meta["members"]
@@ -2101,7 +2115,7 @@ def _state(uid):
             "receipts": s.get("chat_receipts", True) is not False, "push_text": s.get("chat_push_text") is True,
             "max_members": MAX_MEMBERS, "media": media_ok(uid), "invite": invite_on(), "private": _private_ok(uid),
             "invite_switch": features._switch(features.chat_cfg(), "chats_invite"),
-            **_far_state(uid), "calls": _calls_ok(uid), "ruf": _ruf(uid),
+            **_far_state(uid), "calls": _calls_ok(uid), "ruf": _ruf(uid), **{k: f(uid) for k, f in STATE.items()},
             "limits": {"photo_mb": MAX_PHOTO_IN // 1024**2, "file_mb": MAX_FILE // 1024**2, "voice_secs": MAX_VOICE_SECS,
                        "used_mb": round(used(uid) / 1024**2), "quota_mb": QUOTA // 1024**2}}
 

@@ -145,6 +145,7 @@ function cxTop(){const d=CX.data;if(!d)return;cxEl('cxempty').hidden=true;cxEl('
   const why=cxEl('cxwhy');why.hidden=d.can_send;why.textContent=d.can_send?'':cxTr(d.why||t('Hier kannst du gerade nicht schreiben.','You cannot write here right now.'));
   cxEl('cxcomp').hidden=!d.can_send||!!CX.pane||!!CXR.rec;cxEl('cxreply').hidden=!CX.reply&&!CX.edit||!!CX.pane;
   const md=!!(CX.S&&CX.S.media)&&!CX.edit&&(!d.far||!!CX.S.far_media)&&!cxSpans(d);cxEl('cxatt').hidden=!md;cxEl('cxmic').hidden=!md;
+  cxEl('cxpoll').hidden=!(CX.S&&CX.S.polls)||!!CX.edit||(d.kind!=='one'&&d.kind!=='group')||!!d.private||!!d.far||cxSpans(d);
   const ca=!!(CX.S&&CX.S.calls)&&(d.kind==='one'||!!d.private)&&!d.far&&d.can_send;cxEl('cxcall').hidden=!ca;cxEl('cxvideo').hidden=!ca}
 const CX_SYS={add:['fügte hinzu: ','added: '],remove:['nahm heraus: ','took out: '],admin:['machte zum Admin: ','made admin: '],leave:['hat die Gruppe verlassen','left the group'],
   name:['nannte die Gruppe ','named the group '],vanish:['',''],made:['hat die Gruppe erstellt','created the group'],
@@ -169,14 +170,30 @@ function cxLog(){const d=CX.data,log=cxEl('cxlog');log.hidden=!!CX.pane;let html
     const head=d.kind==='group'&&!x.mine&&prev!==x.from?`<b class="cx-who" data-hue="${cxHue(x.from)}">${esc(x.name||t('Gelöschtes Profil','Deleted profile'))}</b>`:'';prev=x.from;
     const rep=x.reply?`<button type="button" class="cx-quote" data-cxa="jump" data-mid="${esc(x.reply.id)}"><b>${esc(x.reply.name||'')}</b><span>${esc(x.reply.gone?t('Nachricht zurückgenommen','Message taken back'):x.reply.text||cxKindWord(x.reply.kind))}</span></button>`:'';
     const body=x.gone?`<span class="cx-gone">${esc(x.mine?t('Du hast diese Nachricht zurückgenommen.','You took this message back.'):t('Diese Nachricht wurde zurückgenommen.','This message was taken back.'))}</span>`
-      :cxMediaHtml(x)+(x.text?`<span class="cx-txt${x.kind==='voice'?' cx-said':''}">${esc(x.text)}</span>`:'');
+      :cxMediaHtml(x)+(x.text?`<span class="cx-txt${x.kind==='voice'?' cx-said':''}">${esc(x.text)}</span>`:'')+(x.poll?cxPollHtml(x):'');
     const meta=`<span class="cx-meta">${x.via==='spark'?`<i title="${esc(t('über den Assistenten','via the assistant'))}">${ic('mic')}</i> `:''}${x.edited?esc(t('bearbeitet','edited'))+' · ':''}${esc(cxHm(x.t))}${x.fail?` <i class="cx-tk fail" title="${esc(t('nicht zugestellt: der andere Spark war 7 Tage nicht erreichbar','not delivered: the other Spark was not reachable for 7 days'))}">${ic('warn')}</i>`:x.tick?' '+cxTick(x.tick):''}</span>`;
     const re=(x.react||[]).length?`<span class="cx-reacts">${x.react.map(r=>`<button type="button" class="cx-rc${r.me?' me':''}" data-cxa="react" data-mid="${esc(x.id)}" data-e="${esc(r.e)}">${esc(r.e)}${r.n>1?' '+r.n:''}</button>`).join('')}</span>`:'';
     html+=`<div class="cx-msg${x.mine?' mine':''}" data-mid="${esc(x.id)}"><div class="cx-bub" tabindex="0" role="button" aria-haspopup="true">${head}${rep}${body}${meta}</div>${re}</div>`}
   if(!d.items.length)html+=`<div class="cx-sys">${esc(d.private?t('Privat: Nur eure beiden Geräte können diesen Chat lesen, der Spark nicht.','Private: only your two people\'s devices can read this chat, the Spark cannot.'):d.kind==='group'?t('Die Gruppe ist da. Schreib die erste Nachricht.','The group is ready. Write the first message.'):d.far?t('Diese Person ist auf einem anderen Spark. Text geht schon, Fotos, Dateien und Sprache kommen später.','This person is on another Spark. Text works already, photos, files and voice come later.'):t('Schreib die erste Nachricht.','Write the first message.'))}</div>`;
-  log.innerHTML=html;cxHues(log);if(d.private&&window.csAfter)csAfter(log,d);
+  log.innerHTML=html;cxHues(log);log.querySelectorAll('[data-pc]').forEach(e=>e.style.setProperty('--p',e.dataset.pc+'%'));if(d.private&&window.csAfter)csAfter(log,d);
   // a change from elsewhere draws the chat again: an open menu stays open
   const m=CX.menu&&log.querySelector(`.cx-msg[data-mid="${CSS.escape(CX.menu)}"]`);CX.menu='';if(m)cxMenu(m)}
+// Umfragen (umfrage.py): the answers with their count and who chose them; a tap votes (again: takes it back)
+function cxPollHtml(x){const p=x.poll,max=Math.max(1,...p.n);
+  return `<span class="cx-poll">`+p.opts.map((o,i)=>`<button type="button" class="cx-po${p.mine.includes(i)?' on':''}${p.closed&&p.win===i?' win':''}" data-cxa="vote" data-mid="${esc(x.id)}" data-i="${i}"${p.closed?' disabled':''}>`+
+    `<span class="cx-pbar" data-pc="${Math.round(100*p.n[i]/max)}"></span><b>${p.mine.includes(i)?'✓ ':''}${esc(o)}</b><i>${p.n[i]}</i>`+
+    (p.who[i].length?`<small>${esc(p.who[i].filter(Boolean).join(', '))}</small>`:'')+`</button>`).join('')+
+    `<small class="cx-pinfo">${esc((p.closed?t('Geschlossen · ','Closed · '):p.multi?t('Mehrere erlaubt · ','Several allowed · '):'')+(p.voters===1?t('1 Stimme','1 vote'):p.voters+' '+t('Stimmen','votes')))}</small>`+
+    (p.can_close?`<button type="button" class="b" data-cxa="pclose" data-mid="${esc(x.id)}">${esc(t('Umfrage schließen','Close poll'))}</button>`:'')+`</span>`}
+function cxPollForm(){const p=cxEl('cxpane');
+  p.innerHTML=`<label class="cx-lbl" for="cxpq">${esc(t('Frage','Question'))}</label><input id="cxpq" maxlength="300" autocomplete="off" placeholder="${esc(t('z. B. Wann grillen wir?','e.g. When do we barbecue?'))}">`+
+    `<div class="cx-grp">${esc(t('Antworten','Answers'))}</div><div id="cxpopts">${[0,1,2].map(cxPollOpt).join('')}</div>`+
+    `<div class="cx-acts2"><button type="button" class="b" data-cxn="popt">${esc(t('Antwort dazu','Add answer'))}</button></div>`+
+    `<label class="cx-pp"><input type="checkbox" id="cxpmulti"><span>${esc(t('Mehrere Antworten erlaubt','Several answers allowed'))}</span></label>`+
+    `<div class="cx-acts2"><button type="button" class="b p" data-cxn="pollgo">${esc(t('Umfrage stellen','Make poll'))}</button><button type="button" class="b" data-cxn="cancel">${esc(t('Abbrechen','Cancel'))}</button></div><div class="cx-msgline mut" id="cxpmsg"></div>`;
+  cxEl('cxpq').focus()}
+const cxPollOpt=i=>`<input class="cx-popt" maxlength="120" autocomplete="off" aria-label="${esc(t('Antwort','Answer')+' '+(i+1))}" placeholder="${esc(t('Antwort','Answer')+' '+(i+1))}">`;
+cxEl('cxpoll').addEventListener('click',()=>{if(CX.data)cxPane('poll')});
 // tap on a bubble: reactions and what can be done with it, right below
 function cxMenu(msg){const old=cxEl('cxlog').querySelector('.cx-acts');const same=old&&old.parentNode===msg;if(old)old.remove();CX.menu='';if(same||!CX.data)return;
   const x=CX.data.items.find(y=>y.id===msg.dataset.mid);if(!x||x.gone||x.kind==='sys')return;CX.menu=x.id;
@@ -193,6 +210,11 @@ cxEl('cxlog').addEventListener('click',async e=>{const b=e.target.closest('[data
   try{if(a==='more'){const first=CX.data.items[0];if(!first)return;const d=await cxApi('/api/chats/items?id='+encodeURIComponent(CX.cur)+'&before='+encodeURIComponent(first.id));if(CX.data.private&&window.csPrepare){d.private=true;await csPrepare(d,CX.cur)}
       const log=cxEl('cxlog'),h=log.scrollHeight;CX.data.items=d.items.concat(CX.data.items);CX.data.more=d.more;cxLog();log.scrollTop=log.scrollHeight-h}
     else if(a==='jump')cxJump(mid);
+    else if(a==='vote'&&x&&x.poll){const p=x.poll,i=+b.dataset.i,on=p.mine.includes(i);
+      const picks=p.multi?(on?p.mine.filter(j=>j!==i):p.mine.concat([i])):(on?[]:[i]);
+      await cxApi('/api/chats/poll/vote',{id:CX.cur,mid,picks});cxOpen(CX.cur,true)}
+    else if(a==='pclose'&&x){if(!confirm(t('Die Umfrage schließen? Danach zählt keine Stimme mehr.','Close the poll? After that no vote counts any more.')))return;
+      await cxApi('/api/chats/poll/close',{id:CX.cur,mid});cxOpen(CX.cur,true)}
     else if(a==='photo'&&x)x.att?csBig(x):cxBig(x);
     else if(a==='react'){const mine=(x&&x.react||[]).some(r=>r.me&&r.e===b.dataset.e);await cxApi('/api/chats/react',{id:CX.cur,mid,emoji:mine?'':b.dataset.e});cxOpen(CX.cur,true)}
     else if(a==='reply'&&x){CX.edit=null;CX.reply={id:x.id,name:x.mine?t('Du','You'):x.name,text:x.text||cxKindWord(x.kind)};cxReplyBar();cxEl('cxtext').focus()}
@@ -230,9 +252,9 @@ function cxPane(k){CX.pane=k;const p=cxEl('cxpane');p.hidden=!k;if(!k){p.innerHT
   box().classList.add('sel');cxEl('cxempty').hidden=true;cxEl('cxlog').hidden=true;cxEl('cxcomp').hidden=true;cxEl('cxreply').hidden=true;cxEl('cxwhy').hidden=true;
   cxEl('cxtop').hidden=false;const tt=cxEl('cxtitle');tt.querySelector('small').hidden=true;
   cxEl('cxcall').hidden=true;cxEl('cxvideo').hidden=true;
-  cxEl('cxinfo').hidden=k==='new'||k==='group'||k==='invite'||k==='ann'||k==='far'||!CX.data;
-  tt.querySelector('b').textContent=k==='new'?t('Neuer Chat','New chat'):k==='group'?t('Neue Gruppe','New group'):k==='invite'?t('Jemanden einladen','Invite someone'):k==='ann'?t('Durchsage','Announcement'):k==='far'?t('Andere Sparks','Other Sparks'):t('Chat-Info','Chat info');
-  if(k==='new')cxNew();else if(k==='group')cxGroup();else if(k==='invite')cxInvite();else if(k==='info')cxInfo();else if(k==='add')cxAdd();else if(k==='ann')cxAnn();else if(k==='far'&&window.vbPane)window.vbPane()}
+  cxEl('cxinfo').hidden=k==='poll'||k==='new'||k==='group'||k==='invite'||k==='ann'||k==='far'||!CX.data;
+  tt.querySelector('b').textContent=k==='new'?t('Neuer Chat','New chat'):k==='group'?t('Neue Gruppe','New group'):k==='invite'?t('Jemanden einladen','Invite someone'):k==='ann'?t('Durchsage','Announcement'):k==='far'?t('Andere Sparks','Other Sparks'):k==='poll'?t('Umfrage','Poll'):t('Chat-Info','Chat info');
+  if(k==='new')cxNew();else if(k==='group')cxGroup();else if(k==='invite')cxInvite();else if(k==='info')cxInfo();else if(k==='add')cxAdd();else if(k==='ann')cxAnn();else if(k==='poll')cxPollForm();else if(k==='far'&&window.vbPane)window.vbPane()}
 const cxPeople=(list,sel)=>list.length?`<div class="cx-people">${list.map(p=>`<label class="cx-pp">${sel?`<input type="checkbox" data-pp="${esc(p.id)}"${CX.pick.has(p.id)?' checked':''}>`:''}`+
   `${cxAva(p.id,p.name)}<span>${esc(p.name)}</span>${sel?'':`<button type="button" class="b" data-cxn="one" data-to="${esc(p.id)}">${esc(t('Schreiben','Write'))}</button>`+
   (CX.S&&CX.S.private?`<button type="button" class="b" data-cxn="priv" data-to="${esc(p.id)}" title="${esc(t('Privat: Ende-zu-Ende verschlüsselt','Private: end-to-end encrypted'))}">${ic('lock')} ${esc(t('Privat','Private'))}</button>`:'')}</label>`).join('')}</div>`
@@ -292,6 +314,10 @@ cxEl('cxpane').addEventListener('click',async e=>{const b=e.target.closest('[dat
     else if(a==='invite')cxPane('invite');
     else if(a==='invmake'){const name=(cxEl('cxinvname')||{}).value||'';b.disabled=true;
       try{const r=await cxApi('/api/chats/invite',{name:name.trim(),base:location.origin});cxInvite(r)}finally{b.disabled=false}}
+    else if(a==='popt'){const o=cxEl('cxpopts'),n=o.querySelectorAll('input').length;if(n<10)o.insertAdjacentHTML('beforeend',cxPollOpt(n));if(n>=9)b.hidden=true}
+    else if(a==='pollgo'){b.disabled=true;
+      try{await cxApi('/api/chats/poll',{id:CX.cur,q:cxEl('cxpq').value.trim(),opts:[...cxEl('cxpopts').querySelectorAll('input')].map(i=>i.value.trim()).filter(Boolean),multi:cxEl('cxpmulti').checked});
+        cxPane('');await cxOpen(CX.cur,true);const log=cxEl('cxlog');log.scrollTop=log.scrollHeight;cxLoad()}finally{b.disabled=false}}
     else if(a==='invcopy')copyString(cxEl('cxinvlink').value,b);
     else if(a==='invshare'){try{await navigator.share({title:'Spark',text:t('Komm in meinen Chat auf dem Spark:','Join my chat on the Spark:'),url:cxEl('cxinvlink').value})}catch{}}
     else if(a==='invnew')cxInvite();

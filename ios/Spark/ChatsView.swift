@@ -44,6 +44,19 @@ struct ChatReact: Hashable {
     var me = false
 }
 
+/// A poll in a chat (umfrage.py): the answers with their count and who chose them.
+struct ChatPoll: Hashable {
+    var opts: [String] = []
+    var n: [Int] = []
+    var who: [[String]] = []
+    var mine: [Int] = []
+    var multi = false
+    var closed = false
+    var win = -1
+    var canClose = false
+    var voters = 0
+}
+
 /// The message a message answers.
 struct ChatQuote: Hashable {
     let id: String
@@ -93,6 +106,7 @@ struct ChatLine: Identifiable, Hashable {
     var locked = false
     /// the key of a private attachment (from inside the box)
     var fileKey: String?
+    var poll: ChatPoll?
 }
 
 /// One page of a chat with what the screen needs to draw it.
@@ -134,6 +148,8 @@ struct ChatState {
     var on = false
     var media = false
     var groups = false
+    /// Umfragen in Chats (umfrage.py) for this profile
+    var polls = false
     /// private chats (Ende-zu-Ende) are on for this profile
     var priv = false
     var chats: [ChatSummary] = []
@@ -190,6 +206,7 @@ extension SparkAPI {
         s.on = d["on"] as? Bool ?? false
         s.media = d["media"] as? Bool ?? false
         s.groups = d["groups"] as? Bool ?? false
+        s.polls = d["polls"] as? Bool ?? false
         s.priv = d["private"] as? Bool ?? false
         s.maxText = (d["max_text"] as? NSNumber)?.intValue ?? 4000
         s.maxMembers = (d["max_members"] as? NSNumber)?.intValue ?? 50
@@ -268,6 +285,19 @@ extension SparkAPI {
             l.box = try? JSONSerialization.data(withJSONObject: b)
             l.canEdit = false
         }
+        if let p = x["poll"] as? [String: Any] {
+            let opts = (p["opts"] as? [String] ?? []).prefix(10).map { String($0.prefix(120)) }
+            var o = ChatPoll(opts: opts)
+            o.n = opts.indices.map { i in ((p["n"] as? [NSNumber] ?? []).dropFirst(i).first)?.intValue ?? 0 }
+            o.who = opts.indices.map { i in (((p["who"] as? [[String]] ?? []).dropFirst(i).first) ?? []).prefix(50).map { String($0.prefix(60)) } }
+            o.mine = (p["mine"] as? [NSNumber] ?? []).map(\.intValue).filter { opts.indices.contains($0) }
+            o.multi = p["multi"] as? Bool ?? false
+            o.closed = p["closed"] as? Bool ?? false
+            o.win = (p["win"] as? NSNumber)?.intValue ?? -1
+            o.canClose = p["can_close"] as? Bool ?? false
+            o.voters = (p["voters"] as? NSNumber)?.intValue ?? 0
+            l.poll = o
+        }
         if let m = x["media"] as? [String: Any] {
             l.media = ChatMedia(w: (m["w"] as? NSNumber)?.intValue ?? 0, h: (m["h"] as? NSNumber)?.intValue ?? 0,
                                 secs: (m["secs"] as? NSNumber)?.intValue ?? 0, size: (m["size"] as? NSNumber)?.intValue ?? 0,
@@ -331,6 +361,19 @@ extension SparkAPI {
 
     func chatEdit(_ id: String, mid: String, text: String) async throws {
         _ = try await post("api/chats/edit", ["id": id, "mid": mid, "text": text])
+    }
+
+    /// Umfragen (umfrage.py): a question with 2 to 10 answers into the chat, a vote ([] takes it back), closing.
+    func chatPoll(_ id: String, question: String, options: [String], multi: Bool) async throws {
+        _ = try await post("api/chats/poll", ["id": id, "q": question, "opts": options, "multi": multi])
+    }
+
+    func chatVote(_ id: String, mid: String, picks: [Int]) async throws {
+        _ = try await post("api/chats/poll/vote", ["id": id, "mid": mid, "picks": picks])
+    }
+
+    func chatPollClose(_ id: String, mid: String) async throws {
+        _ = try await post("api/chats/poll/close", ["id": id, "mid": mid])
     }
 
     /// Takes a message back for everybody (within an hour).
@@ -663,7 +706,7 @@ struct ChatsView: View {
                 // calls only in a chat of two on this Spark (anrufe.py); "new chat" opens one of two as well
                 ChatThreadView(id: id, title: c?.title ?? "", media: m.state.media, maxText: m.state.maxText,
                                callable: Conversation.shared.allowed.calls && !(c?.group ?? false) && !(c?.far ?? false),
-                               contacts: m.state.contacts)
+                               contacts: m.state.contacts, polls: m.state.polls)
             }
             .refreshable { await m.load() }
             .task {
@@ -1095,6 +1138,24 @@ final class ChatThreadModel: ObservableObject {
         if await run({ api in try await api.chatReact(id, mid: l.id, emoji: mine ? "" : e) }) { await load() }
     }
 
+    /// Umfragen (umfrage.py): a tap on an answer votes for it, a second tap takes it back (with "Mehrere" one by one).
+    func vote(_ l: ChatLine, _ i: Int) async {
+        guard let p = l.poll else { return }
+        let on = p.mine.contains(i)
+        let picks = p.multi ? (on ? p.mine.filter { $0 != i } : p.mine + [i]) : (on ? [] : [i])
+        if await run({ api in try await api.chatVote(id, mid: l.id, picks: picks) }) { await load() }
+    }
+
+    func closePoll(_ l: ChatLine) async {
+        if await run({ api in try await api.chatPollClose(id, mid: l.id) }) { await load() }
+    }
+
+    func makePoll(_ q: String, _ opts: [String], _ multi: Bool) async -> Bool {
+        let ok = await run { api in try await api.chatPoll(id, question: q, options: opts, multi: multi) }
+        if ok { await load() }
+        return ok
+    }
+
     func takeBack(_ l: ChatLine) async {
         if await run({ api in try await api.chatBack(id, mid: l.id) }) {
             if editing?.id == l.id { stopWriting() }
@@ -1202,7 +1263,7 @@ final class ChatThreadModel: ObservableObject {
 
 /// What a long press on a message offers.
 enum ChatAction {
-    case react(String), reply, copy, edit, back, jump(String)
+    case react(String), reply, copy, edit, back, jump(String), vote(Int), closePoll
 }
 
 struct ChatThreadView: View {
@@ -1210,6 +1271,9 @@ struct ChatThreadView: View {
     let media: Bool
     let maxText: Int
     let callable: Bool
+    var polls = false
+    @State private var polling = false
+    @State private var closing: ChatLine?
     let contacts: [Recipient]
     @State private var photo: PhotosPickerItem?
     @State private var files = false
@@ -1221,8 +1285,9 @@ struct ChatThreadView: View {
     @ObservedObject private var feed = ChatFeed.shared
     @Environment(\.dismiss) private var dismiss
 
-    init(id: String, title: String, media: Bool, maxText: Int, callable: Bool = false, contacts: [Recipient] = []) {
+    init(id: String, title: String, media: Bool, maxText: Int, callable: Bool = false, contacts: [Recipient] = [], polls: Bool = false) {
         _m = StateObject(wrappedValue: ChatThreadModel(id: id, title: title))
+        self.polls = polls
         self.media = media
         self.maxText = maxText
         self.callable = callable
@@ -1344,6 +1409,18 @@ struct ChatThreadView: View {
                 dismiss()
             }
         }
+        .sheet(isPresented: $polling) {
+            ChatPollForm { q, opts, multi in await m.makePoll(q, opts, multi) }
+        }
+        .confirmationDialog("Die Umfrage schließen?", isPresented: Binding(get: { closing != nil }, set: { if !$0 { closing = nil } }),
+                            titleVisibility: .visible) {
+            Button("Umfrage schließen") {
+                if let l = closing { Task { await m.closePoll(l) } }
+                closing = nil
+            }
+        } message: {
+            Text("Danach zählt keine Stimme mehr.")
+        }
         .confirmationDialog("Für alle zurücknehmen?", isPresented: Binding(get: { backing != nil }, set: { if !$0 { backing = nil } }),
                             titleVisibility: .visible) {
             Button("Für alle zurücknehmen", role: .destructive) {
@@ -1367,6 +1444,8 @@ struct ChatThreadView: View {
             writing = true
         case .back: backing = l
         case .jump(let mid): withAnimation { proxy.scrollTo(mid, anchor: .center) }
+        case .vote(let i): Task { await m.vote(l, i) }
+        case .closePoll: closing = l
         }
     }
 
@@ -1405,6 +1484,13 @@ struct ChatThreadView: View {
                         Image(systemName: "paperclip").font(.title3).frame(width: 36, height: 36)
                     }
                     .accessibilityLabel("Foto oder Datei schicken")
+                    .disabled(m.busy)
+                }
+                if polls && m.editing == nil && (m.page.kind == "one" || m.page.kind == "group") && !m.page.priv && !m.page.far && !m.page.farHome {
+                    Button { polling = true } label: {
+                        Image(systemName: "chart.bar").font(.title3).frame(width: 36, height: 36)
+                    }
+                    .accessibilityLabel("Umfrage stellen")
                     .disabled(m.busy)
                 }
                 TextField("Nachricht", text: $m.text, axis: .vertical)
@@ -1780,6 +1866,7 @@ private struct ChatBubble: View {
                 if !l.text.isEmpty {
                     Text(verbatim: l.text).italic(l.kind == "voice").textSelection(.enabled)
                 }
+                if let p = l.poll { ChatPollView(p: p, act: act) }
             }
             HStack(spacing: 4) {
                 if l.spoken { Image(systemName: "mic").accessibilityLabel(Text("über den Assistenten")) }
@@ -1956,5 +2043,98 @@ private struct ChatFile: View {
         let safe = f.name.components(separatedBy: CharacterSet(charactersIn: "/\\:")).joined(separator: "_")
         let target = FileManager.default.temporaryDirectory.appendingPathComponent(safe.isEmpty ? "Datei" : safe)
         if (try? d.write(to: target, options: .atomic)) != nil { url = target }
+    }
+}
+
+/// A poll's answers in the bubble (umfrage.py): a tap votes (again: takes it back), who asked closes it.
+private struct ChatPollView: View {
+    let p: ChatPoll
+    let act: (ChatAction) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            ForEach(p.opts.indices, id: \.self) { i in
+                Button { act(.vote(i)) } label: {
+                    VStack(alignment: .leading, spacing: 2) {
+                        HStack {
+                            if p.mine.contains(i) { Image(systemName: "checkmark.circle.fill").foregroundStyle(Color.accentColor) }
+                            Text(verbatim: p.opts[i]).fontWeight(p.closed && p.win == i ? .bold : .regular)
+                            Spacer(minLength: 8)
+                            Text(verbatim: "\(p.n[i])").foregroundStyle(.secondary)
+                        }
+                        let names = p.who[i].filter { !$0.isEmpty }
+                        if !names.isEmpty {
+                            Text(verbatim: names.joined(separator: ", ")).font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+                    .padding(.horizontal, 10).padding(.vertical, 7)
+                    .frame(minWidth: 200, alignment: .leading)
+                    .background(GeometryReader { g in
+                        Rectangle().fill(Color.accentColor.opacity(0.16))
+                            .frame(width: g.size.width * CGFloat(p.n[i]) / CGFloat(max(1, p.n.max() ?? 1)))
+                    })
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(p.mine.contains(i) ? Color.accentColor : Color.secondary.opacity(0.3)))
+                }
+                .buttonStyle(.plain)
+                .disabled(p.closed)
+            }
+            Text(verbatim: (p.closed ? String(localized: "Geschlossen") + " · " : p.multi ? String(localized: "Mehrere erlaubt") + " · " : "")
+                 + String(localized: "\(p.voters) Stimmen"))
+                .font(.caption).foregroundStyle(.secondary)
+            if p.canClose {
+                Button("Umfrage schließen") { act(.closePoll) }.font(.footnote)
+            }
+        }
+    }
+}
+
+/// A new poll (umfrage.py): the question, 2 to 10 answers, one or several allowed.
+private struct ChatPollForm: View {
+    let send: (String, [String], Bool) async -> Bool
+    @State private var question = ""
+    @State private var answers = ["", "", ""]
+    @State private var multi = false
+    @State private var busy = false
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Frage") {
+                    TextField("z. B. Wann grillen wir?", text: $question, axis: .vertical)
+                        .onChange(of: question) { _, t in if t.count > 300 { question = String(t.prefix(300)) } }
+                }
+                Section("Antworten") {
+                    ForEach(answers.indices, id: \.self) { i in
+                        TextField(String(localized: "Antwort") + " \(i + 1)", text: $answers[i])
+                            .onChange(of: answers[i]) { _, t in if t.count > 120 { answers[i] = String(t.prefix(120)) } }
+                    }
+                    if answers.count < 10 {
+                        Button("Antwort dazu") { answers.append("") }
+                    }
+                }
+                Section {
+                    Toggle("Mehrere Antworten erlaubt", isOn: $multi)
+                }
+            }
+            .navigationTitle("Umfrage")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Abbrechen") { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Umfrage stellen") {
+                        busy = true
+                        Task {
+                            let opts = answers.map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+                            if await send(question.trimmingCharacters(in: .whitespacesAndNewlines), opts, multi) { dismiss() }
+                            busy = false
+                        }
+                    }
+                    .disabled(busy || question.trimmingCharacters(in: .whitespaces).isEmpty
+                              || answers.filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }.count < 2)
+                }
+            }
+        }
     }
 }

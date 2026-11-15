@@ -422,6 +422,7 @@
     "history_live": true,
     "chats": false,
     "chats_groups": false,
+    "chats_polls": false,
     "chats_media": false,
     "chats_invite": false,
     "chats_private": false,

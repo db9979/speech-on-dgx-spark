@@ -414,6 +414,7 @@
 "test_ui_browser.Browser.test_zustand_shows_both_computers_when_split": 11.4,
 "test_ui_browser.Browser.test_zustand_tiles_fit_and_lead_somewhere": 11.9,
 "test_ui_browser.JoinBrowser.test_invitation_and_handoff": 11.2,
+"test_umfrage": 1.5,
 "test_umziehen": 14.2,
 "test_umzug": 0.3,
 "test_undo": 1.0,

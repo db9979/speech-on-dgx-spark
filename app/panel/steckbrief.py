@@ -526,6 +526,13 @@ STECKBRIEFE = {
         ohne_werkzeug=("ohne", "Anmeldung beim Dienst nur in der Oberfläche")),
     "chatgroups": Steckbrief(de="Gruppen-Chats", en="Group chats", gruppe="day", schalter=("chats_groups",),
         anleitung="chatgroups", parent="chats", me="setbox", ohne_werkzeug=("ohne", "Gruppen in der Oberfläche")),
+    # umfrage.py (Nextcloud-Ideen 4, Dominik 2026-11-15 „alles umsetzen“): a question with answers as a chat message,
+    # members vote, who asked closes it; buttons only, never the model
+    "umfrage": Steckbrief(de="Umfragen in Chats", en="Polls in chats", gruppe="day", schalter=("chats_polls", "chats"),
+        anleitung="umfrage", parent="chats", me="setbox",
+        ohne_werkzeug=("ohne", "nur Knöpfe auf der Seite Chats und in den Apps (Umfrage, abstimmen, schließen)"),
+        begleiter="panel",
+        modul=("umfrage", "geraete", "Umfragen in Chats: Frage mit Antworten, abstimmen, schließen")),
     "chatmedia": Steckbrief(de="Fotos, Dateien und Sprache in Chats", en="Photos, files and voice in chats",
         gruppe="day", schalter=("chats_media",), anleitung="chatmedia", parent="chats", me="setbox",
         ohne_werkzeug=("ohne", "Fotos und Dateien in der Oberfläche")),

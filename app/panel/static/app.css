@@ -1704,7 +1704,9 @@ body.inchats:not(.appview):not(.kbd) .cx-comp{padding-right:96px}
 .cx-inl{display:flex;gap:6px;flex:1 1 200px;min-width:0}.cx-inl input{flex:1;min-width:0;width:auto}
 /* Chats Schritt B: attach, voice, photos, files, invitation */
 .cx [hidden]{display:none!important}
-.cx-comp .cx-att,.cx-comp .cx-mic{flex:none;width:42px;height:42px;padding:0;justify-content:center;border-radius:50%}.cx-comp .cx-att svg,.cx-comp .cx-mic svg{width:19px;height:19px}
+.cx-comp .cx-att,.cx-comp .cx-mic,.cx-comp .cx-pollb{flex:none;width:42px;height:42px;padding:0;justify-content:center;border-radius:50%}.cx-comp .cx-att svg,.cx-comp .cx-mic svg,.cx-comp .cx-pollb svg{width:19px;height:19px}
+/* Umfragen (umfrage.py): answers as rows with a bar behind, the count right, who chose it below */
+.cx-poll{display:grid;gap:6px;margin-top:6px;min-width:min(260px,60vw)}.cx-po{position:relative;display:grid;grid-template-columns:1fr auto;gap:2px 8px;text-align:left;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:inherit;font:inherit;overflow:hidden;cursor:pointer}.cx-po:disabled{cursor:default}.cx-po.on{border-color:var(--acc)}.cx-po.win b{font-weight:700}.cx-po b,.cx-po i,.cx-po small{position:relative;font-style:normal}.cx-po small{grid-column:1/-1;color:var(--mut);font:var(--t-cap)}.cx-pbar{position:absolute;inset:0 auto 0 0;width:var(--p,0%);background:color-mix(in srgb,var(--acc) 16%,transparent)}.cx-pinfo{color:var(--mut);font:var(--t-cap)}.cx-popt{display:block;width:100%;margin-bottom:6px}
 .cx-rec{display:flex;align-items:center;gap:10px;padding:8px 10px;border-top:1px solid var(--line);background:var(--card)}.cx-rec #cxrect{font-variant-numeric:tabular-nums;font-weight:600}
 .cx-recmax{flex:1;min-width:0;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cx-dot{width:10px;height:10px;border-radius:50%;background:var(--bad);animation:wk 1.2s ease-in-out infinite}

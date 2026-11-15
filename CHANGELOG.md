@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older versions (V01.0.000 to V01.0.999 and the lines before version numbers): [CHANGELOG-V01.0.md](CHANGELOG-V01.0.md).
 
+- **V01.1.464** · 2026-11-15 · Nextcloud-Ideen, Stufe 3a: Umfragen in Chats (Admin-Schalter chat.chats_polls, aus): eine Frage mit 2 bis 10 Antworten als Nachricht im Chat zu zweit oder in einer Gruppe dieses Spark, jedes Mitglied stimmt ab und ändert seine Stimme, wer gefragt hat, schließt sie; versiegelt wie jeder Chat-Text, nie in privaten Chats oder mit anderen Sparks; Panel und iPhone-App (P906)
 - **V01.1.463** · 2026-11-15 · Käfer fällt auf: wackelt beim Seitenwechsel, krabbelt ab und zu ein Stück, wird bei Fehlern der Seite orange mit Zahl; nichts springt, ruhig bei „Bewegung reduzieren“; iPhone-App wackelt und krabbelt auch (P905)
 - **V01.1.462** · 2026-11-15 · Gemma 4 von NVIDIA zum Messen: sudo speech-spark modelle messen gemma4nv misst nvidia/Gemma-4-26B-A4B-NVFP4 mit Googles Entwurfsmodell und 16384 Tokens pro Schritt (schnelleres erstes Wort bei langen Fragen), ohne trust_remote_code; unsloth mit MTP: 63,1 Tokens pro Sekunde (P904)
 - **V01.1.461** · 2026-11-15 · Nextcloud-Ideen, Stufe 2b: Beschäftigt im Termin (Admin-Schalter chat.calendar_busy, aus): während eines Termins mit Uhrzeit aus den eigenen Kalendern keine Durchsagen, Mitteilungen warten und kommen danach gesammelt (Alarme und Sicherheitshinweise immer), Spark-Anrufe klingeln nicht, Chats zeigen nur „beschäftigt“ (P903)

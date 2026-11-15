@@ -82,6 +82,7 @@ OHNE = {
     "nasablage": "die Dateien liegen auf der eigenen NAS (spark_ablage), auf dem Spark nur zwei Vorlieben ohne Inhalte",
     "chats": "geteilt: Chats gehören auch den anderen Personen darin",
     "chatgroups": "geteilt: Gruppen gehören allen Mitgliedern",
+    "umfrage": "geteilt: eine Umfrage ist eine Nachricht im Chat und gehört allen darin; Zurücknehmen der Nachricht löscht sie",
     "chatmedia": "geteilt: Anhänge gehören zum Chat",
     "chatinvite": "geteilt: Einladungen betreffen andere Personen",
     "chatprivate": "geteilt: private Chats gehören beiden Seiten",

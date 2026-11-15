@@ -1446,6 +1446,7 @@ def snapshot(view="admin", now=None):
     try:
         import chats
         cht = chats.for_live(now)
+        umf = chats.LIVE["umfrage"]() if "umfrage" in chats.LIVE else {}
     except Exception:
         cht = {"on": False}
     if cht.get("on"):
@@ -2020,6 +2021,7 @@ def snapshot(view="admin", now=None):
                            if cht.get("private_on") else "")
                         + (f" · Alle: {cht['all']} Personen" if cht.get("all") else "")
                         + (f" · {cht['spoken']} vorgelesen" if cht.get("spoken") else "")
+                        + (f" · Umfragen heute {umf.get('gestellt', 0)}, {umf.get('stimmen', 0)} Stimmen" if umf.get("on") else "")
                         + (f" · 🌐 Verbund: {cht.get('far_sparks', 0)} Sparks · {cht.get('far_contacts', 0)} Kontakte · heute "
                            f"{cht.get('far_in', 0)} rein / {cht.get('far_out', 0)} raus" + (f" · {cht['far_waiting']} wartet" if cht.get("far_waiting") else "")
                            + (f" · Dateien heute {cht.get('far_files_in', 0)} rein / {cht.get('far_files_out', 0)} raus" if cht.get("far_media") else "")

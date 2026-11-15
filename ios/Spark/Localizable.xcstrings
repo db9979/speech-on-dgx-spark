@@ -13361,6 +13361,106 @@
         }
       }
     },
+    "Geschlossen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Closed"
+          }
+        }
+      }
+    },
+    "Mehrere erlaubt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Several allowed"
+          }
+        }
+      }
+    },
+    "Umfrage": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Poll"
+          }
+        }
+      }
+    },
+    "Umfrage stellen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make a poll"
+          }
+        }
+      }
+    },
+    "Umfrage schließen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close poll"
+          }
+        }
+      }
+    },
+    "Antwort dazu": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add answer"
+          }
+        }
+      }
+    },
+    "Mehrere Antworten erlaubt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Several answers allowed"
+          }
+        }
+      }
+    },
+    "z. B. Wann grillen wir?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "e.g. When do we barbecue?"
+          }
+        }
+      }
+    },
+    "Die Umfrage schließen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close the poll?"
+          }
+        }
+      }
+    },
+    "Danach zählt keine Stimme mehr.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "After that no vote counts any more."
+          }
+        }
+      }
+    },
     "Geburtstag aus deinen Kontakten; ändern lässt er sich in der Kontaktkarte.": {
       "localizations": {
         "en": {
