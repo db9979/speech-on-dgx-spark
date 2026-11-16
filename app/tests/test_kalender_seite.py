@@ -45,12 +45,14 @@ class View(unittest.TestCase):
     def setUpClass(cls):
         helpers.set_config(calendar=True)
         helpers.CAL_EVENTS[PATH] = EVENT
+        helpers.cal_changed_behind()
         cls.c, cls.uid = profile("Kalender Kai")
         connect(cls.uid)
 
     @classmethod
     def tearDownClass(cls):
         helpers.CAL_EVENTS.pop(PATH, None)
+        helpers.cal_changed_behind()
 
     def test_the_week_with_its_appointment(self):
         r = self.c.get("/api/profile/calendar/view", params={"start": "2026-03-09", "days": 7, "tz": "Europe/Berlin"})
@@ -115,10 +117,14 @@ class Page(unittest.TestCase):
         from tests.test_ui_browser import Browser
         Browser.setUpClass.__func__(cls)
         helpers.CAL_EVENTS[PATH] = EVENT
+        # put on the server behind the Spark's back: a copy of the calendar that a test before took (Uitest is shared)
+        # would show the week without it until SYNC_SECONDS passed (a Dauer-Wackler on GitHub, V01.1.479)
+        helpers.cal_changed_behind()
 
     @classmethod
     def tearDownClass(cls):
         helpers.CAL_EVENTS.pop(PATH, None)
+        helpers.cal_changed_behind()
 
     def test_views_fit_and_the_settings_sit_here(self):
         from tests.test_ui_browser import Browser, async_playwright
