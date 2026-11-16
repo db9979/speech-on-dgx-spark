@@ -179,6 +179,8 @@ LIST = {
     ("PUT", "/api/admin/modelle/hftoken"): (PROTECT, "Spark", "Hugging-Face-Token für Downloads", "Hugging Face token for downloads"),
     ("DELETE", "/api/admin/modelle/hftoken"): (CONFIRM, "Spark", "Hugging-Face-Token löschen", "Delete the Hugging Face token"),
     ("DELETE", "/api/admin/modelle/bibliothek"): (CONFIRM, "Spark", "Einen losen Modell-Stand löschen", "Delete a loose model commit"),
+    ("POST", "/api/admin/modelle/laden"): (CONFIRM, "Spark", "Ein Modell schon vorab laden", "Fetch a model in advance"),
+    ("POST", "/api/admin/modelle/herunterladen"): (CONFIRM, "Spark", "Ein Modell von Hugging Face herunterladen", "Download a model from Hugging Face"),
 }
 
 

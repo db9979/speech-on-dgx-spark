@@ -33,6 +33,10 @@ a time (at most WINDOW seconds off) and a one-time number (each is taken once).
     hf_token_weg                removes it
     hf_info <repo> [<commit>]   a model's metadata from huggingface.co with the token (hftoken.metadaten)
     lose_weg <repo> <commit>    Modell-Bibliothek: one commit no entry names off the disk (modelle.lose_weg)
+    laden <id>                  „Nur laden“: a catalog or own model (or a download entry) fetched while the current
+                                one runs (modelle.laden_anfragen), then speech-spark-wechsel
+    herunterladen <repo> [<commit>]   „Nur herunterladen“: its metadata here with the token (hftoken.metadaten), the
+                                rules of modelle.laden_vorschlag (file kinds, room on the disk), then the same wish
     weiter                      ends this computer's Wartungspause ("Weiter" on the panel)
     update                      starts this computer's own update (speech-spark-update with its own rules: the newest
                                 version with passed GitHub tests, never a version the panel names)
@@ -95,10 +99,10 @@ MAX_SEEN = 5000        # one-time numbers kept (each lives WINDOW * 2 seconds)
 RATE = (40, 10)        # at most 40 requests in 10 seconds (the panel asks for the status every few seconds)
 ACTIONS = ("start", "stop", "restart")
 COMMANDS = ("status", "einheit", "einstellen", "logs", "modelle", "wechseln", "messen", "platz", "neustart",
-            "eigen_dazu", "eigen_weg", "eigen_rezept", "hf_token", "hf_token_weg", "hf_info", "lose_weg", "weiter",
-            "update", "werkstatt", "werkstatt_auftrag", "werkstatt_eins", "werkstatt_weg", "systemupdate",
-            "systemupdate_tun", "pakete", "stimmen", "stimme_ablegen", "stimme_weg", "clients", "client_neu",
-            "client_aendern", "client_weg", "clients_schalten")
+            "eigen_dazu", "eigen_weg", "eigen_rezept", "hf_token", "hf_token_weg", "hf_info", "lose_weg", "laden",
+            "herunterladen", "weiter", "update", "werkstatt", "werkstatt_auftrag", "werkstatt_eins", "werkstatt_weg",
+            "systemupdate", "systemupdate_tun", "pakete", "stimmen", "stimme_ablegen", "stimme_weg", "clients",
+            "client_neu", "client_aendern", "client_weg", "clients_schalten")
 UPDATE_UNIT = "speech-spark-update"
 PAUSE_KEYS = ("on", "parts", "since", "until", "channel")   # what the panel needs of the pause (never who)
 WITH_DATA = ("einstellen", "eigen_dazu", "eigen_rezept", "hf_token", "werkstatt_auftrag", "stimme_ablegen", "client_neu",
@@ -405,6 +409,42 @@ def lose_weg(repo, rev):
     return {"ok": True, "gib": round(frei / 2**30, 1)}
 
 
+def _wechsel_starten():
+    return run(["sudo", "-n", "/usr/bin/systemctl", "start", "--no-block", modelle.WECHSEL_UNIT], timeout=20)[0] == 0
+
+
+def laden(mid):
+    if not modelle.ID.match(str(mid)):
+        raise ValueError("befehl")
+    if _misst():
+        print("waerter: laden abgelehnt misst", flush=True)
+        return {"ok": False, "fehler": "misst"}
+    try:
+        modelle.laden_anfragen(mid, _wechsel_starten, _wechsel_laeuft())
+    except modelle.Fehler as e:
+        print(f"waerter: laden abgelehnt {e}", flush=True)
+        return {"ok": False, "fehler": str(e)}
+    print("waerter: laden ok", flush=True)
+    return {"ok": True}
+
+
+def herunterladen(repo, rev=""):
+    if _misst():
+        print("waerter: herunterladen abgelehnt misst", flush=True)
+        return {"ok": False, "fehler": "misst"}
+    try:
+        try:
+            info = hftoken.metadaten(repo, rev)
+        except ValueError as e:
+            raise modelle.Fehler(str(e))
+        e = modelle.herunterladen_anfragen(repo, rev, info, _wechsel_starten, _wechsel_laeuft(), bool(hftoken.token()))
+    except modelle.Fehler as e:
+        print(f"waerter: herunterladen abgelehnt {e}", flush=True)
+        return {"ok": False, "fehler": str(e)}
+    print("waerter: herunterladen ok", flush=True)
+    return {"ok": True, "id": e["id"]}
+
+
 def eigen_weg(mid):
     if not modelle.ID.match(mid):
         raise ValueError("befehl")
@@ -646,6 +686,14 @@ async def _wart(request, stimme):
             if args:
                 raise ValueError("befehl")
             return JSONResponse(hf_token_weg())
+        if cmd == "laden":
+            if len(args) != 1:
+                raise ValueError("befehl")
+            return JSONResponse(laden(*args))
+        if cmd == "herunterladen":
+            if len(args) not in (1, 2):
+                raise ValueError("befehl")
+            return JSONResponse(herunterladen(*args))
         if cmd == "lose_weg":
             if len(args) != 2:
                 raise ValueError("befehl")

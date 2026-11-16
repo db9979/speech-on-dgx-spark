@@ -657,9 +657,10 @@ class Seite(unittest.TestCase):
         # wechseln), „Lange Gespräche“ (same switch) and „Verwerfen“ after „Ausprobieren“; stage E5 adds the own models
         # (behind Funktionen → Eigene Modelle): add, delete, the search and the check, which change nothing; stage B1b
         # „Neu starten“ when the language model runs with other settings than its entry (same switch); stage B1c
-        # „Löschen“ of a loose commit in the library and of the Hugging Face token
+        # „Löschen“ of a loose commit in the library and of the Hugging Face token, „Nur laden“, „Nur herunterladen“
         self.assertEqual(sorted(set(re.findall(r"mdPost\('(/api/[a-z/]+)'", js))),
-                         ["/api/admin/modelle/bibliothek", "/api/admin/modelle/eigen", "/api/admin/modelle/eigen/", "/api/admin/modelle/hftoken",
+                         ["/api/admin/modelle/bibliothek", "/api/admin/modelle/eigen", "/api/admin/modelle/eigen/",
+                          "/api/admin/modelle/herunterladen", "/api/admin/modelle/hftoken", "/api/admin/modelle/laden",
                           "/api/admin/modelle/messen", "/api/admin/modelle/neustart", "/api/admin/modelle/platz", "/api/admin/modelle/probe", "/api/admin/modelle/wechseln",
                           "/api/admin/modelle/zurueck"])
         self.assertEqual(re.findall(r"api\('(/api/admin/modelle/[a-z/]+)',\{method:'POST'", js),

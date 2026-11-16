@@ -22,7 +22,7 @@ Hugging Face cache (SHA-256 for large files, the git blob hash for small ones).
 Command line (as the panel's service user, from speech-spark.sh): liste · feld <id> repo|revision · messliste <was …> · vorbereiten <id> ·
 pruefen <id> [revision] · vllm-args <id> [--port N] [--revision R] [--ohne-mtp] · messen-lauf <id> [--port N]
 [--einheit unit] [--revision R] · ergebnis · venv <id>|llm|sehen|helfer · start-args llm|sehen|helfer (engine.sh) · signatur llm|sehen|helfer
-(install.sh) · neustart-pruefen (speech-spark-wechsel) · docker-bild <id> ·
+(install.sh) · neustart-pruefen · laden <id> (speech-spark-wechsel) · docker-bild <id> ·
 docker-args <id> --revision R --name N --uid U --gid G [--ohne-mtp] (mess_docker) · fest <repo> ·
 erlaubt (install.sh dl, engine.sh: the pinned commit of a speech model and the file kinds to fetch).
 
@@ -82,6 +82,10 @@ ROLLEN = {"llm": ("modell", "engine_port", 31016), "sehen": ("sehen_modell", "se
 ANFRAGE_KEYS = ("chat_template_kwargs", "top_k")
 # the only file kinds a model download takes: weights as safetensors, the rest is text; never *.bin/*.pt/*.pkl
 ERLAUBT = ("*.safetensors", "*.json", "*.txt", "*.jinja", "*.model", "*.tiktoken", "*.md", "LICENSE*")
+GEWICHTE = (".safetensors",)
+# „Nur herunterladen“ (stage B1c): any public model, also the weight formats of sd.cpp, acestep.cpp and ONNX
+ERLAUBT_LADEN = ERLAUBT + ("*.gguf", "*.onnx", "*.onnx_data")
+GEWICHTE_LADEN = (".safetensors", ".gguf", ".onnx")
 VERBOTEN = re.compile(r"(?i)\.(bin|pt|pth|pkl|pickle|ckpt|py|pyc|so|sh)$")
 REPO, REV = hftoken.REPO, hftoken.REV      # a Hugging Face name, a pinned commit
 ID = re.compile(r"^[a-z0-9][a-z0-9.-]{1,47}$")
@@ -747,7 +751,7 @@ def _datei_hash(path, algo, kopf=b""):
     return h.hexdigest()
 
 
-def pruefen(ordner, rev, hashes=True):
+def pruefen(ordner, rev, hashes=True, gewichte=GEWICHTE):
     """Checks one snapshot in a Hugging Face cache folder: every entry a link into blobs/ (which may link once more
     into the shared hub/blobs/<2 hex>/ of newer huggingface_hub), no file kind outside
     ERLAUBT, every blob equal to its name (64 hex = SHA-256 of a large file, 40 hex = git blob hash of a small
@@ -795,7 +799,7 @@ def pruefen(ordner, rev, hashes=True):
                 ok = False
             if not ok:
                 raise Fehler("hash")
-            weights = weights or name.endswith(".safetensors")
+            weights = weights or name.endswith(gewichte)
             n += 1
             size += os.path.getsize(ziel)
     if not weights:
@@ -803,7 +807,7 @@ def pruefen(ordner, rev, hashes=True):
     return n, size
 
 
-def _aufraeumen(ordner, rev):
+def _aufraeumen(ordner, rev, erlaubt=ERLAUBT):
     """Takes out of one cached snapshot the links of file kinds a download never takes (VERBOTEN, or outside
     ERLAUBT): a cache filled before the commits were pinned (a whole repository from "main", with *.py or *.bin) would
     otherwise fail the check on every update, as a new download never removes a file (security review of V01.0.785).
@@ -817,31 +821,31 @@ def _aufraeumen(ordner, rev):
         for name in files:
             p = os.path.join(root, name)
             rel = os.path.relpath(p, snap)
-            if os.path.islink(p) and (VERBOTEN.search(name) or not any(fnmatch.fnmatch(rel, e) for e in ERLAUBT)):
+            if os.path.islink(p) and (VERBOTEN.search(name) or not any(fnmatch.fnmatch(rel, e) for e in erlaubt)):
                 os.unlink(p)
                 n += 1
     return n
 
 
-def _laden(repo, rev, ordner):
-    """One repository's commit in the cache, checked; downloads only the ERLAUBT kinds when the check fails."""
+def _laden(repo, rev, ordner, erlaubt=ERLAUBT, gewichte=GEWICHTE):
+    """One repository's commit in the cache, checked; downloads only the erlaubt kinds when the check fails."""
     if rev:
         try:
-            pruefen(ordner, rev)
+            pruefen(ordner, rev, gewichte=gewichte)
             zeiger(ordner, rev)
             return rev
         except Fehler:
-            weg = _aufraeumen(ordner, rev)
+            weg = _aufraeumen(ordner, rev, erlaubt)
             if weg:
                 print(f"modelle: {weg} alte dateien entfernt", flush=True)
     from huggingface_hub import snapshot_download
     # the admin's token only to huggingface.co (faster, and models whose terms the admin accepted); False: never a
     # token file of the library's own
-    path = snapshot_download(repo, revision=rev or None, allow_patterns=list(ERLAUBT), token=hftoken.token() or False)
+    path = snapshot_download(repo, revision=rev or None, allow_patterns=list(erlaubt), token=hftoken.token() or False)
     commit = os.path.basename(os.path.normpath(path))
     if rev and commit != rev:
         raise Fehler("revision")
-    pruefen(ordner, commit)
+    pruefen(ordner, commit, gewichte=gewichte)
     zeiger(ordner, commit)
     return commit
 
@@ -1584,7 +1588,7 @@ def _wunsch_ok(art, was):
     """A switch (a kind, an id or "zurueck"), „Lange Gespräche“ (art platz, one of PLATZ) or a restart with the
     entry's settings now (art neustart, llm)."""
     return ((art in TAUSCH and (was == "zurueck" or bool(ID.match(str(was))))) or (art == "platz" and was in PLATZ)
-            or (art == "neustart" and was == "llm"))
+            or (art == "neustart" and was == "llm") or (art == "laden" and bool(ID.match(str(was)))))
 
 
 def wunsch_schreiben(art, was, path=WUNSCH):
@@ -1708,7 +1712,14 @@ def _wort(text, n=40):
     return re.sub(r"[^a-z0-9.-]+", "-", str(text or "").lower()).strip("-.")[:n]
 
 
-def eigen_vorschlag(info, art, repo, total_gib):
+def _zugang(info, mit_token):
+    """Private or switched off: never. A model that needs an approval (gated) only with the admin's token on the model
+    computer (Dominik 2026-11-16 „ja“); whether the admin accepted its terms Hugging Face decides at the download."""
+    if info.get("private") or info.get("disabled") or (info.get("gated") and not mit_token):
+        raise Fehler("zugang")
+
+
+def eigen_vorschlag(info, art, repo, total_gib, mit_token=False):
     """An own catalog entry from the Hugging Face metadata of one commit (the panel reads it, the model never):
     weights only as safetensors, no code from the repository, an architecture the engine knows, it must fit within
     ANTEIL_MAX. Returns the entry; raises Fehler with a fixed word."""
@@ -1718,8 +1729,7 @@ def eigen_vorschlag(info, art, repo, total_gib):
         raise Fehler("repo")
     if not isinstance(info, dict) or not REV.match(str(info.get("sha", ""))):
         raise Fehler("antwort")
-    if info.get("private") or info.get("gated") or info.get("disabled"):
-        raise Fehler("zugang")
+    _zugang(info, mit_token)
     files = [x for x in info.get("siblings") or [] if isinstance(x, dict) and isinstance(x.get("rfilename"), str)]
     weights = [x for x in files if x["rfilename"].endswith(".safetensors")]
     if not weights or len(files) > 2000:
@@ -2036,10 +2046,12 @@ def _wer_braucht(repo, rev, kat):
 
 
 def bibliothek(cfg, kat=None, hf_home=None):
-    """[{repo, revision, gib, ids, laeuft, lose}] for every commit in the cache, biggest first."""
+    """[{repo, revision, gib, ids, laeuft, lose, geladen}] for every commit in the cache, biggest first (geladen: by
+    „Nur herunterladen“, waiting for a slot of its program)."""
     kat = katalog() if kat is None else kat
     hub = os.path.join(hf_wurzel(hf_home), "hub")
     laufend = {x["id"] for x in aktiv(cfg, 0, kat)} | {jetzt_id(a, cfg, kat) for a in TAUSCH}
+    unten = {(x["repo"], x["revision"]) for x in geladen()}
     out = []
     try:
         namen = sorted(os.listdir(hub))
@@ -2059,7 +2071,7 @@ def bibliothek(cfg, kat=None, hf_home=None):
                 continue
             ids = _wer_braucht(repo, rev, kat)
             out.append({"repo": repo, "revision": rev, "gib": round(_snap_bytes(snap) / 2**30, 1), "ids": ids,
-                        "laeuft": bool(set(ids) & laufend), "lose": not ids})
+                        "laeuft": bool(set(ids) & laufend), "lose": not ids, "geladen": (repo, rev) in unten})
             if len(out) >= BIBLIOTHEK_MAX:
                 break
     return sorted(out, key=lambda x: (-x["gib"], x["repo"], x["revision"]))
@@ -2075,6 +2087,7 @@ def lose_weg(repo, rev, cfg, kat=None, hf_home=None):
     kat = katalog() if kat is None else kat
     if _wer_braucht(repo, rev, kat):
         raise Fehler("gebraucht")
+    laden_vergessen(repo, rev)
     ordner = hf_ordner({"repo": repo}, hf_home)
     snaps = os.path.join(ordner, "snapshots")
     snap = os.path.join(snaps, rev)
@@ -2108,6 +2121,127 @@ def lose_weg(repo, rev, cfg, kat=None, hf_home=None):
         if os.path.lexists(p):
             os.unlink(p)          # a link into the shared hub/blobs goes; what it points to stays
     return frei
+
+
+# „Nur herunterladen“ (stage B1c, Dominik 2026-11-16 „alles mögliche gedownloaded werden“): any public model, or one
+# whose terms the admin accepted (with the token), on a pinned commit, only the file kinds of ERLAUBT_LADEN (never
+# Python code, never pickle), when it fits the disk. It is only on the disk (Bibliothek: „heruntergeladen“) until a
+# slot for its program checks it; nothing runs it. „Nur laden“ fetches a catalog or own model the same way while the
+# current one keeps running (alzeo idea 3). Both go as the wish „laden“ to the root unit speech-spark-wechsel.
+GELADEN = os.path.join(STATE, "modelle-geladen.json")
+GELADEN_MAX = 40
+PLATTE_RESERVE_GIB = 20          # what a download leaves free on the disk at least
+
+
+def geladen(path=None):
+    """The models downloaded with „Nur herunterladen“: [{id, repo, revision, gib, lizenz, gewerblich, code, zeit}]."""
+    return [x for x in read_json(path or GELADEN, {}).get("modelle", []) if isinstance(x, dict) and ID.match(str(x.get("id", "")))
+            and REPO.match(str(x.get("repo", ""))) and REV.match(str(x.get("revision", "")))]
+
+
+def platte_frei_gib(hf_home=None):
+    import shutil
+    ort = hf_wurzel(hf_home)
+    while ort and not os.path.isdir(ort):
+        ort = os.path.dirname(ort)
+    return shutil.disk_usage(ort or "/").free / 2**30
+
+
+def laden_vorschlag(info, repo, frei_gib, mit_token=False):
+    """What „Nur herunterladen“ would fetch from the metadata of one commit: the entry, or Fehler (repo, antwort,
+    zugang, format, platte)."""
+    import fnmatch
+    if not REPO.match(str(repo)) or ".." in repo:
+        raise Fehler("repo")
+    if not isinstance(info, dict) or not REV.match(str(info.get("sha", ""))):
+        raise Fehler("antwort")
+    _zugang(info, mit_token)
+    files = [x for x in info.get("siblings") or [] if isinstance(x, dict) and isinstance(x.get("rfilename"), str)]
+    if len(files) > 2000:
+        raise Fehler("format")
+    nimmt = [x for x in files if not VERBOTEN.search(x["rfilename"])
+             and any(fnmatch.fnmatch(x["rfilename"], e) for e in ERLAUBT_LADEN)]
+    if not any(x["rfilename"].endswith(GEWICHTE_LADEN) for x in nimmt):
+        raise Fehler("format")
+    def size(x):
+        lfs = x.get("lfs") if isinstance(x.get("lfs"), dict) else {}
+        v = lfs.get("size", x.get("size"))
+        return v if isinstance(v, int) and not isinstance(v, bool) and v >= 0 else 0
+    gib = sum(size(x) for x in nimmt) / 2**30
+    if gib + PLATTE_RESERVE_GIB > frei_gib:
+        raise Fehler("platte")
+    cfg = info.get("config") if isinstance(info.get("config"), dict) else {}
+    card = info.get("cardData") if isinstance(info.get("cardData"), dict) else {}
+    lizenz = _wort(card.get("license") if isinstance(card.get("license"), str) else "", 32) or "unbekannt"
+    mid = ("hf-" + _wort(repo.split("/", 1)[1], 34)).rstrip("-.") + "-" + info["sha"][:8]
+    return {"id": mid, "repo": repo, "revision": info["sha"], "gib": round(gib, 1), "lizenz": lizenz,
+            "gewerblich": lizenz in FREI, "code": any(w in json.dumps(cfg) for w in ('"auto_map"', "trust_remote_code"))}
+
+
+def laden_merken(e, path=None, kat=None):
+    """Keeps a „Nur herunterladen“ entry (once per repository and commit, at most GELADEN_MAX)."""
+    kat = katalog() if kat is None else kat
+    alle = geladen(path)
+    if any(x["repo"] == e["repo"] and x["revision"] == e["revision"] for x in alle) or _wer_braucht(e["repo"], e["revision"], kat):
+        raise Fehler("schon")
+    if len(alle) >= GELADEN_MAX:
+        raise Fehler("voll")
+    write_json(path or GELADEN, {"modelle": alle + [dict(e, zeit=int(time.time()))]}, indent=1)
+
+
+def laden_vergessen(repo, rev, path=None):
+    alle = geladen(path)
+    rest = [x for x in alle if not (x["repo"] == repo and x["revision"] == rev)]
+    if len(rest) != len(alle):
+        write_json(path or GELADEN, {"modelle": rest}, indent=1)
+
+
+def laden_ziel(mid, kat=None, path=None):
+    """What the wish „laden <id>“ fetches: (repo, revision, erlaubt, gewichte) of a catalog or own entry (its own rules,
+    with its drafter by vorbereiten) or of a „Nur herunterladen“ entry; Fehler("unbekannt") otherwise."""
+    kat = katalog() if kat is None else kat
+    if mid in kat and kat[mid].get("repo") and kat[mid]["engine"] in ENTFERNBAR:
+        return kat[mid]
+    e = next((x for x in geladen(path) if x["id"] == mid), None)
+    if e is None:
+        raise Fehler("unbekannt")
+    return e
+
+
+def laden_anfragen(mid, starten, laeuft=False, kat=None):
+    """„Nur laden“ / „Nur herunterladen“: the wish for root, then starten() starts WECHSEL_UNIT. Raises Fehler
+    (laeuft, unbekannt, start)."""
+    if laeuft:
+        raise Fehler("laeuft")
+    laden_ziel(mid, kat)
+    wunsch_schreiben("laden", mid)
+    if not starten():
+        raise Fehler("start")
+
+
+def herunterladen_anfragen(repo, rev, info, starten, laeuft=False, mit_token=False, frei_gib=None, kat=None):
+    """„Nur herunterladen“ on the computer the models run on: the metadata's rules (laden_vorschlag), the entry kept,
+    then the wish. Returns the entry; raises Fehler (laeuft, the rule's word, schon, voll, start)."""
+    if laeuft:
+        raise Fehler("laeuft")
+    e = laden_vorschlag(info, repo, platte_frei_gib() if frei_gib is None else frei_gib, mit_token)
+    if rev and e["revision"] != rev:
+        raise Fehler("antwort")
+    laden_merken(e, kat=kat)
+    laden_anfragen(e["id"], starten, kat=kat)
+    return e
+
+
+def laden_lauf(mid, log=print, hf_home=None):
+    """Root's unit (as the panel's user) fetches and checks one model: again only when it still fits the disk."""
+    z = laden_ziel(mid)
+    if "engine" in z:                                   # a catalog or own entry: its own way, drafter included
+        vorbereiten(z, hf_home)
+    else:
+        if z["gib"] + PLATTE_RESERVE_GIB > platte_frei_gib(hf_home):
+            raise Fehler("platte")
+        _laden(z["repo"], z["revision"], hf_ordner(z, hf_home), ERLAUBT_LADEN, GEWICHTE_LADEN)
+    log(f"modelle: laden {mid} ok")
 
 
 # ---------------------------------------------------------------- command line
@@ -2200,6 +2334,10 @@ def cli(args, log=print):
             for a in start_args(args[1], cfg):
                 log(a)
             start_merken(args[1], cfg)
+            return 0
+        if cmd == "laden":
+            # root's unit: the wish's id checked again, then fetched and checked as the panel's user
+            laden_lauf(args[1], log)
             return 0
         if cmd == "neustart-pruefen":
             # root checks again what the panel checked: the language model runs with other settings than its entry

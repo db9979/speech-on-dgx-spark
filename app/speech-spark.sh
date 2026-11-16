@@ -599,6 +599,18 @@ neustart_setzen() {
   return 0
 }
 
+# „Nur laden“ / „Nur herunterladen“ (model catalog stage B1c): one model fetched and checked as the panel's user,
+# nothing runs it; modelle.py checks the id again and the room on the disk
+laden_setzen() {  # $1 = id of the catalog, an own entry or a download entry
+  echo "modelle: laden startet"
+  if as_panel_user ../modelle.py laden "$1"; then
+    echo "modelle: laden ok"
+  else
+    echo "modelle: laden fehler"
+  fi
+  return 0
+}
+
 cmd_wunsch_intern() {
   local art was out
   out=$(as_panel_user ../modelle.py wunsch-nehmen) || true
@@ -607,6 +619,7 @@ cmd_wunsch_intern() {
   [[ "${was:-}" =~ ^[a-z0-9][a-z0-9.-]{1,47}$ ]] || { echo "modelle: wechsel abgelehnt wunsch"; return 1; }
   if [ "$art" = platz ]; then platz_setzen "$was"; return; fi
   if [ "$art" = neustart ]; then neustart_setzen; return; fi
+  if [ "$art" = laden ]; then laden_setzen "$was"; return; fi
   if [ "$was" = zurueck ]; then
     out=$(as_panel_user ../modelle.py zurueck-ziel "$art") || true
     was=$(tail -n1 <<<"$out")

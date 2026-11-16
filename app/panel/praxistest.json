@@ -6482,6 +6482,14 @@
 "text": "Als Admin unter Zustand → Prüfen → Qualitätstest „Hilfsmodell vergleichen“ drücken. Nach zwei bis fünf Minuten steht dort für Sprachmodell und Hilfsmodell, wann das erste Wort kam, wann das Ende und wie viele der 14 Fragen richtig waren, dazu die Ladezeit und der Speicher. Die Zeile oben sagt, ob es sich lohnt. Ergebnis bitte in den Thread geben.",
 "thread": "Antworten und Gespräche zuverlässiger machen",
 "test": "test_helfer_vergleich.HelferVergleich.test_both_models_get_the_same_plain_questions"
+},
+{
+"id": "P940",
+"v": 1496,
+"titel": "Nur laden und Nur herunterladen",
+"text": "Zustand → Modelle → Wechseln: bei einem Modell, das noch nicht auf der Platte liegt, „Nur laden“ drücken: es lädt und prüft, das laufende Modell antwortet weiter, gewechselt wird nichts; danach steht es in der Bibliothek. Unter „Mehr“ → Bibliothek (mit Eigene Modelle an) einen Namen wie openai/whisper-large-v3 eintragen, „Nur herunterladen“: nach dem Laden steht es als „heruntergeladen“ in der Liste und lässt sich löschen. Ein Name mit nur .bin-Dateien gibt „Keine Gewichte in einer erlaubten Form“.",
+"thread": "Modellkatalog für Spark und DGX Station bauen",
+"test": "test_herunterladen.Seite.test_here_the_same_rules_and_the_fixed_unit"
 }
 ]
 }

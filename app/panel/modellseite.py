@@ -163,7 +163,8 @@ def _quelle(cfg):
 def _bibliothek_pruefen(x):
     """The model computer's library in the shape modelle.bibliothek gives; a row of another shape is left out."""
     def gut(e):
-        return (isinstance(e, dict) and set(e) == {"repo", "revision", "gib", "ids", "laeuft", "lose"}
+        return (isinstance(e, dict) and set(e) == {"repo", "revision", "gib", "ids", "laeuft", "lose", "geladen"}
+                and isinstance(e["geladen"], bool)
                 and modelle.REPO.match(str(e["repo"])) is not None and ".." not in e["repo"]
                 and modelle.REV.match(str(e["revision"])) is not None
                 and isinstance(e["gib"], (int, float)) and not isinstance(e["gib"], bool) and 0 <= e["gib"] < 10**5
@@ -208,6 +209,7 @@ def seite(cfg=None, total_gib=None, messung=None, lang="de", gestartet=False, we
     b = modelle.budget(cfg, total_gib, kat, profil)
     laufend = {x["id"]: x for x in b["teile"]}
     gemessen = messung.get("modelle") or {}
+    platte = {(e["repo"], e["revision"]) for e in buch["bibliothek"]}
     arten = []
     for art, namen in modelle.ARTEN.items():
         rows = []
@@ -226,7 +228,10 @@ def seite(cfg=None, total_gib=None, messung=None, lang="de", gestartet=False, we
                          # numbers from another kind of computer (a measurement before stage A was on the Spark)
                          "gemessen_auf": _anderswo(r, profil, i),
                          # Rezept-Editor (stage B1): the own entry's engine settings for the form
-                         **({"rezept": modelle.rezept(m)} if m.get("eigen") and m["engine"] == "vllm" else {})})
+                         **({"rezept": modelle.rezept(m)} if m.get("eigen") and m["engine"] == "vllm" else {}),
+                         # „Nur laden“ (stage B1c): a pinned model of the cache that is not on the disk yet
+                         "laden": bool(an and m["engine"] in modelle.ENTFERNBAR and m["revision"]
+                                       and (m["repo"], m["revision"]) not in platte)})
         arten.append({"art": art, "name": namen[i], "modelle": rows})
     laeuft = ((_laeuft() if laeuft is None else laeuft) or wechselt) if an else False
     misst = bool(_misst() if misst is None else misst)
@@ -683,6 +688,85 @@ def hf_token_loeschen(request: Request):
     return _hf_token_info(cfg)
 
 
+# „Nur laden“ / „Nur herunterladen“ (stage B1c): the answers the model computer may give
+LADEN_GRUND = {"laeuft": GRUND["laeuft"], "misst": GRUND["misst"], "start": GRUND["start"], "rechner": GRUND["rechner"],
+               "unbekannt": GRUND["unbekannt"], "repo": GRUND["repo"], "antwort": GRUND["antwort"], "netz": GRUND["netz"],
+               "zugang": "Das Modell ist privat, oder es braucht eine Freigabe: dann den Hugging-Face-Token eintragen und "
+                         "den Bedingungen auf Hugging Face zustimmen.",
+               "format": "Keine Gewichte in einer erlaubten Form (safetensors, GGUF, ONNX); Pickle und Python-Code nimmt der Spark nie.",
+               "platte": "Zu wenig Platz auf der Platte (mindestens 20 GB bleiben frei).",
+               "schon": "Dieser Stand liegt schon auf der Platte oder steht im Katalog.", "voll": "Schon 40 heruntergeladene Modelle."}
+
+
+def _laden_fehler(word, was):
+    word = word if word in LADEN_GRUND else "rechner"
+    print(f"modelle: {was} abgelehnt {word}", flush=True)
+    raise HTTPException({"laeuft": 409, "misst": 409, "schon": 409, "start": 503, "rechner": 503, "netz": 503,
+                         "unbekannt": 404}.get(word, 400), LADEN_GRUND[word])
+
+
+@router.post("/api/admin/modelle/laden", dependencies=[Depends(auth), Depends(admin_code)])
+async def laden(request: Request):
+    """„Nur laden“ (alzeo idea 3): a catalog or own model fetched and checked while the current one keeps running."""
+    guard.limit(request, "modelle_wechsel", None, True)
+    mid = str((await core.json_body(request, MAX_BODY)).get("id", ""))[:48]
+    if not _an():
+        print("modelle: laden abgelehnt aus", flush=True)
+        raise HTTPException(409, "Modelle wechseln ist aus (Funktionen → Modelle wechseln).")
+    if not modelle.ID.match(mid):
+        _laden_fehler("unbekannt", "laden")
+    cfg = load_config()
+    if steuer.remote(cfg):
+        d = await asyncio.to_thread(steuer.call, "laden", (mid,), cfg, 30)
+        if not isinstance(d, dict) or d.get("ok") is not True:
+            _laden_fehler(d.get("fehler") if isinstance(d, dict) else "rechner", "laden")
+    else:
+        if await asyncio.to_thread(_misst):
+            _laden_fehler("misst", "laden")
+        try:
+            await asyncio.to_thread(modelle.laden_anfragen, mid, _starten, await asyncio.to_thread(_laeuft))
+        except modelle.Fehler as e:
+            _laden_fehler(str(e), "laden")
+    print("modelle: laden angefragt", flush=True)
+    guard.log("modelle_wechsel", detail="Nur laden: " + mid)
+    _live["t"] = None
+    return await asyncio.to_thread(seite, None, None, None, "en" if request.query_params.get("lang") == "en" else "de", False, True)
+
+
+@router.post("/api/admin/modelle/herunterladen", dependencies=[Depends(auth), Depends(admin_code)])
+async def herunterladen(request: Request):
+    """„Nur herunterladen“ (Dominik 2026-11-16 „alles mögliche gedownloaded“): any public model, or one with an approval
+    and the token, on a pinned commit, only the allowed file kinds, when it fits the disk; nothing runs it."""
+    guard.limit(request, "modelle_eigen", None, True)
+    _eigen_tor(request)
+    body = await core.json_body(request, EIGEN_BODY)
+    repo, rev = str(body.get("repo", "")).strip()[:200], str(body.get("revision", "")).strip()[:40]
+    if not modelle.REPO.match(repo) or ".." in repo or not (rev == "" or modelle.REV.match(rev)):
+        _laden_fehler("repo", "herunterladen")
+    cfg = load_config()
+    if steuer.remote(cfg):
+        d = await asyncio.to_thread(steuer.call, "herunterladen", (repo, rev) if rev else (repo,), cfg, 40)
+        if not isinstance(d, dict) or d.get("ok") is not True:
+            _laden_fehler(d.get("fehler") if isinstance(d, dict) else "rechner", "herunterladen")
+    else:
+        if await asyncio.to_thread(_misst):
+            _laden_fehler("misst", "herunterladen")
+        try:
+            try:
+                info = await asyncio.to_thread(hftoken.metadaten, repo, rev)
+            except ValueError as e:
+                raise modelle.Fehler(str(e))
+            laeuft = await asyncio.to_thread(_laeuft)
+            await asyncio.to_thread(modelle.herunterladen_anfragen, repo, rev, info, _starten, laeuft,
+                                    bool(hftoken.token()))
+        except modelle.Fehler as e:
+            _laden_fehler(str(e), "herunterladen")
+    print("modelle: herunterladen angefragt", flush=True)
+    guard.log("modelle_eigen", detail="Nur herunterladen: " + repo)
+    _live["t"] = None
+    return await asyncio.to_thread(seite, None, None, None, "en" if request.query_params.get("lang") == "en" else "de", False, True)
+
+
 @router.delete("/api/admin/modelle/bibliothek", dependencies=[Depends(auth), Depends(admin_code)])
 async def bibliothek_weg(request: Request):
     """Modell-Bibliothek „Löschen“ (stage B1c): one commit no catalog or own entry names, after the admin confirmed;
@@ -767,7 +851,8 @@ async def eigen_pruefen(request: Request):
     art, repo = str(body.get("art", ""))[:16], str(body.get("repo", "")).strip()[:200]
     total_gib = (await asyncio.to_thread(_quelle, load_config()))[0]
     try:
-        m = modelle.eigen_vorschlag(await _hf_info(repo), art, repo, total_gib)
+        m = modelle.eigen_vorschlag(await _hf_info(repo), art, repo, total_gib,
+                                    (await asyncio.to_thread(_hf_token_info))["gesetzt"])
     except modelle.Fehler as e:
         print(f"modelle: eigenes abgelehnt {e}", flush=True)
         raise HTTPException(503 if str(e) == "netz" else 400, GRUND.get(str(e), "ungültig"))
@@ -787,7 +872,8 @@ async def eigen_dazu(request: Request):
     try:
         if not modelle.REV.match(rev):
             raise modelle.Fehler("repo")
-        m = modelle.eigen_vorschlag(await _hf_info(repo, rev), art, repo, total_gib)
+        m = modelle.eigen_vorschlag(await _hf_info(repo, rev), art, repo, total_gib,
+                                    (await asyncio.to_thread(_hf_token_info, cfg))["gesetzt"])
         if m["revision"] != rev:
             raise modelle.Fehler("antwort")
         if steuer.remote(cfg):              # the model computer keeps the list and checks the entry again

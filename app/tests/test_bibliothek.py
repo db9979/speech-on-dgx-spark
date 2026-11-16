@@ -145,10 +145,10 @@ class Bibliothek(unittest.TestCase):
         self.assertFalse(os.path.exists(os.path.join(self.hf, "hub", "models--fremd--Alt")))
 
     def test_the_panel_takes_only_the_shape(self):
-        gut = {"repo": "a/b", "revision": REV1, "gib": 1.5, "ids": [], "laeuft": False, "lose": True}
+        gut = {"repo": "a/b", "revision": REV1, "gib": 1.5, "ids": [], "laeuft": False, "lose": True, "geladen": False}
         self.assertEqual(modellseite._bibliothek_pruefen([gut]), [gut])
         for bad in (dict(gut, repo="../x"), dict(gut, revision="main"), dict(gut, ids=["<b>"]), dict(gut, lose=False),
-                    dict(gut, pfad="/etc"), dict(gut, gib="1")):
+                    dict(gut, pfad="/etc"), dict(gut, gib="1"), dict(gut, geladen="ja")):
             self.assertEqual(modellseite._bibliothek_pruefen([bad]), [], bad)
         self.assertEqual(modellseite._bibliothek_pruefen("x"), [])
 
