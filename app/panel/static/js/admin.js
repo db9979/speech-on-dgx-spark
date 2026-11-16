@@ -1033,9 +1033,9 @@ function qProg(p){const box=$('qprog'),bar=$('qbar');box.hidden=!p;if(!p)return;
   const left=d?Math.round(p.seconds/d*(n-d)):0;
   $('qprogtxt').textContent=n?`${t('Frage','Question')} ${Math.min(d+1,n)} ${t('von','of')} ${n}`+(d>=3&&left>0?` · ${t('noch etwa','about')} ${left<60?left+' s':Math.round(left/60)+' min'}${t('',' left')}`:''):t('startet …','starting …')}
 function qRender(d){const r=d&&d.last;clearTimeout(qTimer);qProg(d&&d.running?(d.progress||{done:0,total:0,seconds:0}):null);
-  qCompare(d&&d.compare);
-  if(d&&d.running){$('qmsg').textContent=t('läuft …','running …');$('qgo').disabled=$('qgoqwen').disabled=true;qTimer=setTimeout(loadQuality,2000)}
-  else{$('qgo').disabled=$('qgoqwen').disabled=false;$('qmsg').textContent=r?new Date(r.t*1000).toLocaleString()+' · '+(r.version||'')+(r.reason==='after update'?t(' · nach dem Update',' · after the update'):''):''}
+  qCompare(d&&d.compare);qHelfer(d&&d.helfer);
+  if(d&&d.running){$('qmsg').textContent=t('läuft …','running …');$('qgo').disabled=$('qgoqwen').disabled=$('qgohelfer').disabled=true;qTimer=setTimeout(loadQuality,2000)}
+  else{$('qgo').disabled=$('qgoqwen').disabled=$('qgohelfer').disabled=false;$('qmsg').textContent=r?new Date(r.t*1000).toLocaleString()+' · '+(r.version||'')+(r.reason==='after update'?t(' · nach dem Update',' · after the update'):''):''}
   const none=h=>{$('qsum').innerHTML=h;$('qlist').innerHTML='';$('qallbox').hidden=true};
   if(!r)return none(`<span class="mut">${t('Noch nicht geprüft.','Not tested yet.')}</span>`);
   if(r.error)return none(`<span class="err">${esc(r.error)}</span>`);
@@ -1070,8 +1070,17 @@ async function loadQuality(){try{const d=await (await api('/api/quality')).json(
 function qCompare(c){const box=$('qcmp'),e=c&&c.eigen,q=c&&c.qwen;box.hidden=!(e&&q);if(!(e&&q))return;
   box.textContent=`${t('Eigene Wortwahl','Own word choice')} ${e.passed} / ${e.total} · ${t('Qwen-Empfehlung','Qwen\'s recommendation')} ${q.passed} / ${q.total}`
     +(q.passed>e.passed?' · '+t('Die Empfehlung war besser: unter Einstellungen → Sprachmodell top_p 0,8, top_k 20 und presence_penalty 1 eintragen.','The recommendation was better: set top_p 0.8, top_k 20 and presence_penalty 1 under Settings → Language model.'):'')}
+// Hilfsmodell vergleichen (quality.helfer_run): plain questions to the language model and to the helper model, numbers only
+function qHelfer(h){const box=$('qhelfer');box.hidden=!h;if(!h)return;const v=h.verdict||{},s=x=>x==null?'–':String(x).replace('.',',')+' s';
+  const side=(n,x)=>x?`<tr><td>${n}</td><td><b>${s(x.first)}</b></td><td>${s(x.seconds)}</td><td>${x.passed} / ${x.total}</td></tr>`:'';
+  const gib=h.need_gib||{};
+  box.innerHTML=`<div class="fh" style="margin-top:8px"><b>${t('Hilfsmodell vergleichen','Compare the helper model')}</b> · ${new Date(h.t*1000).toLocaleString()}</div>`
+    +`<div class="${v.level==='ok'?'okc':v.level==='bad'?'err':''}">${esc(t(v.de||'',v.en||''))}</div>`
+    +(h.error?'':`<table class="stack"><thead><tr><th></th><th>${t('Erstes Wort (Mitte)','First word (median)')}</th><th>${t('Ende (Mitte)','End (median)')}</th><th>${t('Richtig','Right')}</th></tr></thead><tbody>${side(t('Sprachmodell','Language model'),h.main)}${side(t('Hilfsmodell','Helper model'),h.helfer)}</tbody></table>`
+    +`<div class="fh">${h.load_s?t('Laden des Hilfsmodells','Loading the helper model')+' '+s(h.load_s)+' · ':''}${gib.main?t('Speicher Sprachmodell','Memory language model')+' '+gib.main+' GiB · ':''}${gib.helfer?t('Hilfsmodell','helper model')+' '+gib.helfer+' GiB':''}</div>`
+    +`<details class="adv"><summary>${t('Je Frage','Per question')}</summary>${(h.cases||[]).map(x=>`<div class="qrow"><div class="qq"><span>${esc(x.q)}</span></div>${['main','helfer'].map(k=>{const y=x[k]||{};return `<div class="qa">${ic(y.ok?'check':'x',y.ok?'okc':'badc')} ${k==='main'?t('Sprachmodell','Language model'):t('Hilfsmodell','Helper model')} · ${s(y.first)}: ${esc(y.answer||'–')}${y.ok?'':' · '+esc((y.why||[]).join('; '))}</div>`}).join('')}</div>`).join('')}</details>`)}
 const qStart=body=>async()=>{try{qRender(await (await api('/api/quality',{method:'POST',body:JSON.stringify(body)})).json())}catch(e){$('qmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
-$('qgo').onclick=qStart({});$('qgoqwen').onclick=qStart({sampling:'qwen'});
+$('qgo').onclick=qStart({});$('qgoqwen').onclick=qStart({sampling:'qwen'});$('qgohelfer').onclick=qStart({sampling:'helfer'});
 $('livego').onclick=async()=>{$('livego').disabled=true;$('livemsg').textContent=t('prüft … (bis zu einer Minute)','checking … (up to a minute)');
   try{liveRender(await (await api('/api/livecheck',{method:'POST'})).json())}catch(e){$('livemsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}$('livego').disabled=false;refresh()};
 const WHY={daily:t('täglich','daily'),manual:t('von Hand','manual'),'before-update':t('vor Update','before update'),'before-rollback':t('vor Rückkehr','before rollback'),'before-restore':t('vor Wiederherstellung','before restore'),move:t('Umzug (mit Schlüssel)','move (with key)')};

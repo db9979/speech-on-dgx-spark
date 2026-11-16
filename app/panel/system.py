@@ -245,7 +245,7 @@ async def kiwix_check(request: Request):
 @router.get("/api/quality", dependencies=[Depends(auth)])
 def quality_result():
     return {"running": quality.running(), "progress": quality.progress(), "last": quality.last(), "own": quality.own(),
-            "compare": quality.compare()}
+            "compare": quality.compare(), "helfer": quality.helfer_last()}
 
 
 @router.delete("/api/quality/cases/{cid}", dependencies=[Depends(auth)])
@@ -260,9 +260,11 @@ async def quality_now(request: Request):
     guard.limit(request, "pruef", admin=True)
     body = await json_body(request, 200, lenient=True)
     if not quality.running():   # "qwen": once with Qwen's recommended word choice (quality.QWEN_SAMPLING)
-        spawn(quality.run("manual", "qwen" if body.get("sampling") == "qwen" else "eigen"))
+        # "helfer": Hilfsmodell vergleichen (quality.helfer_run), plain questions to both models
+        spawn(quality.helfer_run("manual") if body.get("sampling") == "helfer"
+              else quality.run("manual", "qwen" if body.get("sampling") == "qwen" else "eigen"))
         await asyncio.sleep(0.1)
-    return {"running": True, "progress": quality.progress(), "last": quality.last()}
+    return {"running": True, "progress": quality.progress(), "last": quality.last(), "helfer": quality.helfer_last()}
 
 
 # ---------------------------------------------------------------- first-start wizard

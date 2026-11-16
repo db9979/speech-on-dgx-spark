@@ -6,6 +6,7 @@ in this one place (plan Raspberry-Pi split, B1).
 Everything the model answers is data, never a command (Richtlinie Teil 2): complete() returns plain text without the
 thinking; the caller checks it with fixed rules.
 """
+import json
 import time
 
 import httpx
@@ -107,6 +108,36 @@ async def post(c, ccfg, job, payload, who=None, speech_first=True):
     r = await c.post(url(ccfg), json=payload, headers=headers(ccfg))
     verbrauch.response(job, r, payload, who)
     return r
+
+
+async def timed(c, ccfg, job, payload, who=None):
+    """One streamed answer, timed for a measurement (Hilfsmodell vergleichen, quality.helfer_run): (seconds to the first
+    word, seconds to the end, the text without the thinking). Straight, not through vorrang: the model's own pace is
+    measured; counted under job (verbrauch.py). Raises httpx.HTTPStatusError on an error status (its text read)."""
+    import verbrauch
+    t0, first, parts, usage = time.monotonic(), None, [], None
+    body = dict(payload, stream=True, stream_options={"include_usage": True})
+    async with c.stream("POST", url(ccfg), json=body, headers=headers(ccfg)) as r:
+        if r.status_code >= 400:
+            await r.aread()
+        r.raise_for_status()
+        async for line in r.aiter_lines():
+            if not line.startswith("data:") or line[5:].strip() == "[DONE]":
+                continue
+            try:
+                d = json.loads(line[5:])
+            except ValueError:
+                continue
+            usage = d.get("usage") or usage
+            piece = str((((d.get("choices") or [{}])[0] or {}).get("delta") or {}).get("content") or "")
+            if first is None and piece.strip():
+                first = time.monotonic() - t0
+            parts.append(piece)
+    end = time.monotonic() - t0
+    text = no_think("".join(parts))
+    verbrauch.llm(job, usage, int(end * 1000), sum(len(str(m.get("content") or "")) for m in payload.get("messages") or []),
+                  len(text), who)
+    return first, end, text
 
 
 async def complete(system, user, job, max_tokens, temperature=0.1, timeout=120, who=None, ccfg=None,

@@ -333,6 +333,7 @@ DATEIEN = [
     state("weiche-history.json", "Weiche-Änderungen", "Switch changes", lokal="Verlauf der Weiche-Änderungen (die Regeln selbst stehen in config.json)", sonst=True),
     state("bewertungen.json", "Bewertungen pro Tag", "Ratings per day", lokal="Zähler pro Tag", sonst=True),
     state("quality.json", "Letzter Qualitätstest", "Last quality test", lokal="letztes Ergebnis"),
+    state("quality-helfer.json", "Letzter Vergleich Hilfsmodell gegen Sprachmodell", "Last comparison of helper model and language model", lokal="letztes Ergebnis"),
     state("config-undo.json", "Rückgängig (ohne Geheimnisse)", "Undo (no secrets)", lokal="Rückgängig dieses Geräts", schutz=("ohne Geheimnisse", "without secrets")),
     state("tipps.json", "Gezeigte Tipps", "Tips shown", lokal="gezeigte Tipps"),
     state("iphone-update.json", "Update aus der iPhone-App", "Update from the iPhone app", lokal="Hinweise zum Update, entstehen neu"),

@@ -17,7 +17,9 @@ import time
 
 import httpx
 
+import live
 import llm
+import modelle
 import taten
 from common import STATE, load_config, no_think, write_json
 
@@ -458,9 +460,173 @@ async def run(reason="manual", sampling="eigen"):
         _history(res)
         _save(res)
         print(f"quality: test ({reason}, {sampling}): {res['passed']}/{res['total']}", flush=True)
-        import live
         live.mark("Qualitätstest", f"{res['passed']} von {res['total']} richtig, {res['seconds']} s")
         return res
+
+
+# Hilfsmodell vergleichen (Dominik 2026-11-16, „ok testen wir das ganze mal“): would the small helper model answer plain
+# chat questions fast enough and well enough? Only a measurement; who answers stays a fixed rule of the panel. The
+# questions without a tool of the quality test plus a few plain ones go once to the language model and once to the
+# helper model, streamed, both without tools; the panel's answer check (Taten) and the same checks judge both.
+HELFER_RESULT = os.path.join(STATE, "quality-helfer.json")
+HELFER_CASES = ("kalender-ohne-zugriff", "mails-ohne-zugriff", "timer-ohne-werkzeug", "gedaechtnis-unbekannt",
+                "gedaechtnis-veraltet", "gedaechtnis-bestaetigt", "datum", "witz")
+PLAIN = [
+    {"id": "plaudern-hauptstadt", "q": "Was ist die Hauptstadt von Frankreich?", "must": r"paris", "never": r"lyon|marseille"},
+    {"id": "plaudern-rechnen", "q": "Wie viel ist sieben mal acht?", "must": r"\b56\b|sechsundfünfzig", "never": r"\b(54|48|64)\b"},
+    {"id": "plaudern-erklaeren", "q": "Erklär mir in zwei Sätzen, was Photosynthese ist.", "must": r"licht|sonne",
+     "never": r""},
+    {"id": "plaudern-befinden", "q": "Wie geht es dir heute?", "must": r"", "never": r""},
+    {"id": "plaudern-gruss", "q": "Schreib einen kurzen Geburtstagsgruß für meine Schwester.", "must": r"geburtstag",
+     "never": r""},
+    {"id": "plaudern-rat", "q": "Was kann ich gegen Schluckauf tun?", "must": r"wasser|atem|luft", "never": r""},
+]
+HELFER_WAIT_S = 240   # the helper engine's start (llm_tor: 503 "loading"), asked again every HELFER_POLL_S
+HELFER_POLL_S = 5
+HELFER_GAIN_S = 1.0   # worth it only when the first word comes this much sooner (median) ...
+HELFER_WORSE = 1      # ... and at most this many questions fewer pass
+
+
+def helfer_cases():
+    """The plain questions for Hilfsmodell vergleichen: the quality test's questions without a tool (with their hints,
+    offered no tool) and PLAIN."""
+    base = [dict(c, tools=[], results={}, tool=None) for c in _cases() if c["id"] in HELFER_CASES]
+    return base + [dict(c, tools=[], hints=[], results={}, tool=None) for c in PLAIN]
+
+
+async def _helfer_case(c, ccfg, model, case):
+    """One plain question to one model, streamed: first word, end, what is heard after the panel's checks."""
+    msgs = [{"role": "system", "content": _system(ccfg, list(case["hints"]))}, {"role": "user", "content": case["q"]}]
+    payload = {"model": model, "max_tokens": 300, "temperature": float(ccfg.get("temperature", 0.3)), "messages": msgs,
+               "chat_template_kwargs": {"enable_thinking": False}, **chat_sampling(ccfg)}
+    first, end, raw = await llm.timed(c, ccfg, "Qualitätstest", payload)
+    deeds = {"acts": [], "offered": set(), "looked": False, "ran": 0} if ccfg.get("action_check", True) else None
+    answer, held = heard(raw, [m["content"] for m in msgs], False, deeds) if deeds else (raw, [])
+    return {"first": None if first is None else round(first, 2), "seconds": round(end, 2), "answer": answer, "raw": raw,
+            "held": held}
+
+
+async def _helfer_ready(c, ccfg):
+    """Seconds until the helper model answered (0: it was ready), or the reason it does not: "memory" (it does not fit
+    beside the language model), "aus" (no helper model on the model computer) or "fehler"."""
+    t0 = time.monotonic()
+    while True:
+        try:
+            await _helfer_case(c, ccfg, llm.HELFER, {"q": "Hallo", "hints": []})
+            return round(time.monotonic() - t0)
+        except httpx.HTTPStatusError as e:
+            said = e.response.text
+            if e.response.status_code == 503 and "memory" in said:
+                return "memory"
+            if e.response.status_code != 503 or "loading" not in said:
+                return "aus" if e.response.status_code in (400, 404) else "fehler"
+        except httpx.HTTPError:
+            return "fehler"
+        if time.monotonic() - t0 > HELFER_WAIT_S:
+            return "fehler"
+        await asyncio.sleep(HELFER_POLL_S)
+
+
+def _median(xs):
+    xs = sorted(x for x in xs if isinstance(x, (int, float)))
+    if not xs:
+        return None
+    m = len(xs) // 2
+    return round(xs[m] if len(xs) % 2 else (xs[m - 1] + xs[m]) / 2, 2)
+
+
+def _need_gib(cfg, feld):
+    try:
+        return modelle.eintrag((cfg.get("llm") or {}).get(feld)).get("need_gib")
+    except Exception:
+        return None
+
+
+def helfer_verdict(res):
+    """Fixed rule: worth it only with the first word clearly sooner and barely fewer right answers. de/en."""
+    a, b = res.get("main") or {}, res.get("helfer") or {}
+    if res.get("error"):
+        return {"level": "bad", "de": HELFER_ERR[res["error"]][0], "en": HELFER_ERR[res["error"]][1]}
+    gain = None if a.get("first") is None or b.get("first") is None else round(a["first"] - b["first"], 2)
+    res["gain"] = gain
+    if gain is not None and gain >= HELFER_GAIN_S and b.get("passed", 0) >= a.get("passed", 0) - HELFER_WORSE:
+        return {"level": "ok", "de": f"Lohnt sich: das erste Wort kommt {gain} s früher, die Antworten sind kaum schlechter.",
+                "en": f"Worth it: the first word comes {gain} s sooner, the answers are barely worse."}
+    if gain is None or gain < HELFER_GAIN_S:
+        return {"level": "warn", "de": "Lohnt sich nicht: das Hilfsmodell ist nicht deutlich schneller.",
+                "en": "Not worth it: the helper model is not clearly faster."}
+    return {"level": "warn", "de": "Lohnt sich nicht: schneller, aber die Antworten sind deutlich schlechter.",
+            "en": "Not worth it: faster, but the answers are clearly worse."}
+
+
+HELFER_ERR = {"memory": ("Das Hilfsmodell passt gerade nicht neben das Sprachmodell in den Speicher.",
+                         "The helper model does not fit beside the language model in memory right now."),
+              "aus": ("Auf dem Modell-Rechner ist kein Hilfsmodell eingerichtet.",
+                      "No helper model is set up on the model computer."),
+              "fehler": ("Das Hilfsmodell hat nicht geantwortet.", "The helper model did not answer."),
+              "llm": ("Das Sprachmodell ist nicht erreichbar.", "The language model is not reachable.")}
+
+
+async def helfer_run(reason="manual"):
+    """Hilfsmodell vergleichen: every question of helfer_cases() to the language model and to the helper model, one
+    after the other; medians of first word and end, passed counts, a fixed verdict. STATE/quality-helfer.json."""
+    if _lock.locked():
+        return helfer_last()
+    async with _lock:
+        cfg = load_config()
+        ccfg = cfg.get("chat", {})
+        todo = helfer_cases()
+        t0 = time.time()
+        _progress.update(done=0, total=len(todo), started=int(t0))
+        res = {"t": int(t0), "reason": reason, "cases": [],
+               "need_gib": {"main": _need_gib(cfg, "modell"), "helfer": _need_gib(cfg, "helfer_modell")}}
+        async with httpx.AsyncClient(timeout=httpx.Timeout(120, connect=5)) as c:
+            try:
+                model = await llm.model(c, ccfg, llm.headers(ccfg))
+            except Exception:
+                model = None
+                res["error"] = "llm"
+            if model:
+                ready = await _helfer_ready(c, ccfg)
+                if isinstance(ready, str):
+                    res["error"] = ready
+                else:
+                    res["load_s"] = ready
+            for case in todo if "error" not in res else []:
+                row = {"id": case["id"], "q": case["q"]}
+                for side, name in (("main", model), ("helfer", llm.HELFER)):
+                    try:
+                        got = await _helfer_case(c, ccfg, name, case)
+                        why = _check(case, got["answer"], [], got["held"])
+                    except Exception as e:
+                        got = {"first": None, "seconds": None, "answer": "", "raw": "", "held": []}
+                        why = [f"Fehler: {type(e).__name__}"]
+                    rated = await judge(ccfg, case, got) if got["answer"] else None
+                    row[side] = {"first": got["first"], "seconds": got["seconds"], "answer": got["answer"][:400],
+                                 "ok": not why, "why": why, **({"judge": rated} if rated else {})}
+                res["cases"].append(row)
+                _progress["done"] = len(res["cases"])
+        for side in ("main", "helfer"):
+            rows = [x[side] for x in res["cases"]]
+            res[side] = {"first": _median(x["first"] for x in rows), "seconds": _median(x["seconds"] for x in rows),
+                         "passed": sum(x["ok"] for x in rows), "total": len(rows)}
+        res["model"] = llm.known_model() or model or ""
+        res["seconds"] = round(time.time() - t0)
+        res["verdict"] = helfer_verdict(res)
+        write_json(HELFER_RESULT, res, indent=1, ensure_ascii=False)
+        print(f"quality: helfer compare ({reason}): {res['main']['passed']}/{res['main']['total']} vs "
+              f"{res['helfer']['passed']}/{res['helfer']['total']}, first {res['main']['first']} vs "
+              f"{res['helfer']['first']} s" + (f", error {res['error']}" if res.get("error") else ""), flush=True)
+        live.mark("Qualitätstest", "Hilfsmodell verglichen" if not res.get("error") else "Hilfsmodell nicht verglichen")
+        return res
+
+
+def helfer_last():
+    try:
+        with open(HELFER_RESULT) as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return None
 
 
 def chat_sampling(ccfg):

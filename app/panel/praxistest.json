@@ -6474,6 +6474,14 @@
 "text": "Mit „Eindeutiges direkt abrufen“ im Auto oder am Lautsprecher sagen: „Gib mir mein Briefing für heute.“ Unter Zustand → Logs → Anfragen steht „daily_briefing (Panel)“ ohne erste Modellrunde davor, und der erste Ton kommt deutlich früher als die 23 s aus Meldung 13. Dauert ein Thema länger als 4 s, sagt die Antwort kurz, dass es fehlt.",
 "thread": "Antworten und Gespräche zuverlässiger machen",
 "test": "test_fast_start.Direct.test_briefing_topics_wait_briefly_when_only_heard"
+},
+{
+"id": "P939",
+"v": 1495,
+"titel": "Hilfsmodell gegen Sprachmodell messen",
+"text": "Als Admin unter Zustand → Prüfen → Qualitätstest „Hilfsmodell vergleichen“ drücken. Nach zwei bis fünf Minuten steht dort für Sprachmodell und Hilfsmodell, wann das erste Wort kam, wann das Ende und wie viele der 14 Fragen richtig waren, dazu die Ladezeit und der Speicher. Die Zeile oben sagt, ob es sich lohnt. Ergebnis bitte in den Thread geben.",
+"thread": "Antworten und Gespräche zuverlässiger machen",
+"test": "test_helfer_vergleich.HelferVergleich.test_both_models_get_the_same_plain_questions"
 }
 ]
 }
