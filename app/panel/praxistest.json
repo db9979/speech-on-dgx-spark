@@ -6434,6 +6434,14 @@
 "text": "Zustand → Modelle → „Mehr“: die Tabelle „Bibliothek auf der Platte“ zeigt jeden Modell-Stand mit Größe und wofür er da ist; ältere Stände nach einem Update stehen als „lose“ mit „Löschen“ (Bestätigen, danach ist die Platte um so viel freier, das laufende Modell läuft weiter). Darunter „Hugging-Face-Token“: einen Lese-Token (hf_…) eintragen, Admin-Code; danach steht „gesetzt seit …“, der Token selbst erscheint nirgends. Unter Eigene Modelle ein freigabepflichtiges Modell (z. B. Llama, nach Zustimmung auf Hugging Face) prüfen: geht jetzt statt „privat oder braucht eine Freigabe“.",
 "thread": "Modellkatalog für Spark und DGX Station bauen",
 "test": "test_bibliothek.Seite.test_the_token_on_this_computer_and_never_in_the_page"
+},
+{
+"id": "P934",
+"v": 1493,
+"titel": "Monitoring in der Spark-Konsole",
+"text": "Die Spark-Konsole auf dem Spark öffnen (https://<IP des Spark>:31010) und anmelden. Im Überblick steht eine Zeile „Chat-Modell: N laufen · M warten · X tok/s“; „Modell genau →“ öffnet den neuen Reiter „Modell genau“ mit denselben Kacheln, Tabellen und dem Verlauf wie Zustand → Modell-Rechner genau im Panel. Eine Frage an den Assistenten stellen: die Anfrage erscheint dort ohne Inhalt, tok/s steigt. Ein anderer Reiter beendet das Nachladen.",
+"thread": "Monitoring auf tars stark ausbauen",
+"test": "test_modellgenau.Seitenbild.test_console_tab"
 }
 ]
 }

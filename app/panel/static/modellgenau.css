@@ -1,0 +1,49 @@
+/* Modell-Rechner genau (modellgenau.js), in the panel (Zustand → Modell-Rechner genau) and in the Spark-Konsole (tab
+   „Modell genau“): tiles, services with slots, requests, language model inside, GPU, memory per service, events and
+   one curve; tables scroll sideways on a phone, nothing jumps between polls. Only tokens (tokens.css loads first) */
+.mghrow .zrdot{display:inline-block;flex:none;width:12px;height:12px;border-radius:50%;background:var(--warn)}
+.mgmeta{margin:-6px 0 12px;font:var(--t-sub)}
+.mgopen{gap:10px;align-items:center;flex-wrap:wrap;margin:8px 0 12px}
+.zrgenau{margin-left:8px;padding:2px 10px;min-height:24px;font:var(--t-sub);font-weight:600}
+.mghin{margin-bottom:12px}.mghrow{display:flex;gap:8px;align-items:center;padding:3px 0}
+.mgtiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,118px),1fr));gap:10px;margin-bottom:12px}
+.mgtile{background:var(--card);border:1px solid var(--line);border-radius:var(--r-box);padding:10px 12px;min-width:0}
+.mgtile>small{display:block;font:var(--t-sub);color:var(--mut)}.mgtile>b{font:var(--t-title);font-variant-numeric:tabular-nums}
+.mgtile>span{font:var(--t-sub)}.mgtile .zrspark{display:block;width:100%;height:28px;margin-top:4px}
+.mggrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:12px;align-items:start}
+.mggrid>.card{margin:0;min-width:0}.mggrid .mgwide{grid-column:1/-1}
+.mggrid h2{display:flex;align-items:baseline;gap:8px;font:var(--t-head);margin:0 0 8px}.mggrid h2 .mut{margin-left:auto;font:var(--t-sub)}
+.mggrid h3.sec{display:flex;gap:8px;align-items:baseline;margin:14px 0 6px;font:var(--t-body);font-weight:600}.mggrid h3.sec .mut{margin-left:auto;font:var(--t-sub)}
+.mgtab{overflow-x:auto}.mgtab table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.mgtab th{text-align:left;font:var(--t-sub);color:var(--mut);padding:4px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
+.mgtab td{padding:6px;border-bottom:1px solid var(--line);font:var(--t-sub);white-space:nowrap}
+.mgwartet td{color:var(--mut)}
+.mgslots{display:inline-flex;gap:2px;vertical-align:middle}.mgslot{width:10px;height:10px;border-radius:3px;background:var(--fill)}
+.mgslot.r{background:var(--acc)}.mgslot.w{background:var(--warn)}
+.mgst{font:var(--t-cap);font-weight:600;padding:1px 6px;border-radius:5px;background:var(--fill);color:var(--mut)}.mgst2{background:var(--acc-weak);color:var(--acc)}
+.mgrow{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px solid var(--line);font:var(--t-sub)}
+.mgrow:last-child{border-bottom:0}.mgrow>span{color:var(--mut);flex:1 1 auto;min-width:120px}.mgrow>b{font-variant-numeric:tabular-nums;text-align:right;display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.mgbar{display:inline-block;width:80px;height:7px;border-radius:99px;background:var(--fill);overflow:hidden}.mgbar i{display:block;height:100%;background:var(--acc)}
+.mgbar.ok i{background:var(--ok)}.mgbar.bad i{background:var(--bad)}
+.mgseg{margin:0 0 8px}
+.mgmem{display:flex;height:18px;border-radius:6px;overflow:hidden;background:var(--fill);margin:4px 0 6px}.mgmem i{display:block;height:100%}
+.mgleg{display:flex;flex-wrap:wrap;gap:4px 12px;font:var(--t-sub);color:var(--mut)}.mgleg span{display:inline-flex;align-items:center;gap:5px}
+.mgleg i{width:10px;height:10px;border-radius:2px;display:inline-block}
+.mgc1{background:var(--acc)}.mgc2{background:var(--ok)}.mgc3{background:color-mix(in srgb,var(--ok) 50%,var(--acc))}.mgc4{background:color-mix(in srgb,var(--bad) 45%,var(--acc))}.mgc5{background:var(--warn)}.mgc6{background:var(--mut)}.mgc7{background:var(--bad)}
+.mgfrei{background:var(--fill);border:1px solid var(--line)}
+.mgnote{margin-top:8px;font:var(--t-sub)}.mgleer{padding:6px 0}
+.mgev{display:flex;gap:10px;padding:5px 0;border-bottom:1px solid var(--line);font:var(--t-sub)}
+.mgev time{color:var(--mut);flex:none;width:76px;font-variant-numeric:tabular-nums}
+.mgchart{display:block;width:100%;height:56px;min-width:0}.mgchart .mggrid{stroke:var(--line);stroke-width:1;vector-effect:non-scaling-stroke}
+.mgchart .mgcur{stroke:var(--mut);stroke-width:1;vector-effect:non-scaling-stroke}
+.mgrd{min-height:20px;margin:0 0 6px;font:var(--t-sub);font-variant-numeric:tabular-nums}
+.mgcr{display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;align-items:center;padding:4px 0;border-bottom:1px solid var(--line)}
+.mgcr:last-child{border-bottom:0}.mgcharts{touch-action:pan-y}
+.mgcl{display:flex;flex-direction:column;gap:1px;font:var(--t-sub);font-variant-numeric:tabular-nums;min-width:0}
+.mgcl>b{display:flex;align-items:center;gap:6px;font-weight:600}.mgcl i{width:10px;height:10px;border-radius:2px;display:inline-block;flex:none}
+.mgachse{display:flex;justify-content:space-between;font:var(--t-cap);color:var(--mut);font-variant-numeric:tabular-nums}
+.mgline{fill:none;stroke-width:2;vector-effect:non-scaling-stroke}.mgline.mgs1{stroke:var(--acc)}.mgline.mgs2{stroke:var(--ok)}.mgline.mgs3{stroke:var(--warn)}
+.mgcl i.mgs1{background:var(--acc)}.mgcl i.mgs2{background:var(--ok)}.mgcl i.mgs3{background:var(--warn)}
+@media (max-width:760px){.mgtiles{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .mgcr{grid-template-columns:110px minmax(0,1fr);gap:8px}
+  .mggrid h2,.mggrid h3.sec{flex-wrap:wrap}.mggrid h2 .mut,.mggrid h3.sec .mut{margin-left:0}}

@@ -88,11 +88,11 @@ class Schalter(Base):
     def test_only_its_own_paths(self):
         for ok in ("/", "/static/konsole.css", "/static/js/konsole.js", "/api/login", "/api/status", "/api/logs/llm",
                    "/api/update", "/api/update/progress", "/api/admin/spark-clients/neu", "/api/admin/modelle",
-                   "/api/konsole/koppeln"):
+                   "/api/admin/modellgenau", "/api/konsole/koppeln"):
             self.assertTrue(konsole.weg_ok(ok), ok)
         for bad in ("/api/chat", "/api/profile/login", "/api/updatexyz", "/api/admin/config", "/mcp",
                     "/api/statusx", "/v1/chat/completions", "/api/admin/spark-clientsx", "/api/admin/modellex",
-                    "/api/konsolex"):
+                    "/api/konsolex", "/api/admin/modellgenaux"):
             self.assertFalse(konsole.weg_ok(bad), bad)
 
 
@@ -157,6 +157,42 @@ class Seite(Base):
             with mock.patch.dict(os.environ, {konsole.ENV: "1"}):
                 self.assertTrue(modellseite._an())
                 self.assertTrue(modellseite._eigen_an())
+
+    def test_model_in_detail_is_a_tab_of_the_console(self):
+        """Dominik 2026-11-16 „1+2“: the console shows the same page as Zustand → Modell-Rechner genau (one source:
+        modellgenau.js, modellgenau.css, zeichnen.js in both pages) and a line about the chat model in its overview."""
+        static = os.path.join(os.path.dirname(panel.__file__), "static")
+        def read(*p):
+            with open(os.path.join(static, *p), encoding="utf-8") as f:
+                return f.read()
+        html, index, js = read("konsole.html"), read("index.html"), read("js", "konsole.js")
+        for page, first in ((html, "/static/js/konsole.js"), (index, "/static/js/base.js")):
+            self.assertIn("/static/modellgenau.css", page)
+            self.assertLess(page.index("/static/js/zeichnen.js"), page.index(first))
+            self.assertLess(page.index(first), page.index("/static/js/modellgenau.js"))
+        for i in ('id="zmgdet"', 'id="zmgmeta"', 'id="zmgbody"', 'data-tab="modellgenau"'):
+            self.assertIn(i, html)
+        self.assertIn("'modellgenau'", re.search(r"const TABS=\[([^\]]*)\]", js).group(1))
+        self.assertIn("modellgenau:mgOpen", js)
+        self.assertIn("mgClose()", js)
+        self.assertIn("const L=", js)                       # modellgenau.js reads the language as L
+        self.assertIn("function setHtml(", read("js", "zeichnen.js"))
+        self.assertIn("function spark(", read("js", "zeichnen.js"))
+        self.assertNotIn("function setHtml(", read("js", "base.js"))
+        self.assertTrue(konsole.weg_ok("/api/admin/modellgenau"))
+        # the overview's line: numbers from /api/status, a jump link to the tab
+        self.assertIn("genau(d.genau)", js)
+        self.assertIn('href="#modellgenau" data-tab="modellgenau"', js)
+        import admin
+        with mock.patch.object(admin.modellgenau, "fuer_live", lambda nur_llm=False: {"laufen": 2, "warten": 1, "tok_s": 48.0, "kv": 12.0}):
+            d = admin._status(common.load_config(), {n: None for n in admin.SERVICES})
+        self.assertEqual(d["genau"], {"laufen": 2, "warten": 1, "tok_s": 48.0, "kv": 12.0})
+        c = TestClient(panel.app)
+        with mock.patch.object(panel, "KONSOLE", True), mock.patch.object(panel.konsole, "erlaubt", lambda h, cfg=None: True):
+            self.assertEqual(c.get("/api/admin/modellgenau").status_code, 401)   # open in the console, behind its login
+            self.assertEqual(c.get("/static/modellgenau.css").status_code, 200)
+            self.assertEqual(c.get("/static/js/zeichnen.js").status_code, 200)
+            self.assertEqual(c.get("/static/js/modellgenau.js").status_code, 200)
 
     def test_overview_shows_only_hints_about_the_spark_itself(self):
         static = os.path.join(os.path.dirname(panel.__file__), "static")

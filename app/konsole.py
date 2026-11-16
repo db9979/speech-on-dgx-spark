@@ -29,7 +29,7 @@ MAX_NETZE = 8
 EIGENE = "/api/konsole"   # paths only the console has; the panel answers them with 404 before any login
 # the only paths the console answers (prefixes); everything else is 404 before any route reads the request
 WEGE = ("/static/", "/favicon.ico", "/api/login", "/api/logout", "/api/whoami", "/api/status", "/api/logs/",
-        "/api/update", "/api/admin/spark-clients", "/api/admin/modelle", EIGENE)
+        "/api/update", "/api/admin/spark-clients", "/api/admin/modelle", "/api/admin/modellgenau", EIGENE)
 SEITE = "/"
 # "Assistent koppeln" (E4b): the console starts this fixed root unit (sudoers: exactly this command), which runs
 # `speech-spark teilen code --konsole`; teilen.py writes the code into KOPPEL_CODE while it is valid, then the outcome

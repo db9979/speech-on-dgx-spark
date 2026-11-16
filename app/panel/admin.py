@@ -475,6 +475,7 @@ def _status(cfg, healths):
             "alerts": health.alerts(), "watchdog": health.events[-10:], "glance": glance(cfg),
             "rechner": rechnerblick.fuer_status(),   # both computers when the models run apart (Zustand → Überblick → Rechner)
             "rundlauf": rundlauf.fuer_status(),      # the last round trip through the models (Zustand → Überblick → Rundlauf)
+            "genau": modellgenau.fuer_live(True),    # the chat model in numbers (Spark-Konsole → Überblick, line to „Modell genau“)
             "fernzugang": _fernzugang()}             # paired servers, online, sessions (Zustand → Überblick → Fernzugang), numbers only
 
 

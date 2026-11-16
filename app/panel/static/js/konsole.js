@@ -1,10 +1,11 @@
 // Spark-Konsole (konsole.html, ../../konsole.py, plan spark-entkoppeln E4): the model computer's own page. Login and
 // codes are the panel's (/api/login, x-speech-code on 428); the pages read the panel's own answers (/api/status,
-// /api/admin/spark-clients, /api/admin/modelle, /api/update, /api/logs, /api/konsole/koppeln). Every name, number and
-// log line goes through esc().
+// /api/admin/spark-clients, /api/admin/modelle, /api/admin/modellgenau, /api/update, /api/logs, /api/konsole/koppeln).
+// Every name, number and log line goes through esc().
 'use strict';
 const EN=!/^de\b/i.test(navigator.language||'de');
 const t=(de,en)=>EN?en:de;
+const L=EN?'en':'de';   // modellgenau.js (tab Modell genau) reads the language as the panel's i18n.js gives it
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const RECHT={llm:t('Sprachmodell','Language model'),sehen:t('Bilder verstehen','Understand pictures'),helfer:t('Hilfsmodell','Helper model'),
@@ -46,16 +47,20 @@ async function start(){let w;try{w=await (await /*raw: the console loads without
   $('kstate').innerHTML=`<span class="dot"></span>${esc(w.version||'')} · ${esc(t('nur Heimnetz','home network only'))}`;
   show((location.hash||'#ueberblick').slice(1))}
 
-const TABS=['ueberblick','modelle','clients','assistent','updates','logs'];
+const TABS=['ueberblick','modellgenau','modelle','clients','assistent','updates','logs'];
 function show(tab){if(!TABS.includes(tab))tab='ueberblick';TAB=tab;
   document.querySelectorAll('#ktabs a').forEach(a=>a.classList.toggle('on',a.dataset.tab===tab));
-  document.querySelectorAll('.tab').forEach(x=>x.hidden=x.id!=='tab-'+tab);clearInterval(TIMER);
-  ({ueberblick,modelle,clients,assistent,updates,logs})[tab]();if(tab==='ueberblick')TIMER=setInterval(ueberblick,3000)}
+  document.querySelectorAll('.tab').forEach(x=>x.hidden=x.id!=='tab-'+tab);clearInterval(TIMER);if(tab!=='modellgenau')mgClose();
+  ({ueberblick,modellgenau:mgOpen,modelle,clients,assistent,updates,logs})[tab]();if(tab==='ueberblick')TIMER=setInterval(ueberblick,3000)}
 
 const pct=(a,b)=>b?Math.max(0,Math.min(100,Math.round(a/b*100))):0;
 const zust=s=>s==='active'?`<span class="pill ok">${esc(t('bereit','ready'))}</span>`:s==='inactive'?`<span class="pill grey">${esc(t('aus','off'))}</span>`:
   s==='failed'?`<span class="pill bad">${esc(t('Fehler','error'))}</span>`:s==='activating'?`<span class="pill warn">${esc(t('startet','starting'))}</span>`:
   `<span class="pill grey">${esc(t('unbekannt','unknown'))}</span>`;
+// one line about the chat model (modellgenau.fuer_live): numbers only, a jump link to the tab „Modell genau“
+function genau(g){if(!g||g.laufen==null)return '';const n=v=>v==null?'–':Math.round(v);
+  return `<div class="card row kgenau"><b>${esc(t('Chat-Modell','Chat model'))}</b><span>${esc(t(`${n(g.laufen)} laufen · ${n(g.warten)} warten · ${n(g.tok_s)} tok/s`,`${n(g.laufen)} running · ${n(g.warten)} waiting · ${n(g.tok_s)} tok/s`))}</span>${g.kv!=null?`<span class="k">KV ${esc(n(g.kv))} %</span>`:''}
+    <a href="#modellgenau" data-tab="modellgenau">${esc(t('Modell genau','Model in detail'))} →</a></div>`}
 async function ueberblick(){const el=$('tab-ueberblick');let d;
   try{d=await (await api('/api/status')).json()}catch(e){el.innerHTML=`<p class="k">${esc(e.message)}</p>`;return}
   const g=d.gpu||{},s=d.system||{},used=(s.mem_total_gib||0)-(s.mem_avail_gib||0);
@@ -69,6 +74,7 @@ async function ueberblick(){const el=$('tab-ueberblick');let d;
       <div class="card"><div class="k">CPU</div><div class="big">${esc(Math.round(s.cpu||0))} %</div><div class="bar"><i style="width:${pct(s.cpu||0,100)}%"></i></div></div>
       <div class="card"><div class="k">${esc(t('Dienste bereit','Services ready'))}</div><div class="big">${esc(Object.values(d.services||{}).filter(v=>v.state==='active').length)} / ${esc(Object.keys(d.services||{}).length)}</div></div>
     </div>
+    ${genau(d.genau)}
     <div class="g2"><div class="card"><h2>${esc(t('Dienste','Services'))}</h2><table><tr><th>${esc(t('Dienst','Service'))}</th><th>Port</th><th>${esc(t('Zustand','State'))}</th></tr>${rows}</table></div>
     <div class="card"><h2>${esc(t('Hinweise','Notes'))}</h2>${al||`<p class="k">${esc(t('Alles ruhig.','All quiet.'))}</p>`}</div></div>`}
 
@@ -209,8 +215,8 @@ document.addEventListener('click',e=>{const b=e.target.closest('button,a');if(!b
 document.addEventListener('DOMContentLoaded',()=>{
   if(EN){document.documentElement.lang='en';$('klt').textContent='Sign in';$('kld').textContent="This Spark's console. Home network only, with the password from the installation.";
     $('klpw').placeholder='Password';$('klcode').placeholder='Code from the app';$('klgo').textContent='Sign in';$('kout').textContent='Sign out';
-    $('kct').textContent='Confirm with a code';$('kcd').textContent='This change needs a fresh code from the authenticator app.';$('kcok').textContent='Confirm';$('kcno').textContent='Cancel';
-    const tabs={ueberblick:'Overview',modelle:'Models',clients:'Clients',assistent:'Assistant',updates:'Updates',logs:'Logs'};document.querySelectorAll('#ktabs a').forEach(a=>a.textContent=tabs[a.dataset.tab])}
+    $('kct').textContent='Confirm with a code';$('kcd').textContent='This change needs a fresh code from the authenticator app.';$('kcok').textContent='Confirm';$('kcno').textContent='Cancel';$('kmgt').textContent='Model in detail';
+    const tabs={ueberblick:'Overview',modellgenau:'Model in detail',modelle:'Models',clients:'Clients',assistent:'Assistant',updates:'Updates',logs:'Logs'};document.querySelectorAll('#ktabs a').forEach(a=>a.textContent=tabs[a.dataset.tab])}
   $('klform').addEventListener('submit',login);
   $('kout').addEventListener('click',async()=>{try{await /*raw: the console loads without base.js*/fetch('/api/logout',{method:'POST'})}catch{}showLogin()});
   $('kcok').addEventListener('click',()=>codeDone($('kcin').value.trim()));$('kcno').addEventListener('click',()=>codeDone(''));

@@ -168,8 +168,6 @@ const lastSec={};
 function sayToast(text,ms,o){const e=$('updtoast');if(!e)return;o=o||{};e.textContent=text;e.classList.toggle('bad',!!o.bad);e.setAttribute('role',o.bad?'alert':'status');
   if(o.knopf){const b=document.createElement('button');b.type='button';b.className='b p';b.textContent=o.knopf[0];if(o.id)b.id=o.id;b.onclick=()=>{e.style.display='none';o.knopf[1]()};e.append(' ',b)}
   e.style.display='block';clearTimeout(sayToast.t);sayToast.t=setTimeout(()=>e.style.display='none',ms||4000)}
-// writes HTML only when it differs from what this place shows (polled tables: marking, focus and hover stay)
-function setHtml(el,h){if(el&&el._h!==h){el.innerHTML=h;el._h=h}}
 // Ruhige Ansicht (Dominik 2026-11-13 „Stabilisiere auch die Ansichten“): a box drawn from parts [[key, html], …] keeps
 // every part whose html did not change as the very same nodes (scroll place, an open <details>, a loaded mail frame
 // stay); only changed parts are made anew, in their place. Returns the set of nodes made anew (their handlers are new).
@@ -280,11 +278,6 @@ window.copyString=copyString;window.copyEl=copyEl;
 ON.copyEl=(b,id)=>copyEl(id,b);ON.findClose=()=>{$('findmodal').style.display='none'};
 const fmt=(v,u='',d=0)=>v==null?'–':(+v).toFixed(d)+u;
 
-function spark(svg,vals,max){const w=300,h=60;svg.setAttribute('viewBox',`0 0 ${w} ${h}`);svg.setAttribute('preserveAspectRatio','none');
-  const v=vals.filter(x=>x!=null);if(v.length<2){svg.innerHTML='';return}
-  const m=max??(Math.max(...v)*1.1||1);const pts=vals.map((x,i)=>x==null?null:[i*w/(vals.length-1),h-2-(x/m)*(h-4)]).filter(Boolean);
-  const d='M'+pts.map(p=>p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' L');
-  svg.innerHTML=`<path d="${d} L${w} ${h} L0 ${h}Z" fill="var(--acc)" opacity=".12"/><path d="${d}" fill="none" stroke="var(--acc)" stroke-width="1.5" vector-effect="non-scaling-stroke"/>`;}
 // a fixed sentence with the way out per kind of failure, never the browser's English text (code check 19.10. D1)
 function micError(e){const n=e&&e.name||'';
   if(n==='NotAllowedError'||n==='SecurityError')return t('Das Mikrofon ist für diese Seite gesperrt. Erlaube es beim Schloss-Symbol neben der Adresse und lade die Seite neu.','The microphone is blocked for this page. Allow it at the lock symbol next to the address and reload the page.');

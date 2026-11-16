@@ -7,14 +7,18 @@
 <link rel="icon" href="/static/favicon-32.png">
 <link rel="stylesheet" href="/static/tokens.css">
 <link rel="stylesheet" href="/static/konsole.css">
+<link rel="stylesheet" href="/static/modellgenau.css">
 <script src="/static/js/sparkverbinden.js" defer></script>
+<script src="/static/js/zeichnen.js" defer></script>
 <script src="/static/js/konsole.js" defer></script>
+<script src="/static/js/modellgenau.js" defer></script>
 </head>
 <body>
 <header class="top">
   <div class="logo">SPARK <b id="kname">Konsole</b></div>
   <nav class="tabs" id="ktabs" hidden>
     <a href="#ueberblick" data-tab="ueberblick">Überblick</a>
+    <a href="#modellgenau" data-tab="modellgenau">Modell genau</a>
     <a href="#modelle" data-tab="modelle">Modelle</a>
     <a href="#clients" data-tab="clients">Clients</a>
     <a href="#assistent" data-tab="assistent">Assistent</a>
@@ -35,6 +39,12 @@
     </form>
   </section>
   <section id="tab-ueberblick" class="tab" hidden></section>
+  <!-- Modell genau (modellgenau.js, the same page as Zustand → Modell-Rechner genau in the panel) -->
+  <section id="tab-modellgenau" class="tab" hidden><div id="zmgdet" hidden>
+    <h1 id="kmgt">Modell genau</h1>
+    <div class="k mgmeta" id="zmgmeta"></div>
+    <div id="zmgbody"></div>
+  </div></section>
   <section id="tab-modelle" class="tab" hidden></section>
   <section id="tab-clients" class="tab" hidden></section>
   <section id="tab-assistent" class="tab" hidden></section>

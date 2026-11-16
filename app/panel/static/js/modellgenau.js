@@ -2,7 +2,8 @@
 // with the models does right now: tiles, services with their slots, the requests (kind, stage, seconds, tokens; never
 // what was asked), the chat model inside (vLLM), the GPU and the memory per service, the events and one curve of
 // 20 minutes, 24 hours or 7 days. Opened from the model computer's card under Rechner, from „Technische Details“ (one
-// Spark without a Pi) and by the way „Zustand → Modell-Rechner genau“. Every number and word through esc(); a poll
+// Spark without a Pi), by the way „Zustand → Modell-Rechner genau“ and as the tab „Modell genau“ of the Spark-Konsole
+// (konsole.html: it loads zeichnen.js and gives $, t, L, esc and api itself). Every number and word through esc(); a poll
 // every 3 s while the page shows. Widths of bars are set through the CSSOM, never as inline style.
 let MG=null,MG_T=0,MG_ZEIT='20m';
 const MG_SERIEN=[['tok','tok/s','tok/s','mgs1'],['gpu','GPU %','GPU %','mgs2'],['warten',['wartende Anfragen','waiting requests'],null,'mgs3']];
@@ -130,7 +131,8 @@ function mgDraw(){const p=$('zmgdet');if(!p||p.hidden)return;const b=$('zmgbody'
   b.querySelectorAll('svg[data-serie]').forEach(v=>{const k=v.dataset.serie;if(k)spark(v,K.map(x=>x[k]),v.dataset.max?+v.dataset.max:undefined)});
   mgChart($('zmgcharts'),K);
   b.querySelectorAll('[data-mgz]').forEach(x=>x.onclick=()=>{MG_ZEIT=x.dataset.mgz;mgLoad()})}
+// the panel: back button, „Genauer“ and the way; the Spark-Konsole (konsole.js) opens and closes it with its tab
 {const p=$('zmgdet');
- if(p){$('zmgback').onclick=mgClose;$('zmggo').onclick=mgOpen;
-  $('mon').addEventListener('wayopen',e=>{if(p.contains(e.target))mgOpen();else mgClose()});
+ if(p){if($('zmgback'))$('zmgback').onclick=mgClose;if($('zmggo'))$('zmggo').onclick=mgOpen;
+  if($('mon'))$('mon').addEventListener('wayopen',e=>{if(p.contains(e.target))mgOpen();else mgClose()});
   document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!p.hidden)mgLoad()})}}

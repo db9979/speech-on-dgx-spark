@@ -609,6 +609,49 @@ class Seitenbild(unittest.TestCase):
                     await br.close()
         asyncio.run(go())
 
+    def test_console_tab(self):
+        """The Spark-Konsole (Dominik 2026-11-16 „1+2“): the same page as its tab „Modell genau“ under the strict CSP,
+        and the overview's line about the chat model jumps there."""
+        from tests.test_ui_browser import Browser, async_playwright
+        b = Browser("run")
+        b.port = self.port
+        view = json.dumps(fake_view())
+        status = json.dumps({"system": {"mem_total_gib": 121, "mem_avail_gib": 60, "cpu": 12}, "gpu": {"util": 70},
+                             "services": {}, "alerts": [], "genau": {"laufen": 2, "warten": 1, "tok_s": 48.4, "kv": 47.0}})
+        with open(os.path.join(os.path.dirname(modellgenau.__file__), "static", "konsole.html"), encoding="utf-8") as f:
+            html = f.read()
+
+        async def go():
+            async with async_playwright() as p:
+                for w, h in ((1280, 900), (390, 844)):
+                    br, pg, errors = await b.page(p, w, h, csp=True)
+                    base = f"http://127.0.0.1:{self.port}"
+                    csp = (await pg.request.get(base + "/")).headers.get("content-security-policy", "")
+                    self.assertIn("script-src", csp)
+                    await pg.route("**/konsole-probe", lambda route, request=None: route.fulfill(
+                        status=200, content_type="text/html", body=html, headers={"Content-Security-Policy": csp}))
+                    await pg.route("**/api/admin/modellgenau*", lambda route, request=None: route.fulfill(
+                        status=200, content_type="application/json", body=view))
+                    await pg.route("**/api/status", lambda route, request=None: route.fulfill(
+                        status=200, content_type="application/json", body=status))
+                    await pg.goto(base + "/konsole-probe")
+                    await b.until(pg, "!!document.querySelector('#tab-ueberblick .kgenau')")
+                    self.assertIn("48 tok/s", await pg.inner_text("#tab-ueberblick .kgenau"))
+                    await pg.click("#tab-ueberblick .kgenau a")
+                    await b.until(pg, "!!document.querySelector('#zmgbody .mgtiles')")
+                    self.assertFalse(await pg.evaluate("document.getElementById('tab-modellgenau').hidden"))
+                    self.assertEqual(await pg.evaluate("document.querySelectorAll('#zmgbody .mgtile').length"), 6)
+                    self.assertEqual(await pg.evaluate("document.querySelectorAll('#zmgcharts svg path').length"), 3)
+                    self.assertTrue(await pg.evaluate("[...document.querySelectorAll('#zmgbody [data-w]')].every(e=>e.style.width.endsWith('%'))"))
+                    self.assertLessEqual(await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth"), 0, w)
+                    if os.environ.get("MG_SHOT"):
+                        await pg.screenshot(path=os.path.join(os.environ["MG_SHOT"], f"konsole-modellgenau-{w}.png"), full_page=True)
+                    await pg.click("#ktabs a[data-tab='logs']")
+                    self.assertTrue(await pg.evaluate("document.getElementById('zmgdet').hidden"))   # leaving the tab stops the poll
+                    self.assertEqual(errors, [], w)
+                    await br.close()
+        asyncio.run(go())
+
 
 if __name__ == "__main__":
     unittest.main()
