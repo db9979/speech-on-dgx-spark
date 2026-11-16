@@ -142,17 +142,18 @@ function modDraw(msg){const el=$('tab-modelle'),d=MOD,b=d.budget||{},teile=b.tei
     <div class="k">${esc(t('Nur Gewichte als safetensors, kein Code aus dem Repository, eine Architektur, die der Spark kennt. Geladen wird erst beim Wechseln.','Weights as safetensors only, no code from the repository, an architecture the Spark knows. It is downloaded only when you switch to it.'))}</div>
     <div class="row"><select id="kmart" aria-label="${esc(t('Art','Kind'))}">${EIGEN_ARTEN.map(x=>`<option value="${x}">${esc((d.arten||[]).find(a=>a.art===x)?.name||x)}</option>`).join('')}</select>
       <input id="kmq" maxlength="80" placeholder="${esc(t('Suchen, z. B. qwen3 nvfp4','Search, e.g. qwen3 nvfp4'))}" aria-label="${esc(t('Suche','Search'))}"><button class="btn sec" type="button" data-m="suche">${esc(t('Suchen','Search'))}</button></div>
-    <div id="kmtreffer"></div>
+    <div id="kmtreffer" data-halten></div>
     <div class="row"><input id="kmrepo" style="flex:1" maxlength="200" placeholder="org/name" aria-label="${esc(t('Name auf Hugging Face','Name on Hugging Face'))}"><button class="btn sec" type="button" data-m="pruefen">${esc(t('Prüfen','Check'))}</button></div>
     ${f?`<div class="row"><b>${esc(f.name&&f.name.de?(EN?f.name.en:f.name.de):f.repo)}</b> <span class="k mono">${esc(f.repo)} @ ${esc(String(f.revision).slice(0,10))}</span></div>
       <div class="k">${esc(t('Speicher','Memory'))} ${esc(gib(f.need_gib))} · ${esc(t('Platte','Disk'))} ${esc(f.platte_gb)} GB · ${esc(t('Lizenz','License'))} ${esc(f.lizenz)}${f.gewerblich?'':' · '+esc(t('nicht gewerblich','non-commercial'))}</div>
       <div class="row"><button class="btn" type="button" data-m="dazu">${esc(t('Hinzufügen','Add'))}</button></div>`:''}</div>`;
-  el.innerHTML=`<h1>${esc(t('Modelle','Models'))}</h1><div class="k">${esc(t('Was dieser Spark lädt und wie viel Speicher es braucht. Laden, Messen und eigene Modelle fragen nach einem Code.','What this Spark loads and how much memory it needs. Loading, measuring and own models ask for a code.'))}</div>
+  felderNeu(el,`<h1>${esc(t('Modelle','Models'))}</h1><div class="k">${esc(t('Was dieser Spark lädt und wie viel Speicher es braucht. Laden, Messen und eigene Modelle fragen nach einem Code.','What this Spark loads and how much memory it needs. Loading, measuring and own models ask for a code.'))}</div>
     <div class="row"><span class="k" id="kmmsg">${esc(msg||'')}</span></div>${start}
     <div class="card" style="margin-top:14px"><h2>${esc(t('Speicher','Memory'))}</h2>
       <div class="big">${esc(gib(teile.reduce((a,x)=>a+(x.gib||0),0)))} / ${esc(gib(b.gesamt))}</div>
-      <div class="row">${teile.map(x=>`<span class="pill">${esc(x.name)} · ${esc(gib(x.gib))}</span>`).join(' ')}</div></div>${arten}${eigen}`;
-  if(busy||w.start)MOD_T=setTimeout(()=>{if(TAB==='modelle')modelle()},5000)}
+      <div class="row">${teile.map(x=>`<span class="pill">${esc(x.name)} · ${esc(gib(x.gib))}</span>`).join(' ')}</div></div>${arten}${eigen}`);
+  // only while something runs (a finished start stays on the page but asks for nothing more)
+  if(busy||(w.start&&!w.start.ende))MOD_T=setTimeout(()=>{if(TAB==='modelle')modelle()},5000)}
 async function modAct(a,b){const m=x=>{const el=$('kmmsg');if(el)el.textContent=x};const L='?lang='+(EN?'en':'de');
   try{
     if(a==='wechseln'){MOD=await post('/api/admin/modelle/wechseln'+L,{art:b.dataset.art,id:b.dataset.id});return modDraw(t('Wechsel angefragt.','Switch requested.'))}

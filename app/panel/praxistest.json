@@ -6490,6 +6490,14 @@
 "text": "Zustand → Modelle → Wechseln: bei einem Modell, das noch nicht auf der Platte liegt, „Nur laden“ drücken: es lädt und prüft, das laufende Modell antwortet weiter, gewechselt wird nichts; danach steht es in der Bibliothek. Unter „Mehr“ → Bibliothek (mit Eigene Modelle an) einen Namen wie openai/whisper-large-v3 eintragen, „Nur herunterladen“: nach dem Laden steht es als „heruntergeladen“ in der Liste und lässt sich löschen. Ein Name mit nur .bin-Dateien gibt „Keine Gewichte in einer erlaubten Form“.",
 "thread": "Modellkatalog für Spark und DGX Station bauen",
 "test": "test_herunterladen.Seite.test_here_the_same_rules_and_the_fixed_unit"
+},
+{
+"id": "P941",
+"v": 1497,
+"titel": "Eingaben bleiben beim Auffrischen",
+"text": "In der Spark-Konsole (https://<ip>:31010) → Modelle → Eigenes Modell von Hugging Face: Art wählen, ein Suchwort tippen und „Suchen“: Auswahl, Text, Treffer und die Stelle auf der Seite bleiben stehen, auch eine Minute lang ohne Klick; ebenso im Panel unter Zustand → Modelle, während ein Wechsel läuft (Feld „Nur herunterladen“ unter Mehr → Bibliothek).",
+"thread": "Modellkatalog für Spark und DGX Station bauen",
+"test": "test_felder_halten.ImBrowser.test_typed_fields_focus_box_and_scroll_stay"
 }
 ]
 }

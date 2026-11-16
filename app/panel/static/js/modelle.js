@@ -209,10 +209,10 @@ async function loadModelle(daten){const main=$('mdmain'),msg=$('mdmsg');if(!main
   let d=daten;if(!d)try{d=await (await api('/api/admin/modelle'+(L==='en'?'?lang=en':''))).json()}catch(e){msg.textContent=e.message;return}
   const w=d.wechsel||{};
   MD_SEITE=d;if(MD_OFFEN&&!d.arten.some(a=>a.art===MD_OFFEN))MD_OFFEN='';
-  main.innerHTML=mdWechsel(w)+mdProbe(w)+mdBalken(d.budget)+`<div class="mdkacheln">${d.arten.filter(a=>a.modelle.length).map(a=>mdKachel(a,w)).join('')}</div>`+mdWahl(d,w)+
+  felderNeu(main,mdWechsel(w)+mdProbe(w)+mdBalken(d.budget)+`<div class="mdkacheln">${d.arten.filter(a=>a.modelle.length).map(a=>mdKachel(a,w)).join('')}</div>`+mdWahl(d,w)+
     `<details class="mdmehr" id="mdmehr"${MD_MEHR?' open':''}><summary>${esc(t('Mehr: Lange Gespräche, Messwerte, Messen, Zurückholen, letzte Starts, Bibliothek, Hugging-Face-Token','More: long conversations, measurements, measuring, bringing back, last starts, library, Hugging Face token'))}</summary>`+
     `<div class="vb-two">${mdPlatz(w)}${mdBudget(d.budget)}${d.arten.map(a=>mdArt(a,w,d)).join('')}${mdStarts(d)}${mdBib(d)}${mdHf(d)}</div>`+
     `<div class="mut vb-note">${d.geraet?esc(t('Gerät: ','Computer: ')+d.geraet)+' · ':''}${esc(d.messung_zeit?t('Letzte Messung: ','Last measurement: ')+new Date(d.messung_zeit*1000).toLocaleString(L==='en'?'en':'de'):t('Noch keine Messung. „Messen“ beim Modell (mit Funktionen → Modelle wechseln) oder auf dem Spark: sudo speech-spark modelle messen','No measurement yet. „Measure“ at the model (with Features → Routing models) or on the Spark: sudo speech-spark modelle messen'))}`+
-    ` · ${esc(t('„~“ heißt geschätzt.','“~” means estimated.'))}</div></details>`;
+    ` · ${esc(t('„~“ heißt geschätzt.','“~” means estimated.'))}</div></details>`);
   mdKnoepfe(d);if(typeof labelTables==='function')labelTables();
   clearTimeout(window.mdTick);const st=w.start&&!w.start.ende;if(w.laeuft||w.misst||st)window.mdTick=setTimeout(()=>{if($('mdmain')&&$('mdmain').offsetParent)loadModelle()},w.misst||st?8000:15000)}
