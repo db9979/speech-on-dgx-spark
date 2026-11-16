@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.480** Dungeon-Prüfung 15.11., Punkt 10: dungeon.py und dungeon.js aufgeteilt, ohne sichtbare Änderung: die 78 Endpunkte in eigener Datei mit eigenem Router, die Regel-Seite des Admins in eigenem Skript
 - **V01.1.479** ROT-FIX: Kalender-Seitentest wackelt nicht mehr
 - **V01.1.478** ROT-FIX: Test der Hinweis-Blase misst in einem Schritt
 - **V01.1.477** Dungeon-Prüfung 15.11., Punkt 7: Neue Runde Schritt für Schritt (Welt, Geschichte, Die Runde, Dein Held; oben eine Leiste, „Weiter“ und „Zurück“, „Runde starten“ erst beim Helden, ohne Titel zurück zu Schritt 3) und die Karte „Wie letztes Mal“: ein Tipp startet eine frei erzählte Runde mit Welt, Ton, Zeiten, Erzählweise, Regeltiefe und Vorlesen der letzten Runde und ihrem Helden (dungeon.quick, feste Regeln, nur freie lebende Helden); dazu ist der Heiler-Test nicht mehr von der Uhrzeit abhängig (P919)
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.473** Käfer überdeckt nichts mehr: am Rechner im Seitenmenü neben dem Mikrofon, am Handy mit Abstand; Wächter-Test prüft alle Seiten
 - **V01.1.472** Dungeon-Master: Kämpfe höchstens 6 bis 7 Züge bei gleicher Siegquote, Bosse nachgemessen, keine Proben-Frage an das Modell, wo das Panel schon entscheidet
 - **V01.1.471** Ideen aus OpenFuse 3: PDF-Formulare ausfüllen, als neues Dokument speichern und als Antwort mailen
-- **V01.1.470** Zertifikat der NAS: Let's-Encrypt-Erneuerungen gehen von selbst durch
 
 
 

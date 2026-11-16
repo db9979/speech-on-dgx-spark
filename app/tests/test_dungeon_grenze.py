@@ -15,7 +15,8 @@ PANEL = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TUEREN = {
     "admin": {"dungeon_auto", "dungeon_tiefe"},
     "live": {"dungeon_erzaehlstand", "dungeon_gast", "dungeon_import", "dungeon_live", "dungeon_pruefstand"},
-    "panel": {"dungeon", "dungeon_buch", "dungeon_chronik", "dungeon_dingbild", "dungeon_echt", "dungeon_erzaehlstand",
+    # dungeon_endpunkte: dungeon.py's own router, moved out of it (Prüfung 15.11., Punkt 10), no new way into the game
+    "panel": {"dungeon", "dungeon_endpunkte", "dungeon_buch", "dungeon_chronik", "dungeon_dingbild", "dungeon_echt", "dungeon_erzaehlstand",
               "dungeon_fluestern", "dungeon_geschichten", "dungeon_gesicht", "dungeon_import", "dungeon_karte",
               "dungeon_knapp", "dungeon_lied", "dungeon_musik", "dungeon_pruefstand", "dungeon_rast",
               "dungeon_regelseite", "dungeon_tiefe", "dungeon_wappen", "dungeon_wunsch"},

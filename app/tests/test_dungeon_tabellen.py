@@ -91,7 +91,7 @@ class Tabellen(unittest.TestCase):
                 ("dungeon.js", "DMWACHE", set(dungeon_ideen.WACHE)),
                 ("dungeon.js", "DMGFAUS", {"am_boden", "geflohen"}),                # dungeon_gefaehrte: c["aus"]
                 ("dungeon.js", "DMEPGRUND", ep),
-                ("dungeon.js", "DMRMARKE", set(dungeon_balance.MARKEN)),
+                ("dungeonregeln.js", "DMRMARKE", set(dungeon_balance.MARKEN)),
                 ("dungeonfenster.js", "DMZEIT", set(dungeon.TAGESZEITEN)),
                 ("dungeonfenster.js", "DMHAUS", {h for h, _, _ in dungeon_gold.HAEUSER}),
                 ("dungeonfenster.js", "DMVERB", dienste))

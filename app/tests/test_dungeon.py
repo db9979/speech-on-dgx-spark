@@ -3270,7 +3270,8 @@ class ReadAloud(Base):
         story, _ = dungeon.check_story(r, rd, {"erzaehlung": text, "npc": npc, "frage_an": ""})
         self.assertEqual([n.get("im_text", False) for n in story["npc"]], [True, True, False])   # the table shows only „Lauft!“ below
         e = {"text": text, "npc": story["npc"]}
-        self.assertEqual(dungeon.auto_car.told(e, 0).count("Gefängnis"), 1)                              # in the car once too
+        import dungeon_auto
+        self.assertEqual(dungeon_auto.told(e, 0).count("Gefängnis"), 1)                              # in the car once too
         js = open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8").read()
         self.assertIn("(e.npc||[]).filter(n=>!n.im_text)", js)
 
@@ -3859,8 +3860,10 @@ class OwnStories(Base):
         self.assertEqual(self.cards()[r.json()["gid"]], "eigen")
 
     def test_the_page_has_the_menu_and_the_new_card(self):
-        with open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8") as f:
-            js = f.read()
+        js = ""
+        for name in ("dungeon.js", "dungeonregeln.js"):   # the admin's page has its own script (Prüfung 15.11., Punkt 10)
+            with open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", name), encoding="utf-8") as f:
+                js += f.read()
         for x in ("data-dmgneu", "data-dmgmehr", "data-dmgwas", "data-dmgzeigen", "/api/profile/dungeon/geschichten/"):
             self.assertIn(x, js)
 

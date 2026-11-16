@@ -7852,6 +7852,14 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "KI-Dungeon-Master: Endpunkte in eigener Datei (Prüfung 15.11., Punkt 10)",
+"text": "KI-Dungeon-Master: Endpunkte in eigener Datei (Prüfung 15.11., Punkt 10): Ohne sichtbare Änderung. Die 78 Endpunkte des Dungeon-Masters (eigene Seite /api/profile/dungeon/*, Platz eines Gasts /api/dungeon/*, Regeln und Geschichten des Admins /api/admin/dungeon/*) stehen jetzt in dungeon_endpunkte.py mit eigenem Router, die Regeln und der Zustand bleiben in dungeon.py (rund 1500 Zeilen kürzer). Genauso steht die Seite des Admins (Reiter „Regeln“ mit Katalog, eigenen Geschichten und Geschichten-Planer) jetzt in dungeonregeln.js, das dungeonlader.js gleich nach dungeon.js lädt; dungeon.js ist damit rund 450 Zeilen kürzer. Die Endpunkte erreichen alles aus dungeon.py erst beim Aufruf über dm.NAME; so gilt, was ein Selbsttest dort austauscht (Modell, Hintergrundarbeit, Regeln), auch für sie. Nur dungeon_endpunkte importiert dungeon, nie umgekehrt (test_schichten). Anmeldung, Profilbindung, CSRF, Größen- und Rate-Limits sind unverändert (test_scanner, test_hardening)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "KI-Dungeon-Master: Leben nur mit Grund",
 "text": "KI-Dungeon-Master: Leben nur mit Grund: dungeon.grounded: Schaden außerhalb des Kampfs gilt nur nach einer misslungenen Probe dieses Zugs auf KOERPER_WERTE (Stärke, Geschick, Konstitution), etwa Sprung, Klettern, zuschnappendes Schloss; die Zeile nennt „Probe „…“ misslungen“. Anderer Schaden fällt weg (dungeon: folgen | schaden | ohne grund, Zähler schaden_ohne_grund). Heilung und Gegnertreffer bleiben. Selbsttest LifeLossReason."
 },
@@ -25638,6 +25646,14 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "AI Dungeon Master: new round step by step and \"Like last time\" (review 15 Nov, point 7): No switch of its own. The new round shows only one of its four steps at a time (World, Story, The round, Your hero); on top a bar with the four steps to tap, below \"← Back\" and \"Next →\", \"Start the round\" only at the hero. Without a title the page jumps back to step 3. Above it stands the card \"Like last time\" as soon as you have a hero who is alive and plays in no other round: a tap on \"Start now\" makes a freely told round with world, tone, time per turn, duration, way of telling, rule depth and reading aloud of your last round and its hero (else your first free one), the title is the world and the day. Without a last round the card is called \"Quick start\" and takes the form's defaults. The panel chooses by fixed rules (dungeon.quick), only what the rules still know; a new hero still needs the steps. Self-tests test_quick_start_like_last_time and test_new_round_in_four_steps_and_like_last_time in test_dungeon."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "AI Dungeon Master: endpoints in a file of their own (review 15 Nov, point 10)",
+"text": "AI Dungeon Master: endpoints in a file of their own (review 15 Nov, point 10): No visible change. The Dungeon Master's 78 endpoints (own page /api/profile/dungeon/*, a guest's seat /api/dungeon/*, the admin's rules and stories /api/admin/dungeon/*) now live in dungeon_endpunkte.py with their own router; the rules and the state stay in dungeon.py (about 1500 lines shorter). Likewise the admin's page (tab \"Rules\" with the catalog, own stories and the story planner) now lives in dungeonregeln.js, which dungeonlader.js loads right after dungeon.js; dungeon.js is thus about 450 lines shorter. The endpoints reach everything of dungeon.py only when called, as dm.NAME; so what a self-test swaps there (model, background work, rules) applies to them too. Only dungeon_endpunkte imports dungeon, never the other way round (test_schichten). Login, profile binding, CSRF, size and rate limits are unchanged (test_scanner, test_hardening)."
 },
 {
 "lang": "en",
