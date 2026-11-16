@@ -2156,7 +2156,7 @@ private struct ChatPollForm: View {
                     .pickerStyle(.segmented)
                 }
                 if findTime { timeSections } else { questionSections }
-                if let e = error { Text(verbatim: SparkAPI.way(e)).font(.footnote).foregroundStyle(Theme.badText) }
+                if let e = error { Text(SparkAPI.way(e)).font(.footnote).foregroundStyle(Theme.badText) }
             }
             .navigationTitle(findTime ? "Termin finden" : "Umfrage")
             .navigationBarTitleDisplayMode(.inline)

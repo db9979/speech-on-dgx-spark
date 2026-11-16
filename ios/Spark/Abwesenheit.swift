@@ -18,17 +18,22 @@ final class AbwesenheitModel: ObservableObject {
     @Published var error: String?
     @Published var note: String?
 
-    private static let fmt: DateFormatter = {
+    private static let fmt = formatter()
+
+    /// The Spark's day format "YYYY-MM-DD" (one place; nonisolated, so day() can use it off the main actor)
+    nonisolated private static func formatter() -> DateFormatter {
         let f = DateFormatter()
         f.calendar = Calendar(identifier: .gregorian)
         f.locale = Locale(identifier: "en_US_POSIX")
         f.dateFormat = "yyyy-MM-dd"
         return f
-    }()
+    }
 
-    /// A day "YYYY-MM-DD" of the Spark as a date at 00:00 here.
-    static func day(_ s: String) -> Date? {
-        s.range(of: #"^\d{4}-\d{2}-\d{2}$"#, options: .regularExpression) == nil ? nil : fmt.date(from: s)
+    /// A day "YYYY-MM-DD" of the Spark as a date at 00:00 here. nonisolated with its own formatter: the chat list
+    /// reads it while decoding off the main actor (ChatsView, „away“).
+    nonisolated static func day(_ s: String) -> Date? {
+        guard s.range(of: #"^\d{4}-\d{2}-\d{2}$"#, options: .regularExpression) != nil else { return nil }
+        return formatter().date(from: s)
     }
 
     func load() async {
