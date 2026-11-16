@@ -61,8 +61,8 @@ class Regeln(unittest.TestCase):
         for p, kontext in (("4x64k", 65536), ("1x256k", 262144)):
             n = modelle.mit_platz(m, p)
             self.assertEqual(n["kontext"], kontext)
-            self.assertGreater(n["anteil"], m["anteil"])
-            self.assertLessEqual(n["anteil"], modelle.ANTEIL_MAX)
+            self.assertGreater(n["gpu_gib"], m["gpu_gib"])
+            self.assertLessEqual(n["gpu_gib"], modelle.ANTEIL_MAX * 120.0)       # still fits the reference DGX Spark
         for bad in ("8x64k", "1x256k; reboot", ""):
             with self.assertRaises(modelle.Fehler, msg=bad):
                 modelle.mit_platz(m, bad)
@@ -100,7 +100,7 @@ class Regeln(unittest.TestCase):
     def test_the_budget_counts_the_bigger_store(self):
         def llm_gib(c):
             return next(x["gib"] for x in modelle.aktiv(c, 121.0) if x["id"] == QWEN)
-        self.assertAlmostEqual(llm_gib(cfg(platz="4x64k")) - llm_gib(cfg()), 0.07 * 121.0, places=1)
+        self.assertAlmostEqual(llm_gib(cfg(platz="4x64k")) - llm_gib(cfg()), modelle.PLATZ["4x64k"][0], places=1)
         self.assertEqual(llm_gib(cfg(platz="gibts-nicht")), llm_gib(cfg()))   # an unknown choice counts as standard
 
     def test_the_engine_starts_with_it(self):

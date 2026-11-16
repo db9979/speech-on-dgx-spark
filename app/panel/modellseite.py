@@ -37,6 +37,7 @@ import core  # noqa: E402
 import features  # noqa: E402
 import netguard  # noqa: E402
 import guard  # noqa: E402
+import hardware  # noqa: E402
 import konsole  # noqa: E402
 import llmstart  # noqa: E402
 import modelle  # noqa: E402
@@ -125,19 +126,20 @@ def _starten(unit=modelle.WECHSEL_UNIT):
 
 
 def _quelle(cfg):
-    """(total_gib, messung, laeuft, kat, alte switches, misst, stand, start) of the computer the models run on;
+    """(total_gib, messung, laeuft, kat, alte switches, misst, stand, start, profil) of the computer the models run on;
     HTTPException 503 when that is another one and it does not answer. laeuft, misst and stand are None here (asked
-    when needed); start is what the language model does while it switches or starts (llmstart)."""
+    when needed); start is what the language model does while it switches or starts (llmstart); profil its hardware
+    (hardware.py; a model computer before stage A sends none: the reference, a DGX Spark)."""
     if steuer.remote(cfg):
         d = steuer.modelle(cfg)
         if d is None:
             raise HTTPException(503, GRUND["rechner"])
         stand = modelle.stand("\n".join(x for x in d.get("stand", []) if isinstance(x, str))) if d.get("misst") else []
         return (d["gesamt_gib"], d["messung"], d["laeuft"], modelle.katalog(eigene=d["eigene"]), d["wechsel"],
-                d.get("misst", False), stand, d.get("start"))
+                d.get("misst", False), stand, d.get("start"), hardware.gueltig(d.get("profil")) or hardware.profil())
     messung = read_json(modelle.MESSUNG, {})
     return (modelle.gesamt_gib(), messung, None, modelle.katalog(), None, None, None,
-            llmstart.hier(cfg, messung))
+            llmstart.hier(cfg, messung), hardware.profil())
 
 
 def _fehler(e, was="wechsel"):
@@ -147,9 +149,9 @@ def _fehler(e, was="wechsel"):
     raise HTTPException(STATUS.get(word, 400), GRUND.get(word, "ungültig"))
 
 
-def _waehlbar(art, mid, cfg, total_gib, kat, messung):
+def _waehlbar(art, mid, cfg, total_gib, kat, messung, profil=None):
     try:
-        modelle.wechsel_pruefen(art, mid, cfg, total_gib, kat, messung)
+        modelle.wechsel_pruefen(art, mid, cfg, total_gib, kat, messung, profil)
         return ""
     except modelle.Fehler as e:
         return str(e)
@@ -158,12 +160,12 @@ def _waehlbar(art, mid, cfg, total_gib, kat, messung):
 def seite(cfg=None, total_gib=None, messung=None, lang="de", gestartet=False, wechselt=False):
     """What the page shows: {arten: [{art, name, modelle: [...]}], budget, messung_zeit}."""
     cfg = load_config() if cfg is None else cfg
-    q_gib, q_messung, laeuft, kat, wechsel, misst, stand, start = _quelle(cfg)
+    q_gib, q_messung, laeuft, kat, wechsel, misst, stand, start, profil = _quelle(cfg)
     total_gib = q_gib if total_gib is None else total_gib
     messung = q_messung if messung is None else messung
     i = 1 if lang == "en" else 0
     an = _an(cfg)
-    b = modelle.budget(cfg, total_gib, kat)
+    b = modelle.budget(cfg, total_gib, kat, profil)
     laufend = {x["id"]: x for x in b["teile"]}
     gemessen = messung.get("modelle") or {}
     arten = []
@@ -173,20 +175,22 @@ def seite(cfg=None, total_gib=None, messung=None, lang="de", gestartet=False, we
             if m["art"] != art:
                 continue
             r = gemessen.get(mid) or {}
-            nein = _waehlbar(art, mid, cfg, total_gib, kat, messung) if an and art in modelle.TAUSCH else "art"
+            nein = _waehlbar(art, mid, cfg, total_gib, kat, messung, profil) if an and art in modelle.TAUSCH else "art"
             rows.append({"id": mid, "name": m["name"]["en" if i else "de"], "engine": m["engine"], "need_gib": m["need_gib"],
                          "waehlbar": not nein, "nein": "" if nein in ("art", "schon", "wahl") else nein,
                          "eigen": bool(m.get("eigen")), "messbar": an and m["engine"] == "vllm",
                          # how the configuration runs it (VoiceDesign on demand), else the catalog's way
                          "gemessen": m["gemessen"], "betrieb": (laufend.get(mid) or {}).get("betrieb") or m["betrieb"], "lizenz": m["lizenz"], "gewerblich": m["gewerblich"],
                          "aktiv": mid in laufend, "gib": (laufend.get(mid) or {}).get("gib"), "fest": bool(m["revision"]),
-                         "messung": {k: r[k] for k in MESSWERTE if k in r}})
+                         "messung": {k: r[k] for k in MESSWERTE if k in r},
+                         # numbers from another kind of computer (a measurement before stage A was on the Spark)
+                         "gemessen_auf": _anderswo(r, profil, i)})
         arten.append({"art": art, "name": namen[i], "modelle": rows})
     laeuft = ((_laeuft() if laeuft is None else laeuft) or wechselt) if an else False
     misst = bool(_misst() if misst is None else misst)
     stand = (_stand() if stand is None else stand) if misst else []
     # just asked for: the unit starts in a moment (--no-block), the page shows it at once
-    platz = modelle.platz_wahl(cfg, total_gib, kat) if an and cfg.get("llm", {}).get("enabled") else None
+    platz = modelle.platz_wahl(cfg, total_gib, kat, profil) if an and cfg.get("llm", {}).get("enabled") else None
     for p in (platz or {}).get("wahl", []):
         p["name"] = p["name"][i]
     probe = modelle.probe_stand(kat, messung, laufend, misst or gestartet) if an else None
@@ -202,7 +206,15 @@ def seite(cfg=None, total_gib=None, messung=None, lang="de", gestartet=False, we
     teile = [{"id": x["id"], "name": kat[x["id"]]["name"]["en" if i else "de"], "art": x["art"], "gib": x["gib"],
               "betrieb": x["betrieb"]} for x in b["teile"]]
     return {"arten": arten, "budget": dict(b, teile=teile), "messung_zeit": messung.get("zeit"),
-            "wechsel": wechsel}
+            "wechsel": wechsel, "geraet": hardware.text(profil, "en" if i else "de")}
+
+
+def _anderswo(r, profil, i):
+    """The name of the computer a measurement r was made on when that is another kind than this one, else ""."""
+    wo = r.get("profil", "gb10") if r else ""
+    if not wo or profil["id"] == "ohne_gpu" or wo == profil["id"] or wo not in hardware.PROFILE:
+        return ""
+    return hardware.PROFILE[wo]["en" if i else "de"]
 
 
 def _start_zeigen(x, kat, i):
@@ -287,8 +299,8 @@ def for_live(now=None):
     if _live["t"] is None or now - _live["t"] > LIVE_EVERY:
         try:
             cfg = load_config()
-            total_gib, _, laeuft, kat, _, misst, _, start = _quelle(cfg)
-            b = modelle.budget(cfg, total_gib, kat)
+            total_gib, _, laeuft, kat, _, misst, _, start, profil = _quelle(cfg)
+            b = modelle.budget(cfg, total_gib, kat, profil)
             _live["v"] = {"on": True, "frei": b["frei"], "regel": b["regel"]}
             if cfg.get("llm", {}).get("enabled"):   # after the move: the catalog name of the model that really runs
                 _live["v"]["eigen"] = echt_name(cfg, kat)

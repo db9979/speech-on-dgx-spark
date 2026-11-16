@@ -133,7 +133,7 @@ class Rezept(unittest.TestCase):
         with self.assertRaises(modelle.Fehler):
             modelle.pruefe_eintrag(dict(m, art="sehen"))
         self.assertFalse(m["gewerblich"])                            # Qwen Community License + NVIDIA agreement
-        self.assertEqual(m["anteil"], 0.7)
+        self.assertEqual(m["gpu_gib"], 84)
         with self.assertRaises(modelle.Fehler):
             modelle.eintrag("qwen38-flash-next-fp4-065")            # share 0.65 never started (tars 2026-10-21)
         eigen = dict(m, id="eigen-flash", eigen=True)

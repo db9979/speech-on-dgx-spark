@@ -13,7 +13,8 @@ A variant ("basis": an earlier entry's id) takes that entry and changes only the
 merged (one source: Qwen3.6 with and without MTP).
 
 Rules for every entry (test_modelle): the engine is one we know, the repository a plain "owner/name", the revision
-a full commit or empty (empty only to measure), the memory share at most ANTEIL_MAX (above ~0.80 the GB10 freezes),
+a full commit or empty (empty only to measure), the memory in GiB (gpu_gib; the share of this computer's pool, see
+hardware.py, at most ANTEIL_MAX: above ~0.80 the GB10 freezes),
 never trust_remote_code, only the flags vllm_args builds from the fields in VLLM_KEYS. Downloads take only the
 file kinds in ERLAUBT (no pickle, no Python code) and pruefen() checks every file against its name in the
 Hugging Face cache (SHA-256 for large files, the git blob hash for small ones).
@@ -47,6 +48,7 @@ import urllib.request
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from common import MODEL_LOG_UNITS, STATE, klon_noetig, load_config, mem_available_gib, read_json, write_json  # noqa: E402
+import hardware  # noqa: E402
 
 KATALOG = os.path.join(os.path.dirname(os.path.abspath(__file__)), "modelle.json")
 MESSUNG = os.path.join(STATE, "modelle-messung.json")
@@ -60,6 +62,7 @@ ENGINES = ("vllm", "qwen-asr", "qwen-tts", "sdcpp", "acestepcpp", "onnx-cpu")
 BETRIEB = ("resident", "bei_bedarf")
 MESSEN = ("immer", "auf_wunsch")
 ANTEIL_MAX = 0.80
+GPU_GIB_MAX = 1024     # gpu_gib of one engine: what vLLM reserves for weights and context, in GiB (any computer)
 MESS_PORT = 31016
 VLLM_KEYS = ("reasoning_parser", "tool_call_parser", "mtp", "max_seqs", "quantization", "bilder_pro_frage", "kv_cache_dtype",
              "venv", "docker", "entwurf", "batched_tokens")
@@ -182,13 +185,13 @@ def pruefe_eintrag(m):
 
 
 def _pruefe_vllm(m):
-    """An engine started by this installation: only llm or sehen, a memory share within ANTEIL_MAX, only the known
-    flags and request fields."""
+    """An engine started by this installation: only llm or sehen, its memory in GiB (whether it fits is a question of
+    the computer: vllm_args, budget), only the known flags and request fields."""
     if m["art"] not in ROLLEN or m.get("messen") not in MESSEN:
         raise Fehler("art")
-    a = m.get("anteil")
-    if isinstance(a, bool) or not isinstance(a, (int, float)) or not 0.02 <= a <= ANTEIL_MAX:
-        raise Fehler("anteil")
+    g = m.get("gpu_gib")
+    if isinstance(g, bool) or not isinstance(g, (int, float)) or not 1 <= g <= GPU_GIB_MAX or "anteil" in m:
+        raise Fehler("gpu_gib")
     for key in ("kontext", "kontext_max"):
         k = m.get(key, m.get("kontext"))
         if isinstance(k, bool) or not isinstance(k, int) or not 2048 <= k <= 262144:
@@ -264,6 +267,15 @@ def _aus_basis(m, davor):
     return {**b, **m, "vllm": {**b["vllm"], **m.get("vllm", {})}, "anfrage": {**b["anfrage"], **m.get("anfrage", {})}}
 
 
+def _alt_anteil(m):
+    """An own entry saved before stage A (a share of the GB10's pool) as GiB: the same memory on the same computer."""
+    if isinstance(m, dict) and "anteil" in m and "gpu_gib" not in m:
+        a = m["anteil"]
+        rest = {k: v for k, v in m.items() if k != "anteil"}
+        return dict(rest, gpu_gib=round(a * hardware.BEZUG_GIB, 1)) if isinstance(a, (int, float)) and not isinstance(a, bool) else rest
+    return m
+
+
 def katalog(path=KATALOG, eigene=None):
     """{id: entry} from modelle.json; every entry checked, ids unique. Then the admin's own entries (stage E5,
     STATE/modelle-eigene.json, only with the shipped catalog): each checked by the same rules plus eigen_ok();
@@ -282,6 +294,7 @@ def katalog(path=KATALOG, eigene=None):
     # eigene: the file, or the list itself (from the model computer's Wärter, plan Raspberry-Pi split B4c)
     rows = eigene if isinstance(eigene, list) else (read_json(eigene, {}).get("modelle") or []) if eigene else []
     for m in rows[:EIGENE_MAX]:
+        m = _alt_anteil(m)
         try:
             eigen_ok(m)
         except Fehler:
@@ -331,7 +344,7 @@ def aktiv(cfg, total_gib, kat=None):
     if own.get("enabled"):
         m = kat.get(own.get("modell"))
         m = _platz(m, cfg) if m and m["engine"] == "vllm" and m["art"] == "llm" else m
-        add(m, m["anteil"] * total_gib + 1.5 if m and m["engine"] == "vllm" else None)
+        add(m, m["gpu_gib"] + 1.5 if m and m["engine"] == "vllm" else None)
         if m and not m.get("kann_sehen"):
             add(kat.get(own.get("sehen_modell")), None, "bei_bedarf")
         add(kat.get(own.get("helfer_modell")), None, "bei_bedarf")
@@ -368,15 +381,19 @@ def aktiv(cfg, total_gib, kat=None):
 
 
 EIN_PLATZ = ("bild", "musik")     # loaded one after the other, never both at once (schwer.ARTEN, the queue for pictures and music)
-SYSTEM_GIB = 6     # DGX OS, the panel and the small services next to the models (plan: Speicher-Budget)
-
-
-def budget(cfg, total_gib, kat=None):
+def budget(cfg, total_gib, kat=None, profil=None):
     """The memory budget (plan „Speicher-Budget“): fixed = the resident models + system + reserve; on demand = the
     models loaded when needed. "alle" when all of them fit at once, "ein_platz" when only one on-demand model fits
     beside the fixed ones (they then run one after the other through vorrang), "zu_knapp" when not even that fits.
-    A fixed rule from numbers; the model decides nothing."""
+    A fixed rule from numbers; the model decides nothing. profil (hardware.py, the model computer's): what the system
+    takes beside the models, and on a computer whose GPU has its own memory (DGX Station) the CPU models do not count
+    in the GPU's pool total_gib."""
+    kat = katalog() if kat is None else kat
+    profil = profil or hardware.profil()
     teile = aktiv(cfg, total_gib, kat)
+    if not profil["gemeinsam"]:
+        teile = [x for x in teile if (kat.get(x["id"]) or {}).get("engine") != "onnx-cpu"]
+    system = profil["system_gib"]
     reserve = float(cfg.get("memory", {}).get("reserve_gib", 10))
     fest = round(sum(x["gib"] for x in teile if x["betrieb"] == "resident"), 1)
     # pictures and music share one place (Dominik 2026-10-18 „immer nur ein Modell, beide nicht gleichzeitig“):
@@ -384,14 +401,14 @@ def budget(cfg, total_gib, kat=None):
     bedarf = [x["gib"] for x in teile if x["betrieb"] == "bei_bedarf" and x["art"] not in EIN_PLATZ]
     bedarf += [max(x["gib"] for x in teile if x["betrieb"] == "bei_bedarf" and x["art"] in EIN_PLATZ)] \
         if any(x["betrieb"] == "bei_bedarf" and x["art"] in EIN_PLATZ for x in teile) else []
-    frei = round(total_gib - SYSTEM_GIB - reserve - fest, 1)
+    frei = round(total_gib - system - reserve - fest, 1)
     if frei >= sum(bedarf):
         regel = "alle"
     elif frei >= max(bedarf, default=0):
         regel = "ein_platz"
     else:
         regel = "zu_knapp"
-    return {"gesamt": round(total_gib, 1), "system": SYSTEM_GIB, "reserve": reserve, "fest": fest,
+    return {"gesamt": round(total_gib, 1), "system": system, "reserve": reserve, "fest": fest,
             "bedarf": round(sum(bedarf), 1), "bedarf_max": round(max(bedarf, default=0), 1), "frei": frei,
             "regel": regel, "teile": teile, "ein_platz": list(EIN_PLATZ)}
 
@@ -440,7 +457,7 @@ def messliste(was, kat=None):
     return [i for i, m in kat.items() if m["engine"] == "vllm" and (i in ids or (m["art"] in was and m["messen"] == "immer"))]
 
 
-def vllm_args(m, port=MESS_PORT, revision="", mtp=True, uds=""):
+def vllm_args(m, port=MESS_PORT, revision="", mtp=True, uds="", pool_gib=None):
     """The arguments after `vllm serve`: only from the catalog's checked fields, never trust_remote_code, always
     on 127.0.0.1 (an engine in Docker: only on its Unix socket uds, and only there). revision may stand in only for
     an entry without one (a measurement after the download)."""
@@ -454,10 +471,13 @@ def vllm_args(m, port=MESS_PORT, revision="", mtp=True, uds=""):
         raise Fehler("revision")
     if isinstance(port, bool) or not isinstance(port, int) or not 31000 <= port <= 31099:
         raise Fehler("port")
+    anteil = m["gpu_gib"] / (pool_gib or hardware.profil()["pool_gib"])     # GiB → this computer's share
+    if anteil > ANTEIL_MAX:
+        raise Fehler("budget")
     v = m["vllm"]
     a = [m["repo"], "--revision", rev, *(["--uds", uds] if uds else ["--host", "127.0.0.1", "--port", str(port)]),
          "--served-model-name", m["id"], "--max-model-len", str(m["kontext"]),
-         "--gpu-memory-utilization", f"{m['anteil']:.2f}", "--max-num-seqs", str(v.get("max_seqs", 8)),
+         "--gpu-memory-utilization", f"{anteil:.2f}", "--max-num-seqs", str(v.get("max_seqs", 8)),
          "--generation-config", "vllm", "--no-enable-flashinfer-autotune",
          "--disable-uvicorn-access-log",   # stats stay on: /metrics counts the MTP and prefix cache hits
          # usage.prompt_tokens_details.cached_tokens: the panel shows how much of a question came from the prefix cache
@@ -565,9 +585,9 @@ def fest_revision(m, messung=None):
 
 
 # Zustand → Modelle „Lange Gespräche“ (Dominik 2026-10-17): the own language model's context store as fixed choices,
-# (extra memory share, longest question in tokens; None = the catalog's). It is one pool: about 15 GiB hold 4
+# (extra memory in GiB, longest question in tokens; None = the catalog's). It is one pool: about 15 GiB hold 4
 # conversations of 64K or one of 256K (Qwen3.8 NVFP4 on tars: 7.7 GiB for 131K, the KV cache already in FP8)
-PLATZ = {"standard": (0.0, None), "4x64k": (0.07, 65536), "1x256k": (0.07, 262144)}
+PLATZ = {"standard": (0.0, None), "4x64k": (8.4, 65536), "1x256k": (8.4, 262144)}
 PLATZ_NAMEN = {"standard": ("Standard: 1 Gespräch mit 128K oder 2 mit 64K", "Standard: 1 conversation of 128K or 2 of 64K"),
                "4x64k": ("4 Gespräche gleichzeitig mit je 64K", "4 conversations at once of 64K each"),
                "1x256k": ("1 sehr langes Gespräch mit 256K", "1 very long conversation of 256K")}
@@ -583,7 +603,7 @@ def mit_platz(m, platz):
     plus, kontext = PLATZ[platz]
     if kontext > m.get("kontext_max", m["kontext"]):
         raise Fehler("kontext")
-    return dict(m, anteil=round(min(m["anteil"] + plus, ANTEIL_MAX), 2), kontext=kontext)
+    return dict(m, gpu_gib=round(m["gpu_gib"] + plus, 1), kontext=kontext)
 
 
 def _platz(m, cfg):
@@ -594,7 +614,7 @@ def _platz(m, cfg):
         return m
 
 
-def platz_pruefen(platz, cfg, total_gib, kat=None):
+def platz_pruefen(platz, cfg, total_gib, kat=None, profil=None):
     """The fixed rules for „Lange Gespräche“: a known choice, the own language model on, one the model allows, not the one set, and
     the budget must not end up too tight. Returns the entry as it would start; raises Fehler with a fixed word."""
     if platz not in PLATZ:
@@ -607,12 +627,12 @@ def platz_pruefen(platz, cfg, total_gib, kat=None):
         raise Fehler("schon")
     probe = json.loads(json.dumps(cfg))
     probe.setdefault("llm", {})["platz"] = platz
-    if budget(probe, total_gib, kat)["regel"] == "zu_knapp":
+    if budget(probe, total_gib, kat, profil)["regel"] == "zu_knapp":
         raise Fehler("budget")
     return neu
 
 
-def platz_wahl(cfg, total_gib, kat=None):
+def platz_wahl(cfg, total_gib, kat=None, profil=None):
     """For the page: the choices with their extra memory and why one is not possible (a fixed word, "" when it is)."""
     c = cfg.get("llm", {})
     m = (kat or katalog()).get(c.get("modell"))
@@ -621,11 +641,11 @@ def platz_wahl(cfg, total_gib, kat=None):
         try:
             if m is None:
                 raise Fehler("aus")
-            platz_pruefen(p, cfg, total_gib, kat)
+            platz_pruefen(p, cfg, total_gib, kat, profil)
             nein = ""
         except Fehler as e:
             nein = str(e)
-        out.append({"id": p, "name": PLATZ_NAMEN[p], "plus_gib": round(plus * total_gib, 1), "nein": nein})
+        out.append({"id": p, "name": PLATZ_NAMEN[p], "plus_gib": plus, "nein": nein})
     return {"jetzt": c.get("platz") or "standard", "wahl": out}
 
 
@@ -1184,7 +1204,8 @@ def messen_lauf(m, port=MESS_PORT, einheit="", log=print):
     speicher = Speicher()
     frei_start = speicher.tiefst
     speicher.start()
-    r = {"art": m["art"], "repo": m["repo"], "anteil": m["anteil"], "kontext": m["kontext"], "zeit": int(time.time()),
+    r = {"art": m["art"], "repo": m["repo"], "gpu_gib": m["gpu_gib"], "kontext": m["kontext"], "zeit": int(time.time()),
+         "profil": hardware.profil()["id"],
          "frei_start_gib": round(frei_start, 1), "ablage": ablage(hf_ordner(m))}
     log(f"modelle: messung {mid} ablage {r['ablage']}")
     try:
@@ -1381,8 +1402,9 @@ ENTFERNBAR = ("vllm", "qwen-asr", "qwen-tts")           # models that live in th
 
 
 def gesamt_gib():
-    """The unified memory of this machine in GiB."""
-    return os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES") / 2**30
+    """The memory pool the engines share on this computer in GiB: the one shared memory of a DGX Spark, the GPU's own
+    memory of a DGX Station (hardware.profil)."""
+    return hardware.profil()["pool_gib"]
 
 
 def jetzt_id(art, cfg, kat=None):
@@ -1426,7 +1448,7 @@ def mit_wechsel(cfg, art, m):
     return c
 
 
-def wechsel_pruefen(art, mid, cfg, total_gib, kat=None, messung=None):
+def wechsel_pruefen(art, mid, cfg, total_gib, kat=None, messung=None, profil=None):
     """The fixed rules of a switch (the panel decides, never a model): a kind that switches, an entry of that kind from
     the catalog, for an own engine a pinned commit (catalog or measured), for the others an entry install.sh offers,
     the language model only while the own one is on (llm.enabled), not the one running, and the budget must not
@@ -1454,7 +1476,7 @@ def wechsel_pruefen(art, mid, cfg, total_gib, kat=None, messung=None):
             raise Fehler("ungeprueft")
     if jetzt_id(art, cfg, kat) == mid:
         raise Fehler("schon")
-    if budget(mit_wechsel(cfg, art, m), total_gib, kat)["regel"] == "zu_knapp":
+    if budget(mit_wechsel(cfg, art, m), total_gib, kat, profil)["regel"] == "zu_knapp":
         raise Fehler("budget")
     return m
 
@@ -1676,7 +1698,7 @@ def eigen_vorschlag(info, art, repo, total_gib):
     m = {"id": ("eigen-" + _wort(repo.split("/", 1)[1], 41)).rstrip("-."), "art": art, "name": {"de": name, "en": name},
          "engine": "vllm", "repo": repo, "revision": info["sha"], "lizenz": lizenz, "gewerblich": lizenz in FREI,
          "platte_gb": max(1, round(sum(sizes) / 1e9)), "need_gib": max(1, round(need)), "gemessen": False,
-         "anteil": round(min(ANTEIL_MAX, max(0.02, need / total_gib + 0.01)), 2), "kontext": EIGEN_KONTEXT,
+         "gpu_gib": round(need + 0.01 * total_gib, 1), "kontext": EIGEN_KONTEXT,
          "kann_sehen": sehen, "werkzeuge": art == "llm" and "tool_call_parser" in fam,
          "vllm": dict(fam if art == "llm" else {}, max_seqs=4), "anfrage": {}, "messen": "auf_wunsch",
          "betrieb": "resident" if art == "llm" else "bei_bedarf", "eigen": True}

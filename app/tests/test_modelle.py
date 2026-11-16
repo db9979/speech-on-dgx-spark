@@ -1,6 +1,6 @@
 """Modell-Katalog, Stufe E0 (modelle.py, modelle.json, speech-spark modelle; plan plaene/eigene-modelle.md, Dominik
 2026-10-14 „1a 2a 3a 4a 5a 6a“): every catalog entry follows the fixed rules (known engine, plain repository, full
-commit or empty, memory share at most ANTEIL_MAX, never trust_remote_code); the vLLM arguments come only from those
+commit or empty, memory in GiB that fits on the reference DGX Spark within ANTEIL_MAX, never trust_remote_code); the vLLM arguments come only from those
 fields and listen on 127.0.0.1; a cached model is checked file by file against its names (no pickle, no links out of
 blobs/); a measurement keeps numbers and fixed words only, never an answer's text; the shell command never leaves
 the language model stopped. The engine is faked (no GPU); nothing depends on the time of day."""
@@ -22,6 +22,7 @@ from unittest import mock
 from tests import helpers
 
 helpers.start()
+import hardware  # noqa: E402
 import modelle  # noqa: E402
 
 GEHEIM = "Zitronenfalter"   # a word only the fake model says: it must never reach a log line or the result file
@@ -103,7 +104,7 @@ class Katalog(unittest.TestCase):
         self.assertTrue(any(m["art"] == "sehen" for m in kat.values()))
         for mid, m in kat.items():
             if m["engine"] == "vllm":
-                self.assertLessEqual(m["anteil"], modelle.ANTEIL_MAX, mid)
+                self.assertLessEqual(m["gpu_gib"], modelle.ANTEIL_MAX * hardware.BEZUG_GIB, mid)   # fits a DGX Spark
             self.assertNotIn("trust_remote_code", json.dumps(m), mid)
             self.assertRegex(m["revision"], r"^([0-9a-f]{40})?$", mid)
             self.assertTrue(m["name"]["de"] and m["name"]["en"], mid)
@@ -112,7 +113,10 @@ class Katalog(unittest.TestCase):
 
     def test_broken_entries_are_refused(self):
         bad = [("trust", lambda m: m["vllm"].update(trust_remote_code=True)),
-               ("anteil", lambda m: m.update(anteil=0.85)),
+               ("gpu_gib", lambda m: m.update(gpu_gib=0)),
+               ("gpu_gib2", lambda m: m.update(gpu_gib=True)),
+               ("gpu_gib3", lambda m: m.update(gpu_gib=modelle.GPU_GIB_MAX + 1)),
+               ("anteil", lambda m: m.update(anteil=0.3)),          # the old share: one source, GiB only
                ("repo", lambda m: m.update(repo="../etc")),
                ("repo2", lambda m: m.update(repo="a/b/c")),
                ("revision", lambda m: m.update(revision="main")),
@@ -166,7 +170,7 @@ class Katalog(unittest.TestCase):
         # Dominik 2026-11-15 „1 und 2“: NVIDIA's own NVFP4 with the draft model and 16384 tokens per step, to measure
         self.assertEqual(modelle.messliste(["gemma4nv"]), ["gemma4-26b-a4b-nvidia-mtp"])
         nv = modelle.katalog()["gemma4-26b-a4b-nvidia-mtp"]
-        self.assertEqual((nv["repo"], nv["revision"], nv["anteil"]), ("nvidia/Gemma-4-26B-A4B-NVFP4", "", 0.25))
+        self.assertEqual((nv["repo"], nv["revision"], nv["gpu_gib"]), ("nvidia/Gemma-4-26B-A4B-NVFP4", "", 30))
         g = modelle.vllm_args(nv, revision="a" * 40)
         self.assertEqual(g[0], "nvidia/Gemma-4-26B-A4B-NVFP4")
         self.assertEqual(g[g.index("--max-num-batched-tokens") + 1], "16384")
@@ -516,12 +520,12 @@ class Budget(unittest.TestCase):
         return c
 
     @staticmethod
-    def own(c, anteil=None):
-        """The configuration with the own language model on, and the catalog with its memory share changed."""
+    def own(c, gib=None):
+        """The configuration with the own language model on, and the catalog with its memory changed."""
         c = dict(copy.deepcopy(c), llm={"enabled": True, "modell": "qwen36-35b-a3b-nvfp4"})
         kat = copy.deepcopy(modelle.katalog())
-        if anteil:
-            kat["qwen36-35b-a3b-nvfp4"]["anteil"] = anteil
+        if gib:
+            kat["qwen36-35b-a3b-nvfp4"]["gpu_gib"] = gib
         return c, kat
 
     def test_memory_need_comes_from_the_catalog(self):
@@ -555,11 +559,11 @@ class Budget(unittest.TestCase):
 
     def test_the_rule_follows_the_numbers(self):
         c = self.cfg(image={"enabled": True, "variant": "4b-q8"})
-        for anteil, regel in ((0.76, "zu_knapp"), (0.30, "alle")):
-            oc, kat = self.own(c, anteil)
-            self.assertEqual(modelle.budget(oc, 120, kat)["regel"], regel, anteil)
+        for gib, regel in ((91.2, "zu_knapp"), (36, "alle")):
+            oc, kat = self.own(c, gib)
+            self.assertEqual(modelle.budget(oc, 120, kat)["regel"], regel, gib)
         c["chat"]["rerank"] = True                                                 # 11 + 0.5 + 4 GiB on demand
-        oc, kat = self.own(c, 0.66)
+        oc, kat = self.own(c, 79.2)
         b = modelle.budget(oc, 120, kat)
         self.assertEqual((b["frei"], b["bedarf"], b["bedarf_max"]), (13.3, 15.5, 11))
         self.assertEqual(b["regel"], "ein_platz", b)

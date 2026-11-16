@@ -6378,6 +6378,14 @@
 "text": "Als Admin Zustand → Modell-Rechner genau öffnen. Im Chat am Handy eine lange Antwort anfordern und die App mitten in der Antwort schließen: unter „Zuletzt fertig“ steht eine Zeile „abgebrochen“, die Zeile darüber nach einer normalen Frage „fertig“, nie ein Text. Bei „GPU“ steht „Speicher verweigert (Treiber)“ mit zwei Zahlen. Beim Sprachmodell steht „geladen“, nicht „hängt“.",
 "thread": "Monitoring auf tars stark ausbauen",
 "test": "test_modellgenau.Ende.test_a_stream_the_client_leaves_is_cancelled"
+},
+{
+"id": "P927",
+"v": 1485,
+"titel": "Hardware-Profil auf der Modellseite",
+"text": "Nach dem Update: Zustand → Modelle → „Mehr“ zeigt unten „Gerät: DGX Spark (GB10) · … GiB gemeinsam“. Das Sprachmodell startet wie vorher (gleicher Speicher, Zustand → Modelle zeigt dieselbe Belegung), Wechseln und „Lange Gespräche“ gehen wie vorher, eigene Modelle sind noch da.",
+"thread": "Modellkatalog für Spark und DGX Station bauen",
+"test": "test_hardware.Budget.test_the_page_takes_the_model_computers_profile"
 }
 ]
 }

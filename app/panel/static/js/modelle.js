@@ -96,7 +96,7 @@ function mdKarte(m,a,w){const x=m.messung||{},probe=['revision','ungeprueft'].in
   const tun=m.aktiv?`<span class="pill ok">${esc(mdLaeuft(m))}</span>`:m.waehlbar?`<button type="button" class="b sm" data-mdw="${esc(a.art)}" data-mdid="${esc(m.id)}">${esc(t('Wechseln','Switch'))}</button>`:
     probe?`<button type="button" class="b sm" data-mdp="${esc(m.id)}">${esc(t('Ausprobieren','Try'))}</button>`:`<span class="mut">${esc(t(...(MD_NEIN[m.nein]||['nicht wählbar','not selectable'])))}</span>`;
   const weg=w.eigene&&m.eigen&&!m.aktiv?` <button type="button" class="b sm danger" data-mde="${esc(m.id)}">${esc(t('Löschen','Delete'))}</button>`:'';
-  const zeile=[x.ok===false?t('Messung abgebrochen','measurement broke off'):x.tok_s!=null?x.tok_s+t(' tok/s gemessen',' tok/s measured'):probe?t('noch nicht gemessen','not measured yet'):'',
+  const zeile=[x.ok===false?t('Messung abgebrochen','measurement broke off'):x.tok_s!=null?x.tok_s+t(' tok/s gemessen',' tok/s measured')+(m.gemessen_auf?t(' auf ',' on ')+m.gemessen_auf:''):probe?t('noch nicht gemessen','not measured yet'):'',
     (m.gemessen?'':'~')+mdGib(m.aktiv&&m.gib!=null?m.gib:m.need_gib),m.betrieb==='resident'?t('immer geladen','always loaded'):t('bei Bedarf','on demand'),m.lizenz].filter(Boolean).join(' · ');
   return `<div class="mdkarte${!m.aktiv&&!m.waehlbar&&!probe?' aus':''}"><div class="mdkopf"><b>${esc(m.name)}</b>${m.gewerblich?'':` <span class="pill warn">${esc(t('nur privat','private use only'))}</span>`}${m.eigen?` <span class="pill">${esc(t('eigenes','own'))}</span>`:''}</div>`+
     `<div class="mdtun">${tun}${weg}</div><div class="mut mdzahl">${esc(zeile)}</div></div>`}
@@ -154,7 +154,7 @@ async function loadModelle(daten){const main=$('mdmain'),msg=$('mdmsg');if(!main
   main.innerHTML=mdWechsel(w)+mdProbe(w)+mdBalken(d.budget)+`<div class="mdkacheln">${d.arten.filter(a=>a.modelle.length).map(a=>mdKachel(a,w)).join('')}</div>`+mdWahl(d,w)+
     `<details class="mdmehr" id="mdmehr"${MD_MEHR?' open':''}><summary>${esc(t('Mehr: Lange Gespräche, Messwerte, Messen, Zurückholen','More: long conversations, measurements, measuring, bringing back'))}</summary>`+
     `<div class="vb-two">${mdPlatz(w)}${mdBudget(d.budget)}${d.arten.map(a=>mdArt(a,w,d)).join('')}</div>`+
-    `<div class="mut vb-note">${esc(d.messung_zeit?t('Letzte Messung: ','Last measurement: ')+new Date(d.messung_zeit*1000).toLocaleString(L==='en'?'en':'de'):t('Noch keine Messung. „Messen“ beim Modell (mit Funktionen → Modelle wechseln) oder auf dem Spark: sudo speech-spark modelle messen','No measurement yet. „Measure“ at the model (with Features → Routing models) or on the Spark: sudo speech-spark modelle messen'))}`+
+    `<div class="mut vb-note">${d.geraet?esc(t('Gerät: ','Computer: ')+d.geraet)+' · ':''}${esc(d.messung_zeit?t('Letzte Messung: ','Last measurement: ')+new Date(d.messung_zeit*1000).toLocaleString(L==='en'?'en':'de'):t('Noch keine Messung. „Messen“ beim Modell (mit Funktionen → Modelle wechseln) oder auf dem Spark: sudo speech-spark modelle messen','No measurement yet. „Measure“ at the model (with Features → Routing models) or on the Spark: sudo speech-spark modelle messen'))}`+
     ` · ${esc(t('„~“ heißt geschätzt.','“~” means estimated.'))}</div></details>`;
   mdKnoepfe(d);if(typeof labelTables==='function')labelTables();
   clearTimeout(window.mdTick);const st=w.start&&!w.start.ende;if(w.laeuft||w.misst||st)window.mdTick=setTimeout(()=>{if($('mdmain')&&$('mdmain').offsetParent)loadModelle()},w.misst||st?8000:15000)}

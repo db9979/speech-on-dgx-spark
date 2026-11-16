@@ -63,6 +63,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 
 import gputakt
+import hardware
 import installiert
 import mandanten
 import llmstart
@@ -235,7 +236,8 @@ def modelle_daten():
     return {"gesamt_gib": round(modelle.gesamt_gib(), 1),
             "messung": messung, "wechsel": read_json(modelle.WECHSEL, {}),
             "eigene": modelle.eigene(), "laeuft": _wechsel_laeuft(), **_messung_laeuft(),
-            "start": llmstart.hier(load_config(), messung)}     # what the language model does while it starts
+            "start": llmstart.hier(load_config(), messung),     # what the language model does while it starts
+            "profil": hardware.profil()}                         # which kind of computer (DGX Spark, DGX Station)
 
 
 def _messung_laeuft():

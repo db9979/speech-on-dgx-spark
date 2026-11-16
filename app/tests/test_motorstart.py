@@ -83,7 +83,7 @@ class Signatur(unittest.TestCase):
         musik = next(k for k, m in kat.items() if m["art"] == "musik")
         other[musik] = dict(kat[musik], need_gib=kat[musik]["need_gib"] + 1)       # a music model changed
         self.assertEqual(modelle.signatur("llm", cfg, messung={}, kat=other), sig)
-        other["qwen36-35b-a3b-nvfp4"] = dict(kat["qwen36-35b-a3b-nvfp4"], anteil=0.31)        # the language model's share changed
+        other["qwen36-35b-a3b-nvfp4"] = dict(kat["qwen36-35b-a3b-nvfp4"], gpu_gib=37)        # the language model's memory changed
         self.assertNotEqual(modelle.signatur("llm", cfg, messung={}, kat=other), sig)
         self.assertNotEqual(modelle.signatur("llm", dict(cfg, llm=dict(cfg["llm"], engine_port=31018)), messung={}, kat=kat), sig)
         with mock.patch.object(modelle, "vllm_args", side_effect=lambda *a, **k: ["neue-option"]):

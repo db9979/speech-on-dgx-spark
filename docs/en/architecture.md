@@ -584,6 +584,7 @@ Speech recognition and speech output as their own services, ahead of everything 
 | `app/common.py` | Shared helpers for the ASR and TTS services: config, model state, request stats. |
 | `app/dockertor.py` | Docker-Tor: puts an engine in Docker on 127.0.0.1. |
 | `app/einordnung.py` | Einordnung mit Wahrscheinlichkeit, the shared rules of a question (System One): the panel's systemone.py builds questions with them, and the LLM-Tor (llm_tor … |
+| `app/hardware.py` | Hardware-Profil: which kind of computer the models run on, so the catalog can name GiB instead of a share of the GB10's memory and the same catalog fits a DG … |
 | `app/kurzref.py` | A shorter reference for a cloned voice (tts.ref_max_s, 0 = off). |
 | `app/llm_tor.py` | LLM-Tor: the one door to the language model this installation runs itself. |
 | `app/llmstart.py` | What the own language model is doing while it switches, restarts or loads. |

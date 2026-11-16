@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.485** Modelle in GiB statt Anteil: derselbe Katalog passt auf DGX Spark und später DGX Station
 - **V01.1.484** Modell-Rechner genau: Anfragen ohne Inhalt, Warteschlangen, Sprachmodell innen, GPU mit Drosselung und abgelehntem Speicher, zuletzt fertig mit Ergebnis, „hängt“ und Verlauf auf einer Seite unter Zustand, auch für den Spark allein
 - **V01.1.483** ROT-FIX: die iPhone-App baut wieder (Abwesenheits-Datum und Fehlerzeile der Umfrage)
 - **V01.1.482** Web-App aufräumen: ruhigere Kopfleiste und ein Zähler am Handy, kleine Karten, untere Leiste in Safari nicht mehr abgeschnitten, 5 Tabs, eigene Seiten ohne Karte in der Karte, Seitenleiste auf dem iPad nur mit Symbolen
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.478** ROT-FIX: Test der Hinweis-Blase misst in einem Schritt
 - **V01.1.477** Dungeon-Prüfung 15.11., Punkt 7: Neue Runde Schritt für Schritt (Welt, Geschichte, Die Runde, Dein Held; oben eine Leiste, „Weiter“ und „Zurück“, „Runde starten“ erst beim Helden, ohne Titel zurück zu Schritt 3) und die Karte „Wie letztes Mal“: ein Tipp startet eine frei erzählte Runde mit Welt, Ton, Zeiten, Erzählweise, Regeltiefe und Vorlesen der letzten Runde und ihrem Helden (dungeon.quick, feste Regeln, nur freie lebende Helden); dazu ist der Heiler-Test nicht mehr von der Uhrzeit abhängig (P919)
 - **V01.1.476** Dungeon-Prüfung 15.11., Punkte 6 und 8: kleinere Handeln-Leiste am Handy (Zustand mit „wartet auf …“ in einer Zeile, Wunsch und weitere Knöpfe hinter „⋯ Mehr“, ▾ klappt auf Feld und Senden-Pfeil zusammen, je Gerät gemerkt), Datum, Monde und Tageszeit in einer Zeile über der Geschichte, „Gewölbe würfeln“ und „Karte neu würfeln“ im Spielleiter-Pult unter „Karte“ statt unter der Karte (P918)
-- **V01.1.475** Hinweise oben ruhig: nur noch ein kleines Zeichen „● N Hinweise“ neben dem Käfer, gleiche Ursache in einer Zeile
 
 
 

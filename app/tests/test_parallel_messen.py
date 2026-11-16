@@ -150,8 +150,8 @@ class Varianten(unittest.TestCase):
     def test_a_variant_is_its_basis_with_only_the_named_fields(self):
         kat = modelle.katalog()
         basis, ohne = kat["qwen36-35b-a3b-nvfp4"], kat["qwen36-35b-a3b-nvfp4-ohne-mtp"]
-        self.assertEqual((ohne["repo"], ohne["revision"], ohne["kontext"], ohne["anteil"]),
-                         (basis["repo"], basis["revision"], basis["kontext"], basis["anteil"]))
+        self.assertEqual((ohne["repo"], ohne["revision"], ohne["kontext"], ohne["gpu_gib"]),
+                         (basis["repo"], basis["revision"], basis["kontext"], basis["gpu_gib"]))
         self.assertEqual((ohne["messen"], basis["messen"]), ("auf_wunsch", "immer"))    # only the one with MTP by default
         self.assertEqual(ohne["anfrage"], basis["anfrage"])
         self.assertEqual({k: v for k, v in ohne["vllm"].items() if k != "mtp"},
