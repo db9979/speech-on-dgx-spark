@@ -45,6 +45,7 @@ function vgCard(x,where){const el=icEl,c=el('div','vk'+(x.dringend?' hot':''));c
   if(x.gruppe==='erledigt'){c.className='vk-zu';c.append(el('span','vk-sym','✓'),el('span','',x.titel),el('small','mut',vgState(x)));
     if(VG.msg&&VG.msgId===x.id&&where!=='list')c.appendChild(el('div','fh'+(VG.msgOk?'':' err'),VG.msg));
     const b=el('button','b',t('Zurückholen','Bring back'));b.type='button';b.onclick=()=>vgAct(x,'zurueck','',b);if(x.acts.some(a=>a.k==='zurueck'))c.appendChild(b);return c}
+  if(where==='chat')return vgSmall(x,c);
   const k=el('div','vk-k'),sym=el('span','vk-sym');sym.appendChild(icSvg(vgSym(x),14));k.append(sym,el('b','',vgName(x)));
   const f=vgFrist(x.frist);if(f)k.appendChild(el('span','frist'+(f[1]?' warn':''),f[0]));
   c.append(k,el('b','vk-t',x.titel));if(x.zeile)c.appendChild(el('div','vk-z',x.zeile));
@@ -56,6 +57,29 @@ function vgCard(x,where){const el=icEl,c=el('div','vk'+(x.dringend?' hot':''));c
   if(x.acts.some(a=>a.k==='spaeter'))bar.appendChild(vgLater(x));
   c.appendChild(bar);const st=vgState(x);if(st)c.appendChild(el('div','vk-fuss',st));
   if(VG.msg&&VG.msgId===x.id&&where!=='list')c.appendChild(el('div','fh'+(VG.msgOk?'':' err'),VG.msg));
+  return c}
+// the card in the conversation, small (Web-App aufräumen 3a, Dominik 2026-11-16): symbol and title, the line in two rows at
+// most, the fields in one; two buttons, everything else (more buttons, „Später“, the page Offen) behind „⋯“; the page Offen
+// shows the whole card
+function vgSmall(x,c){const el=icEl;c.classList.add('kompakt');c.title=vgName(x);
+  const k=el('div','vk-k'),sym=el('span','vk-sym');sym.appendChild(icSvg(vgSym(x),14));const tt=el('b','vk-t',x.titel);k.append(sym,tt);
+  const f=vgFrist(x.frist);if(f)k.appendChild(el('span','frist'+(f[1]?' warn':''),f[0]));c.appendChild(k);
+  if(x.zeile)c.appendChild(el('div','vk-z',x.zeile));
+  if(x.felder&&x.felder.length)c.appendChild(el('div','vk-fz',x.felder.map(([a,b])=>t(a,{Von:'From',Betrag:'Amount'}[a]||a)+': '+b).join(' · ')));
+  const acts=x.acts.filter(a=>a.k!=='spaeter'&&a.k!=='zurueck'),bar=el('div','vk-b');
+  const run=a=>a.k==='oeffnen'&&x.vorschau?b=>vgPick(x,c,b):b=>vgAct(x,a.k,'',b);
+  acts.slice(0,2).forEach((a,i)=>{const b=el('button','b'+(i?'':' p'),L==='en'?a.en:a.de);b.type='button';b.onclick=()=>run(a)(b);bar.appendChild(b)});
+  if(x.zustand==='spaeter'&&x.acts.some(a=>a.k==='zurueck')){const b=el('button','b',t('Jetzt zeigen','Show now'));b.type='button';b.onclick=()=>vgAct(x,'zurueck','',b);bar.appendChild(b)}
+  const w=el('span','vk-sp ic-menu'),mb=el('button','b vk-mehr');mb.type='button';mb.setAttribute('aria-haspopup','true');mb.setAttribute('aria-label',t('Mehr','More'));mb.appendChild(icSvg('more',16));
+  const pop=el('div','ic-pop vk-pop');pop.hidden=true;
+  const item=(txt,fn)=>{const o=el('button','',txt);o.type='button';o.onclick=()=>{pop.hidden=true;fn(mb)};pop.appendChild(o)};
+  for(const a of acts.slice(2))item(L==='en'?a.en:a.de,run(a));
+  if(x.acts.some(a=>a.k==='spaeter'))for(const [kk,[de,en]] of Object.entries(VG.spaeter))item(t('Später: ','Later: ')+(L==='en'?en:de),b=>vgAct(x,'spaeter',kk,b));
+  item(t('Auf der Seite Offen','On the page Open'),()=>vgShow(x.id));
+  mb.onclick=e=>{e.stopPropagation();const open=!pop.hidden;document.querySelectorAll('.ic-pop').forEach(p=>p.hidden=true);pop.hidden=open};
+  w.append(mb,pop);bar.appendChild(w);c.appendChild(bar);
+  const st=vgState(x);if(st)c.appendChild(el('div','vk-fuss',st));
+  if(VG.msg&&VG.msgId===x.id)c.appendChild(el('div','fh'+(VG.msgOk?'':' err'),VG.msg));
   return c}
 // „Später ▾“: the four choices of vorgaenge.SPAETER, the time it comes back beside each
 function vgLater(x){const el=icEl,w=el('span','vk-sp'),b=el('button','b',t('Später ▾','Later ▾'));b.type='button';b.setAttribute('aria-haspopup','true');
@@ -94,8 +118,10 @@ function vgFillAtt(d){const x=VG.items.get(d.dataset.vg);if(!x)return;d.textCont
 window.vgLive=(id,text)=>{if(!document.querySelector('#chatlog .vgmsg[data-vg="'+id+'"]')){const b=chatLog('assistant',text);b.classList.add('pro');vgMount(b,{vg:id})}
   vgLoad(false).then(()=>{if(typeof convoLook==='function')convoLook(true)})};
 // „Noch offen: 3“ above the conversation; open it for the titles, a tap opens the card on the page Offen
+// what needs one now, newest first: the strip here, the counter „● N“ in the phone's bar (appview.js)
+const vgNeed=()=>VG_ON?[...VG.items.values()].filter(x=>x.gruppe==='braucht').sort((a,b)=>b.t-a.t):[];
 function vgStrip(){const log=$('chatlog');if(!log)return;let s=$('vgstrip');
-  const need=[...VG.items.values()].filter(x=>x.gruppe==='braucht').sort((a,b)=>b.t-a.t);
+  const need=vgNeed();
   if(!VG_ON||!need.length){if(s)s.remove();return}
   if(!s){s=icEl('div','vgstrip');s.id='vgstrip';log.before(s)}
   s.textContent='';const head=icEl('button','vgs-h');head.type='button';head.setAttribute('aria-expanded',String(VG.open));
@@ -184,7 +210,7 @@ async function vgSettings(b){b.textContent='';const c=VG.counts;
   b.appendChild(icDanger(t('Alles Offene löschen','Delete everything open'),t('Die Karten und die Später-Liste sind dann weg. Mails und Erinnerungen bleiben, wo sie sind.','The cards and the later list are gone then. Mails and reminders stay where they are.'),
     t('Alles löschen','Delete all'),e=>{const btn=e.currentTarget;if(btn.dataset.sure){drop(false,btn);delete btn.dataset.sure;btn.textContent=t('Alles löschen','Delete all')}else{btn.dataset.sure='1';btn.textContent=t('Wirklich löschen?','Really delete?')}}))}
 // ---------------------------------------------------------------- every place at once
-function vgPaint(){document.querySelectorAll('#chatlog .vgmsg').forEach(vgFill);document.querySelectorAll('#chatlog .vgatt').forEach(vgFillAtt);vgStrip();
+function vgPaint(){document.querySelectorAll('#chatlog .vgmsg').forEach(vgFill);document.querySelectorAll('#chatlog .vgatt').forEach(vgFillAtt);vgStrip();if(typeof window.apRender==='function')apRender();
   const n=VG_ON?VG.counts.braucht||0:0;
   document.querySelectorAll('nav button[data-s=offen]').forEach(b=>{let s=b.querySelector('.ncnt');if(!s){s=icEl('span','ncnt');b.append(' ',s)}s.hidden=!n;s.textContent=n>99?'99+':String(n)});
   const w=$('vgview');if(w)vgPage(w)}

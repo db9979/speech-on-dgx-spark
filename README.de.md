@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.482** Web-App aufräumen: ruhigere Kopfleiste und ein Zähler am Handy, kleine Karten, untere Leiste in Safari nicht mehr abgeschnitten, 5 Tabs, eigene Seiten ohne Karte in der Karte, Seitenleiste auf dem iPad nur mit Symbolen
 - **V01.1.481** CarPlay: die letzten Antworten mit Daumen hoch oder runter bewerten oder per Sprache ein Issue dazu erstellen, mit dem Ton-Protokoll der App
 - **V01.1.480** Dungeon-Prüfung 15.11., Punkt 10: dungeon.py und dungeon.js aufgeteilt, ohne sichtbare Änderung: die 78 Endpunkte in eigener Datei mit eigenem Router, die Regel-Seite des Admins in eigenem Skript
 - **V01.1.479** ROT-FIX: Kalender-Seitentest wackelt nicht mehr
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.475** Hinweise oben ruhig: nur noch ein kleines Zeichen „● N Hinweise“ neben dem Käfer, gleiche Ursache in einer Zeile
 - **V01.1.474** ROT-FIX Dungeon-Handyleiste: die Leiste wächst nicht mehr mit dem Text (Zustand eine Zeile mit „…“, Vorschläge eine Reihe zum Wischen); auf GitHub nahm sie mit breiterer Schrift über die halbe Höhe ein, test_the_phone_table_head_fight_field_group_and_hero war dadurch ein Dauer-Wackler, jetzt mit breiter Schrift geprüft
 - **V01.1.473** Käfer überdeckt nichts mehr: am Rechner im Seitenmenü neben dem Mikrofon, am Handy mit Abstand; Wächter-Test prüft alle Seiten
-- **V01.1.472** Dungeon-Master: Kämpfe höchstens 6 bis 7 Züge bei gleicher Siegquote, Bosse nachgemessen, keine Proben-Frage an das Modell, wo das Panel schon entscheidet
 
 
 

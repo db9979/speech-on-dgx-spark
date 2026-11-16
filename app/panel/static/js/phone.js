@@ -54,6 +54,17 @@ layout();
 // header height for the sticky bars below it; the voice button steps aside while the keyboard is up
 const hdrH=()=>document.documentElement.style.setProperty('--hdrh',document.querySelector('header').offsetHeight+'px');
 addEventListener('resize',hdrH);hdrH();
+// the conversation's column is as high as what one really sees (Web-App aufräumen 4a, Dominik 2026-11-16): iOS 26 Safari
+// counts the room under its floating bar into 100dvh, so the tab bar at the bottom was cut off; the smaller of the
+// window's and the visible part's height (not while zoomed), 100dvh stays the fallback in app.css
+let appHv=0;
+const appH=()=>{const v=window.visualViewport,h=Math.round(v&&v.scale<1.05?Math.min(innerHeight,v.height):innerHeight);
+  if(h>200&&h!==appHv){appHv=h;document.documentElement.style.setProperty('--apph',h+'px')}};
+addEventListener('resize',appH);if(window.visualViewport)visualViewport.addEventListener('resize',appH);appH();
+// the side menu shows only symbols between 761 and 1100 px (app.css, Web-App aufräumen 6a): each entry names itself in
+// its title, read from its words when the pointer comes (so it follows a change of language)
+document.querySelector('header nav').addEventListener('pointerover',e=>{const b=e.target.closest('button');if(!b||b.classList.contains('navfind'))return;
+  const n=[...b.childNodes].filter(x=>x.nodeType===3).map(x=>x.textContent).join('').trim();if(n&&b.title!==n)b.title=n});
 const typingEl=e=>e&&e.matches&&e.matches('input:not([type=checkbox]):not([type=range]):not([type=file]),textarea,select');
 document.addEventListener('focusin',e=>{if(typingEl(e.target))document.body.classList.add('kbd')});
 document.addEventListener('focusout',()=>setTimeout(()=>{if(!typingEl(document.activeElement))document.body.classList.remove('kbd')},50));

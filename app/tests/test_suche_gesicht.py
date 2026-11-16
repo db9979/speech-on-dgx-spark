@@ -137,8 +137,10 @@ class Static(unittest.TestCase):
         css, appv, find = read(STATIC, "app.css"), read(STATIC, "js", "appview.js"), read(STATIC, "js", "find.js")
         self.assertNotIn("body.prof #findbtn", css)
         self.assertIn("grid-template-columns:minmax(0,1fr)", css[css.index(".fpal{"):css.index(".fpal[hidden]")])
-        self.assertIn('data-ap="find"', appv)
-        self.assertIn("else if(a==='find')palOpen()});", appv)
+        # Web-App aufräumen 1a (2026-11-16): the magnifier is a row of the „⋯“ sheet on the phone's conversation head
+        self.assertIn('data-ap="more"', appv)
+        self.assertIn("row('data-sa=\"pal\"'", appv)
+        self.assertIn("else if(b.dataset.sa==='pal')palOpen();", appv)
         self.assertIn("x.onclick=palClose;", find)
 
 
@@ -183,7 +185,8 @@ class Browser(unittest.TestCase):
                 for w in (320, 390):
                     br, pg, errors = await self.page(p, w, 760)
                     try:
-                        await pg.click("#aptrail [data-ap=find]")
+                        await pg.click("#aptrail [data-ap=more]")
+                        await pg.click("#apsheet [data-sa=pal]")
                         box = await pg.evaluate("(()=>{const b=document.querySelector('#fpal .fbox').getBoundingClientRect();return [b.left,b.right]})()")
                         self.assertGreaterEqual(box[0], 0, w)
                         self.assertLessEqual(box[1], w, w)

@@ -193,7 +193,7 @@ body.inchat #fab{display:none}
    wide screens give the history the extra width, narrow windows put a small face bar on top */
 @media (min-width:761px){
   html:has(body.inchat){scrollbar-gutter:auto}
-  body.inchat{height:100dvh;overflow:hidden;display:flex;flex-direction:column}
+  body.inchat{height:var(--apph,100dvh);overflow:hidden;display:flex;flex-direction:column}
   body.inchat main{flex:1;min-height:0;width:100%;max-width:none;box-sizing:border-box;display:flex;flex-direction:column;padding:16px 20px 8px}
   body.inchat section#chat.on{flex:1;min-height:0;display:flex;flex-direction:column}
   body.inchat .talkwrap{flex:1;min-height:0;align-items:stretch;grid-template-columns:320px minmax(0,1fr)}
@@ -274,7 +274,7 @@ body[data-face=wave] .av i{width:16px;height:2.5px;border-radius:2px;background:
   header nav,#hdr,#langbtn,#themebtn,#logoutbtn{display:none!important}
   #mmenu{display:flex;margin-left:auto;padding:10px 12px;min-height:44px}#mmenu svg{width:18px;height:18px}
   header h1{font-size:15px;overflow:hidden;text-overflow:ellipsis}
-  body.inchat{height:100dvh;overflow:hidden;display:flex;flex-direction:column}
+  body.inchat{height:var(--apph,100dvh);overflow:hidden;display:flex;flex-direction:column}
   body.inchat main{flex:1;min-height:0;padding:0;display:flex;flex-direction:column;width:100%}
   body.inchat #credit,body.inchat .convohead,body.inchat #chatnew,body.inchat #chatstop,body.inchat .stage .hint{display:none}
   body.inchat section#chat.on{flex:1;min-height:0;display:flex;flex-direction:column}
@@ -597,6 +597,33 @@ body.guest .navme{display:none}
 }
 @media (min-width:761px){body.adm .cfgnav{top:24px}}
 @media (min-width:761px){body.adm header nav{order:5}body.adm .hfoot{order:6}body.adm #hdr{padding-left:48px}}
+/* Web-App aufräumen 6a (Dominik 2026-11-16): between 761 and 1100 px (iPad upright, narrow windows) the side menu shows its
+   symbols only (--side-w from tokens.css), so a page with its own menu column keeps room for its content; the name
+   stands in the symbol's title (phone.js navTitles). Microphone and Käfer stand under the logo, the foot as a column. */
+@media (min-width:761px) and (max-width:1100px){
+  body.adm header{padding:142px 8px 10px;align-items:center;overflow-x:hidden}
+  body.adm header h1{position:absolute;top:14px;left:calc(var(--side-w) / 2 - 14px);width:28px;height:28px;overflow:hidden;white-space:nowrap;padding:0;min-height:0;color:transparent}
+  body.adm header h1 .logo{margin:0;color:var(--bg)}
+  body.adm #hdr{display:none}
+  body.adm #fab{left:calc(var(--side-w) / 2 - 20px);top:56px}
+  body.adm #rpbug{left:calc(var(--side-w) / 2 - 20px);top:98px}
+  body.adm nav{width:100%;align-items:center}
+  body.adm nav button,body.adm nav .navfind{position:relative;justify-content:flex-start;width:44px;min-height:40px;padding:0 0 0 12px;gap:0;margin:0;overflow:hidden;white-space:nowrap;color:transparent}
+  body.adm nav button .ni{margin-right:12px}
+  body.adm nav .navfind span,body.adm nav .navfind kbd{display:none}
+  body.adm nav .navfind{margin-bottom:6px;padding-left:13px}body.adm nav .navfind svg{width:18px;height:18px;color:var(--mut)}
+  body.adm nav .ni{width:20px;height:20px}
+  body.adm nav .ncnt{position:absolute;top:1px;right:0;margin:0;min-width:16px;line-height:16px;padding:0 4px}
+  body.adm nav .hdot,body.adm nav .medot{position:absolute;top:7px;right:8px;margin:0}
+  body.adm nav #updbadge{display:none!important}
+  body.adm .navgrp{width:28px;height:1px;overflow:hidden;color:transparent;padding:0;margin:8px 0;background:var(--line)}
+  body.adm .hfoot{display:flex;flex-direction:column;align-items:center;gap:6px;width:100%}
+  body.adm .sidewho span,body.adm .notausbtn span{display:none}
+  body.adm .sidewho{padding:4px}body.adm .b.notausbtn{padding:6px;min-width:40px}
+  body.adm .hsmall{flex-direction:column;align-items:center;gap:0}
+  body.adm .hsmall .b{font-size:11.5px;padding:4px 2px}
+  body.adm #logoutbtn{margin-left:0}
+}
 @media (max-width:760px){body.adm #mmenu{display:none}body.adm #profbtn{margin-left:auto}}
 @media (max-width:760px){body.adm #profmodal .mecard{min-height:100%}}
 /* Zustand (V01.0.146): one sentence on top, then what needs the admin; details folded. Klar 6 (Redesign Stufe 6): a
@@ -995,6 +1022,8 @@ a.zcard,button.zcard{cursor:pointer}a.zcard:hover,button.zcard:hover{border-colo
 details.ztech{margin-top:4px}details.ztech>summary{cursor:pointer;font:var(--t-body);font-weight:600;padding:8px 2px;color:var(--mut)}
 /* the service table and the numbers under „Technische Details“: hairlines, ports and numbers in tabular digits */
 #ztech td{font-variant-numeric:tabular-nums}#ztech .grid .card{box-shadow:none}details.ztech[open]>summary{margin-bottom:10px;color:var(--fg)}
+/* the Zustand tiles two by two up to 1100 px too (Web-App aufräumen 6a): four in a row were cut to „k… A…“ beside the menu column */
+@media (min-width:761px) and (max-width:1100px){.zcards,.zcards.z5{grid-template-columns:repeat(2,minmax(0,1fr))}.zcards.z5>*{grid-column:auto}.zcards.z5>:last-child:nth-child(odd){grid-column:1/-1}}
 @media (max-width:760px){.zcards,.zcards.z5{grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}.zcards.z5>*{grid-column:auto}.zcards.z5>:last-child{grid-column:1/-1}.zrechner{grid-template-columns:1fr}.zcard>b{font:var(--t-head);font-weight:700}.zgo{display:none}.zcard{padding:var(--s3)}
   .zch{display:none}#zneed .zrow>span:nth-child(2){hyphens:auto;overflow-wrap:anywhere}}
 /* Rückgängig above the admin log (C5, V01.0.286) */
@@ -2442,6 +2471,16 @@ textarea{resize:none}textarea[data-fest]{resize:vertical}textarea.feldplatz{padd
 .vgpick{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px}.vgpick select{flex:1 1 220px;max-width:420px}   /* „Anderer Ordner …“: the folders of the mailbox right at the card */
 .vk-sp{margin-left:auto}.vk-pop{top:auto;bottom:38px}
 .vk-fuss{font-size:12px;color:var(--mut)}
+/* the card in the conversation, small (Web-App aufräumen 3a): symbol and title in one row, the line in two at most, the
+   fields in one, the buttons in one row with „⋯“ at its end; the kind's name is the card's title */
+.vk.kompakt{padding:10px 12px;gap:3px;box-shadow:none}
+.vk.kompakt .vk-k{text-transform:none;letter-spacing:0;font-size:14px;color:var(--fg);gap:8px}
+.vk.kompakt .vk-t{font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vk.kompakt .vk-z{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:12.5px;color:var(--mut);margin-left:30px}
+.vk-fz{font-size:12.5px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-left:30px}
+.vk.kompakt .vk-b{flex-wrap:nowrap;margin:6px 0 0 30px}.vk.kompakt .vk-b .b{white-space:nowrap}
+.vk.kompakt .vk-sp{margin-left:0}.vk.kompakt .vk-mehr{display:inline-grid;place-items:center;padding:6px 8px}
+.vk.kompakt .vk-pop{left:0;right:auto}.vk.kompakt .vk-fuss{margin-left:30px}
 .vk-zu{display:inline-flex;flex-wrap:wrap;gap:8px;align-items:center;border:1px dashed var(--line);border-radius:12px;padding:6px 12px;font-size:13px}
 .vk-zu .vk-sym{background:color-mix(in srgb,var(--ok) 16%,var(--card));color:var(--ok)}.vk-zu .b{padding:3px 9px;font-size:12.5px}
 /* Mitteilung antippen (mitteilung.js): the tapped note above the conversation */

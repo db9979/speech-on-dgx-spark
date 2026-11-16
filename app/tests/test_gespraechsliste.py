@@ -116,8 +116,10 @@ class Page(unittest.TestCase):
                 self.assertEqual(await pg.evaluate("document.querySelector('#chatlog .msg:last-child').offsetHeight"), h0)
                 await pg.click("#chatlog .macts .mmore")
                 self.assertTrue(await pg.evaluate("!!document.querySelector('#chatlog .macts .rpabar').offsetParent"))
-                # narrow: the list opens over the conversation with the button, a pick closes it
-                await pg.set_viewport_size({"width": 1000, "height": 900})
+                # narrow (an iPad upright; up to 1100 px the side menu shows only symbols since 2026-11-16, so 1000 px
+                # leaves the card wide enough for the list beside it): the list opens over the conversation with the
+                # button, a pick closes it
+                await pg.set_viewport_size({"width": 820, "height": 900})
                 await self.until(pg, "!$('convocard').classList.contains('cvwide')")
                 self.assertFalse(await pg.evaluate("!!$('convolist').offsetParent"))
                 await pg.click("#cvlbtn")

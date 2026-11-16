@@ -450,7 +450,7 @@ def origin(body, request):
 
 
 def app_view(body):
-    """The phone view (tabs Spark · Heute · Dokumente · Ich · Verwalten): the browser says so, it only changes
+    """The phone view (tabs Spark · Chats · Heute · Ich · Verwalten): the browser says so, it only changes
     how a way in the panel is written."""
     return isinstance(body, dict) and body.get("view") == "app"
 

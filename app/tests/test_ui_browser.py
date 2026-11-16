@@ -3395,9 +3395,10 @@ class Browser(unittest.TestCase):
                             self.assertFalse(await pg.is_visible(f"nav button[data-s={s}]"), s)
                         await pg.click("#navme")
                     else:
-                        # the app's tabs: Spark, Heute, Dokumente (documents are on here), Ich; Verwalten only with the admin login
+                        # the app's tabs: Spark, Heute, Ich; Verwalten only with the admin login; Dokumente (on here) is
+                        # under Ich → Dokumente since 2026-11-16, not a tab (five tabs at most, test_webapp_ordnung)
                         shown = await pg.evaluate("[...document.querySelectorAll('#aptabs button')].filter(b=>b.offsetParent).map(b=>b.dataset.tab)")
-                        self.assertEqual(shown, ["spark", "today", "docs", "me"])
+                        self.assertEqual(shown, ["spark", "today", "me"])
                         await pg.click("#aptabs button[data-tab=me]")
                     await pg.wait_for_selector("#profmodal", state="visible")
                     self.assertFalse(await pg.is_visible("#loginbtn"))   # a profile without an admin role

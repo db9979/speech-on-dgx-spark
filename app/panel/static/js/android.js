@@ -48,6 +48,7 @@ function andJump(){if(!IN_ANDROID)return;const h=location.hash;let ask=null,pic=
   else if(h!=='#talk')return;
   try{history.replaceState(history.state,'',location.pathname+location.search)}catch{}
   const go=()=>{if(typeof PROFILE==='undefined'||!$('chattext'))return setTimeout(go,300);
+    if(tab==='docs'){openMe('docbox');return}   // Dokumente is no tab since 2026-11-16, it lives under Ich → Meine Daten
     if(tab){const b=document.querySelector(`#aptabs button[data-tab=${tab}]`);if(b&&!b.hidden)b.click();return}
     const chat=document.querySelector('nav button[data-s=chat]');if(chat)chat.click();
     if(pic){if(typeof picTake==='function')picTake(pic);return}

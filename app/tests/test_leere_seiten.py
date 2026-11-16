@@ -139,33 +139,32 @@ class Browser(unittest.TestCase):
 
     def test_the_footer_stands_at_the_bottom_on_a_phone(self):
         """On a short page the footer stood in the middle of the phone's screen, on a long one it ended under the
-        tab bar: now it is the last thing above the tab bar, and the chat has none as before."""
+        tab bar. Since 2026-11-16 (Web-App aufräumen 5a: „keine Fußzeile mitten im Bild“) a phone shows it only under
+        the lists Heute and Verwalten, as the last thing above the tab bar; one's own pages, the admin pages and the
+        chat have none."""
         async def go():
             async with async_playwright() as p:
                 br, pg, errors = await self.page(p, 390, 760, profile=True)
                 try:
                     maß = ("(()=>{const c=document.getElementById('credit').getBoundingClientRect(),"
                            "b=document.getElementById('aptabs').getBoundingClientRect();"
-                           "return [Math.round(c.bottom),Math.round(b.top),Math.round(c.height),"
+                           "return [Math.round(c.bottom),Math.round(c.top),Math.round(b.top),Math.round(c.height),"
                            "document.documentElement.scrollHeight,innerHeight]})()")
-                    for seite in ("mappen", "offen"):                 # short pages
+                    for seite in ("mappen", "offen", "feat"):
                         await pg.evaluate(f"goSec('{seite}')")
                         await pg.wait_for_timeout(600)
-                        unten, leiste, hoch, ganz, fenster = await pg.evaluate(maß)
-                        self.assertGreater(hoch, 0, seite)
-                        self.assertEqual(ganz, fenster, seite)        # nothing to scroll
-                        self.assertLessEqual(unten, leiste + 1, seite)
-                        self.assertGreater(unten, leiste - 24, seite)
-                    await pg.evaluate("goSec('feat')")                # a long page: scrolled to its end
+                        self.assertEqual((await pg.evaluate(maß))[3], 0, seite)
+                    await pg.evaluate("APV.tab('today')")           # the list Heute: at its end, above the tab bar
                     await pg.wait_for_timeout(600)
                     await pg.evaluate("scrollTo(0,document.documentElement.scrollHeight)")
                     await pg.wait_for_timeout(200)
-                    unten, leiste, hoch, ganz, fenster = await pg.evaluate(maß)
-                    self.assertGreater(ganz, fenster)
+                    unten, oben, leiste, hoch, ganz, fenster = await pg.evaluate(maß)
+                    self.assertGreater(hoch, 0)
                     self.assertLessEqual(unten, leiste + 1)
+                    self.assertGreater(oben, 0)
                     await pg.evaluate("goSec('chat')")
                     await pg.wait_for_timeout(400)
-                    self.assertEqual((await pg.evaluate(maß))[2], 0)
+                    self.assertEqual((await pg.evaluate(maß))[3], 0)
                     self.assertEqual(errors, [])
                 finally:
                     await br.close()

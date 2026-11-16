@@ -6338,6 +6338,30 @@
 "text": "Im Auto mit Bewerten oder Probleme melden frei: zwei Fragen stellen, dann „Antworten bewerten“ antippen. Die letzten Antworten stehen mit deiner Frage da. Eine antippen, „Falsche Antwort“ wählen: kurz „Danke, notiert.“, die Zeile zeigt danach den Daumen runter. Nochmal eine Antwort antippen, „Issue erstellen“: das Mikrofon geht auf, das Auto zeigt „Was war falsch?“, einen Satz sagen. Spark sagt, ob das Issue auf GitHub ist oder als Entwurf unter Ich → Probleme melden liegt; im Entwurf stehen Frage, Antwort, Weg und das App-Protokoll. Direkt nach einer Antwort „Daumen hoch“ sagen: Spark sagt „Danke, freut mich.“",
 "thread": "Bewerten und Fehler melden in CarPlay",
 "test": "test_carplay.Verdicts.test_one_flat_list_per_answer"
+},
+{
+"id": "P922",
+"v": 1482,
+"titel": "Web-App am iPhone und iPad aufgeräumt",
+"text": "Im iPhone-Safari das Panel öffnen (Assistent): oben links Neu und Verlauf, rechts nur „● N“ und „⋯“; „⋯“ zeigt Suchen, Vorlesen, Gespräch einstellen und Fehler melden. Die untere Leiste mit 5 Tabs (Assistent, Chats, Heute, Ich, Verwalten) steht ganz sichtbar über der Safari-Leiste, auch nach dem Drehen und mit offener Tastatur. Dokumente unter Ich → Dokumente. Auf dem iPad hochkant: links nur Symbole, Zustand und Einstellungen haben Platz, die Kacheln stehen zwei nebeneinander.",
+"thread": "Web-App aufräumen und neu ordnen",
+"test": "test_webapp_ordnung.Browser.test_phone_head_tabs_and_tablet_room"
+},
+{
+"id": "P923",
+"v": 1482,
+"titel": "Ein Zähler und kleine Karten im Assistenten",
+"text": "Am iPhone im Assistenten: oben rechts ein „● N“ statt der Leiste „Noch offen“; antippen zeigt Hinweise und was dich braucht in einem Blatt, ein Eintrag öffnet die Seite Offen. Die Karten im Gespräch sind klein: zwei Knöpfe und „⋯“ in einer Reihe, dahinter „Später: …“ und „Auf der Seite Offen“. Am Rechner steht „Noch offen“ wie bisher, die Karten sind auch dort klein.",
+"thread": "Web-App aufräumen und neu ordnen",
+"test": "test_webapp_ordnung.Browser.test_one_counter_and_small_cards"
+},
+{
+"id": "P924",
+"v": 1482,
+"titel": "Eigene Seiten am Handy ohne Karte in der Karte",
+"text": "Am iPhone Heute → Kalender, E-Mail, Listen und Offen öffnen: der Inhalt geht über die ganze Breite ohne Rahmen drumherum, unten steht keine Zeile „Speech auf DGX Spark …“ mehr. Die steht nur noch ganz unten unter Heute und unter Verwalten, über der Tab-Leiste.",
+"thread": "Web-App aufräumen und neu ordnen",
+"test": "test_leere_seiten.Browser.test_the_footer_stands_at_the_bottom_on_a_phone"
 }
 ]
 }

@@ -1,5 +1,5 @@
 // Phones look and feel like the iPhone app (plan handy-wie-app.md, V01.0.281). Below 760 px the page gets the app's tab
-// bar (Spark, Heute, Dokumente, Ich, Verwalten), its chat (face, bubbles, a big microphone, the text field always
+// bar (Assistent, Chats, Heute, Ich, Verwalten; Dokumente under Ich → Meine Daten since 2026-11-16), its chat (face, bubbles, a big microphone, the text field always
 // there), lists like the iOS settings, pages that slide in with "‹ back" on top, sheets from below, and the phone's
 // back gesture goes one level up. It is only a second drawing of the same page: the elements are moved, not copied,
 // every switch and check stays where it is, and what a tab shows is still decided by the server (a hidden tab is not
@@ -11,7 +11,7 @@ const wanted=()=>{try{return localStorage.getItem('appview')!=='off'}catch{retur
 let ON=false,TAB='spark',hd=0,dirty=false;
 // the symbols come from icons.js (one source); the tab „Assistent“ shows the speech bubble
 const SV=n=>ic(n==='spark'?'chat':n);
-const TABS=[['spark',t('Assistent','Assistant')],['chats',t('Chats','Chats')],['today',t('Heute','Today')],['docs',t('Dokumente','Documents')],['me',t('Ich','Me')],['manage',t('Verwalten','Manage')]];
+const TABS=[['spark',t('Assistent','Assistant')],['chats',t('Chats','Chats')],['today',t('Heute','Today')],['me',t('Ich','Me')],['manage',t('Verwalten','Manage')]];
 const mk=(tag,id,cls,html)=>{const e=document.createElement(tag);if(id)e.id=id;if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e};
 const label=b=>b?[...b.childNodes].filter(n=>n.nodeType===3).map(n=>n.textContent).join('').trim():'';
 const navBtn=s=>document.querySelector(`nav button[data-s=${s}]`);
@@ -57,7 +57,7 @@ const OWN_FULL=new Set(['dungeon','spiel']);
 function ownSec(){const sec=document.querySelector('main>section.on');return !!sec&&OWN.has(sec.id)}
 function ownOpen(){const sec=document.querySelector('main>section.on');return !B.classList.contains('appage')&&$('profmodal').style.display!=='grid'&&!!sec&&OWN.has(sec.id)&&!OWN_FULL.has(sec.id)}
 function secTab(sec){return !sec||sec.id==='chat'?'spark':sec.id==='chats'?'chats':OWN.has(sec.id)?ownTab():'manage'}
-function leave(stillPhone){const page=B.classList.contains('appage');ON=false;B.classList.remove('appview','appage','apmsgs','aptabs','apsub','aptab-docs');sheet.hidden=true;
+function leave(stillPhone){const page=B.classList.contains('appage');ON=false;B.classList.remove('appview','appage','apmsgs','aptabs','apsub');sheet.hidden=true;
   // on a wider screen phone.js has put its parts back already: only the face (never touched by phone.js here) moves
   const f=$('face'),fm=marks.get(f);if(fm){fm.parentNode.insertBefore(f,fm);fm.remove();marks.delete(f)}
   const ti=$('chattext');if(ti.dataset.ph!=null){ti.placeholder=ti.dataset.ph;delete ti.dataset.ph}
@@ -67,17 +67,16 @@ function apply(){const want=NAR.matches&&wanted();if(want&&!ON)enter();else if(!
 NAR.addEventListener('change',apply);
 // ---------------------------------------------------------------- tabs
 function visible(){const prof=typeof PROFILE!=='undefined'&&!!PROFILE,adm=typeof ADMIN!=='undefined'&&!!ADMIN;
-  return {spark:true,chats:prof&&!!window.CHATS_ON,today:prof,docs:prof&&typeof DOCS_ON!=='undefined'&&DOCS_ON,me:prof||adm,manage:adm}}
+  return {spark:true,chats:prof&&!!window.CHATS_ON,today:prof,me:prof||adm,manage:adm}}
 function showPage(pg){B.classList.add('appage');B.classList.remove('inchat');
   for(const p of [today,manage])p.classList.toggle('on',p===pg);window.scrollTo(0,0)}
 function tab(k){if(!ON)return;closeSheet();const pm=$('profmodal').style.display==='grid';
   const prev=TAB;TAB=k;
-  if(k!=='me'&&k!=='docs'&&pm&&window.closeProf)closeProf();
+  if(k!=='me'&&pm&&window.closeProf)closeProf();
   if(k==='spark'){B.classList.remove('appage');navBtn('chat').click()}
   else if(k==='chats'){B.classList.remove('appage');for(const p of [today,manage])p.classList.remove('on');navBtn('chats').click()}
   else if(k==='today'){showPage(today);renderToday()}
   else if(k==='manage'){showPage(manage);renderManage()}
-  else if(k==='docs'){openMe('docbox')}
   else if(k==='me'){if(prev==='me'&&pm&&$('profmodal').classList.contains('sub'))$('meback').click();else openMe('list')}
   render()}
 tabs.addEventListener('click',e=>{const b=e.target.closest('button[data-tab]');if(b)tab(b.dataset.tab)});
@@ -95,20 +94,19 @@ function manageNav(){const m=mainEl(),cw=document.querySelector('.cfgwrap'),sec=
   return {back:t('Spark verwalten','Manage the Spark'),title:label(document.querySelector('nav button[data-s].on')),act:()=>tab('manage'),deep:1}}
 function render(){if(!ON)return;if(manage.classList.contains('on')&&manageSig()!==mSig)renderManage();   // rights or Zustand arrived later
   const v=visible(),pm=$('profmodal').style.display==='grid',page=B.classList.contains('appage');
-  if(pm&&TAB!=='me'&&TAB!=='docs')TAB='me';
-  if(!pm&&(TAB==='me'||TAB==='docs')){const sec=document.querySelector('main>section.on');TAB=page?(manage.classList.contains('on')?'manage':'today'):secTab(sec)}
+  if(pm&&TAB!=='me')TAB='me';
+  if(!pm&&TAB==='me'){const sec=document.querySelector('main>section.on');TAB=page?(manage.classList.contains('on')?'manage':'today'):secTab(sec)}
   const shown=Object.keys(v).filter(k=>v[k]);B.classList.toggle('aptabs',shown.length>1);
   tabs.querySelectorAll('button').forEach(b=>{b.hidden=!v[b.dataset.tab];b.classList.toggle('on',b.dataset.tab===TAB);b.setAttribute('aria-selected',b.dataset.tab===TAB)});
   const hd2=$('hdot');tabs.querySelector('.apdot').hidden=!(hd2&&/\b(warn|bad)\b/.test(hd2.className));
-  B.classList.toggle('aptab-docs',TAB==='docs');
-  const back=$('apback'),lead=$('aplead'),trail=$('aptrail');let show=false,title='',bl='',lh='',th='';
+  const back=$('apback'),lead=$('aplead'),trail=$('aptrail');let show=false,title='',bl='',lh='',th='',more='';
   if(TAB==='spark'&&!pm&&!page){show=true;title='Spark';
     lh=`<button type="button" class="apib" data-ap="new" aria-label="${esc(t('Neues Gespräch','New conversation'))}">${SV('new')}</button><button type="button" class="apib" data-ap="hist" aria-label="${esc(t('Verlauf','History'))}">${SV('hist')}</button>`;
-    // "Vorlesen" on this device (chat.js voiceShow): the speaker in the top bar; locked while the profile has it off
-    const vc=$('chatvoice'),von=!!(vc&&vc.checked);
-    // Suchen (plaene/suche-gesicht.md): the magnifier at the top for admins and profiles, guests have nothing to find
-    th=(ADMIN||PROFILE?`<button type="button" class="apib" data-ap="find" aria-label="${esc(t('Suchen','Search'))}">${SV('find')}</button>`:'')+(vc?`<button type="button" class="apib" data-ap="voice" aria-pressed="${von}"${vc.disabled?' disabled':''} aria-label="${esc(vc.closest('label').title||t('Vorlesen','Read aloud'))}">${SV(von?'vol':'mute')}</button>`:'')+(isGuest()?`<button type="button" class="apib" data-ap="menu" aria-label="${esc(t('Menü','Menu'))}">${SV('more')}</button>`
-      :`<button type="button" class="apib" data-ap="set" aria-label="${esc(t('Gespräch einstellen','Conversation settings'))}">${SV('set')}</button>`)}
+    // Web-App aufräumen 1a (Dominik 2026-11-16): four buttons at most on the phone's conversation head (Neu, Verlauf,
+    // the notes „● N“ and „⋯“); Suchen, Vorlesen, Gespräch einstellen and the Käfer sit in the „⋯“ sheet (openMore),
+    // guests keep the page menu there
+    more=isGuest()?`<button type="button" class="apib" data-ap="menu" aria-label="${esc(t('Menü','Menu'))}">${SV('more')}</button>`
+      :`<button type="button" class="apib" data-ap="more" aria-label="${esc(t('Mehr','More'))}">${SV('more')}</button>`}
   // an own page gets the same head as every other page: its name, and back to where one came from
   else if(ownOpen()){show=true;title=label(document.querySelector('nav button[data-s].on'));bl=TAB==='manage'?t('Spark verwalten','Manage the Spark'):t('Heute','Today')}
   else if(TAB==='manage'&&!page&&!pm&&!ownSec()){show=true;const n=manageNav();title=n.title;bl=n.back}
@@ -116,8 +114,13 @@ function render(){if(!ON)return;if(manage.classList.contains('on')&&manageSig()!
   // Käfer-Symbol (melden.js rpBug): in the bar on top of every page that has the bar, else it stays in the page
   // the notes of the page (admin.js showAlerts, Dominik 2026-11-15 Variante 2): „● N“ in the bar beside the Käfer; a tap
   // lays the rows under it (hinweiseAuf, the same rows as the panel's pill)
-  if(show&&typeof ALERTS_N==='number'&&ALERTS_N)th+=`<button type="button" class="apib aphinw${ALERTS_BAD?' bad':''}" data-ap="hinw" data-hinw aria-expanded="false" aria-controls="alerts" aria-label="${esc(hinwWort(ALERTS_N))}"><span class="adot"></span>${ALERTS_N}</button>`;
-  if(show&&window.rpMay)th+=`<button type="button" class="apib" data-ap="bug" aria-label="${esc(t('Fehler oder Wunsch melden','Report a fault or a wish'))}">${SV('bug')}</button>`;
+  // the conversation's head (Web-App aufräumen 2a, Dominik 2026-11-16): one counter „● N“ for the notes and what needs
+  // one under Offen (vgNeed, offen.js) instead of „Noch offen: N“ above the conversation; a tap opens both as one sheet
+  const tally=more?offenZahl():null;
+  if(tally&&tally.n)th+=`<button type="button" class="apib aphinw${tally.bad?' bad':''}" data-ap="offen" aria-label="${esc(tally.n+' '+t('offen','open'))}"><span class="adot"></span>${tally.n>99?'99+':tally.n}</button>`;
+  else if(!more&&show&&typeof ALERTS_N==='number'&&ALERTS_N)th+=`<button type="button" class="apib aphinw${ALERTS_BAD?' bad':''}" data-ap="hinw" data-hinw aria-expanded="false" aria-controls="alerts" aria-label="${esc(hinwWort(ALERTS_N))}"><span class="adot"></span>${ALERTS_N}</button>`;
+  if(show&&window.rpMay&&!more)th+=`<button type="button" class="apib" data-ap="bug" aria-label="${esc(t('Fehler oder Wunsch melden','Report a fault or a wish'))}">${SV('bug')}</button>`;
+  th+=more;
   B.classList.toggle('apbaron',show);   // „Funktionen ‹ Funktionen“
   bar.hidden=!show;$('aptitle').textContent=title;back.hidden=!bl;back.querySelector('span').textContent=bl;
   // the back label takes the room up to the title, so „Verwalten“ stands whole beside a short title and shortens
@@ -128,7 +131,7 @@ function render(){if(!ON)return;if(manage.classList.contains('on')&&manageSig()!
   sync()}
 bar.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
   if(b.id==='apback'){back();return}
-  const a=b.dataset.ap;if(a==='new')$('chatnew').click();else if(a==='hist')openHist();else if(a==='set')openSet();else if(a==='voice'){const c=$('chatvoice');if(c&&!c.disabled){c.checked=!c.checked;c.onchange()}}else if(a==='menu')$('mmenu').click();else if(a==='bug'&&window.rpBug)rpBug();else if(a==='find')palOpen()});
+  const a=b.dataset.ap;if(a==='new')$('chatnew').click();else if(a==='hist')openHist();else if(a==='menu')$('mmenu').click();else if(a==='more')openMore();else if(a==='offen')openOffen();else if(a==='bug'&&window.rpBug)rpBug()});
 // ---------------------------------------------------------------- one level back (top left, edge swipe, back gesture)
 function depth(){if(!ON)return 0;let d=sheet.hidden&&$('msheet').style.display!=='grid'?0:1;const pm=$('profmodal');
   if(pm.style.display==='grid'&&TAB==='me'&&pm.classList.contains('sub')&&!pm.classList.contains('one'))d++;
@@ -176,12 +179,32 @@ function openSheet(title,html){sheet.querySelector('.apshead b').textContent=tit
 function closeSheet(){if(sheet.hidden)return;sheet.hidden=true;if(ON)render()}
 sheet.addEventListener('click',e=>{if(e.target.classList.contains('apshade')||e.target.closest('[data-close]')){closeSheet();return}
   const b=e.target.closest('[data-cid],[data-sa]');if(!b)return;closeSheet();
-  if(b.dataset.sa==='new')$('chatnew').click();else if(b.dataset.sa==='find')$('convofind').click();else if(b.dataset.sa==='del')$('convodel').click();
+  if(b.dataset.sa==='new')$('chatnew').click();else if(b.dataset.sa==='pal')palOpen();else if(b.dataset.sa==='set')openSet();else if(b.dataset.sa==='bug'&&window.rpBug)rpBug();
+  else if(b.dataset.sa==='al'){const x=offenHinweise()[+b.dataset.i];if(x&&x.go&&typeof wayGo==='function')wayGo(x.go)}
+  else if(b.dataset.sa==='vg'&&typeof vgShow==='function')vgShow(b.dataset.id);else if(b.dataset.sa==='alle'&&typeof vgShow==='function')vgShow('');
+  else if(b.dataset.sa==='voice'){const c=$('chatvoice');if(c&&!c.disabled){c.checked=!c.checked;c.onchange()}}else if(b.dataset.sa==='find')$('convofind').click();else if(b.dataset.sa==='del')$('convodel').click();
   else convoPick(b.dataset.cid)});
 // pull the sheet down to close it
 let gy=null;
 sheet.addEventListener('touchstart',e=>{gy=e.target.closest('.apshead,.sheetgrip')?e.touches[0].clientY:null},{passive:true});
 sheet.addEventListener('touchend',e=>{if(gy!=null&&e.changedTouches[0].clientY-gy>60)closeSheet();gy=null},{passive:true});
+// the counter on the conversation's head (2a): the notes of the page (admin.js, not the „info“ ones of Zustand) and what
+// needs one under Offen; red with a bad note or an urgent card
+const offenHinweise=()=>typeof ALERTS_RAW!=='undefined'?ALERTS_RAW.filter(x=>x.level!=='info'):[];
+function offenZahl(){const a=offenHinweise(),v=typeof vgNeed==='function'?vgNeed():[];
+  return {n:a.length+v.length,bad:a.some(x=>x.level==='bad')||v.some(x=>x.dringend),a,v}}
+function openOffen(){const z=offenZahl();
+  const al=z.a.map((x,i)=>row(`data-sa="al" data-i="${i}"`,esc(x.text),'',{nochev:!x.go})).join('');
+  const vg=z.v.slice(0,8).map(x=>row(`data-sa="vg" data-id="${esc(x.id)}"`,esc(x.titel),'',{sub:esc(typeof vgName==='function'?vgName(x):'')})).join('');
+  openSheet(z.n+' '+t('offen','open'),grp(t('Hinweise','Notes')+' · '+z.a.length,al)+grp(t('Braucht dich','Needs you')+' · '+z.v.length,vg)
+    +(typeof vgNeed==='function'&&typeof VG_ON!=='undefined'&&VG_ON?grp('',row('data-sa="alle"',`<span class="apacc">${esc(t('Alles unter Offen zeigen','Show everything under Open'))}</span>`)):''))}
+// „⋯“ on the conversation head (1a): what used to stand as four more symbols in the bar, as rows of one sheet
+function openMore(){const vc=$('chatvoice'),von=!!(vc&&vc.checked),n=typeof KF!=='undefined'?KF.n-KF.seen:0;
+  const rows=row('data-sa="pal"',esc(t('Suchen','Search')))+
+    (vc?row(`data-sa="voice"${vc.disabled?' disabled':''}`,esc(t('Vorlesen','Read aloud')),esc(von?t('An','On'):t('Aus','Off')),{nochev:true}):'')+
+    row('data-sa="set"',esc(t('Gespräch einstellen','Conversation settings')))+
+    (window.rpMay?row('data-sa="bug"',esc(t('Fehler oder Wunsch melden','Report a fault or a wish')),n>0?esc(n>9?'9+':String(n)):''):'');
+  openSheet(t('Mehr','More'),grp('',rows))}
 function openHist(){let list=[];try{list=convos.load()}catch{}
   let html=`<button type="button" class="apsearch" data-sa="find">${SV('find')}<span>${esc(t('In Gesprächen suchen','Search conversations'))}</span></button>`+
     `<div class="apgrp"><div class="apgb"><button type="button" class="aprow" data-sa="new"><span class="apl apacc">${esc(t('Neues Gespräch','New conversation'))}</span></button></div></div>`;
