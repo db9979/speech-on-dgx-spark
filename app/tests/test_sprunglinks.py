@@ -517,22 +517,25 @@ class Browser(unittest.TestCase):
                                   "{kind:'service',level:'bad',text:'Sprachausgabe ist weg.'},"
                                   "{kind:'praxistest',level:'info',text:'25 Praxistests sind jetzt wichtig.',go:'Zustand → Praxistest'}])")
                 await self.until(pg, "!$('apill').hidden&&$('rpbug').getBoundingClientRect().width>0")
-                r = await pg.evaluate("""(()=>{const p=$('apill'),r=p.getBoundingClientRect(),k=$('rpbug').getBoundingClientRect(),m=document.querySelector('main>section.on').getBoundingClientRect();
+                r = await pg.evaluate("""(()=>{const p=$('apill'),r=p.getBoundingClientRect(),k=$('rpbug').getBoundingClientRect();
                   return {txt:p.textContent,bad:p.classList.contains('bad'),h:r.height,box:getComputedStyle($('alerts')).display,
-                  free:r.right+6<=k.left||k.right+6<=r.left||r.bottom+6<=k.top||k.bottom+6<=r.top,top:Math.round(m.top)}})()""")
+                  free:r.right+6<=k.left||k.right+6<=r.left||r.bottom+6<=k.top||k.bottom+6<=r.top}})()""")
                 self.assertEqual(r["txt"], "3 Hinweise")      # on Zustand the info ones count too
                 self.assertTrue(r["bad"])
                 self.assertLess(r["h"], 36)
                 self.assertEqual(r["box"], "none")
                 self.assertTrue(r["free"], "the pill covers the Käfer")
-                await pg.click("#apill")
-                r2 = await pg.evaluate("""(()=>{const b=$('alerts'),m=document.querySelector('main>section.on').getBoundingClientRect();
+                # nothing moves: the page's place right before and right after the tap, in one step (V01.1.478: measured
+                # a few seconds apart, the page itself had settled by a pixel in between on GitHub, not the notes)
+                await pg.evaluate("document.fonts.ready.then(()=>1)")
+                r2 = await pg.evaluate("""(()=>{const sec=()=>document.querySelector('main>section.on').getBoundingClientRect().top,t0=sec(),y0=scrollY;
+                  $('apill').click();const b=$('alerts');
                   return {pos:getComputedStyle(b).position,first:b.firstElementChild.classList.contains('bad'),n:b.children.length,
-                  top:Math.round(m.top),exp:$('apill').getAttribute('aria-expanded')}})()""")
+                  t0,t1:sec(),y0,y1:scrollY,exp:$('apill').getAttribute('aria-expanded')}})()""")
                 self.assertEqual(r2["pos"], "fixed")
                 self.assertTrue(r2["first"])
                 self.assertEqual(r2["n"], 3)
-                self.assertEqual(r2["top"], r["top"])          # nothing moves
+                self.assertEqual((r2["t1"], r2["y1"]), (r2["t0"], r2["y0"]))   # nothing moves
                 self.assertEqual(r2["exp"], "true")
                 await pg.evaluate("document.querySelector('main>section.on').click()")   # beside it: closed
                 await self.until(pg, "!document.body.classList.contains('alertsauf')")
