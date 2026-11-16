@@ -50,6 +50,7 @@ import urllib.request
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from common import MODEL_LOG_UNITS, STATE, klon_noetig, load_config, mem_available_gib, read_json, write_json  # noqa: E402
 import hardware  # noqa: E402
+import hftoken  # noqa: E402
 
 KATALOG = os.path.join(os.path.dirname(os.path.abspath(__file__)), "modelle.json")
 MESSUNG = os.path.join(STATE, "modelle-messung.json")
@@ -82,8 +83,7 @@ ANFRAGE_KEYS = ("chat_template_kwargs", "top_k")
 # the only file kinds a model download takes: weights as safetensors, the rest is text; never *.bin/*.pt/*.pkl
 ERLAUBT = ("*.safetensors", "*.json", "*.txt", "*.jinja", "*.model", "*.tiktoken", "*.md", "LICENSE*")
 VERBOTEN = re.compile(r"(?i)\.(bin|pt|pth|pkl|pickle|ckpt|py|pyc|so|sh)$")
-REPO = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,95}/[A-Za-z0-9][A-Za-z0-9._-]{0,95}$")
-REV = re.compile(r"^[0-9a-f]{40}$")
+REPO, REV = hftoken.REPO, hftoken.REV      # a Hugging Face name, a pinned commit
 ID = re.compile(r"^[a-z0-9][a-z0-9.-]{1,47}$")
 PARSER = re.compile(r"^[a-z0-9_]{2,32}$")
 QUANT = ("fp8", "modelopt_mixed")
@@ -537,7 +537,7 @@ def docker_args(m, revision, name, uid, gid, mtp=True, hf_home=None, ordner=None
         raise Fehler("name")
     d = DOCKER[m["vllm"]["docker"]]
     profil = seccomp_profil(d)
-    hf = os.path.realpath(hf_home or os.environ.get("HF_HOME") or os.path.expanduser("~/.cache/huggingface"))
+    hf = os.path.realpath(hf_wurzel(hf_home))
     base = os.path.join(os.path.realpath(ordner or DOCKER_ORDNER), m["id"])
     umgebung = {"HF_HOME": "/hf", "HOME": "/cache", "HF_HUB_OFFLINE": "1", "VLLM_NO_USAGE_STATS": "1", "DO_NOT_TRACK": "1",
                 **KOMPILIEREN, **d["umgebung"]}
@@ -729,9 +729,13 @@ def neustart_anfragen(cfg, starten, laeuft=False, kat=None, path=None):
 
 
 # ---------------------------------------------------------------- files in the Hugging Face cache
+def hf_wurzel(hf_home=None):
+    """The Hugging Face folder of this computer (HF_HOME, else the library's own default)."""
+    return hf_home or os.environ.get("HF_HOME") or os.path.expanduser("~/.cache/huggingface")
+
+
 def hf_ordner(m, hf_home=None):
-    hf_home = hf_home or os.environ.get("HF_HOME") or os.path.expanduser("~/.cache/huggingface")
-    return os.path.join(hf_home, "hub", "models--" + m["repo"].replace("/", "--"))
+    return os.path.join(hf_wurzel(hf_home), "hub", "models--" + m["repo"].replace("/", "--"))
 
 
 def _datei_hash(path, algo, kopf=b""):
@@ -831,7 +835,9 @@ def _laden(repo, rev, ordner):
             if weg:
                 print(f"modelle: {weg} alte dateien entfernt", flush=True)
     from huggingface_hub import snapshot_download
-    path = snapshot_download(repo, revision=rev or None, allow_patterns=list(ERLAUBT))
+    # the admin's token only to huggingface.co (faster, and models whose terms the admin accepted); False: never a
+    # token file of the library's own
+    path = snapshot_download(repo, revision=rev or None, allow_patterns=list(ERLAUBT), token=hftoken.token() or False)
     commit = os.path.basename(os.path.normpath(path))
     if rev and commit != rev:
         raise Fehler("revision")
@@ -1667,8 +1673,7 @@ def messen_wunsch_nehmen(path=MESS_WUNSCH, now=None, kat=None):
 # ---------------------------------------------------------------- stage E5: the admin's own models
 EIGENE = os.path.join(STATE, "modelle-eigene.json")     # own entries the admin added (Zustand → Modelle)
 EIGENE_MAX = 20
-HF_API = "https://huggingface.co/api/models/{repo}/revision/{rev}?blobs=true"
-HF_INFO_MAX = 4 * 1024 * 1024    # bytes of the metadata answer at most
+HF_API, HF_INFO_MAX = hftoken.API, hftoken.MAX_BYTES     # the metadata of one commit, its answer at most
 # architectures the engine runs without code from the repository (vLLM's own model classes); nothing else is added
 VLLM_ARCH = {
     "llm": ("Qwen3ForCausalLM", "Qwen3MoeForCausalLM", "Qwen2ForCausalLM", "Qwen2MoeForCausalLM", "LlamaForCausalLM",
@@ -1990,13 +1995,119 @@ def eigen_loeschen(mid, cfg, now=None, path=EIGENE, wechsel=WECHSEL, hf_home=Non
 def ordner_weg(ordner, hf_home=None):
     """Removes one model folder of the Hugging Face cache (never a link, never anything outside hub/models--*)."""
     import shutil
-    hub = os.path.realpath(os.path.join(hf_home or os.environ.get("HF_HOME") or os.path.expanduser("~/.cache/huggingface"), "hub"))
+    hub = os.path.realpath(os.path.join(hf_wurzel(hf_home), "hub"))
     if os.path.islink(ordner) or not os.path.isdir(ordner):
         return False
     if os.path.dirname(os.path.realpath(ordner)) != hub or not os.path.basename(ordner).startswith("models--"):
         raise Fehler("ordner")
     shutil.rmtree(ordner)
     return True
+
+
+# ---------------------------------------------------------------- Modell-Bibliothek (stage B1c, alzeo idea 2)
+# Every model commit in the Hugging Face cache of this computer, with its size and who needs it: a catalog or own
+# entry pins it (fest), it runs, or nothing names it (lose: an older commit left by an update, a model taken out of
+# the catalog). Only a loose commit may go, after the admin confirmed it; ids and numbers only.
+BIBLIOTHEK_MAX = 400
+
+
+def _snap_bytes(snap):
+    """Bytes of one snapshot: each file once (its blob), links followed only inside the cache (pruefen's rules)."""
+    gesehen, n = set(), 0
+    for root, _, files in os.walk(snap):
+        for name in files:
+            ziel = os.path.realpath(os.path.join(root, name))
+            if ziel not in gesehen and os.path.isfile(ziel):
+                gesehen.add(ziel)
+                n += os.path.getsize(ziel)
+    return n
+
+
+def _wer_braucht(repo, rev, kat):
+    """The ids of the entries that name this commit: pinned to it, or measured on the newest (no pinned commit), or
+    an own recipe's drafter pinned to it."""
+    out = []
+    for mid, m in kat.items():
+        v = m.get("vllm") if m.get("engine") == "vllm" else {}
+        if (m.get("repo") == repo and m.get("revision") in (rev, "")) or (
+                (v or {}).get("entwurf") == repo and (v or {}).get("entwurf_revision", rev) in (rev, "")):
+            out.append(mid)
+    return sorted(out)
+
+
+def bibliothek(cfg, kat=None, hf_home=None):
+    """[{repo, revision, gib, ids, laeuft, lose}] for every commit in the cache, biggest first."""
+    kat = katalog() if kat is None else kat
+    hub = os.path.join(hf_wurzel(hf_home), "hub")
+    laufend = {x["id"] for x in aktiv(cfg, 0, kat)} | {jetzt_id(a, cfg, kat) for a in TAUSCH}
+    out = []
+    try:
+        namen = sorted(os.listdir(hub))
+    except OSError:
+        return []
+    for name in namen:
+        ordner = os.path.join(hub, name)
+        if not name.startswith("models--") or os.path.islink(ordner) or not os.path.isdir(ordner):
+            continue
+        repo = name[len("models--"):].replace("--", "/", 1)
+        snaps = os.path.join(ordner, "snapshots")
+        if not REPO.match(repo) or not os.path.isdir(snaps) or os.path.islink(snaps):
+            continue
+        for rev in sorted(os.listdir(snaps)):
+            snap = os.path.join(snaps, rev)
+            if not REV.match(rev) or os.path.islink(snap) or not os.path.isdir(snap):
+                continue
+            ids = _wer_braucht(repo, rev, kat)
+            out.append({"repo": repo, "revision": rev, "gib": round(_snap_bytes(snap) / 2**30, 1), "ids": ids,
+                        "laeuft": bool(set(ids) & laufend), "lose": not ids})
+            if len(out) >= BIBLIOTHEK_MAX:
+                break
+    return sorted(out, key=lambda x: (-x["gib"], x["repo"], x["revision"]))
+
+
+def lose_weg(repo, rev, cfg, kat=None, hf_home=None):
+    """Removes one loose commit (bibliothek: no entry names it): its snapshot and the blobs of the model's folder that
+    no other snapshot of it uses; the whole folder when it was the last. Never a link, never outside the cache.
+    Returns the bytes freed; raises Fehler (repo, fehlt, gebraucht)."""
+    import shutil
+    if not REPO.match(str(repo)) or ".." in repo or not REV.match(str(rev)):
+        raise Fehler("repo")
+    kat = katalog() if kat is None else kat
+    if _wer_braucht(repo, rev, kat):
+        raise Fehler("gebraucht")
+    ordner = hf_ordner({"repo": repo}, hf_home)
+    snaps = os.path.join(ordner, "snapshots")
+    snap = os.path.join(snaps, rev)
+    if os.path.islink(ordner) or os.path.islink(snaps) or os.path.islink(snap) or not os.path.isdir(snap):
+        raise Fehler("fehlt")
+    andere = [os.path.join(snaps, r) for r in os.listdir(snaps) if r != rev and REV.match(r)]
+    if not andere:
+        frei = _snap_bytes(snap)
+        ordner_weg(ordner, hf_home)
+        return frei
+    blobs = os.path.realpath(os.path.join(ordner, "blobs"))
+
+    def eigene_blobs(s):
+        out = set()
+        for root, _, files in os.walk(s):
+            for name in files:
+                p = os.path.join(root, name)
+                if os.path.islink(p):
+                    erst = os.path.normpath(os.path.join(root, os.readlink(p)))
+                    if os.path.realpath(os.path.dirname(erst)) == blobs:
+                        out.add(os.path.basename(erst))
+        return out
+    bleiben = set().union(*(eigene_blobs(s) for s in andere))
+    weg = eigene_blobs(snap) - bleiben
+    frei = 0
+    shutil.rmtree(snap)
+    for b in weg:
+        p = os.path.join(blobs, b)
+        if os.path.isfile(p) and not os.path.islink(p):
+            frei += os.path.getsize(p)
+        if os.path.lexists(p):
+            os.unlink(p)          # a link into the shared hub/blobs goes; what it points to stays
+    return frei
 
 
 # ---------------------------------------------------------------- command line

@@ -38,12 +38,13 @@ import features  # noqa: E402
 import netguard  # noqa: E402
 import guard  # noqa: E402
 import hardware  # noqa: E402
+import hftoken  # noqa: E402
 import konsole  # noqa: E402
 import llmstart  # noqa: E402
 import modelle  # noqa: E402
 import steuer  # noqa: E402
 from common import journal, load_config, read_json  # noqa: E402
-from core import admin_code, auth  # noqa: E402
+from core import admin_code, admin_code_fresh, auth  # noqa: E402
 
 LIVE_EVERY = 30          # seconds the Live view reuses the budget (systemctl and /proc are not read on every look)
 MESSWERTE = ("tok_s", "erste_s", "belegt_gib", "laden_s", "mtp_annahme", "erste_warm_s", "zwischenspeicher", "werkzeug", "bild_text", "bild_szene", "bild_ok", "ok",
@@ -79,6 +80,10 @@ GRUND = {"art": "Diese Art lässt sich nicht wechseln.", "unbekannt": "Das Model
          # „Lange Gespräche“
          "platz": "Diese Auswahl gibt es nicht.", "suche": "Suchwort mit Buchstaben, Zahlen, Leerzeichen, Punkt, Strich.", "kontext": "Dieses Modell kann so lange Gespräche nicht.", "dateien": "Die Dateien ließen sich nicht ganz löschen."}
 STATUS = {"laeuft": 409, "misst": 409, "start": 503, "start_messen": 503, "rechner": 503}
+# Modell-Bibliothek (stage B1c): the answers to „Löschen“
+BIBLIOTHEK_GRUND = {"repo": "ungültig", "fehlt": "Dieser Stand liegt nicht mehr auf der Platte.",
+                    "gebraucht": "Dieser Stand gehört zu einem Modell im Katalog; er bleibt.",
+                    "dateien": "Die Dateien ließen sich nicht ganz löschen.", "rechner": "Der Modell-Rechner antwortet gerade nicht."}
 # the words the model computer may answer a restart with (Rezept-Abgleich); "schon": it runs as its entry says
 NEUSTART_GRUND = ("laeuft", "misst", "schon", "start")
 EIGEN_BODY = 512
@@ -146,10 +151,25 @@ def _quelle(cfg):
         stand = modelle.stand("\n".join(x for x in d.get("stand", []) if isinstance(x, str))) if d.get("misst") else []
         return (d["gesamt_gib"], d["messung"], d["laeuft"], modelle.katalog(eigene=d["eigene"]), d["wechsel"],
                 d.get("misst", False), stand, d.get("start"), hardware.gueltig(d.get("profil")) or hardware.profil(),
-                {"starts": llmstart.buch_pruefen(d.get("starts")), "abweichung": d.get("abweichung") is True})
+                {"starts": llmstart.buch_pruefen(d.get("starts")), "abweichung": d.get("abweichung") is True,
+                 "hf_token": _hf_token_pruefen(d.get("hf_token")), "bibliothek": _bibliothek_pruefen(d.get("bibliothek"))})
     messung = read_json(modelle.MESSUNG, {})
     return (modelle.gesamt_gib(), messung, None, modelle.katalog(), None, None, None,
-            llmstart.hier(cfg, messung), hardware.profil(), {"starts": _starts_hier(), "abweichung": modelle.abweichung("llm", cfg)})
+            llmstart.hier(cfg, messung), hardware.profil(),
+            {"starts": _starts_hier(), "abweichung": modelle.abweichung("llm", cfg), "hf_token": hftoken.info(),
+             "bibliothek": modelle.bibliothek(cfg)})
+
+
+def _bibliothek_pruefen(x):
+    """The model computer's library in the shape modelle.bibliothek gives; a row of another shape is left out."""
+    def gut(e):
+        return (isinstance(e, dict) and set(e) == {"repo", "revision", "gib", "ids", "laeuft", "lose"}
+                and modelle.REPO.match(str(e["repo"])) is not None and ".." not in e["repo"]
+                and modelle.REV.match(str(e["revision"])) is not None
+                and isinstance(e["gib"], (int, float)) and not isinstance(e["gib"], bool) and 0 <= e["gib"] < 10**5
+                and isinstance(e["ids"], list) and len(e["ids"]) <= 50 and all(isinstance(i, str) and modelle.ID.match(i) for i in e["ids"])
+                and isinstance(e["laeuft"], bool) and e["lose"] is (not e["ids"]))
+    return [dict(e) for e in x[:modelle.BIBLIOTHEK_MAX] if gut(e)] if isinstance(x, list) else []
 
 
 def _starts_hier():
@@ -230,7 +250,13 @@ def seite(cfg=None, total_gib=None, messung=None, lang="de", gestartet=False, we
     teile = [{"id": x["id"], "name": kat[x["id"]]["name"]["en" if i else "de"], "art": x["art"], "gib": x["gib"],
               "betrieb": x["betrieb"]} for x in b["teile"]]
     return {"arten": arten, "budget": dict(b, teile=teile), "messung_zeit": messung.get("zeit"),
-            "wechsel": wechsel, "geraet": hardware.text(profil, "en" if i else "de"), "starts": _starts_zeigen(buch, kat, i)}
+            "wechsel": wechsel, "geraet": hardware.text(profil, "en" if i else "de"), "starts": _starts_zeigen(buch, kat, i),
+            "hf_token": buch["hf_token"], "bibliothek": _bibliothek_zeigen(buch["bibliothek"], kat, i)}
+
+
+def _bibliothek_zeigen(rows, kat, i):
+    """The library for the page: each commit with the names of the entries that need it."""
+    return [dict(e, namen=[(kat.get(x) or {}).get("name", {}).get("en" if i else "de", x) for x in e["ids"]]) for e in rows]
 
 
 def _starts_zeigen(buch, kat, i):
@@ -565,15 +591,29 @@ def admin_probe_weg(request: Request):
 
 # ---------------------------------------------------------------- stage E5: own models
 async def _hf_info(repo, rev=""):
-    """The metadata of one commit (or the newest) from Hugging Face, through netguard (public internet only)."""
+    """The metadata of one commit (or the newest) from Hugging Face: with the models on another computer that one asks
+    with its token (Wärter hf_info, the token never leaves it), here through netguard (public internet only) with the
+    token of this computer when one is set."""
     if not modelle.REPO.match(repo) or ".." in repo or not (rev == "" or modelle.REV.match(rev)):
         raise modelle.Fehler("repo")
+    cfg = load_config()
+    if steuer.remote(cfg):
+        d = await asyncio.to_thread(steuer.call, "hf_info", (repo, rev) if rev else (repo,), cfg, 30)
+        if not isinstance(d, dict):
+            raise modelle.Fehler("rechner")
+        if d.get("ok") is not True or not isinstance(d.get("info"), dict):
+            raise modelle.Fehler(d.get("fehler") if d.get("fehler") in ("repo", "zugang", "antwort", "netz") else "antwort")
+        return d["info"]
     import httpx
+    url = modelle.HF_API.format(repo=repo, rev=rev or "main")
     try:
-        async with netguard.client(netguard.PUBLIC, max_bytes=modelle.HF_INFO_MAX, timeout=20, follow_redirects=False) as c:
-            r = await c.get(modelle.HF_API.format(repo=repo, rev=rev or "main"))
+        async with netguard.client(netguard.PUBLIC, max_bytes=modelle.HF_INFO_MAX, timeout=20, follow_redirects=False,
+                                   headers=hftoken.kopf(url)) as c:
+            r = await c.get(url)
     except (httpx.HTTPError, OSError, ValueError):
         raise modelle.Fehler("netz")
+    if r.status_code == 401 and hftoken.token():
+        hftoken.abgelehnt()
     if r.status_code in (401, 403):
         raise modelle.Fehler("zugang")
     if r.status_code != 200:
@@ -582,6 +622,97 @@ async def _hf_info(repo, rev=""):
         return r.json()
     except ValueError:
         raise modelle.Fehler("antwort")
+
+
+# ---------------------------------------------------------------- the admin's Hugging Face token (stage B1c)
+HFTOKEN_BODY = 512
+
+
+def _hf_token_info(cfg=None):
+    """{gesetzt, seit, abgelehnt} of the computer the models run on; never the token."""
+    cfg = load_config() if cfg is None else cfg
+    if steuer.remote(cfg):
+        return _hf_token_pruefen((steuer.modelle(cfg) or {}).get("hf_token"))
+    return hftoken.info()
+
+
+def _hf_token_pruefen(d):
+    """What the model computer said about its token, in the shape hftoken.info gives; anything else: none set."""
+    ok = isinstance(d, dict) and d.get("gesetzt") is True
+    seit = d.get("seit") if ok and isinstance(d.get("seit"), int) and not isinstance(d.get("seit"), bool) else None
+    return {"gesetzt": ok, "seit": seit, "abgelehnt": ok and d.get("abgelehnt") is True}
+
+
+@router.put("/api/admin/modelle/hftoken", dependencies=[Depends(auth), Depends(admin_code_fresh)])
+async def hf_token_setzen(request: Request):
+    """Zustand → Modelle → „Mehr“ „Hugging-Face-Token“ (Dominik 2026-11-16): kept only on the computer the models run
+    on, with a fresh admin code; the answer says only whether one is set."""
+    guard.limit(request, "modelle_eigen", None, True)
+    t = str((await core.json_body(request, HFTOKEN_BODY)).get("token") or "").strip()
+    if not hftoken.TOKEN.fullmatch(t):
+        print("modelle: hf-token abgelehnt form", flush=True)
+        raise HTTPException(400, "Das ist kein Hugging-Face-Token (er beginnt mit hf_).")
+    cfg = load_config()
+    if steuer.remote(cfg):
+        d = await asyncio.to_thread(steuer.call, "hf_token", (), cfg, 15, {"token": t})
+        if not isinstance(d, dict) or d.get("ok") is not True:
+            print("modelle: hf-token abgelehnt rechner", flush=True)
+            raise HTTPException(503, GRUND["rechner"])
+    else:
+        hftoken.speichern(t)
+    print("modelle: hf-token gesetzt", flush=True)
+    guard.log("modelle_eigen", detail="Hugging-Face-Token gesetzt")
+    _live["t"] = None
+    return await asyncio.to_thread(_hf_token_info, cfg)
+
+
+@router.delete("/api/admin/modelle/hftoken", dependencies=[Depends(auth), Depends(admin_code)])
+def hf_token_loeschen(request: Request):
+    guard.limit(request, "modelle_eigen", None, True)
+    cfg = load_config()
+    if steuer.remote(cfg):
+        d = steuer.call("hf_token_weg", (), cfg, 15)
+        if not isinstance(d, dict) or d.get("ok") is not True:
+            print("modelle: hf-token weg rechner", flush=True)
+            raise HTTPException(503, GRUND["rechner"])
+    else:
+        hftoken.weg()
+    print("modelle: hf-token geloescht", flush=True)
+    guard.log("modelle_eigen", detail="Hugging-Face-Token gelöscht")
+    _live["t"] = None
+    return _hf_token_info(cfg)
+
+
+@router.delete("/api/admin/modelle/bibliothek", dependencies=[Depends(auth), Depends(admin_code)])
+async def bibliothek_weg(request: Request):
+    """Modell-Bibliothek „Löschen“ (stage B1c): one commit no catalog or own entry names, after the admin confirmed;
+    the computer the models run on checks that again."""
+    guard.limit(request, "modelle_eigen", None, True)
+    body = await core.json_body(request, MAX_BODY)
+    repo, rev = str(body.get("repo", "")).strip()[:200], str(body.get("revision", ""))[:40]
+    cfg = load_config()
+    try:
+        if not modelle.REPO.match(repo) or ".." in repo or not modelle.REV.match(rev):
+            raise modelle.Fehler("repo")
+        if steuer.remote(cfg):
+            d = await asyncio.to_thread(steuer.call, "lose_weg", (repo, rev), cfg, 120)
+            if not isinstance(d, dict):
+                raise modelle.Fehler("rechner")
+            if d.get("ok") is not True:
+                raise modelle.Fehler(d.get("fehler") if d.get("fehler") in BIBLIOTHEK_GRUND else "rechner")
+        else:
+            await asyncio.to_thread(modelle.lose_weg, repo, rev, cfg)
+    except modelle.Fehler as e:
+        word = str(e) if str(e) in BIBLIOTHEK_GRUND else "repo"
+        print(f"modelle: bibliothek abgelehnt {word}", flush=True)
+        raise HTTPException({"gebraucht": 409, "fehlt": 404, "rechner": 503}.get(word, 400), BIBLIOTHEK_GRUND[word])
+    except OSError:
+        print("modelle: bibliothek dateien fehler", flush=True)
+        raise HTTPException(500, GRUND["dateien"])
+    print("modelle: bibliothek geloescht", flush=True)
+    guard.log("modelle_eigen", detail="Modell-Bibliothek: ein loser Stand gelöscht")
+    _live["t"] = None
+    return await asyncio.to_thread(seite, lang="en" if request.query_params.get("lang") == "en" else "de")
 
 
 def _eigen_tor(request):

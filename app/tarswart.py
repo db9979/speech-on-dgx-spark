@@ -29,6 +29,10 @@ a time (at most WINDOW seconds off) and a one-time number (each is taken once).
     eigen_dazu {entry}          an own model (modelle.eigen_speichern checks it again)
     eigen_weg <id>              an own model off the list and its files off the disk (modelle.eigen_loeschen)
     eigen_rezept <id> {fields}  an own model's recipe (modelle.eigen_aendern checks every field again)
+    hf_token {token}            the admin's Hugging Face token, kept here only (hftoken.speichern: its shape, 0600)
+    hf_token_weg                removes it
+    hf_info <repo> [<commit>]   a model's metadata from huggingface.co with the token (hftoken.metadaten)
+    lose_weg <repo> <commit>    Modell-Bibliothek: one commit no entry names off the disk (modelle.lose_weg)
     weiter                      ends this computer's Wartungspause ("Weiter" on the panel)
     update                      starts this computer's own update (speech-spark-update with its own rules: the newest
                                 version with passed GitHub tests, never a version the panel names)
@@ -68,6 +72,7 @@ from fastapi.responses import JSONResponse
 
 import gputakt
 import hardware
+import hftoken
 import installiert
 import mandanten
 import llmstart
@@ -90,14 +95,14 @@ MAX_SEEN = 5000        # one-time numbers kept (each lives WINDOW * 2 seconds)
 RATE = (40, 10)        # at most 40 requests in 10 seconds (the panel asks for the status every few seconds)
 ACTIONS = ("start", "stop", "restart")
 COMMANDS = ("status", "einheit", "einstellen", "logs", "modelle", "wechseln", "messen", "platz", "neustart",
-            "eigen_dazu", "eigen_weg", "eigen_rezept", "weiter", "update", "werkstatt", "werkstatt_auftrag",
-            "werkstatt_eins", "werkstatt_weg", "systemupdate", "systemupdate_tun", "pakete", "stimmen",
-            "stimme_ablegen", "stimme_weg", "clients", "client_neu", "client_aendern", "client_weg",
-            "clients_schalten")
+            "eigen_dazu", "eigen_weg", "eigen_rezept", "hf_token", "hf_token_weg", "hf_info", "lose_weg", "weiter",
+            "update", "werkstatt", "werkstatt_auftrag", "werkstatt_eins", "werkstatt_weg", "systemupdate",
+            "systemupdate_tun", "pakete", "stimmen", "stimme_ablegen", "stimme_weg", "clients", "client_neu",
+            "client_aendern", "client_weg", "clients_schalten")
 UPDATE_UNIT = "speech-spark-update"
 PAUSE_KEYS = ("on", "parts", "since", "until", "channel")   # what the panel needs of the pause (never who)
-WITH_DATA = ("einstellen", "eigen_dazu", "eigen_rezept", "werkstatt_auftrag", "stimme_ablegen", "client_neu", "client_aendern",
-             "clients_schalten")
+WITH_DATA = ("einstellen", "eigen_dazu", "eigen_rezept", "hf_token", "werkstatt_auftrag", "stimme_ablegen", "client_neu",
+             "client_aendern", "clients_schalten")
 # what status reports: the units the panel shows and watches
 WATCHED = dict(UNITS, **OWN_LLM_UNITS, **ON_DEMAND_UNITS)
 
@@ -243,7 +248,9 @@ def modelle_daten():
             "eigene": modelle.eigene(), "laeuft": _wechsel_laeuft(), **_messung_laeuft(),
             "start": llmstart.hier(load_config(), messung),     # what the language model does while it starts
             "profil": hardware.profil(),                         # which kind of computer (DGX Spark, DGX Station)
-            "starts": _starts(), "abweichung": modelle.abweichung("llm", load_config())}
+            "starts": _starts(), "abweichung": modelle.abweichung("llm", load_config()),
+            "hf_token": hftoken.info(),                          # whether a Hugging Face token is set, never itself
+            "bibliothek": modelle.bibliothek(load_config())}     # every model commit on the disk (stage B1c)
 
 
 def _starts():
@@ -355,6 +362,47 @@ def eigen_rezept(mid, felder):
         return {"ok": False, "fehler": str(e)}
     print("waerter: eigen_rezept ok", flush=True)
     return {"ok": True}
+
+
+def hf_token(daten):
+    """Zustand → Modelle „Hugging-Face-Token“: kept only here, never sent back."""
+    try:
+        hftoken.speichern((daten or {}).get("token") if isinstance(daten, dict) else "")
+    except ValueError:
+        print("waerter: hf_token abgelehnt form", flush=True)
+        return {"ok": False, "fehler": "token"}
+    print("waerter: hf_token gesetzt", flush=True)
+    return {"ok": True}
+
+
+def hf_token_weg():
+    print(f"waerter: hf_token_weg {'ok' if hftoken.weg() else 'keins'}", flush=True)
+    return {"ok": True}
+
+
+def hf_info(repo, rev=""):
+    """The metadata of one commit with this computer's token (the panel checks it as before); fixed words only."""
+    try:
+        d = hftoken.metadaten(repo, rev)
+    except ValueError as e:
+        print(f"waerter: hf_info abgelehnt {e}", flush=True)
+        return {"ok": False, "fehler": str(e)}
+    print("waerter: hf_info ok", flush=True)
+    return {"ok": True, "info": d}
+
+
+def lose_weg(repo, rev):
+    """Modell-Bibliothek „Löschen“: only a commit no catalog or own entry names (checked again here)."""
+    try:
+        frei = modelle.lose_weg(repo, rev, load_config())
+    except modelle.Fehler as e:
+        print(f"waerter: lose_weg abgelehnt {e}", flush=True)
+        return {"ok": False, "fehler": str(e)}
+    except OSError:
+        print("waerter: lose_weg dateien fehler", flush=True)
+        return {"ok": False, "fehler": "dateien"}
+    print(f"waerter: lose_weg ok {frei // 2**30} GiB", flush=True)
+    return {"ok": True, "gib": round(frei / 2**30, 1)}
 
 
 def eigen_weg(mid):
@@ -592,6 +640,20 @@ async def _wart(request, stimme):
             return JSONResponse(einstellen(daten))
         if cmd == "eigen_dazu":
             return JSONResponse(eigen_dazu(daten))
+        if cmd == "hf_token":
+            return JSONResponse(hf_token(daten))
+        if cmd == "hf_token_weg":
+            if args:
+                raise ValueError("befehl")
+            return JSONResponse(hf_token_weg())
+        if cmd == "lose_weg":
+            if len(args) != 2:
+                raise ValueError("befehl")
+            return JSONResponse(lose_weg(*args))
+        if cmd == "hf_info":
+            if len(args) not in (1, 2):
+                raise ValueError("befehl")
+            return JSONResponse(hf_info(*args))
         if cmd == "eigen_rezept":
             return JSONResponse(eigen_rezept(*args, daten) if len(args) == 1 else eigen_rezept("", daten))
         if cmd == "stimme_ablegen":

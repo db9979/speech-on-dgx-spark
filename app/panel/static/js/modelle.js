@@ -68,7 +68,7 @@ function mdPlatz(w){const p=w.platz;if(!p||w.laeuft||w.misst)return '';
     `<div class="mut vb-note">${esc(t('Alle Gespräche teilen sich einen Gesprächsspeicher. Mehr Platz kostet Speicher, der Bildern, Musik und dem Sehen-Modell fehlt. Das Sprachmodell startet dafür neu.','All conversations share one context store. More room costs memory that pictures, music and the vision model then lack. The language model restarts for it.'))}</div></div>`}
 async function mdPost(url,body,frage,method='POST'){if(!confirm(frage))return;const msg=$('mdmsg');msg.textContent='';
   // the answer is the page itself (after „Messen“ already showing the measurement that starts in a moment)
-  try{const r=await api(url+(L==='en'?'?lang=en':''),method==='POST'||method==='PUT'?{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:{method});
+  try{const r=await api(url+(L==='en'?'?lang=en':''),method==='POST'||method==='PUT'||body?{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:{method});
     let d=null;try{d=await r.json()}catch(_){}loadModelle(d&&d.arten?d:null)}catch(e){msg.textContent=e.message}}
 // „Läuft jetzt“: the memory bar and one tile per kind with the model it runs
 let MD_OFFEN='',MD_MEHR=false;const MD_TREFFER={};
@@ -154,6 +154,9 @@ function mdKnoepfe(d){const main=$('mdmain');
     if(r.value===p.jetzt){$('mdmsg').textContent=t('Das ist schon eingestellt.','That is set already.');return}
     const n=(p.wahl.find(x=>x.id===r.value)||{}).name||r.value;
     mdPost('/api/admin/modelle/platz',{platz:r.value},t('„'+n+'“ einstellen? Das Sprachmodell startet dafür neu und antwortet ein paar Minuten nicht.','Set "'+n+'"? The language model restarts for it and does not answer for a few minutes.'))};
+  if($('mdhfok'))$('mdhfok').onclick=()=>{const v=$('mdhf').value.trim();if(v)mdPost('/api/admin/modelle/hftoken',{token:v},t('Den Token auf dem Modell-Rechner speichern?','Save the token on the model computer?'),'PUT')};
+  if($('mdhfweg'))$('mdhfweg').onclick=()=>mdPost('/api/admin/modelle/hftoken',null,t('Den Hugging-Face-Token vom Modell-Rechner löschen? Widerrufen kannst du ihn auf Hugging Face.','Delete the Hugging Face token from the model computer? You revoke it on Hugging Face.'),'DELETE');
+  main.querySelectorAll('[data-mdbw]').forEach(b=>b.onclick=()=>mdPost('/api/admin/modelle/bibliothek',{repo:b.dataset.mdbw,revision:b.dataset.mdbr},t('Den losen Stand von „'+b.dataset.mdbw+'“ von der Platte löschen? Kein Modell im Katalog braucht ihn.','Delete the loose commit of "'+b.dataset.mdbw+'" from the disk? No model in the catalog needs it.'),'DELETE'));
   main.querySelectorAll('[data-mdn]').forEach(b=>b.onclick=()=>mdPost('/api/admin/modelle/neustart',{},t('Das Sprachmodell mit den Einstellungen aus dem Katalog neu starten? Es antwortet dafür ein paar Minuten nicht.','Restart the language model with the settings from the catalog? It does not answer for a few minutes.')));
   main.querySelectorAll('[data-mdz]').forEach(b=>b.onclick=()=>mdPost('/api/admin/modelle/zurueck',{art:b.dataset.mdz},t('Das vorige Modell zurückholen?','Bring back the previous model?')));
   main.querySelectorAll('[data-mde]').forEach(b=>b.onclick=()=>mdPost('/api/admin/modelle/eigen/'+encodeURIComponent(b.dataset.mde),null,t('Dieses eigene Modell aus der Liste und von der Platte löschen?','Delete this own model from the list and from the disk?'),'DELETE'));
@@ -176,14 +179,30 @@ function mdStarts(d){const st=d.starts||[];if(!st.length)return '';
     a.starts.map(x=>`<tr><td>${esc(new Date(x.zeit*1000).toLocaleString(L==='en'?'en':'de'))}</td><td>${esc(x.name)}${x.geraet?` <span class="mut">${esc(x.geraet)}</span>`:''}</td>`+
       `<td class="n">${esc(mdGib(x.gpu_gib))}</td><td class="n">${esc(zahl(x.kontext))}</td><td class="n">${esc(x.bereit_s!=null?Math.round(x.bereit_s/60*10)/10+' min':'–')}</td><td class="n">${esc(zahl(x.kv_tokens))}</td></tr>`).join('')+
     `</tbody></table>`).join('')+`<div class="mut vb-note">${esc(t('„Platz“: so viele Tokens passen in den Gesprächsspeicher, alle Gespräche zusammen.','“Room”: this many tokens fit into the context store, all conversations together.'))}</div></div>`}
+// the admin's Hugging Face token (stage B1c): faster downloads and models whose terms the admin accepted; kept only
+// on the computer the models run on, the page sees only whether one is set
+function mdHf(d){const h=d.hf_token;if(!h)return '';
+  return `<div><h3>${esc(t('Hugging-Face-Token','Hugging Face token'))}</h3>`+(h.gesetzt?
+    `<div class="row"><span class="pill ${h.abgelehnt?'warn':'ok'}">${esc(h.abgelehnt?t('abgelehnt: neuen eintragen','refused: enter a new one'):t('gesetzt','set'))}</span>`+
+      `${h.seit?` <span class="mut">${esc(t('seit ','since ')+new Date(h.seit*1000).toLocaleDateString(L==='en'?'en':'de'))}</span>`:''} <button type="button" class="b sm danger" id="mdhfweg">${esc(t('Löschen','Delete'))}</button></div>`:'')+
+    (!h.gesetzt||h.abgelehnt?`<div class="row"><input type="password" id="mdhf" autocomplete="off" placeholder="hf_…" aria-label="${esc(t('Hugging-Face-Token','Hugging Face token'))}"> <button type="button" class="b sm" id="mdhfok">${esc(t('Speichern','Save'))}</button></div>`:'')+
+    `<div class="mut vb-note">${esc(t('Ein Token mit Leserechten (huggingface.co → Settings → Access Tokens, Typ „Read“). Damit laden Modelle schneller, und Modelle mit Freigabe (z. B. Llama) gehen, sobald du ihren Bedingungen auf Hugging Face zugestimmt hast. Er bleibt nur auf dem Modell-Rechner und steht nie im Log.','A token with read access (huggingface.co → Settings → Access Tokens, type “Read”). Models then download faster, and models that need an approval (e.g. Llama) work once you accepted their terms on Hugging Face. It stays only on the model computer and never appears in a log.'))}</div></div>`}
+// Modell-Bibliothek (stage B1c): every model commit on the disk, who needs it; only a loose one can go
+function mdBib(d){const b=d.bibliothek||[];if(!b.length)return '';
+  const frei=b.filter(x=>x.lose).reduce((n,x)=>n+x.gib,0);
+  return `<div><h3>${esc(t('Bibliothek auf der Platte','Library on the disk'))}</h3><table class="mdstarts"><thead><tr><th>${esc(t('Modell','Model'))}</th><th>${esc(t('Stand','Commit'))}</th><th class="n">${esc(t('Platte','Disk'))}</th><th>${esc(t('Für','For'))}</th><th></th></tr></thead><tbody>`+
+    b.map(x=>`<tr><td>${esc(x.repo)}</td><td><code>${esc(x.revision.slice(0,12))}</code></td><td class="n">${esc(mdGib(x.gib))}</td>`+
+      `<td>${x.laeuft?`<span class="pill ok">${esc(t('läuft','running'))}</span> `:''}${x.lose?`<span class="pill warn">${esc(t('lose','loose'))}</span>`:esc(x.namen.join(', '))}</td>`+
+      `<td>${x.lose?`<button type="button" class="b sm danger" data-mdbw="${esc(x.repo)}" data-mdbr="${esc(x.revision)}">${esc(t('Löschen','Delete'))}</button>`:''}</td></tr>`).join('')+
+    `</tbody></table><div class="mut vb-note">${esc(frei?t('„lose“: kein Modell im Katalog braucht diesen Stand mehr (ein älterer Stand nach einem Update, ein entferntes Modell). Zusammen ','“loose”: no model in the catalog needs this commit any more (an older one after an update, a removed model). Together ')+mdGib(frei)+t(' frei zu machen.',' to free.'):t('Jeder Stand gehört zu einem Modell im Katalog.','Every commit belongs to a model in the catalog.'))}</div></div>`}
 let MD_SEITE=null;
 async function loadModelle(daten){const main=$('mdmain'),msg=$('mdmsg');if(!main)return;msg.textContent='';
   let d=daten;if(!d)try{d=await (await api('/api/admin/modelle'+(L==='en'?'?lang=en':''))).json()}catch(e){msg.textContent=e.message;return}
   const w=d.wechsel||{};
   MD_SEITE=d;if(MD_OFFEN&&!d.arten.some(a=>a.art===MD_OFFEN))MD_OFFEN='';
   main.innerHTML=mdWechsel(w)+mdProbe(w)+mdBalken(d.budget)+`<div class="mdkacheln">${d.arten.filter(a=>a.modelle.length).map(a=>mdKachel(a,w)).join('')}</div>`+mdWahl(d,w)+
-    `<details class="mdmehr" id="mdmehr"${MD_MEHR?' open':''}><summary>${esc(t('Mehr: Lange Gespräche, Messwerte, Messen, Zurückholen, letzte Starts','More: long conversations, measurements, measuring, bringing back, last starts'))}</summary>`+
-    `<div class="vb-two">${mdPlatz(w)}${mdBudget(d.budget)}${d.arten.map(a=>mdArt(a,w,d)).join('')}${mdStarts(d)}</div>`+
+    `<details class="mdmehr" id="mdmehr"${MD_MEHR?' open':''}><summary>${esc(t('Mehr: Lange Gespräche, Messwerte, Messen, Zurückholen, letzte Starts, Bibliothek, Hugging-Face-Token','More: long conversations, measurements, measuring, bringing back, last starts, library, Hugging Face token'))}</summary>`+
+    `<div class="vb-two">${mdPlatz(w)}${mdBudget(d.budget)}${d.arten.map(a=>mdArt(a,w,d)).join('')}${mdStarts(d)}${mdBib(d)}${mdHf(d)}</div>`+
     `<div class="mut vb-note">${d.geraet?esc(t('Gerät: ','Computer: ')+d.geraet)+' · ':''}${esc(d.messung_zeit?t('Letzte Messung: ','Last measurement: ')+new Date(d.messung_zeit*1000).toLocaleString(L==='en'?'en':'de'):t('Noch keine Messung. „Messen“ beim Modell (mit Funktionen → Modelle wechseln) oder auf dem Spark: sudo speech-spark modelle messen','No measurement yet. „Measure“ at the model (with Features → Routing models) or on the Spark: sudo speech-spark modelle messen'))}`+
     ` · ${esc(t('„~“ heißt geschätzt.','“~” means estimated.'))}</div></details>`;
   mdKnoepfe(d);if(typeof labelTables==='function')labelTables();

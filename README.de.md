@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.492** Modell-Bibliothek auf der Platte und Hugging-Face-Token für schnellere und freigegebene Downloads
 - **V01.1.491** Modell-Rechner genau: Verlauf ohne doppelte Linien, tok/s ohne Zacken
 - **V01.1.490** Notbremse: wird der Speicher knapp, beendet das Sprachmodell die älteste Antwort, bevor DGX OS Programme beendet (aus, Einstellungen → Spark → Betrieb)
 - **V01.1.489** Assistent-Seite entschlacken: am Rechner eine Karte, leer mit großem Gesicht, Vorschlägen und „Zuletzt“, danach das Gesicht klein im Kopf, Schalter im „⋯“, Mikrofon im Eingabefeld
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.485** Modelle in GiB statt Anteil: derselbe Katalog passt auf DGX Spark und später DGX Station
 - **V01.1.484** Modell-Rechner genau: Anfragen ohne Inhalt, Warteschlangen, Sprachmodell innen, GPU mit Drosselung und abgelehntem Speicher, zuletzt fertig mit Ergebnis, „hängt“ und Verlauf auf einer Seite unter Zustand, auch für den Spark allein
 - **V01.1.483** ROT-FIX: die iPhone-App baut wieder (Abwesenheits-Datum und Fehlerzeile der Umfrage)
-- **V01.1.482** Web-App aufräumen: ruhigere Kopfleiste und ein Zähler am Handy, kleine Karten, untere Leiste in Safari nicht mehr abgeschnitten, 5 Tabs, eigene Seiten ohne Karte in der Karte, Seitenleiste auf dem iPad nur mit Symbolen
 
 
 

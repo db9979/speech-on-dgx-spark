@@ -208,7 +208,7 @@ class Seite(unittest.TestCase):
                                                                   "eigene": [], "wechsel": {}, "starts": {"llm": "<b>"},
                                                                   "abweichung": "ja"}):
             q = modellseite._quelle({})
-        self.assertEqual(q[9], {"starts": {}, "abweichung": False})
+        self.assertEqual((q[9]["starts"], q[9]["abweichung"]), ({}, False))
 
 
 class Waerter(test_waerter.Base):

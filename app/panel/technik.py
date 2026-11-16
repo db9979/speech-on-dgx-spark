@@ -347,6 +347,7 @@ MODULE = {
     "mandanten": ("betrieb", "Spark-Clients: Schlüssel je Client mit Rechten, Vorrangklasse und Grenzen, nur aus dem Heimnetz; /v1/spark/faehigkeiten"),
     "konsole": ("betrieb", "Spark-Konsole: das Panel als eigene Webseite des Modell-Rechners, nur https, nur Heimnetz, nur eigene Wege"),
     "hardware": ("sprache", "Hardware-Profil: DGX Spark oder Station aus fester nvidia-smi-Abfrage, GiB des Katalogs als Anteil hier"),
+    "hftoken": ("sprache", "Hugging-Face-Token des Admins: nur auf dem Modell-Rechner, 0600, nur an huggingface.co"),
     "gputakt": ("betrieb", "GPU-Taktgrenze: feste Werte, startet die root-Einheit nur bei Änderung, Stand für die GPU-Anzeige"),
     "schwachstellen_stand": ("betrieb", "Schwachstellen, das gespeicherte Ergebnis: Zahlen für Live und den Hinweis oben, nie ein Paketname"),
     "installiert": ("betrieb", "Was ein Rechner wirklich installiert hat: Pakete der venvs, Pakete in den Docker-Abbildern"),

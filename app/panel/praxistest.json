@@ -6426,6 +6426,14 @@
 "text": "Als Admin Einstellungen → Spark → Betrieb: „Notbremse“ ist aus, darunter „Notbremse unter“ 6 GiB. Einschalten und speichern: Sprechen und Hören starten dabei nicht neu. Zustand → Modell-Rechner genau zeigt keinen Hinweis, solange genug Speicher frei ist. Danach wieder ausschalten, wenn du sie nicht willst.",
 "thread": "Monitoring auf tars stark ausbauen",
 "test": "test_modellgenau.Ende.test_emergency_brake"
+},
+{
+"id": "P933",
+"v": 1492,
+"titel": "Bibliothek und Hugging-Face-Token",
+"text": "Zustand → Modelle → „Mehr“: die Tabelle „Bibliothek auf der Platte“ zeigt jeden Modell-Stand mit Größe und wofür er da ist; ältere Stände nach einem Update stehen als „lose“ mit „Löschen“ (Bestätigen, danach ist die Platte um so viel freier, das laufende Modell läuft weiter). Darunter „Hugging-Face-Token“: einen Lese-Token (hf_…) eintragen, Admin-Code; danach steht „gesetzt seit …“, der Token selbst erscheint nirgends. Unter Eigene Modelle ein freigabepflichtiges Modell (z. B. Llama, nach Zustimmung auf Hugging Face) prüfen: geht jetzt statt „privat oder braucht eine Freigabe“.",
+"thread": "Modellkatalog für Spark und DGX Station bauen",
+"test": "test_bibliothek.Seite.test_the_token_on_this_computer_and_never_in_the_page"
 }
 ]
 }

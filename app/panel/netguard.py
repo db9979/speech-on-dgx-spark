@@ -146,6 +146,7 @@ DIRECT_OK = {
     "images": ("sprachmodell", "Sprachmodell"),
     "intent": ("sprachmodell", "Sprachmodell für unklare Fragen der Weiche"),
     "llm": ("sprachmodell", "Sprachmodell (llm.complete für Hintergrundaufgaben; Adresse aus chat.llm_url)"),
+    "hftoken": ("fest", "nur die Metadaten eines Modells bei huggingface.co (feste Adresse, keine Umleitung), mit dem Token des Admins"),
     "llmstart": ("lokal", "/health der eigenen Sprachmodell-Engine auf 127.0.0.1 (Port aus dem Katalog)"),
     "sparkkalender": ("lokal", "kein Netz: der Spark-Kalender antwortet im Panel selbst (httpx.MockTransport), seine Adresse spark.invalid löst nie auf"),
     "loopwacht": ("lokal", "nur die Meldung an systemd über den Unix-Socket aus $NOTIFY_SOCKET (Watchdog), kein Netz"),

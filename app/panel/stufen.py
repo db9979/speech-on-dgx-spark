@@ -176,6 +176,9 @@ LIST = {
     ("POST", "/api/admin/modelle/eigen"): (CONFIRM, "Spark", "Ein eigenes Modell hinzufügen", "Add an own model"),
     ("DELETE", "/api/admin/modelle/eigen/{mid}"): (CONFIRM, "Spark", "Ein eigenes Modell löschen", "Delete an own model"),
     ("PUT", "/api/admin/modelle/eigen/{mid}/rezept"): (CONFIRM, "Spark", "Rezept eines eigenen Modells ändern", "Change an own model's recipe"),
+    ("PUT", "/api/admin/modelle/hftoken"): (PROTECT, "Spark", "Hugging-Face-Token für Downloads", "Hugging Face token for downloads"),
+    ("DELETE", "/api/admin/modelle/hftoken"): (CONFIRM, "Spark", "Hugging-Face-Token löschen", "Delete the Hugging Face token"),
+    ("DELETE", "/api/admin/modelle/bibliothek"): (CONFIRM, "Spark", "Einen losen Modell-Stand löschen", "Delete a loose model commit"),
 }
 
 
