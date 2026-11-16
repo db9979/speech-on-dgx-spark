@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.494** More reliable answers: the check sees the whole result, no promise without a deed, "warn me about storms" switches the weather warning, source line without empty looks, the conversation keeps its thread, a faster daily briefing
 - **V01.1.493** Spark-Konsole: new tab "Model in detail" with requests, queues, chat model, GPU and history, and a chat model line in its overview
 - **V01.1.492** Model library on the disk and a Hugging Face token for faster and approved downloads
 - **V01.1.491** Model computer in detail: history without doubled lines, tok/s without jags
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.487** Model computer in detail: "Chat model inside" shows only the chat model with its name, the history shows values, scales and a time axis
 - **V01.1.486** Own models with a full recipe: set context, memory, MTP and parsers, then take it over as a catalog line
 - **V01.1.485** Models in GiB instead of a share: the same catalog fits a DGX Spark and later a DGX Station
-- **V01.1.484** Model computer in detail: requests without content, queues, the language model inside, GPU with throttling and refused memory, finished requests with their result, "hangs" and history on one page under Status, also for the Spark alone
 
 
 

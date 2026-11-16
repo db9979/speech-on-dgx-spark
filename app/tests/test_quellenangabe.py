@@ -84,6 +84,11 @@ class Teile(unittest.TestCase):
         self.assertEqual([p["art"] for p in parts], ["eigen", "welt"])
         empty = teile([], {"hits": [], "n": {"docs": 0}, "web": None})
         self.assertEqual(qa.zeile(empty), "Quelle: eigene Daten ohne Treffer")
+        # issue 13 in spark-meldungen: beside a source that gave something, a look without a hit is not named
+        both = teile([call("daily_briefing")], {"hits": [], "n": {"docs": 0}, "web": None})
+        self.assertEqual([p["tool"] for p in both], ["lokal:leer", "daily_briefing"])   # the record keeps both
+        self.assertEqual(qa.zeile(both), "Quelle: " + both[1]["de"])
+        self.assertEqual(qa.satz(both), "Quelle: " + both[1]["de"] + ".")
 
     def test_own_or_world_from_the_weiche(self):
         self.assertEqual(quellen.werkzeug_art("web_search"), "welt")
@@ -140,6 +145,9 @@ class Merken(unittest.TestCase):
         self.assertIn("nichts nachgeschlagen", shown)
         self.assertIn("Achtung: nicht in deinen Daten nachgesehen.", shown)
         self.assertFalse(qa.fremd("u1", "web:c1", now=201.0))
+        qa.vergiss("u1", "web:c1")   # an answer without a line: the earlier record never stands for it (issue 14)
+        self.assertTrue(qa.antwort("u1", "web:c1", now=201.0)[0].startswith(none))
+        self.assertIsNone(qa.letzte("u1", "web:c1", now=201.0))
         qa.merke("u1", "web:c1", [], "", [{"title": "[klick](javascript:x) <b>Titel</b>"}], now=300.0)
         self.assertNotIn("[", qa.antwort("u1", "web:c1", now=301.0)[0])       # no markup from a page's title
         self.assertNotIn("<", qa.antwort("u1", "web:c1", now=301.0)[0])

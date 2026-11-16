@@ -571,7 +571,13 @@ async def briefing_text(t, st):
     topics = chat.brief_topics(t.who["id"] if t.who and t.private_ok else "", t.cal["topics"], t.ccfg) if t.search else []
     jobs = [calendars.events(t.who["id"], today, today + datetime.timedelta(days=2), zone)
             if t.cal["calendars"] else asyncio.sleep(0)]
-    jobs += [chat.brief_topic(t.c, t.ccfg, q) for _, q in topics]   # each topic's news of the day, else of the last days
+    # Antworten zuverlässiger 4 (issue 13: the first sound in the car came after 23 s, 10 s of it the topics' web
+    # searches): a client that only hears the answer waits at most chat.BRIEF_HEARD_S for a topic, a late one is left
+    # out and named; weather, birthdays and parcels are read at the same time instead of after the searches
+    heard = bool(getattr(t, "car", False) or t.body.get("client") in chat.SPOKEN_ONLY)
+    jobs += [asyncio.wait_for(chat.brief_topic(t.c, t.ccfg, q), chat.BRIEF_HEARD_S) if heard and q
+             else chat.brief_topic(t.c, t.ccfg, q) for _, q in topics]   # each topic's news of the day, else of the last days
+    xtask = asyncio.create_task(extras.briefing(t.who["id"], zone, t.private_ok)) if t.who else None
     if t.mailbox:   # last, so the topics above are searched before any mail is read
         st["mail"] = True
         jobs.append(asyncio.to_thread(mail.briefing, t.who["id"]))
@@ -600,8 +606,8 @@ async def briefing_text(t, st):
         pend = [x for x in (profiles.reminders(t.who["id"]) if t.who else []) if x["due"] < end]
         parts.append("Reminders today:\n" + ("\n".join(
             f"{datetime.datetime.fromtimestamp(x['due'] / 1000, zone):%H:%M} {x['text']}" for x in pend) or "none"))
-    if t.who:   # weather, birthdays, parcels (parcels come from mail: then the answer counts as mail)
-        for kind, part in await extras.briefing(t.who["id"], zone, t.private_ok):
+    if xtask:   # weather, birthdays, parcels (parcels come from mail: then the answer counts as mail)
+        for kind, part in await xtask:
             parts.append(part)
             if kind == "parcels":
                 st["mail"] = True
@@ -611,12 +617,18 @@ async def briefing_text(t, st):
         if t.tidy_on:
             parts.append(tidy.briefing_line(t.who["id"]))
     srcs = []
+    late = 0
     for (q, _), r in zip(topics, res[1:]):
-        if isinstance(r, Exception):
+        if isinstance(r, asyncio.TimeoutError):
+            late += 1
+            parts.append(f"Topic '{q}': not ready in time, left out (say so in a few words)")
+        elif isinstance(r, Exception):
             parts.append(f"Topic '{q}': search failed")
         else:
             parts.append(f"Topic '{q}':\n{r[0][:2500]}")
             srcs += r[1][:2]
     if srcs:
         await quellenangabe.links(t.out, st, srcs)
+    if late:
+        print(f"briefing: topic slow | heard | {late} of {len(topics)} left out after {chat.BRIEF_HEARD_S} s", flush=True)
     return "\n\n".join(parts)

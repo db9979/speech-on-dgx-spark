@@ -3,7 +3,8 @@ questions with them, and the LLM-Tor (llm_tor.py) checks every question it gets 
 model. One place for the limits (Richtlinie Teil 17)."""
 import re
 
-MAX_STATE = 4000              # characters of the text being judged
+MAX_STATE = 8000              # characters of the text being judged (4000 until 2026-11-16: the check of an answer
+#                               with several tool results lost the end of them, issue 13 in spark-meldungen)
 MAX_QUESTIONS = 8
 MAX_OPTIONS = 40
 NAME = re.compile(r"[a-z][a-z0-9_]{0,31}")

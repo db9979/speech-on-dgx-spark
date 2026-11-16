@@ -22,6 +22,7 @@ import live
 import notaus
 import notbetrieb
 import parcels
+import proactive
 import profiles
 import quellenangabe
 import re
@@ -68,6 +69,7 @@ async def quellenangabe_zeile(turn, found, st, trace, out, who, src, messages, s
         except Exception:
             kind = ""
     if not parts and (kind not in quellen.CLASSES or st["acts"]):
+        quellenangabe.vergiss(who["id"], src)   # the sources of an earlier answer never stand for this one
         print("quelle: keine Zeile (keine Wissensfrage)", flush=True)
         return None
     warn = quellenangabe.warnung(kind, parts)
@@ -686,10 +688,25 @@ async def model_turn(*, acked, body, c, came_from, carry, ccfg, cfg, check_on, e
             st["held_acts"].remove(taten.ANNOUNCED)
             print("chat: action check: announcement left out, a tool ran", flush=True)
         worked = {a["art"] for a in st["acts"] if a.get("ok")}
-        if any(k and k in worked for k in st["held_acts"]):
+        if any(k and taten.backed(k, worked) for k in st["held_acts"]):
             # „Ich mache das Lied.“ before the call that then worked: left out, the tool's answer says the rest
-            st["held_acts"] = [k for k in st["held_acts"] if not k or k not in worked]
+            st["held_acts"] = [k for k in st["held_acts"] if not k or not taten.backed(k, worked)]
             print("chat: action check: claim left out, its tool worked later", flush=True)
+        route = getattr(getattr(turn, "route", None), "names", None) or []
+        if who and (not route or "wetter" in route) and proactive.warn_wish(getattr(turn, "ask_text", "")):
+            # „Warn mich, wenn es stürmisch wird“ (issue 14; Weiche wetter or unklar): the panel answers the wish with
+            # fixed rules (proactive.py), a promise of the model to speak up later is left out, the panel's sentence
+            # says what is true
+            en = chat.guess_language(messages[-1]["content"]) == "English"
+            note, state = await asyncio.to_thread(proactive.wetter_zusage, who["id"], en)
+            st["held_acts"] = [k for k in st["held_acts"] if k != "zusage"]
+            trace["calls"].append({"name": "Wetterwarnung (Panel)", "args": "", "result": state})
+            await out.put({"type": "text", "delta": (" " if st["shown"] else "") + note})
+            trace["said"] += (" " if trace["said"] else "") + note
+            st["shown"] += len(note) + 1
+            await sentences.put(note)
+            if tr:
+                tr.step("check", "Wetterwarnung (Panel)", time.time(), panel=True)
         if st["held_acts"]:
             # "Taten prüfen": a deed was claimed that no tool did; one fixed sentence instead (never the model's)
             en = chat.guess_language(messages[-1]["content"]) == "English"

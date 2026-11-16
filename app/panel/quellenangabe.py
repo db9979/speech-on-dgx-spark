@@ -144,9 +144,18 @@ def warnung(kind, parts):
     return ""
 
 
+def genannt(parts):
+    """The sources named in the line and the sentence: a look in the own data without a hit (EIGEN_LEER) only when
+    nothing else was looked up (issue 13 in spark-meldungen: „Quelle: eigene Daten ohne Treffer und Tagesüberblick“
+    in the car named a source that gave nothing). The record for „Woher weißt du das?“ keeps every part."""
+    found = [p for p in parts if p["tool"] != "lokal:leer"]
+    return found or list(parts)
+
+
 def zeile(parts, warn="", en=False):
     """The line under the answer, in fixed words only."""
     i = 1 if en else 0
+    parts = genannt(parts)
     names = [p["en" if en else "de"] for p in parts][:MAX_NAMES]
     text = HEAD[i] + (", ".join(names) + (" …" if len(parts) > MAX_NAMES else "") if names else MODELL[i])
     return text + (" · " + WARN_HEAD[i] + WARN[warn][i] if warn else "")
@@ -154,7 +163,7 @@ def zeile(parts, warn="", en=False):
 
 def satz(parts, warn="", en=False):
     """The short sentence at the end of a spoken answer (2a)."""
-    names = [p["en" if en else "de"] for p in parts][:MAX_SAID]
+    names = [p["en" if en else "de"] for p in genannt(parts)][:MAX_SAID]
     if not names:
         out = "I only know that from my model knowledge, I looked nothing up." if en else \
             "Das weiß ich nur aus meinem Modellwissen, nachgeschlagen habe ich nichts."
@@ -181,6 +190,13 @@ def merke(uid, src, parts, warn, links=(), now=None):
             for k in [k for k, v in _last.items() if now - v[0] > TTL] or list(_last)[:MAX_KEEP // 10]:
                 _last.pop(k, None)
         _last[(uid, src)] = (now, rec)
+
+
+def vergiss(uid, src):
+    """An answer without a line (it only did something, or wanted to know nothing): the record of an earlier answer
+    goes, so neither „Woher weißt du das?“ nor a report (meldung.py) names its sources for this one (issue 14)."""
+    with _lock:
+        _last.pop((uid, src), None)
 
 
 def letzte(uid, src, now=None):

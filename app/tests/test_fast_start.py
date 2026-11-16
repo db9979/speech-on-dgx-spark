@@ -11,6 +11,7 @@
 No model, no clock.
 """
 import json
+import asyncio
 import unittest
 
 from tests import helpers
@@ -208,8 +209,42 @@ class Direct(unittest.TestCase):
                            ("Habe ich neue Mails von Tom?", None), ("Welche Erinnerungen habe ich morgen?", None),
                            ("Lösch alle Erinnerungen", None), ("Hallo", None)):
             self.assertEqual(intent.direct(text, offered), want, text)
+        # Antworten zuverlässiger 4 (issue 13 in spark-meldungen): the briefing by name, fetched by the panel
+        brief = {"daily_briefing", "calendar_events", "weather"}
+        for text in ("Gib mir mein Briefing für heute: Termine, Fristen und Wetter.", "Briefing", "Mein Tagesbriefing bitte",
+                     "Was steht heute an?", "Gib mir den Tagesüberblick", "Lies mir das Morgenbriefing"):
+            self.assertEqual(intent.direct(text, brief), "daily_briefing", text)
+        for text in ("Guten Morgen", "Gib mir ein Briefing über Formel 1 in Monaco", "Was steht heute in meinem Kalender?"):
+            self.assertNotEqual(intent.direct(text, brief), "daily_briefing", text)
+        self.assertIsNone(intent.direct("Briefing", {"calendar_events"}))   # not offered: the model as before
         self.assertIsNone(intent.direct("Habe ich neue Mails?", {"weather"}))   # only what the turn offers
         self.assertIsNone(intent.direct("Wie ist das Wetter?" + " " * 100, offered))
+
+    def test_briefing_topics_wait_briefly_when_only_heard(self):
+        """Issue 13: in the car the topics' web searches held the first sound back; a client that only hears the
+        answer waits at most chat.BRIEF_HEARD_S per topic, a late one is named as left out."""
+        import types
+        import chat
+        import chat_tools
+        from unittest import mock
+
+        async def slow(c, ccfg, q, wait):
+            await asyncio.sleep(wait)
+            return ("NEWS " + q, [])
+
+        def turn(**kw):
+            return types.SimpleNamespace(body={"client": kw.get("client", "web")}, car=kw.get("car", False), who=None,
+                                         private_ok=True, cal={"calendars": [], "topics": ["Fußball"]}, search=True,
+                                         c=None, ccfg={}, mailbox=False, timers=False, out=asyncio.Queue(),
+                                         sentences=asyncio.Queue())
+        with mock.patch.object(chat, "BRIEF_HEARD_S", 0.05):
+            with mock.patch.object(chat, "brief_topic", lambda c, ccfg, q: slow(c, ccfg, q, 0.3)):
+                for t in (turn(car=True), turn(client="speaker")):
+                    text = asyncio.run(chat_tools.briefing_text(t, {"first": True}))
+                    self.assertIn("Topic 'Fußball': not ready in time", text)
+                    self.assertNotIn("NEWS", text)
+                text = asyncio.run(chat_tools.briefing_text(turn(), {"first": True}))   # with a screen: as before
+                self.assertIn("NEWS Fußball", text)
 
     def test_tomorrow_with_the_panels_date(self):
         """V01.0.362: „Wie wird das Wetter morgen?“ and tomorrow's appointments are fetched directly with the date the
@@ -231,12 +266,13 @@ class Direct(unittest.TestCase):
 
     def test_calendar_today_only(self):
         """V01.0.358: today's appointments are fetched directly (no arguments = today); other ranges, another person
-        or "was steht heute an" (daily_briefing) stay with the model."""
+        stay with the model; "was steht heute an" is the briefing (daily_briefing, fetched by the panel since
+        Antworten zuverlässiger 4)."""
         offered = {"calendar_events", "daily_briefing"}
         for text, want in (("Welche Termine habe ich heute?", "calendar_events"), ("Hab ich heute noch Termine?", "calendar_events"),
                            ("Was steht heute im Kalender?", "calendar_events"), ("Meine Termine heute", "calendar_events"),
                            ("Welche Termine habe ich nächste Woche?", None), ("Welche Termine hat Anna heute?", None),
-                           ("Was steht heute an?", None), ("Trag einen Termin ein", None)):
+                           ("Was steht heute an?", "daily_briefing"), ("Trag einen Termin ein", None)):
             self.assertEqual(intent.direct(text, offered), want, text)
         self.assertIsNone(intent.direct("Welche Termine habe ich heute?", {"daily_briefing"}))
 

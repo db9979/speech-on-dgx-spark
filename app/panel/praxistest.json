@@ -6442,6 +6442,38 @@
 "text": "Die Spark-Konsole auf dem Spark öffnen (https://<IP des Spark>:31010) und anmelden. Im Überblick steht eine Zeile „Chat-Modell: N laufen · M warten · X tok/s“; „Modell genau →“ öffnet den neuen Reiter „Modell genau“ mit denselben Kacheln, Tabellen und dem Verlauf wie Zustand → Modell-Rechner genau im Panel. Eine Frage an den Assistenten stellen: die Anfrage erscheint dort ohne Inhalt, tok/s steigt. Ein anderer Reiter beendet das Nachladen.",
 "thread": "Monitoring auf tars stark ausbauen",
 "test": "test_modellgenau.Seitenbild.test_console_tab"
+},
+{
+"id": "P935",
+"v": 1494,
+"titel": "Wetterwarnung per Sprache, keine leere Zusage",
+"text": "Im Assistenten (auch im Auto oder am Lautsprecher) sagen: „Warn mich, wenn es in Langensteinbach stürmisch wird.“ Die Antwort endet mit einem festen Satz, der sagt, ob die Wetterwarnung am Vorabend an ist, jetzt eingeschaltet wurde oder warum sie nicht kommen kann; nie „ich werde dich warnen“ ohne diesen Satz. Danach „Sag mir Bescheid, sobald das Paket da ist“: ohne gestellte Erinnerung kommt „Von selbst Bescheid geben kann ich dafür nicht …“.",
+"thread": "Antworten und Gespräche zuverlässiger machen",
+"test": "test_taten.Chat.test_a_weather_warning_wish_gets_the_panels_answer"
+},
+{
+"id": "P936",
+"v": 1494,
+"titel": "Tagesüberblick nicht mehr fälschlich „nicht belegt“",
+"text": "Mit „Nicht belegte Antworten markieren“ im Auto oder am Handy „Gib mir mein Briefing für heute: Termine, Fristen und Wetter“ fragen. Unter der Antwort steht nicht mehr „Nicht belegt“, und bei der nächsten Antwort kommt nicht „Meine letzte Antwort war nicht belegt“. Die gesprochene Quelle nennt „eigene Daten ohne Treffer“ nur, wenn sonst nichts nachgeschlagen wurde.",
+"thread": "Antworten und Gespräche zuverlässiger machen",
+"test": "test_systemone.AntwortPruefen.test_check_sees_the_whole_briefing"
+},
+{
+"id": "P937",
+"v": 1494,
+"titel": "Gespräch behält den Faden",
+"text": "Als Admin Funktionen → Gespräch → „Natürliches Gespräch“ an. Im Assistenten nacheinander fragen: „Wie wird das Wetter morgen?“, „Was steht heute an?“, dann „Was hattest du vorhin zum Wetter gesagt?“. Die Antwort nennt das Wetter von vorhin, ohne neu nachzusehen. Mit „Natürliches Gespräch“ aus sagt der Spark wie bisher, dass er nachsehen muss.",
+"thread": "Antworten und Gespräche zuverlässiger machen",
+"test": "test_left_out.Faden.test_a_question_back_takes_it_up"
+},
+{
+"id": "P938",
+"v": 1494,
+"titel": "Tagesüberblick schneller im Auto",
+"text": "Mit „Eindeutiges direkt abrufen“ im Auto oder am Lautsprecher sagen: „Gib mir mein Briefing für heute.“ Unter Zustand → Logs → Anfragen steht „daily_briefing (Panel)“ ohne erste Modellrunde davor, und der erste Ton kommt deutlich früher als die 23 s aus Meldung 13. Dauert ein Thema länger als 4 s, sagt die Antwort kurz, dass es fehlt.",
+"thread": "Antworten und Gespräche zuverlässiger machen",
+"test": "test_fast_start.Direct.test_briefing_topics_wait_briefly_when_only_heard"
 }
 ]
 }

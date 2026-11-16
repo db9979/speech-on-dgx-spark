@@ -526,6 +526,36 @@ class AntwortPruefen(Base):
         self.assertEqual(befund.diagnose(case)[0]["k"], "erfunden")
         helpers.set_config(berater=False)
 
+    def test_check_sees_the_whole_briefing(self):
+        """Issue 13 in spark-meldungen: the weather stood after 800 characters of the briefing's result (the note about
+        text from outside included) and never reached the check; a right answer counted as made up."""
+        import chat
+        cal = "\n".join(f"Mo 16.11. {h:02d}:00–{h:02d}:30: Termin Nummer {h} [Arbeit]" for h in range(8, 20))
+        brief = chat.wrap_outside("Aktuelles Datum: Montag, 16. November 2026\nToday's appointments:\n" + cal
+                                  + "\nTopic 'Fußball':\n" + "Lange Meldung über ein Spiel. " * 120
+                                  + "\nWetter Langensteinbach: Regen, 9 bis 11 Grad, Böen bis 63 km/h")
+        said = "Es regnet bei 9 bis 11 Grad, Böen bis 63 km/h in Langensteinbach."
+        state = systemone.check_state("Gib mir mein Briefing.", said, [brief, "0 Treffer"])
+        self.assertLessEqual(len(state), systemone.MAX_STATE)
+        self.assertIn("Böen bis 63 km/h", state.split("Antwort:")[0])   # the weather is in the results part
+        self.assertNotIn(chat.OUTSIDE_NOTE, state)   # the note and the markers are not needed for the check
+        self.assertNotIn("<<<", state)
+        self.assertIn("0 Treffer", state)   # a short result stays whole
+        self.assertTrue(state.endswith("Antwort: " + said))
+        # four long results share the room, none is dropped
+        many = systemone.check_state("Frage?", "Antwort.", [f"Ergebnis {i} " + "x" * 9000 for i in range(4)])
+        self.assertLessEqual(len(many), systemone.MAX_STATE)
+        self.assertTrue(all(f"Ergebnis {i}" in many for i in range(4)))
+
+    def test_only_the_models_words_are_checked(self):
+        """Issue 14: the fixed sentences of the panel after an answer (source line, „Meine letzte Antwort war nicht
+        belegt“) are no claims of the model; chat.py hands over trace["llm"], never trace["said"]."""
+        import inspect
+        import chat
+        src = inspect.getsource(chat)
+        self.assertIn('systemone.check_later(ccfg, tr, who, turn.ask_text, trace["llm"]', src)
+        self.assertEqual(src.count('trace["llm"] +='), 3)   # the three places the model's text is shown
+
     def test_unbelegt_marks_tells_and_reports(self):
         """Nicht belegte Antworten markieren and Erfundenes automatisch melden (Issue 3 in spark-meldungen, Dominik
         2026-11-14): the check's number decides by fixed rules; the page asks once for its own answer only, a speaker

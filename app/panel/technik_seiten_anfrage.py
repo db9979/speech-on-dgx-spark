@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "vorbereiten": {
-        "stand": "6e900ba45d",
+        "stand": "589c5ab37c",
         "bezug": {
             "klaeren.MAX_BUTTONS": ["s7"], "chat_turn.prepare": ["s1", "s13"], "chat_turn.STUFEN": ["s1", "s13"], "chat_turn.shared_stranger": ["s3"],
             "chat.left_out": ["s2", "s4"], "notaus.locked_tools": ["s11"], "chat_turn.notaus_note": ["s8", "s11"],
@@ -58,12 +58,20 @@ SEITEN = {
               ("Der Verlauf wird auf sein Budget gekürzt. Steht eine Antwort aus fremdem Text unter den letzten drei "
                "Nachrichten, beginnt dieser Zug gesperrt; ältere werden gar nicht mehr mitgeschickt. Wünscht sich die "
                "Person in eigenen Worten ein Lied, bleibt so eine Antwort bis {musik.BACK} Nachrichten zurück als Daten "
-               "dabei (Akkorde, Stil). Eine Bildschirm-Beschreibung kommt nur als fester Hinweis mit und sperrt nichts. "
+               "dabei (Akkorde, Stil). Mit „Natürliches Gespräch“ behält das Gespräch den Faden: ist der Zug ohnehin "
+               "gesperrt, bleiben auch ältere solche Antworten dabei, und eine reine Frage mit Rückbezug („Was hattest "
+               "du vorhin zum Wetter gesagt?“, chat.FADEN_REFERS) holt eine aus den letzten {chat.FADEN_BACK} "
+               "Nachrichten zurück und sperrt den Zug, nie wenn die Weiche etwas zum Ändern sieht; Mail bleibt draußen. "
+               "Eine Bildschirm-Beschreibung kommt nur als fester Hinweis mit und sperrt nichts. "
                "Mit „Lange Gespräche zusammenfassen“ kommt für ein Profil, was hier wegfiel, als kurze Zusammenfassung "
                "in den Systemprompt (verlaufkurz.fuer_zug, im Hintergrund geschrieben, ohne Mail- und Webtext).",
                "The history is trimmed to its budget. If an answer from outside text is among the last three messages, "
                "this turn starts locked; older ones are not sent at all. When the person asks for a song in their own "
-               "words, such an answer up to {musik.BACK} messages back stays along as data (chords, style). A screen "
+               "words, such an answer up to {musik.BACK} messages back stays along as data (chords, style). With "
+               "„Natural conversation“ the conversation keeps its thread: when the turn is locked anyway, older such "
+               "answers stay too, and a pure question pointing back („What did you say about the weather earlier?“, "
+               "chat.FADEN_REFERS) takes one of the last {chat.FADEN_BACK} messages up and locks the turn, never when "
+               "the Weiche sees something to change; mail stays out. A screen "
                "description only comes along as a fixed note and locks nothing. With „Summarize long conversations“ "
                "what dropped here comes back for a profile as a short summary in the system prompt "
                "(verlaufkurz.fuer_zug, written in the background, without mail and web text).")),
@@ -792,13 +800,15 @@ SEITEN = {
         "heute": [],
     },
     "antwort": {
-        "stand": "e08d9217f1",
+        "stand": "426d97bb34",
         "bezug": {
             "chat.MAX_SAVES": ["s11"], "chat.LOOP_SAME": ["s11"], "chat._answer": ["s4", "s5", "s11"], "chat_modell.model_turn": ["s4", "s11"], "chat_modell.herkunft_und_chip": ["s3"], "chat_modell.quellenangabe_zeile": ["s3"], "chat_ton.speech_out": ["s8"],
             "chat.split_sentences": ["s5"], "chat.said_key": ["s8"], "chat.no_code": ["s8"],
             "chat.loop_count": ["s11"], "answercheck.known": ["s6"], "answercheck.unsupported": ["s6"],
             "answercheck.fresh": ["s6"], "rechnen.fix": ["s6"],
             "taten.announces": ["s7", "s12"], "vorrat.WAIT": ["s11"], "frisch.nachsatz": ["s12"],
+            "taten.COVERS": ["s7"], "quellenangabe.genannt": ["s3"], "quellenangabe.vergiss": ["s3"],
+            "proactive.warn_wish": ["s12"], "proactive.wetter_zusage": ["s12"],
             "laufend.add": ["s14"],
         },
         "kurz": ("Hier entsteht die Antwort: Das Panel fragt das Sprachmodell in Runden, lässt angebotene Werkzeuge "
@@ -860,7 +870,10 @@ SEITEN = {
                "Internet suchen“ an (chat_modell.herkunft_und_chip). Mit der Quellenangabe (quellenangabe.py) "
                "steht stattdessen unter jeder Wissensantwort jede gelaufene lesende Quelle („Quelle: 2 Mails, Websuche“ "
                "oder „nichts nachgeschlagen, nur Modellwissen“), mit Hinweis, wenn sie nicht zur Klasse der "
-               "Quellen-Weiche passt; am Lautsprecher kurz gesprochen (chat_modell.quellenangabe_zeile).",
+               "Quellen-Weiche passt; am Lautsprecher kurz gesprochen (chat_modell.quellenangabe_zeile). Ein Blick in "
+               "die eigenen Daten ohne Treffer steht nur da, wenn sonst nichts nachgeschlagen wurde "
+               "(quellenangabe.genannt); eine Antwort ohne Zeile löscht die gemerkte Quelle der Antwort davor "
+               "(quellenangabe.vergiss), damit „Woher weißt du das?“ und eine Meldung nie fremde Quellen nennen.",
                "When the preparation decided that the panel acts itself (a switch command, reading states, „search "
                "locally first“, a clear reading request), it runs now. The result goes to the model like a tool "
                "result, outside text wrapped as data; „local first“ brings the best hits of every released source with "
@@ -870,7 +883,10 @@ SEITEN = {
                "and for internal without the web offers „Also search the web“ (chat_modell.herkunft_und_chip). With the "
                "source note (quellenangabe.py) every knowledge answer instead names each reading source that ran "
                "(„Source: 2 mails, Web search“ or „nothing looked up, model knowledge only“), with a note when it does "
-               "not fit the source switch's class; at a speaker said briefly (chat_modell.quellenangabe_zeile).")),
+               "not fit the source switch's class; at a speaker said briefly (chat_modell.quellenangabe_zeile). A look "
+               "into the own data without a hit is only named when nothing else was looked up (quellenangabe.genannt); "
+               "an answer without a line drops the kept source of the answer before (quellenangabe.vergiss), so „Where "
+               "did you get that?“ and a report never name sources of another answer.")),
             S("s4", "schritt", ("Runde vorbereiten", "Prepare a round"),
               ("höchstens vier Werkzeug-Runden", "at most four tool rounds"),
               ("Angeboten wird die Liste ohne gesperrte, wegen Fehlern gestoppte oder zu oft genutzte Werkzeuge. "
@@ -928,12 +944,16 @@ SEITEN = {
                "ankündigt („Ich rufe das Timer-Werkzeug auf …“), wird nie gesagt; kommt danach kein Werkzeug, sagt "
                "das Panel am Ende seinen festen Satz (taten.announces). Klappt ein Werkzeug der behaupteten Art "
                "später in derselben Antwort („Ich mache das Lied.“ vor musik_machen), fällt der Satz still weg. Gilt, wenn ein änderndes Werkzeug oder gar "
-               "keines angeboten war.",
+               "keines angeboten war. Eine Zusage, sich später von selbst zu melden („werde ich dich warnen“, „ich "
+               "sage dir Bescheid, sobald …“), gilt nur mit einer Erinnerung oder einer Beobachtung aus dieser Antwort "
+               "(taten.COVERS); Merken allein reicht nicht.",
                "When a sentence claims a deed („is on now“, „entered it“), a tool of that kind must have worked in this "
                "answer (taten.check). A sentence that only announces a tool call or a deed („I'm calling the timer "
                "tool …“) is never said; when no tool follows, the panel says its fixed sentence at the end "
                "(taten.announces). When a tool of the claimed kind works later in the same answer („I'm making the "
-               "song.“ before musik_machen), the sentence is left out silently. Applies when a changing tool or none at all was offered."),
+               "song.“ before musik_machen), the sentence is left out silently. Applies when a changing tool or none at all was offered. "
+               "A promise to speak up later by itself („I will warn you“, „I'll let you know as soon as …“) only holds "
+               "with a reminder or a watch from this answer (taten.COVERS); noting it alone is not enough."),
               ("info", "ja", ("Satz fällt weg, am Ende „hat nicht geklappt“", "Sentence dropped, „did not work“ at the end"))),
             S("s8", "schritt", ("Zeigen und sprechen", "Show and speak"),
               ("nie ein Satz zweimal", "never a sentence twice"),
@@ -987,7 +1007,10 @@ SEITEN = {
                "nichts von heute oder stammt ein Archiv-Artikel aus einem Kiwix-Buch, das älter als ein Jahr ist, und die Antwort sagt das nicht selbst, hängt das Panel „Nicht ganz aktuell: Wetter: Stand gestern "
                "23:10 Uhr.“ an (frisch.nachsatz, Regel „Stand nennen“ der Antwort-Prüfung). Alle Sätze kommen vom Panel, nie vom Modell. Antwortet das "
                "Sprachmodell nicht, weil es gerade wechselt, neu startet oder gemessen wird, sagt das Panel das mit der "
-               "erwarteten Zeit (llmstart.satz, auch in der Wartungspause eines Wechsels).",
+               "erwarteten Zeit (llmstart.satz, auch in der Wartungspause eines Wechsels). Bittet die Person darum, vor "
+               "Sturm, Regen, Frost oder Hitze gewarnt zu werden (proactive.warn_wish, feste Wörter, nie verneint), "
+               "sagt das Panel, was wirklich gilt: die Wetterwarnung am Vorabend ist an, jetzt eingeschaltet, oder "
+               "warum sie nicht kommen kann (proactive.wetter_zusage); eine Zusage des Modells fällt dann weg.",
                "When a sentence fell out because of a figure, the panel says „I have no more precise details on "
                "that.“; when a deed fell out, a fixed sentence from taten.sentence. When a service came only with an "
                "older reading, a search for today found nothing of today or an archive article comes from a Kiwix book older "
@@ -995,7 +1018,10 @@ SEITEN = {
                "adds „Not quite current: weather: as of yesterday 23:10.“ (frisch.nachsatz, rule „name the stand“ of the "
                "answer check). All of them come from the panel, never from the model. When the language model does not answer because it is switching, restarting or "
                "being measured, the panel says so with the expected time (llmstart.satz, also during a switch's "
-               "maintenance pause).")),
+               "maintenance pause). When the person asks to be warned about storm, rain, frost or heat "
+               "(proactive.warn_wish, fixed words, never negated), the panel says what really holds: the weather "
+               "warning the evening before is on, switched on now, or why it cannot come (proactive.wetter_zusage); a "
+               "promise of the model is then left out.")),
             S("s13", "schritt", ("Nachfragen des Panels", "The panel's own questions"),
               ("Korrektur, Gedächtnis, reMarkable, Vorab holen", "correction, memory, reMarkable, fetch ahead"),
               ("Nur wenn nichts Fremdes gelesen wurde: eine gelernte Korrektur zum Merken anbieten oder ein Fakt aus "
@@ -1097,6 +1123,8 @@ SEITEN = {
             ("chat_modell.model_turn", ("Runden mit dem Modell, Werkzeuge, Prüfungen", "rounds with the model, tools, checks")),
             ("chat_modell.herkunft_und_chip", ("Herkunftszeile und „Auch im Internet suchen“ unter der Antwort", "line of origin and „Also search the web“ under the answer")),
             ("chat_modell.quellenangabe_zeile", ("Quellenangabe unter der Antwort, am Lautsprecher kurz gesprochen", "source note under the answer, said briefly at a speaker")),
+            ("quellenangabe.genannt", ("Nullfund nur, wenn sonst nichts nachgeschlagen wurde", "a look without hits only when nothing else was looked up")),
+            ("quellenangabe.vergiss", ("Antwort ohne Zeile: alte Quelle weg", "answer without a line: the old source goes")),
             ("chat.split_sentences", ("schneidet fertige Sätze ab", "cuts finished sentences off")),
             ("chat.said_key", ("erkennt einen schon gesagten Satz", "spots a sentence already said")),
             ("chat.no_code", ("Codeblöcke nur zeigen, nie sprechen", "code blocks only shown, never spoken")),
@@ -1108,6 +1136,9 @@ SEITEN = {
             ("taten.check", ("Tat behauptet, aber kein Werkzeug hat es geschafft", "deed claimed, no tool managed it")),
             ("taten.announces", ("Werkzeugaufruf oder Tat nur angekündigt", "tool call or deed only announced")),
             ("taten.sentence", ("der feste ehrliche Satz", "the fixed honest sentence")),
+            ("taten.COVERS", ("Zusage, sich zu melden: nur mit Erinnerung oder Beobachtung", "promise to speak up: only with a reminder or a watch")),
+            ("proactive.warn_wish", ("Wunsch nach Wetterwarnung, feste Wörter", "wish for a weather warning, fixed words")),
+            ("proactive.wetter_zusage", ("der feste Satz, was für die Wetterwarnung gilt", "the fixed sentence of what holds for the weather warning")),
             ("frisch.nachsatz", ("Stand-Hinweis, wenn etwas nicht aktuell war", "stand note when something was not current")),
         ],
         "tests": ["test_panel", "test_taten", "test_handlungsregel", "test_fast_start", "test_morgen_termine", "test_tagesaktuell"],
@@ -1116,7 +1147,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Werkzeuge (chat_tools.run)
     "werkzeuge": {
-        "stand": "b4e2cb5fb3",
+        "stand": "f98a624fef",
         "bezug": {
             "chat.LOCKED_OUTSIDE": ["s4"], "notaus.INTERNET_TOOLS": ["s3"], "werkzeuge.NAMES": ["s11"],
             "chat_tools.run": ["s2", "s7"], "chat.wrap_outside": ["s9"], "chat.LOCKED_AFTER_MAIL": ["s4"],
@@ -1224,14 +1255,19 @@ SEITEN = {
                "die Zeitangabe des Panels. Eine Erweiterung kann statt einer Antwort des Modells den festen Satz des "
                "Panels übergeben (ctx „fest“, die Sofort-Karte von Finden); das Modell formuliert ihn nie um. "
                "memory_forget löscht nur, wenn die eigene letzte Nachricht ums Vergessen bittet und es weder abruft noch "
-               "verneint (intent.forget_ok); ein verneinter Smart-Home-Befehl erreicht Home Assistant nie.",
+               "verneint (intent.forget_ok); ein verneinter Smart-Home-Befehl erreicht Home Assistant nie. Der "
+               "Tagesüberblick (daily_briefing) liest Wetter, Geburtstage und Pakete zugleich mit den Themen; ein Gerät, "
+               "das die Antwort nur hört, wartet je Thema höchstens {chat.BRIEF_HEARD_S} s, ein spätes fällt mit "
+               "Hinweis weg.",
                "Extensions get profile, device and origin from the panel, never from the model. Smart home changes need "
                "the code word in the latest message when one is set. Connections to outside services go through the "
                "guard. Home Assistant reads states from the live connection's copy (halive.states) while it stands for "
                "exactly this address and key, else over HTTP. The period of the web search comes from the question's own "
                "words and the query (frisch.zeitraum), never from the panel's time note. An extension can hand over the "
                "panel's fixed sentence instead of a model answer (ctx „fest“, Find's Sofort-Karte); the model never "
-               "rewords it.")),
+               "rewords it. The daily briefing (daily_briefing) reads weather, birthdays and parcels at the same time as "
+               "the topics; a device that only hears the answer waits at most {chat.BRIEF_HEARD_S} s per topic, a late "
+               "one is left out with a note.")),
             S("s8", "schritt", ("Fehler als Satz", "Errors as a sentence"),
               ("„nicht erreichbar“, nie raten", "„not reachable“, never guess"),
               ("Ist ein Dienst nicht erreichbar, wird daraus ein kurzer Ergebnis-Text („nicht erreichbar“, „Suche "

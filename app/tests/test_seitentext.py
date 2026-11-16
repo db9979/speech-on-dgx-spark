@@ -108,7 +108,7 @@ class OneSource(unittest.TestCase):
 
     def test_best_parts_keep_lines(self):
         text = "# Preise\n\n| Ware | Preis |\n|---|---|\n| Brot | 3 Euro |\n\n" + "Füllsatz ohne Bezug. " * 60
-        got = chat.best_parts(text, "Was kostet das Brot?", 600)
+        got = seitentext.best_parts(text, "Was kostet das Brot?", 600)
         self.assertIn("| Brot | 3 Euro |", got)
         self.assertIn("\n", got)
 

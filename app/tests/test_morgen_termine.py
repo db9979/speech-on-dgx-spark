@@ -88,7 +88,12 @@ class BriefingByName(unittest.TestCase):
                                       "tz": "Europe/Berlin"})
         self.assertEqual(r.status_code, 200, r.text)
         first = next(c for c in helpers.LLM_CALLS if c.get("stream"))
-        self.assertEqual(first.get("tool_choice"), {"type": "function", "function": {"name": "daily_briefing"}})
+        # since V01.1.494 the panel reads the day itself before the model's first word (intent.DIRECT): the first
+        # round already carries the daily_briefing call and its result, no round of choosing a tool comes before
+        calls = [x["function"]["name"] for m in first["messages"] for x in (m.get("tool_calls") or [])]
+        self.assertEqual(calls, ["daily_briefing"])
+        self.assertEqual(first["messages"][-1]["role"], "tool")
+        self.assertTrue(first["messages"][-1]["content"])
 
 
 class EndedAppointments(unittest.TestCase):

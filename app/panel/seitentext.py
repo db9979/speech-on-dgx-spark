@@ -312,3 +312,30 @@ def _markdown(page, most, junk):
         last = kind
     text = "".join(sep + line for sep, line in out).strip()
     return text[:most] if most else text
+
+
+def best_parts(text, query, limit):
+    """The parts of a text (a page, a tool result) that share most words with the query (a question, an answer
+    being checked), in their order, up to limit characters; without any shared word the beginning, as before. A piece
+    keeps the lines of the Markdown: a table row, a list item and a heading stay lines of their own. One source for
+    the web search (chat.page_text) and the Antwort-Prüfung im Hintergrund (systemone.check_answer)."""
+    words = {w.lower() for w in re.findall(r"[^\W_]{3,}", query or "")}
+    chunks, cur = [], ""
+    for line in (x.strip() for x in text.split("\n")):   # pieces of about 400 characters, whole sentences and lines
+        for i, p in enumerate(re.split(r"(?<=[.!?])\s+", line) if line else ()):
+            cur = (cur + ("\n" if i == 0 else " ") + p).strip()
+            if len(cur) >= 400:
+                chunks.append(cur)
+                cur = ""
+    if cur:
+        chunks.append(cur)
+    score = [len(words & {w.lower() for w in re.findall(r"[^\W_]{3,}", ch)}) for ch in chunks]
+    if not any(score):
+        return text[:limit]
+    keep, used = set(), 0
+    for i in sorted(range(len(chunks)), key=lambda i: (-score[i], i)):
+        if not score[i] or used + len(chunks[i]) > limit:
+            continue
+        keep.add(i)
+        used += len(chunks[i]) + 5
+    return " … ".join(chunks[i] for i in sorted(keep))[:limit]

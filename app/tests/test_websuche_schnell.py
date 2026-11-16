@@ -5,6 +5,7 @@ import unittest
 
 from tests import helpers  # noqa: F401  (sets up paths and a throw-away state directory)
 import chat  # noqa: E402
+import seitentext  # noqa: E402
 
 
 class _Resp:
@@ -81,10 +82,10 @@ class Parts(unittest.TestCase):
     def test_the_fitting_parts_not_the_beginning(self):
         filler = "Menü Startseite Impressum Datenschutz Kontakt Newsletter. " * 20
         text = filler + "Der Baumarkt hat heute von 8 bis 20 Uhr offen. " + filler
-        got = chat.best_parts(text, "Wann hat der Baumarkt offen?", 600)
+        got = seitentext.best_parts(text, "Wann hat der Baumarkt offen?", 600)
         self.assertIn("8 bis 20 Uhr", got)
         self.assertLessEqual(len(got), 600)
-        self.assertEqual(chat.best_parts("Nur Text ohne Bezug.", "Baumarkt", 10), "Nur Text o")   # nothing fits: the beginning
+        self.assertEqual(seitentext.best_parts("Nur Text ohne Bezug.", "Baumarkt", 10), "Nur Text o")   # nothing fits: the beginning
 
 
 class OutsideNote(unittest.TestCase):

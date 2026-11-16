@@ -100,5 +100,60 @@ class LeftOut(unittest.TestCase):
                                                    {"role": "user", "content": "c"}], 1))
 
 
+
+class Faden(unittest.TestCase):
+    """„Gespräch behält den Faden“ (Antworten zuverlässiger 3): with Natürliches Gespräch released, older answers from
+    outside text stay when the turn is locked anyway, and a pure question back takes one up, locked."""
+    @classmethod
+    def setUpClass(cls):
+        admin = TestClient(panel.app)
+        admin.post("/api/login", json={"password": "secret-admin"})
+        assert admin.post("/api/admin/profiles", json={"name": "Fadenfrau", "pin": "1234"}).status_code in (200, 409)
+        cls.c = TestClient(panel.app)
+        assert cls.c.post("/api/profile/login", json={"name": "Fadenfrau", "pin": "1234"}).status_code == 200
+
+    def setUp(self):
+        helpers.LLM_CALLS.clear()
+
+    def tearDown(self):
+        helpers.set_config(gespraech=False)
+
+    def sent(self, messages):
+        r = self.c.post("/api/chat", json={"messages": messages, "client": "web"})
+        assert r.status_code == 200, r.text
+        helpers.events(r)
+        return json.dumps(streamed()[0]["messages"], ensure_ascii=False)
+
+    LOCKED = [{"role": "user", "content": "Wie wird das Wetter?"},
+              {"role": "assistant", "content": "Morgen 12 Grad und Regen.", "outside": True},
+              {"role": "user", "content": "Was steht heute an?"},
+              {"role": "assistant", "content": "Zahnarzt um 9.", "outside": True},
+              {"role": "user", "content": "Was hattest du vorhin zum Wetter gesagt?"}]
+    BACK = [{"role": "user", "content": "Wie wird das Wetter?"},
+            {"role": "assistant", "content": "Sonnig, 20 Grad.", "outside": True},
+            {"role": "user", "content": "Wie heißt du?"},
+            {"role": "assistant", "content": "Ich bin Spark."},
+            {"role": "user", "content": "Und wie alt bist du?"},
+            {"role": "assistant", "content": "Ganz neu."}]
+
+    def test_off_as_before(self):
+        self.assertNotIn("12 Grad", self.sent(self.LOCKED))
+        self.assertNotIn("20 Grad", self.sent(self.BACK + [{"role": "user", "content": "Was hast du vorhin zum Wetter gesagt?"}]))
+
+    def test_locked_turn_keeps_the_older_ones(self):
+        helpers.set_config(gespraech=True)
+        sent = self.sent(self.LOCKED)
+        self.assertIn("12 Grad", sent)
+        self.assertIn("Zahnarzt um 9.", sent)
+
+    def test_a_question_back_takes_it_up(self):
+        helpers.set_config(gespraech=True)
+        self.assertIn("20 Grad", self.sent(self.BACK + [{"role": "user", "content": "Was hast du vorhin zum Wetter gesagt?"}]))
+        helpers.LLM_CALLS.clear()
+        # no word pointing back, no question, or something to change: left out as before
+        for text in ("Wie spät ist es?", "Erzähl mir vorhin einen Witz.", "Kannst du dazu eine Erinnerung stellen?"):
+            helpers.LLM_CALLS.clear()
+            self.assertNotIn("20 Grad", self.sent(self.BACK + [{"role": "user", "content": text}]), text)
+
 if __name__ == "__main__":
     unittest.main()

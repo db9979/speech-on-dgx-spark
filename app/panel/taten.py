@@ -104,8 +104,25 @@ CLAIMS = {
              r"|\bich\s+lege\s+(?:gleich\s+|jetzt\s+)?los\b[^.!?]{0,60}\b(?:lied|song|musikstück|\w*track|beat)\w*\b"
              r"|\bi(?:'m| am| will|'ll)\s+(?:now\s+)?(?:mak|creat|compos)\w*\b[^.!?]{0,40}\b(?:song|track|tune)\b",
     "aufgabe": r"\b" + _DONE + r"\b[^.!?]{0,60}\b(?:auf die liste|zur liste|auf deine liste|to (?:your|the) list)\b",
+    # a promise to speak up later by itself („werde ich dich warnen“, „ich sage dir Bescheid, sobald …“, issue 14 in
+    # spark-meldungen): true only when a reminder or a watch was set in this answer (COVERS)
+    "zusage": r"\b(?:werde|würde)\s+ich\s+dich\b[^.!?]{0,60}\b(?:warnen|benachrichtigen|informieren|erinnern|wecken)\b"
+              r"|\bich\s+(?:werde|würde)\s+dich\b[^.!?]{0,60}\b(?:warnen|benachrichtigen|informieren|erinnern|wecken)\b"
+              r"|\bich\s+(?:warne|benachrichtige|informiere)\s+dich\b[^.!?]{0,60}\b(?:wenn|sobald|falls|rechtzeitig)\b"
+              r"|\b(?:ich\s+(?:sage|sag|gebe|geb)\s+dir|(?:sage|sag|gebe|geb)\s+ich\s+dir)\s+(?:dann\s+|sofort\s+|gleich\s+|rechtzeitig\s+)?bescheid\b"
+              r"|\b(?:ich\s+melde\s+mich|melde\s+ich\s+mich)\b[^.!?]{0,40}\b(?:wenn|sobald|falls|bei dir)\b"
+              r"|\bi(?:'ll| will)\s+(?:warn|notify|alert|let you know|tell you)\b[^.!?]{0,60}\b(?:when|as soon as|if)\b",
 }
 CLAIMS = {k: re.compile(v, re.I) for k, v in CLAIMS.items()}
+# a claimed kind that a deed of another kind makes true: a promise to speak up later holds when a reminder (or a call
+# planned, Für dich) or a watch of a page or rule (aenderung) was set in this answer
+COVERS = {"zusage": {"erinnerung", "aenderung"}}
+
+
+def backed(kind, worked):
+    """True when a deed that worked in this answer (its kinds) makes a claim of this kind true."""
+    return kind in worked or bool(COVERS.get(kind, set()) & set(worked))
+
 # a sentence that announces a tool call or a deed as happening now („Ich rufe das Timer-Werkzeug auf …“, Qualitätstest
 # V01.0.568): said in an answer in which no tool ran, it promises something that never happens
 ANNOUNCED = "ankuendigung"
@@ -147,7 +164,7 @@ def check(text, acts, offered, looked=False):
     if "" in kinds:
         writes = any(n in KIND for n in offered or ())
         return [""] if writes and not done and not looked else []
-    if kinds & done:   # in doubt the sentence is said: one of the deeds it names did work
+    if any(backed(k, done) for k in kinds):   # in doubt the sentence is said: one of the deeds it names did work
         return []
     return sorted(kinds)
 
@@ -155,18 +172,25 @@ def check(text, acts, offered, looked=False):
 SENTENCE = {
     "failed": {"de": "Das hat nicht geklappt: {what}.", "en": "That did not work: {what}."},
     "missing": {"de": "Das habe ich nicht ausgeführt.", "en": "I did not do that."},
+    "zusage": {"de": "Von selbst Bescheid geben kann ich dafür nicht, eingerichtet ist nichts. Eine Erinnerung zu einer "
+                     "festen Zeit kann ich dir stellen.",
+               "en": "I cannot let you know about that by myself, nothing is set up. I can set you a reminder for a "
+                     "fixed time."},
 }
 WHAT = {"geraet": ("das Gerät", "the device"), "erinnerung": ("die Erinnerung", "the reminder"),
         "termin": ("der Termin", "the appointment"), "mail_entwurf": ("der Mail-Entwurf", "the mail draft"),
         "dokument": ("das Dokument", "the document"), "remarkable": ("das reMarkable", "the reMarkable"),
         "nachricht": ("die Nachricht", "the message"), "merken": ("das Merken", "remembering it"),
-        "aufgabe": ("die Aufgabe", "the task"), "ablegen": ("das Ablegen auf der NAS", "filing it on the NAS"), "musik": ("das Lied", "the song"), "aenderung": ("die Änderung", "the change"), "": ("das", "that")}
+        "aufgabe": ("die Aufgabe", "the task"), "ablegen": ("das Ablegen auf der NAS", "filing it on the NAS"), "musik": ("das Lied", "the song"), "aenderung": ("die Änderung", "the change"),
+        "zusage": ("die Zusage", "the promise"), "": ("das", "that")}
 
 
 def sentence(art, status, en=False, what=""):
     """The one honest sentence instead of held back claims: status "failed" (a tool of that kind ran and failed) or
     "missing" (none ran). what: a short name the panel took from the tool's arguments (a device), else the kind."""
     lang = "en" if en else "de"
+    if art == "zusage":   # nothing was set up that could keep the promise
+        return SENTENCE["zusage"][lang]
     if status == "failed":
         name = (what or WHAT.get(art, WHAT[""])[1 if en else 0])[:60]
         return SENTENCE["failed"][lang].format(what=name)

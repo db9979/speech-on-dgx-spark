@@ -27,9 +27,11 @@ import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 import llm
+import notaus
 import profiles
 import vorrang
 import features
+import weather
 from common import DayCounter, load_config, no_think
 import core
 from core import assistant, browser_profile, own_profile
@@ -123,7 +125,6 @@ def blocked(uid, kind, p=None, local=None, st=None):
     st = state(uid) if st is None else st
     if not enabled():
         return "turned off by the admin"
-    import notaus
     if notaus.refuse("auto", uid):     # the Notaus from stage 2, or the profile's own (notaus.py)
         return "Notaus"
     if features.blocked("proactive", uid):    # the admin blocked it for this profile (Personen und Geräte → Gesperrte Funktionen)
@@ -1097,6 +1098,57 @@ WEATHER_SAY = {"rain": ("Regen", "Denk an einen Schirm."), "frost": ("Frost", "E
                "heat": ("Hitze", "Viel trinken und tagsüber die Rollläden zu.")}
 
 
+# „Warn mich, wenn es stürmisch wird“ (issue 14 in spark-meldungen, 2026-11-16): the model only noted it and promised a
+# warning that nothing would give. Now the panel answers the wish itself with fixed rules (chat_modell): the weather
+# warning above (the evening before, at pro_weather_at) is said to be on, switched on for the profile (pro_weather,
+# only when „Von selbst“ is on for it) or why it cannot come. Never on a negated wish („warn mich nicht mehr“).
+WARN_WISH = re.compile(r"(?i)\b(?:warn\w*|bescheid|benachrichtig\w*|vorwarn\w*|notify|alert|let me know)\b")
+WARN_WEATHER = re.compile(r"(?i)\b(?:st[uü]rm(?:e|s|isch\w*)?|unwetter\w*|gewitter\w*|regen|regnet|regnen|frost\w*|"
+                          r"glatteis|hitze\w*|storm\w*|rain|rains|raining|heat|heatwave)\b")
+WARN_NOT = re.compile(r"(?i)\b(?:nicht|nie|keine?n?|nimmer|aus|stop\w*|don'?t|no more|never)\b")
+WARN_SAY = {
+    "an": ("Die Wetterwarnung ist an: Kommen morgen Sturm, Regen, Frost oder Hitze, sage ich dir am Vorabend um {at} Uhr "
+           "Bescheid.", "The weather warning is on: if storm, rain, frost or heat come tomorrow, I tell you the evening "
+           "before at {at}."),
+    "eingeschaltet": ("Ich habe die Wetterwarnung für dich eingeschaltet: Kommen morgen Sturm, Regen, Frost oder Hitze, "
+                      "sage ich dir am Vorabend um {at} Uhr Bescheid.", "I switched the weather warning on for you: if "
+                      "storm, rain, frost or heat come tomorrow, I tell you the evening before at {at}."),
+    "admin": ("Eine Wetterwarnung kann ich dir nicht geben: Von selbst melden ist auf dem Spark nicht freigegeben.",
+              "I cannot give you a weather warning: speaking up by itself is not released on the Spark."),
+    "profil": ("Eine Wetterwarnung kann ich dir nicht geben, solange Von selbst melden bei dir aus ist: Ich → Von selbst.",
+               "I cannot give you a weather warning while speaking up by itself is off for you: Me → By itself."),
+    "ort": ("Für die Wetterwarnung fehlt mir noch dein Ort: Ich → Von selbst.",
+            "For the weather warning I still need your place: Me → By itself."),
+}
+
+
+def warn_wish(text):
+    """True when a short message of the person asks to be warned about the weather (fixed words, never negated)."""
+    t = str(text or "")
+    return 0 < len(t) <= 300 and bool(WARN_WISH.search(t)) and bool(WARN_WEATHER.search(t)) and not WARN_NOT.search(t)
+
+
+def wetter_zusage(uid, en=False):
+    """The panel's answer to a weather warning wish: (fixed sentence, state word for the log). Switches pro_weather on
+    when only that was off; „Von selbst“ itself (pro_on) stays the person's own choice."""
+    p = prefs(uid)
+    if not enabled() or features.blocked("proactive", uid) or notaus.refuse("auto", uid):
+        state = "admin"
+    elif not p.get("pro_on"):
+        state = "profil"
+    elif not (weather.usable(uid) or (str(p.get("pro_place") or "").strip() and ccfg().get("search_url")
+                                      and features.allowed("search", uid, ccfg()))):
+        state = "ort"
+    elif p.get("pro_weather", True):
+        state = "an"
+    else:
+        profiles.save_settings(uid, {"pro_weather": True})
+        state = "eingeschaltet"
+    at = str(p.get("pro_weather_at") or "18:00")
+    print(f"proactive: weather warning wish | {state}", flush=True)
+    return WARN_SAY[state][1 if en else 0].format(at=at), state
+
+
 def parse_weather(text, source):
     text = no_think(text or "")
     m = re.search(r"(?s)\{.*\}", text)
@@ -1116,7 +1168,6 @@ WEATHER_RETRY = 600   # seconds until the next try after a passing failure of th
 
 
 async def check_weather(uid, p, now):
-    import weather
     cc = ccfg()
     place = str(p.get("pro_place") or "").strip()
     at = re.fullmatch(r"(\d\d):(\d\d)", p.get("pro_weather_at") or "")
@@ -1294,7 +1345,6 @@ def status(uid):
     import calendars
     import contacts
     import parcels
-    import weather
     import fuerdich
     import ichweiss
     import homeassistant

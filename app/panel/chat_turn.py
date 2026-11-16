@@ -329,8 +329,10 @@ async def _weg(z):
     z.pick_info = {}      # with chat.route_model "systemone": its probability
     z.pick_task = asyncio.create_task(z.intent.ask_model(z.ccfg, z.ask0, z.pick_info, z.me0["id"])) \
         if z.route_on and z.ask0 and not z.route.names and z.ccfg.get("route_model") in ("on", "systemone") else None
+    z.own_words = False   # the person asks for something new in own words (wants_own): never taken up again below
     if z.carry == "outside" and z.route_on and z.intent.wants_own(z.route, z.ask0):
         z.carry = None
+        z.own_words = True
         print("weiche: answer from outside text before; this message asks for", z.route.label(),
               "in its own words - that answer is left out, nothing locked", flush=True)
     # a song in the person's own words („mach daraus einen House-Track“): the last answer from outside text (chords,
@@ -342,7 +344,23 @@ async def _weg(z):
             and z.musik.wants(z.ask0):
         z.carry = "outside"
         print("musik: answer from outside text before kept as data for the song wish", flush=True)
-    z.messages, z.gone = chat.left_out(z.messages, z.marked[-1] if z.carry else -1)
+    # „Gespräch behält den Faden“ (Antworten zuverlässiger 3, with Natürliches Gespräch released): a turn that is locked
+    # by an answer from outside text anyway keeps the older such answers too („Was hattest du vorhin zum Wetter
+    # gesagt?“); a pure question that points back (chat.FADEN_REFERS) to such an answer of the last chat.FADEN_BACK
+    # messages takes it up and is locked like any carried answer, never when the Weiche sees something to change
+    # (chat.LOCKED_OUTSIDE). Answers from mail stay out as before.
+    z.faden = bool(z.me0 and not z.guest and z.messages[-1]["role"] == "user"
+                   and features.allowed("gespraech", z.me0["id"]))
+    if z.faden and not z.carry and not z.own_words and z.marked and z.marked[-1] >= len(z.messages) - chat.FADEN_BACK \
+            and z.messages[z.marked[-1]]["mark"] == "outside" and chat.just_asks(z.ask0) \
+            and chat.FADEN_REFERS.search(z.ask0 or "") and not (z.route.tools() & chat.LOCKED_OUTSIDE):
+        z.carry = "outside"
+        print("chat: Faden | question back to an answer from outside text - taken up, locked", flush=True)
+    z.faden = z.faden and z.carry == "outside"
+    older = sum(1 for i in z.marked[:-1] if z.messages[i]["mark"] == "outside") if z.faden else 0
+    z.messages, z.gone = chat.left_out(z.messages, z.marked[-1] if z.carry else -1, ("outside",) if z.faden else ())
+    if older:
+        print("chat: Faden |", older, "older answers from outside text kept, locked", flush=True)
     z.system = z.ccfg.get("system_prompt") or ""
     # "Schneller Antwortbeginn" (chat.prompt_cache): what holds for this turn only goes with the question
     # (turn_notes, chat._answer), so the system prompt, the tool list and the conversation before stay the same

@@ -53,6 +53,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 import guard
 import llm
 import meldung
+import seitentext
 from common import DayCounter, load_config
 from einordnung import MAX_OPTIONS, MAX_QUESTIONS, MAX_STATE, NAME, check_questions, clean_state  # noqa: F401  (the shared rules)
 from core import assistant, auth, own_profile
@@ -383,6 +384,37 @@ _bg = set()                   # running background checks (a reference, so they 
 TOOL_NAME = re.compile(r"[a-z][a-z0-9_]{1,40}")
 
 
+# Issues 13/14 in spark-meldungen (2026-11-16): every result was cut after 800 characters, the note "text from outside"
+# included, so the weather at the end of the daily briefing never reached the check and a right answer counted as
+# made up. Now the note and the markers go, the room of MAX_STATE is shared out and a long result keeps the parts that
+# share most words with the answer (seitentext.best_parts). Fixed rules, the text stays data for the check.
+CHECK_ASK, CHECK_SAID, CHECK_PART_MIN = 400, 1500, 300
+_WRAPPED = re.compile(r"(?s)\A[^\n]{0,400}\n<<<\n(.*?)(?:\n>>>)?\s*\Z")
+
+
+def _inner(result):
+    """A tool result without the panel's note about text from outside and its <<< >>> markers."""
+    m = _WRAPPED.match(str(result or ""))
+    return (m.group(1) if m else str(result or "")).strip()
+
+
+def check_state(ask_text, said, results):
+    """The text the check reads: the question, every result as far as MAX_STATE allows (a short one in full, the room
+    it leaves to the longer ones, each at least CHECK_PART_MIN; a long one with the parts nearest to the answer) and
+    the answer (the model's own words, chat.py: trace["llm"])."""
+    ask, ans = str(ask_text or "")[:CHECK_ASK], str(said or "")[:CHECK_SAID]
+    head, tail = f"Frage: {ask}\nWerkzeugergebnisse:\n", f"\nAntwort: {ans}"
+    room = MAX_STATE - len(head) - len(tail)
+    parts = [_inner(r) for r in results]
+    left, out = len(parts), {}
+    for i in sorted(range(len(parts)), key=lambda i: len(parts[i])):
+        each = max(CHECK_PART_MIN, (room - sum(len(x) + 1 for x in out.values())) // left)
+        out[i] = parts[i] if len(parts[i]) <= each else seitentext.best_parts(parts[i], ans, each)
+        left -= 1
+    mid = "\n".join(out[i] for i in range(len(parts)))[:max(0, room)]
+    return head + mid + tail
+
+
 def check_later(ccfg, tr, who, ask_text, said, calls, outside=False, client="", aid=None):
     """Antworten im Hintergrund prüfen: schedules check_answer after a finished answer; never raises, never waits.
     Returns the id of the answer's mark (Nicht belegte Antworten markieren) when the page may ask for the result
@@ -428,8 +460,7 @@ async def check_answer(ccfg, tr, who, ask_text, said, results, outside=False, no
         done = _count.counts().get("pruefen", 0)
     if done >= CHECK_DAY:
         return case
-    res = "\n".join(r[:800] for r in results)
-    state = f"Frage: {str(ask_text or '')[:500]}\nWerkzeugergebnisse:\n{res}\nAntwort: {str(said or '')[:1500]}"
+    state = check_state(ask_text, said, results)
     try:
         ans = await vorrang.run("Antwort prüfen", lambda: ask(ccfg, "pruefen", state, quality_questions(), timeout=30))
     except (Unavailable, vorrang.Busy, ValueError):

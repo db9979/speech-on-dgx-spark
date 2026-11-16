@@ -822,12 +822,18 @@ DIRECT = (
     ("parcels", re.compile(r"(?i)\s*(wo (ist|sind|bleibt|bleiben) meine? pakete?|kommt heute (ein|mein) paket|"
                            r"(hab(e)? ich|kommen) (heute )?pakete?( unterwegs)?|meine pakete)" + _END)),
     # V01.0.358: only today's appointments (calendar_events without arguments = today, one day); "was steht heute
-    # an" stays with daily_briefing (BRIEFING_HINT)
+    # an" is daily_briefing (below)
     ("calendar_events", re.compile(r"(?i)\s*((welche|was für) termine (hab(e)? ich|stehen( heute)? an|gibt es)( heute)?|"
                                    r"hab(e)? ich heute (noch )?(einen |irgendwelche )?termine?|(meine|die) termine heute|"
                                    r"was steht heute (in |im )?(meinem )?kalender)" + _END)),
     # Issue 3 in spark-meldungen (V01.1.421): an order is confirmed by mail, so the panel searches the mails itself
     # (DIRECT_ARGS) instead of leaving it to a model that looked only in Finden and then made a mail up
+    # Antworten zuverlässiger 4 (issue 13 in spark-meldungen): the briefing asked for by name; the model's first round
+    # only picked daily_briefing (6.4 s in the car), so the panel fetches it itself. „Guten Morgen“ stays with the
+    # model (chat.MORNING forces the tool there), a greeting may also just be a greeting.
+    ("daily_briefing", re.compile(r"(?i)\s*((gib|sag|lies|zeig)( mir)? (bitte )?(mein(en)?|das|den) (tages|morgen)?"
+                                  r"(briefing|überblick)( für heute| von heute)?(\s*:[^?!]{0,60})?|(mein |das )?"
+                                  r"(tages|morgen)?briefing( für heute)?|was steht heute (so )?an)" + _END)),
     ("mail_search", re.compile(r"(?i)\s*(was (war|ist) (meine|die) (letzte|neueste) bestellung|(meine|die) letzten? "
                                r"bestellung(en)?|was hab(e)? ich (zuletzt|als letztes|kürzlich|neulich) bestellt|"
                                r"wann hab(e)? ich (zuletzt|das letzte mal) (etwas |was )?bestellt)" + _END)),

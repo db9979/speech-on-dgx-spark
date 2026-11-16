@@ -68,6 +68,28 @@ class Rules(unittest.TestCase):
         self.assertEqual(taten.check("Ich habe den Termin eingetragen und die Nachricht an Anna gesendet.",
                                      [{"art": "termin", "ok": True}], set()), [])
 
+    def test_promises_to_speak_up_later(self):
+        """Issue 14 in spark-meldungen: „… werde ich dich auf deinen Geräten warnen“ after only memory_save. A promise
+        to speak up later holds only when a reminder or a watch was set in this answer (taten.COVERS)."""
+        for text in ["Wenn für Langensteinbach Sturm vorhergesagt wird, werde ich dich auf deinen Geräten warnen.",
+                     "Ich werde dich rechtzeitig informieren.", "Ich sage dir Bescheid, sobald das Paket da ist.",
+                     "Dann gebe ich dir Bescheid.", "Ich melde mich, sobald es neue Mails gibt.",
+                     "Ich warne dich, wenn es regnet.", "I'll let you know when it arrives."]:
+            self.assertEqual(taten.claims(text), {"zusage"}, text)
+            self.assertEqual(taten.check(text, [], {"memory_save"}), ["zusage"], text)
+            merk = [{"art": "merken", "ok": True}]
+            self.assertEqual(taten.check(text, merk, {"memory_save"}), ["zusage"], text)   # noting it is no warning
+            for art in ("erinnerung", "aenderung"):   # a reminder or a watch keeps the promise
+                self.assertEqual(taten.check(text, [{"art": art, "ok": True}], set()), [], text)
+        for text in ["Soll ich dir Bescheid sagen, wenn es regnet?", "Ich kann dich nicht warnen.",
+                     "Möchtest du, dass ich dich warne?", "Wenn du willst, sage ich dir Bescheid.",
+                     "Die Wettervorschau warnt bei Sturm."]:
+            self.assertEqual(taten.claims(text), set(), text)
+        self.assertTrue(taten.backed("zusage", {"erinnerung"}))
+        self.assertFalse(taten.backed("zusage", {"merken"}))
+        self.assertIn("Erinnerung zu einer festen Zeit", taten.sentence("zusage", "missing"))
+        self.assertIn("reminder", taten.sentence("zusage", "missing", en=True))
+
     def test_announcements(self):
         # Qualitätstest V01.0.568: „Ich rufe das Timer-Werkzeug auf …“ in an answer without any tool
         for text in ["Ich rufe das Timer-Werkzeug auf, um die 5 Minuten zu starten.", "Ich stelle dir einen Timer auf 5 Minuten.",
@@ -140,6 +162,40 @@ class Chat(unittest.TestCase):
         self.assertIn("Das habe ich nicht ausgeführt.", said)
         # the same sentence before a call of that kind that worked is left out silently (chat.py)
         self.assertEqual(taten.check("Ich mache das Lied.", [{"art": "musik", "ok": True}], {"musik_machen"}), [])
+
+    def test_a_promise_without_a_reminder_is_not_said(self):
+        c = profile("Taten7")
+        said, _ = ask(c, "SAY |x| Gut. Ich sage dir Bescheid, sobald das Paket da ist.")
+        self.assertIn("Gut.", said)
+        self.assertNotIn("sobald das Paket", said)
+        self.assertIn(taten.SENTENCE["zusage"]["de"], said)
+
+    def test_a_weather_warning_wish_gets_the_panels_answer(self):
+        """Issue 14: „Warn mich, wenn es stürmisch wird“ is answered by the panel with what is true (proactive.py)."""
+        import profiles
+        import proactive
+        c = profile("Taten8")
+        uid = c.get("/api/whoami").json()["profile"]["id"]
+        wish = "SAY |x| Gut. Wenn Sturm kommt, werde ich dich warnen. Warn mich, wenn es in Karlsbad stürmisch wird."
+        self.assertTrue(proactive.warn_wish(wish))
+        for text in ["Warn mich nicht mehr bei Regen.", "Wie wird das Wetter?", "Warn mich, wenn der Regenschirm fehlt."]:
+            self.assertFalse(proactive.warn_wish(text), text)
+        try:
+            said, _ = ask(c, wish)
+            self.assertNotIn("werde ich dich warnen", said)
+            self.assertIn(proactive.WARN_SAY["admin"][0], said)   # Von selbst melden is off on the Spark
+            helpers.set_config(proactive=True, search_url="http://127.0.0.1:1/search", search=True)
+            self.assertIn(proactive.WARN_SAY["ort"][0], ask(c, wish)[0])   # no place yet
+            profiles.save_settings(uid, {"pro_place": "Karlsbad", "pro_weather": False})
+            said, _ = ask(c, wish)
+            self.assertIn(proactive.WARN_SAY["eingeschaltet"][0].format(at="18:00"), said)
+            self.assertIs(profiles.effective(uid)["pro_weather"], True)
+            self.assertIn(proactive.WARN_SAY["an"][0].format(at="18:00"), ask(c, wish)[0])
+            profiles.save_settings(uid, {"pro_on": False})
+            self.assertIn(proactive.WARN_SAY["profil"][0], ask(c, wish)[0])   # „Von selbst“ stays the person's choice
+            self.assertIs(profiles.effective(uid)["pro_on"], False)
+        finally:
+            helpers.set_config(proactive=False, search_url="", search=False)
 
     def test_announced_tool_without_a_call_is_not_said(self):
         c = profile("Taten4")
