@@ -3149,7 +3149,7 @@ Gilt bei: [Schritt 4](#kn-betrieb-s4)
 - Zustand → Logs → Diagnose: Zeilen nach Bereich, Fehler und Warnungen, mit festem Hinweis.
 - Zustand → Live: laufende Anfragen, Wächter-Entscheidungen und Dienste als Bild.
 - Zustand → Dienste: was der Dienst-Wächter prüft und die Ausfälle der letzten Tage.
-- Zustand → Modell-Rechner genau: Anfragen je Dienst mit Art, Stufe, Sekunden und Tokens (nie Inhalt), Sprachmodell innen (vLLM), GPU mit Drosselgrund, Speicher je Dienst, Verlauf und Ereignisse; ohne Pi misst das Panel selbst.
+- Zustand → Modell-Rechner genau: Anfragen je Dienst mit Art, Stufe, Sekunden und Tokens (nie Inhalt), Chat-Modell innen (vLLM), GPU mit Drosselgrund, Speicher je Dienst, Verlauf und Ereignisse; ohne Pi misst das Panel selbst.
 
 #### Im Code
 

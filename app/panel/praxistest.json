@@ -6367,7 +6367,7 @@
 "id": "P925",
 "v": 1484,
 "titel": "Modell-Rechner genau",
-"text": "Als Admin Zustand → Überblick, an der Karte des Modell-Rechners „Genauer“. Eine Frage im Chat stellen und gleich hinschauen: unter Anfragen steht eine Zeile „Sprachmodell · Gespräch · normal“ mit Sekunden und Tokens, nie der Text. Kacheln, Sprachmodell innen (KV-Cache, Prefix-Cache, MTP), GPU und Verlauf (20 min, 24 Std., 7 Tage) füllen sich; Zurück führt zum Überblick. Zustand → Live zeigt beim Sprachmodell „N laufen, M warten, X tok/s“.",
+"text": "Als Admin Zustand → Überblick, an der Karte des Modell-Rechners „Genauer“. Eine Frage im Chat stellen und gleich hinschauen: unter Anfragen steht eine Zeile „Sprachmodell · Gespräch · normal“ mit Sekunden und Tokens, nie der Text. Kacheln, Chat-Modell innen mit Namen des Modells (KV-Cache, Prefix-Cache, MTP), GPU und Verlauf (20 min, 24 Std., 7 Tage) füllen sich; Zurück führt zum Überblick. Zustand → Live zeigt beim Sprachmodell „N laufen, M warten, X tok/s“.",
 "thread": "Monitoring auf tars stark ausbauen",
 "test": "test_modellgenau.Seitenbild.test_page"
 },

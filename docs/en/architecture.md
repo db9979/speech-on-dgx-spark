@@ -3149,7 +3149,7 @@ Applies at: [step 4](#kn-betrieb-s4)
 - Status → Logs → Diagnosis: lines by area, errors and warnings, with a fixed hint.
 - Status → Live: running requests, guard decisions and services as a picture.
 - Status → Services: what the service watch looks at and the outages of the last days.
-- Status → Model computer in detail: requests per service with kind, stage, seconds and tokens (never content), the language model inside (vLLM), the GPU with its throttle reason, memory per service, history and events; without a Pi the panel looks itself.
+- Status → Model computer in detail: requests per service with kind, stage, seconds and tokens (never content), the chat model inside (vLLM), the GPU with its throttle reason, memory per service, history and events; without a Pi the panel looks itself.
 
 #### In the code
 

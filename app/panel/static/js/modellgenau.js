@@ -1,10 +1,10 @@
 // Zustand → Modell-Rechner genau (modellgenau.py, Dominik 2026-11-16 „Alles auf einmal umsetzen“): what the computer
 // with the models does right now: tiles, services with their slots, the requests (kind, stage, seconds, tokens; never
-// what was asked), the language model inside (vLLM), the GPU and the memory per service, the events and one curve of
+// what was asked), the chat model inside (vLLM), the GPU and the memory per service, the events and one curve of
 // 20 minutes, 24 hours or 7 days. Opened from the model computer's card under Rechner, from „Technische Details“ (one
 // Spark without a Pi) and by the way „Zustand → Modell-Rechner genau“. Every number and word through esc(); a poll
 // every 3 s while the page shows. Widths of bars are set through the CSSOM, never as inline style.
-let MG=null,MG_T=0,MG_ZEIT='20m',MG_INNEN='llm';
+let MG=null,MG_T=0,MG_ZEIT='20m';
 const MG_SERIEN=[['tok','tok/s','tok/s','mgs1'],['gpu','GPU %','GPU %','mgs2'],['warten',['wartende Anfragen','waiting requests'],null,'mgs3']];
 const mgN=(v,d=0)=>v==null?'–':(+v).toLocaleString(L==='en'?'en':'de',{maximumFractionDigits:d,minimumFractionDigits:0});
 const mgS=v=>v==null?'–':v<1?mgN(v*1000)+' ms':mgN(v,2)+' s';
@@ -40,11 +40,9 @@ function mgFertig(d){if(!d.fertig||!d.fertig.length)return `<div class="mut mgle
    <td>${mgNm(x,'art_name','art_en')}${x.kunde?' · '+esc(x.kunde):''}</td><td>${mgNm(x,'stufe_name','stufe_en')}</td><td>${mgN(x.s,1)} s</td>
    <td>${mgN(x.rein)}</td><td>${mgN(x.raus)}</td><td><span class="pill ${MG_ERG[x.ergebnis]||''}">${mgNm(x,'ergebnis_name','ergebnis_en')}</span></td></tr>`).join('')}</tbody></table></div>`}
 function mgRow(k,v,bar){return `<div class="mgrow"><span>${esc(k)}</span><b>${bar||''}${esc(v)}</b></div>`}
-function mgInnen(d){const ids=Object.keys(d.innen);if(!ids.length)return `<div class="mut mgleer">${esc(t('Keine vLLM-Engine läuft gerade.','No vLLM engine runs right now.'))}</div>`;
-  if(!d.innen[MG_INNEN])MG_INNEN=ids[0];const x=d.innen[MG_INNEN];
-  const seg=ids.length>1?`<div class="segc mgseg">${ids.map(i=>`<button type="button" data-mgi="${esc(i)}" class="${i===MG_INNEN?'on':''}">${mgNm(d.innen[i],'name','en')}</button>`).join('')}</div>`:'';
+function mgInnen(d){const x=d.innen;if(!x)return `<div class="mut mgleer">${esc(t('Das Chat-Modell läuft gerade nicht.','The chat model is not running right now.'))}</div>`;
   const k=x.kanarie;
-  return seg+mgRow(t('Schreiben (Ausgabe)','Writing (output)'),x.raus_s==null?'–':mgN(x.raus_s,1)+' tok/s')
+  return mgRow(t('Modell','Model'),(L==='en'?x.modell_en:x.modell)||'–')+mgRow(t('Schreiben (Ausgabe)','Writing (output)'),x.raus_s==null?'–':mgN(x.raus_s,1)+' tok/s')
     +mgRow(t('Lesen (Prefill)','Reading (prefill)'),x.rein_s==null?'–':mgN(x.rein_s)+' tok/s')
     +mgRow(t('läuft / wartet in der Engine','running / waiting in the engine'),mgN(x.laufen)+' / '+mgN(x.warten))
     +mgRow(t('Erstes Token p50 / p95','First token p50 / p95'),mgS(x.ttft_p50)+' / '+mgS(x.ttft_p95))
@@ -75,15 +73,34 @@ function mgEreignisse(d){if(!d.ereignisse.length)return `<div class="mut mgleer"
   return d.ereignisse.map(e=>`<div class="mgev"><time>${esc(new Date(e.t*1000).toLocaleString(L==='en'?'en':'de',{weekday:'short',hour:'2-digit',minute:'2-digit'}))}</time>
     <span>${esc((e.dienst&&e.dienst[0]?(L==='en'?e.dienst[1]:e.dienst[0])+': ':'')+(L==='en'?e.name[1]:e.name[0])+(e.n!=null?' ('+e.n+')':''))}</span></div>`).join('')}
 function mgVerlauf(){return `<div class="segc mgseg">${[['20m','20 min','20 min'],['24h','24 Std.','24 h'],['7d','7 Tage','7 days']].map(z=>`<button type="button" data-mgz="${z[0]}" class="${z[0]===MG_ZEIT?'on':''}">${esc(t(z[1],z[2]))}</button>`).join('')}</div>
-  <svg class="mgchart" id="zmgchart" viewBox="0 0 800 140" preserveAspectRatio="none" aria-hidden="true"></svg>
-  <div class="mgleg">${MG_SERIEN.map(s=>`<span><i class="${s[3]}"></i>${esc(Array.isArray(s[1])?t(...s[1]):s[1])}</span>`).join('')}</div>`}
-// three lines on one chart, each scaled to its own top (a tooltip-free overview; the numbers stand in the tiles)
-function mgChart(svg,K){if(!svg)return;const W=800,H=140,n=K.length;svg.textContent='';
-  for(const y of [35,70,105]){const l=document.createElementNS('http://www.w3.org/2000/svg','line');l.setAttribute('x1',0);l.setAttribute('x2',W);l.setAttribute('y1',y);l.setAttribute('y2',y);l.setAttribute('class','mggrid');svg.appendChild(l)}
-  if(n<2)return;
-  for(const [k,,,cls] of MG_SERIEN){const vs=K.map(p=>p[k]),max=Math.max(k==='gpu'?100:1,...vs.filter(v=>v!=null));let d='',pen=false;
-    vs.forEach((v,i)=>{if(v==null){pen=false;return}const x=(i/(n-1))*W,y=H-4-(v/max)*(H-12);d+=(pen?'L':'M')+x.toFixed(1)+' '+y.toFixed(1);pen=true});
-    const p=document.createElementNS('http://www.w3.org/2000/svg','path');p.setAttribute('d',d);p.setAttribute('class','mgline '+cls);svg.appendChild(p)}}
+  <div class="mut mgrd" id="zmgrd"></div><div class="mgcharts" id="zmgcharts"></div>`}
+// one row per series with its own scale: name, the value now and the top of the scale beside it; a shared time axis;
+// pointing at the curves shows the values at that moment (Dominik 2026-11-16 „hier sehe ich keine werte“)
+const mgFmt=(k,v)=>v==null?'–':k==='gpu'?mgN(v)+' %':k==='tok'?mgN(v)+' tok/s':mgN(v,1);
+const mgZeit=s=>new Date(s*1000).toLocaleString(L==='en'?'en':'de',MG_ZEIT==='7d'?{weekday:'short',hour:'2-digit',minute:'2-digit'}:{hour:'2-digit',minute:'2-digit'});
+const MG_NS='http://www.w3.org/2000/svg';
+function mgSvg(tag,a){const e=document.createElementNS(MG_NS,tag);for(const k in a)e.setAttribute(k,a[k]);return e}
+let MG_ZEIGER=null;
+function mgChart(box,K){if(!box)return;const W=800,H=60,n=K.length;
+  if(n<2){setHtml(box,`<div class="mut mgleer">${esc(t('Noch zu wenige Werte für einen Verlauf.','Too few values for a history yet.'))}</div>`);return}
+  const last=k=>{for(let i=n-1;i>=0;i--)if(K[i][k]!=null)return K[i][k];return null};
+  setHtml(box,MG_SERIEN.map(([k,de,,cls])=>{const vs=K.map(p=>p[k]).filter(v=>v!=null),top=k==='gpu'?100:Math.max(1,...vs);
+    return `<div class="mgcr"><div class="mgcl"><b><i class="${cls}"></i>${esc(Array.isArray(de)?t(...de):de)}</b><span>${esc(t('jetzt ','now '))}<b>${esc(mgFmt(k,last(k)))}</b></span><span class="mut">${esc(t('Skala bis ','scale to '))+esc(mgFmt(k,top))}</span></div>
+      <svg class="mgchart" data-k="${k}" data-top="${top}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"></svg></div>`}).join('')
+    +`<div class="mgcr"><span></span><div class="mgachse"><span>${esc(mgZeit(K[0].t))}</span><span>${esc(mgZeit(K[Math.floor((n-1)/2)].t))}</span><span>${esc(t('jetzt','now'))}</span></div></div>`);
+  box.querySelectorAll('svg[data-k]').forEach(svg=>{const k=svg.dataset.k,top=+svg.dataset.top,cls=MG_SERIEN.find(x=>x[0]===k)[3];
+    for(const y of [1,H/2,H-1])svg.appendChild(mgSvg('line',{x1:0,x2:W,y1:y,y2:y,class:'mggrid'}));
+    let d='',pen=false;K.forEach((p,i)=>{const v=p[k];if(v==null){pen=false;return}const x=i/(n-1)*W,y=H-2-Math.min(1,v/top)*(H-4);d+=(pen?'L':'M')+x.toFixed(1)+' '+y.toFixed(1);pen=true});
+    svg.appendChild(mgSvg('path',{d,class:'mgline '+cls}));svg.appendChild(mgSvg('line',{x1:0,x2:0,y1:0,y2:H,class:'mgcur',visibility:'hidden'}))});
+  const zeige=i=>{const rd=$('zmgrd');if(i==null||!K[i]){box.querySelectorAll('.mgcur').forEach(l=>l.setAttribute('visibility','hidden'));
+      if(rd)rd.textContent=t('Zeig auf den Verlauf: dann stehen hier die Werte zu dem Zeitpunkt.','Point at the history to see the values at that moment.');return}
+    const x=i/(n-1)*W;box.querySelectorAll('.mgcur').forEach(l=>{l.setAttribute('x1',x);l.setAttribute('x2',x);l.setAttribute('visibility','visible')});
+    if(rd)rd.textContent=[new Date(K[i].t*1000).toLocaleString(L==='en'?'en':'de',MG_ZEIT==='20m'?{hour:'2-digit',minute:'2-digit',second:'2-digit'}:MG_ZEIT==='7d'?{weekday:'short',hour:'2-digit',minute:'2-digit'}:{hour:'2-digit',minute:'2-digit'}),
+      mgFmt('tok',K[i].tok),'GPU '+mgFmt('gpu',K[i].gpu),mgFmt('warten',K[i].warten)+t(' wartend',' waiting')].join(' · ')};
+  box.onpointermove=e=>{const s=box.querySelector('svg[data-k]');if(!s)return;const r=s.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right){MG_ZEIGER=null;zeige(null);return}
+    MG_ZEIGER=(e.clientX-r.left)/r.width;zeige(Math.round(MG_ZEIGER*(n-1)))};
+  box.onpointerleave=()=>{MG_ZEIGER=null;zeige(null)};
+  zeige(MG_ZEIGER==null?null:Math.round(MG_ZEIGER*(n-1)))}
 function mgDraw(){const p=$('zmgdet');if(!p||p.hidden)return;const b=$('zmgbody'),d=MG;
   if(!d){setHtml(b,`<div class="card mut">${esc(t('Lädt …','Loading …'))}</div>`);return}
   if(!d.da){setHtml(b,`<div class="card mut">${esc(d.remote?t('Der Modell-Rechner antwortet gerade nicht. Seine Werte kommen, sobald er wieder antwortet.','The model computer does not answer right now. Its values come once it answers again.')
@@ -102,16 +119,15 @@ function mgDraw(){const p=$('zmgdet');if(!p||p.hidden)return;const b=$('zmgbody'
      <div class="card mgwide"><h2>${esc(t('Dienste und Anfragen','Services and requests'))}<span class="mut">${esc(t('Plätze: blau läuft, gelb wartet','Slots: blue runs, yellow waits'))}</span></h2>${mgDienste(d)}
       <h3 class="sec">${esc(t('Laufende und wartende Anfragen','Running and waiting requests'))}<span class="mut">${esc(t('ohne Inhalt, ohne Profil','without content, without profile'))}</span></h3>${mgAnfragen(d)}
       <h3 class="sec">${esc(t('Zuletzt fertig','Finished lately'))}<span class="mut">${esc(t('Sprachmodell, mit Ergebnis','language model, with result'))}</span></h3>${mgFertig(d)}</div>
-     <div class="card"><h2>${esc(t('Sprachmodell innen','Language model inside'))}<span class="mut">vLLM /metrics</span></h2>${mgInnen(d)}</div>
+     <div class="card"><h2>${esc(t('Chat-Modell innen','Chat model inside'))}<span class="mut">vLLM /metrics</span></h2>${mgInnen(d)}</div>
      <div class="card"><h2>GPU<span class="mut">${esc(t('nvidia-smi, nur lesen','nvidia-smi, read only'))}</span></h2>${mgGpu(d)}</div>
      <div class="card"><h2>${esc(t('Ereignisse','Events'))}<span class="mut">${esc(t('feste Wörter, wie im Log','fixed words, as in the log'))}</span></h2><div>${mgEreignisse(d)}</div></div>
      <div class="card mgwide"><h2>${esc(t('Verlauf','History'))}</h2>${mgVerlauf()}</div>
     </div>`);
   b.querySelectorAll('[data-w]').forEach(e=>{e.style.width=e.dataset.w+'%'});
   b.querySelectorAll('svg[data-serie]').forEach(v=>{const k=v.dataset.serie;if(k)spark(v,K.map(x=>x[k]),v.dataset.max?+v.dataset.max:undefined)});
-  mgChart($('zmgchart'),K);
-  b.querySelectorAll('[data-mgz]').forEach(x=>x.onclick=()=>{MG_ZEIT=x.dataset.mgz;mgLoad()});
-  b.querySelectorAll('[data-mgi]').forEach(x=>x.onclick=()=>{MG_INNEN=x.dataset.mgi;mgDraw()})}
+  mgChart($('zmgcharts'),K);
+  b.querySelectorAll('[data-mgz]').forEach(x=>x.onclick=()=>{MG_ZEIT=x.dataset.mgz;mgLoad()})}
 {const p=$('zmgdet');
  if(p){$('zmgback').onclick=mgClose;$('zmggo').onclick=mgOpen;
   $('mon').addEventListener('wayopen',e=>{if(p.contains(e.target))mgOpen();else mgClose()});

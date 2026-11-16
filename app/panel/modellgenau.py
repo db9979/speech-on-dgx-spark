@@ -437,13 +437,12 @@ def ansicht(zeit="20m", cfg=None):
                      art_en=ARTEN_NAMEN.get(x["art"], ARTEN_NAMEN[""])[1], stufe_name=STUFEN[x["stufe"]][0], stufe_en=STUFEN[x["stufe"]][1],
                      tok_s=round(x["raus"] / x["s"], 1) if x["z"] == "laeuft" and x.get("raus") and x["s"] >= 0.5 else None)
                 for x in m["anfragen"]]
-    innen = {}
-    for d, v in m["vllm"].items():
-        innen[d] = dict({k: v.get(k) for k in ("laufen", "warten", "kv", "kv_tokens", "verdraengt")}, **(raten.get(d) or {}),
-                        name=DIENSTE[d][0], en=DIENSTE[d][1])
-    if "llm" in innen:
-        innen["llm"]["kontext"] = _kontext(cfg)
-        innen["llm"]["kanarie"] = m.get("kanarie")
+    innen = None     # only the chat model (Dominik 2026-11-16 „nicht diversifizieren“): its engine's counters
+    v = m["vllm"].get("llm")
+    if v is not None:
+        md = _modell("llm", cfg)
+        innen = dict({k: v.get(k) for k in ("laufen", "warten", "kv", "kv_tokens", "verdraengt")}, **(raten.get("llm") or {}),
+                     modell=md[0], modell_en=md[1], kontext=_kontext(cfg), kanarie=m.get("kanarie"))
     g = dict(m["gpu"], **{k: (gpu or {}).get(k) for k in ("name", "util", "temp", "power", "clock", "grenze")})
     g["drossel_namen"] = [list(DROSSEL_NAMEN[w]) for w in g.get("drossel") or [] if w in DROSSEL_NAMEN]
     g["nvrm"] = m.get("nvrm")

@@ -100,7 +100,8 @@ class Fern(unittest.TestCase):
         self.runde(1_800_000_000, 1000.0)
         self.runde(1_800_000_003, 1003.0, raus=10600, treffer=1800, fragen=2000)
         a = modellgenau.ansicht("20m", {})
-        llm = a["innen"]["llm"]
+        llm = a["innen"]
+        self.assertEqual(set(a["innen"]) >= {"modell", "kontext", "kanarie"}, True)   # only the chat model, with its name
         self.assertEqual(llm["raus_s"], 200.0)                 # 600 tokens in 3 s
         self.assertEqual(llm["prefix_pct"], 90.0)              # (1800-900)/(2000-1000) over the window
         self.assertEqual(a["jetzt"]["laufen"], 4)
@@ -514,7 +515,13 @@ class Seitenbild(unittest.TestCase):
                     self.assertEqual(await pg.evaluate("document.querySelectorAll('#zmgbody .mgtab')[0].querySelectorAll('tbody tr').length"), 3)
                     self.assertEqual(await pg.evaluate("document.querySelectorAll('#zmgbody .mgtab')[1].querySelectorAll('tbody tr').length"), 3)
                     self.assertTrue(await pg.evaluate("[...document.querySelectorAll('#zmgbody [data-w]')].every(e=>e.style.width.endsWith('%'))"))
-                    self.assertGreaterEqual(await pg.evaluate("document.querySelectorAll('#zmgchart path').length"), 2)
+                    self.assertEqual(await pg.evaluate("document.querySelectorAll('#zmgcharts svg path').length"), 3)
+                    self.assertIn("tok/s", await pg.inner_text("#zmgcharts"))          # the value now and the scale beside
+                    box = await pg.evaluate("(()=>{const s=document.querySelector('#zmgcharts svg');s.scrollIntoView({block:'center'});"
+                                            "const r=s.getBoundingClientRect();"
+                                            "return [r.left+r.width*0.99,r.top+r.height/2]})()")
+                    await pg.mouse.move(*box)
+                    self.assertIn("tok/s", await pg.inner_text("#zmgrd"))              # pointing shows the values
                     self.assertLessEqual(await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth"), 0, w)
                     if os.environ.get("MG_SHOT"):
                         await pg.screenshot(path=os.path.join(os.environ["MG_SHOT"], f"modellgenau-{w}.png"), full_page=True)

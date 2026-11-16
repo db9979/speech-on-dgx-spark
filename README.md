@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.487** Model computer in detail: "Chat model inside" shows only the chat model with its name, the history shows values, scales and a time axis
 - **V01.1.486** Own models with a full recipe: set context, memory, MTP and parsers, then take it over as a catalog line
 - **V01.1.485** Models in GiB instead of a share: the same catalog fits a DGX Spark and later a DGX Station
 - **V01.1.484** Model computer in detail: requests without content, queues, the language model inside, GPU with throttling and refused memory, finished requests with their result, "hangs" and history on one page under Status, also for the Spark alone
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.480** Dungeon review 15 Nov, point 10: dungeon.py and dungeon.js split, no visible change: the 78 endpoints in their own file with their own router, the admin's rules page in its own script
 - **V01.1.479** RED FIX: calendar page test no longer flaky
 - **V01.1.478** RED-FIX: the notes bubble test measures in one step
-- **V01.1.477** Dungeon review 15 Nov, point 7: the new round step by step (world, story, the round, your hero; a bar on top, "Next" and "Back", "Start the round" only at the hero, without a title back to step 3) and the card "Like last time": one tap starts a freely told round with world, tone, times, way of telling, rule depth and reading aloud of the last round and its hero (dungeon.quick, fixed rules, only free living heroes); the healer test no longer depends on the clock (P919)
 
 
 

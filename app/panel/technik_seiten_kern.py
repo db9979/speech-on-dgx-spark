@@ -1647,10 +1647,10 @@ SEITEN = {
             ("Zustand → Dienste: was der Dienst-Wächter prüft und die Ausfälle der letzten Tage.",
              "Status → Services: what the service watch looks at and the outages of the last days."),
             ("Zustand → Modell-Rechner genau: Anfragen je Dienst mit Art, Stufe, Sekunden und Tokens (nie Inhalt), "
-             "Sprachmodell innen (vLLM), GPU mit Drosselgrund, Speicher je Dienst, Verlauf und Ereignisse; ohne Pi "
+             "Chat-Modell innen (vLLM), GPU mit Drosselgrund, Speicher je Dienst, Verlauf und Ereignisse; ohne Pi "
              "misst das Panel selbst.",
              "Status → Model computer in detail: requests per service with kind, stage, seconds and tokens (never "
-             "content), the language model inside (vLLM), the GPU with its throttle reason, memory per service, "
+             "content), the chat model inside (vLLM), the GPU with its throttle reason, memory per service, "
              "history and events; without a Pi the panel looks itself."),
         ],
         "mehr": [
