@@ -199,7 +199,7 @@ OHNE = {
         "keep_days", "live", "live_monitor", "live_names", "live_screens", "max_mb", "trace",
     ),
     "memory": (
-        "guard", "reserve_gib",
+        "guard", "notbremse", "notbremse_gib", "reserve_gib",
     ),
     "panel": (
         "allow_lan", "host", "notaus_auto", "notaus_profiles", "session_days", "trust_days", "trusted_proxies",

@@ -3021,7 +3021,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Modell-Rechner genau",
 "title": "Modell-Rechner genau",
-"text": "g kein Token, meldet es „hängt“. Rechnet die Engine 3 Blicke lang mehr Anfragen, als das Tor kennt, ist das ein Ereignis; die Ablehnungen von GPU-Speicher zählt modellblick.nvrm aus dem Kernel-Log, höchstens alle 60 s, ohne eine Zeile zu behalten."
+"text": "g kein Token, meldet es „hängt“. Rechnet die Engine 3 Blicke lang mehr Anfragen, als das Tor kennt, ist das ein Ereignis; die Ablehnungen von GPU-Speicher zählt modellblick.nvrm aus dem Kernel-Log, höchstens alle 60 s, ohne eine Zeile zu behalten. Die Notbremse (memory.notbremse, aus) greift nur, wo CPU und GPU einen Speicher teilen: unter der Grenze nimmt das Tor nichts Neues an und beendet alle 2 s die älteste gestreamte Antwort, bis 2 GiB mehr frei sind."
 },
 {
 "lang": "de",
@@ -16869,7 +16869,7 @@
 "file": "Sicherheit und Betrieb",
 "head": "Modell-Rechner genau (seit V01.1.484)",
 "title": "Modell-Rechner genau (seit V01.1.484)",
-"text": "1-16 „alles“): Unter den laufenden Anfragen stehen die letzten 20 fertigen des Sprachmodells mit Ergebnis (fertig, abgebrochen, Zeit abgelaufen, Fehler). Bei einem Spark-Client steht in der Zeile der Name, den du ihm gegeben hast, bei eigenen Profilen nie eine Person. Geht ein Gerät mitten in der Antwort weg, schließt das LLM-Tor die Verbindung zur Engine, und vLLM hört auf zu rechnen; rechnet die Engine trotzdem 3 Blicke lang mehr Anfragen, als das Tor kennt, gibt es das Ereignis „rechnet an Anfragen, die niemand mehr will“. Laufen Anfragen, aber die Engine liest und schreibt 90 s lang kein Token, zeigt die Seite beim Sprachmodell „hängt“; neu starten tut sie nichts, das bleibt beim Schalter *Einstellungen → Spark → Betrieb → Hängende Dienste neu starten*. Unter GPU zählt „Speicher verweigert (Treiber)“ die NVRM-Zeilen im Kernel-Log, die eine Speicheranfrage der GPU ablehnen (letzte Stunde, letzte 24 Stunden, höchstens jede Minute gezählt, keine Zeile wird behalten). - Mit Pi und tars: Der Wärter auf dem Modell-Rechner misst bei jedem Statusabruf mit (Block betrieb), signiert wie bisher; er fragt nur die eigenen Dienste und Engines auf 127.0.0.1 (/health, /metrics), je Abfrage höc"
+"text": "1-16 „alles“): Unter den laufenden Anfragen stehen die letzten 20 fertigen des Sprachmodells mit Ergebnis (fertig, abgebrochen, Zeit abgelaufen, Fehler). Bei einem Spark-Client steht in der Zeile der Name, den du ihm gegeben hast, bei eigenen Profilen nie eine Person. Geht ein Gerät mitten in der Antwort weg, schließt das LLM-Tor die Verbindung zur Engine, und vLLM hört auf zu rechnen; rechnet die Engine trotzdem 3 Blicke lang mehr Anfragen, als das Tor kennt, gibt es das Ereignis „rechnet an Anfragen, die niemand mehr will“. Laufen Anfragen, aber die Engine liest und schreibt 90 s lang kein Token, zeigt die Seite beim Sprachmodell „hängt“; neu starten tut sie nichts, das bleibt beim Schalter *Einstellungen → Spark → Betrieb → Hängende Dienste neu starten*. Unter GPU zählt „Speicher verweigert (Treiber)“ die NVRM-Zeilen im Kernel-Log, die eine Speicheranfrage der GPU ablehnen (letzte Stunde, letzte 24 Stunden, höchstens jede Minute gezählt, keine Zeile wird behalten). - Notbremse (seit V01.1.490, alzeo Punkt 4, *Einstellungen → Spark → Betrieb → Notbremse*, aus; Grenze *Notbremse unter*, 6 GiB, 2 bis 32): Nur wo CPU und GPU einen Speicher teilen (DGX Spark, hardware.profil(); auf e"
 },
 {
 "lang": "de",
@@ -16877,7 +16877,15 @@
 "file": "Sicherheit und Betrieb",
 "head": "Modell-Rechner genau (seit V01.1.484)",
 "title": "Modell-Rechner genau (seit V01.1.484)",
-"text": "hstens 0,5 s, alles zusammen höchstens 2 s. Kein neuer Port, nichts Neues im Netz. - Spark allein (ohne Pi): Das Panel misst selbst auf demselben Rechner mit modellblick.messen; die Seite sieht gleich aus. - Auch woanders: Zustand → Live zeigt beim Sprachmodell und beim Modell-Rechner „N laufen, M warten, X tok/s“, die Steuerzentrale am HDMI-Bildschirm die laufenden Anfragen und Tokens pro Sekunde. - Endpunkt: GET /api/admin/modellgenau?zeit=20m|24h|7d (Admin, Rate-Limit „modellgenau“, nur lesen)."
+"text": "iner DGX Station tut sie nichts). Sinkt der freie Speicher (MemAvailable) unter die Grenze, nimmt das LLM-Tor keine neuen Anfragen an (503 „memory“) und beendet alle 2 s die älteste laufende gestreamte Antwort, bis wieder 2 GiB mehr als die Grenze frei sind; so beendet DGX OS keine Programme. Die Seite zeigt dann den Hinweis, das Ereignis „Notbremse greift“, beim Chat-Modell die Zahl der beendeten Antworten und unter „Zuletzt fertig“ das Ergebnis „Notbremse“. Ändern startet keinen Dienst neu. Im Log nur llmtor: bremse an|aus|abgelehnt|beendet. - Mit Pi und tars: Der Wärter auf dem Modell-Rechner misst bei jedem Statusabruf mit (Block betrieb), signiert wie bisher; er fragt nur die eigenen Dienste und Engines auf 127.0.0.1 (/health, /metrics), je Abfrage höchstens 0,5 s, alles zusammen höchstens 2 s. Kein neuer Port, nichts Neues im Netz. - Spark allein (ohne Pi): Das Panel misst selbst auf demselben Rechner mit modellblick.messen; die Seite sieht gleich aus. - Auch woanders: Zustand → Live zeigt beim Sprachmodell und beim Modell-Rechner „N laufen, M warten, X tok/s“, die Steuerzentrale am HDMI-Bildschirm die laufenden Anfragen und Tokens pro Sekunde. - Endpunkt: GET /api/admin/mode"
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Modell-Rechner genau (seit V01.1.484)",
+"title": "Modell-Rechner genau (seit V01.1.484)",
+"text": "llgenau?zeit=20m|24h|7d (Admin, Rate-Limit „modellgenau“, nur lesen)."
 },
 {
 "lang": "de",
@@ -21045,7 +21053,7 @@
 "file": "Architecture and data flow",
 "head": "Model computer in detail",
 "title": "Model computer in detail",
-"text": " than the gate knows for 3 looks, that is an event; modellblick.nvrm counts the GPU memory refusals in the kernel log, at most every 60 s, without keeping a line."
+"text": " than the gate knows for 3 looks, that is an event; modellblick.nvrm counts the GPU memory refusals in the kernel log, at most every 60 s, without keeping a line. The emergency brake (memory.notbremse, off) acts only where CPU and GPU share one memory: below the limit the gate takes nothing new and ends the oldest streamed answer every 2 s until 2 GiB more are free."
 },
 {
 "lang": "en",
@@ -34565,7 +34573,7 @@
 "file": "Security and operation",
 "head": "Model computer in detail (since V01.1.484)",
 "title": "Model computer in detail (since V01.1.484)",
-"text": "language model's last 20 finished ones with their result (done, cancelled, timed out, error). For a Spark client the row shows the name you gave it, for own profiles never a person. When a device leaves in the middle of an answer, the LLM-Tor closes the connection to the engine and vLLM stops computing; if the engine still computes more requests than the gate knows for 3 looks, there is the event \"computes requests nobody waits for\". When requests run but the engine reads and writes no token for 90 s, the page shows \"hängt\" at the language model; it restarts nothing, that stays with the switch *Settings → Spark → Operation → Restart hanging services*. Under GPU, \"Memory refused (driver)\" counts the NVRM lines in the kernel log that refuse a GPU memory request (last hour, last 24 hours, counted at most every minute, no line is kept). - With Pi and tars: the warden on the model computer measures along with each status call (block betrieb), signed as before; it asks only its own services and engines on 127.0.0.1 (/health, /metrics), at most 0.5 s per query, at most 2 s in all. No new port, nothing new on the network. - Spark alone (without a Pi): the panel measures itself on the same "
+"text": "language model's last 20 finished ones with their result (done, cancelled, timed out, error). For a Spark client the row shows the name you gave it, for own profiles never a person. When a device leaves in the middle of an answer, the LLM-Tor closes the connection to the engine and vLLM stops computing; if the engine still computes more requests than the gate knows for 3 looks, there is the event \"computes requests nobody waits for\". When requests run but the engine reads and writes no token for 90 s, the page shows \"hängt\" at the language model; it restarts nothing, that stays with the switch *Settings → Spark → Operation → Restart hanging services*. Under GPU, \"Memory refused (driver)\" counts the NVRM lines in the kernel log that refuse a GPU memory request (last hour, last 24 hours, counted at most every minute, no line is kept). - Emergency brake (since V01.1.490, alzeo point 4, *Settings → Spark → Operation → Emergency brake*, off; limit *Emergency brake below*, 6 GiB, 2 to 32): only where CPU and GPU share one memory (DGX Spark, hardware.profil(); on a DGX Station it does nothing). When the free memory (MemAvailable) drops below the limit, the LLM-Tor takes no new requests (5"
 },
 {
 "lang": "en",
@@ -34573,7 +34581,7 @@
 "file": "Security and operation",
 "head": "Model computer in detail (since V01.1.484)",
 "title": "Model computer in detail (since V01.1.484)",
-"text": "computer with modellblick.messen; the page looks the same. - Elsewhere too: Status → Live shows \"N running, M waiting, X tok/s\" at the language model and the model computer, the control center on the HDMI screen the running requests and tokens per second. - Endpoint: GET /api/admin/modellgenau?zeit=20m|24h|7d (admin, rate limit \"modellgenau\", read only)."
+"text": "03 \"memory\") and ends the oldest running streamed answer every 2 s until 2 GiB more than the limit are free again; so DGX OS kills no programs. The page then shows the note, the event \"emergency brake on\", the number of ended answers at the chat model and the result \"emergency brake\" under \"Finished lately\". Changing it restarts no service. The log only says llmtor: bremse an|aus|abgelehnt|beendet. - With Pi and tars: the warden on the model computer measures along with each status call (block betrieb), signed as before; it asks only its own services and engines on 127.0.0.1 (/health, /metrics), at most 0.5 s per query, at most 2 s in all. No new port, nothing new on the network. - Spark alone (without a Pi): the panel measures itself on the same computer with modellblick.messen; the page looks the same. - Elsewhere too: Status → Live shows \"N running, M waiting, X tok/s\" at the language model and the model computer, the control center on the HDMI screen the running requests and tokens per second. - Endpoint: GET /api/admin/modellgenau?zeit=20m|24h|7d (admin, rate limit \"modellgenau\", read only)."
 },
 {
 "lang": "en",

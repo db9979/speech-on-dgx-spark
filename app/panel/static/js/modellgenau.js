@@ -32,7 +32,7 @@ function mgAnfragen(d){if(!d.anfragen.length)return `<div class="mut mgleer">${e
   ${d.anfragen.map((x,i)=>`<tr${x.z==='wartet'?' class="mgwartet"':''}><td>${i+1}</td><td>${mgNm(x,'dienst','dienst_en')}</td><td>${mgNm(x,'art_name','art_en')}${x.folge?esc(t(' · Folgesatz',' · follow-up')):''}${x.kunde?' · '+esc(x.kunde):''}</td>
    <td><span class="${x.stufe===2?'mgst mgst2':'mgst'}">${mgNm(x,'stufe_name','stufe_en')}</span></td><td>${x.z==='wartet'?esc(t('wartet ','waits '))+mgN(x.s,1)+' s':mgN(x.s,1)+' s'}</td>
    <td>${mgN(x.rein)}</td><td>${mgN(x.raus)}</td><td>${mgN(x.tok_s)}</td></tr>`).join('')}</tbody></table></div>`}
-const MG_ERG={fertig:'ok',abgebrochen:'warn',zeit:'bad',fehler:'bad'};
+const MG_ERG={fertig:'ok',abgebrochen:'warn',zeit:'bad',fehler:'bad',bremse:'bad'};
 function mgFertig(d){if(!d.fertig||!d.fertig.length)return `<div class="mut mgleer">${esc(t('Noch keine fertige Anfrage.','No finished request yet.'))}</div>`;
   return `<div class="mgtab"><table><thead><tr><th>${esc(t('Ende','End'))}</th><th>${esc(t('Art','Kind'))}</th><th>${esc(t('Stufe','Stage'))}</th><th>${esc(t('Dauer','Duration'))}</th>
   <th>${esc(t('Tokens rein','Tokens in'))}</th><th>${esc(t('Tokens raus','Tokens out'))}</th><th>${esc(t('Ergebnis','Result'))}</th></tr></thead><tbody>
@@ -53,6 +53,7 @@ function mgInnen(d){const x=d.innen;if(!x)return `<div class="mut mgleer">${esc(
     +mgRow(t('Fertige Anfragen (5 min)','Finished requests (5 min)'),mgN(x.fertig_5m))
     +mgRow(t('Verdrängt (Preemption) seit Start','Preempted since start'),mgN(x.verdraengt))
     +(k?mgRow(t('Probeantwort','Test answer'),(k.status==='ready'?t('klappt','works'):k.status==='error'?t('klappt nicht','fails'):k.status==='loading'?t('lädt','loading'):'–')+(k.ms!=null?' · '+mgN(k.ms)+' ms':'')):'')
+    +(x.bremse&&(x.bremse.an||x.bremse.n)?mgRow(t('Notbremse','Emergency brake'),(x.bremse.an?t('greift gerade · ','on now · '):'')+t(`${mgN(x.bremse.n)} Antworten beendet seit Start`,`${mgN(x.bremse.n)} answers ended since start`)):'')
     +(x.kontext?mgRow(t('Kontext','Context'),t(`höchstens ${mgN(x.kontext)} Token`,`at most ${mgN(x.kontext)} tokens`)):'')}
 const MG_FARBEN=['mgc1','mgc2','mgc3','mgc4','mgc5','mgc6','mgc7'];
 function mgGpu(d){const g=d.gpu||{},gr=g.grenze&&g.grenze.wort&&g.grenze.wort!=='aus'?g.grenze.wort:'';

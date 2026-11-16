@@ -36,6 +36,10 @@ This service sits on llm.port (31006, on the network like the speech APIs) and a
 - "hängt" (haengt_loop): requests run, but the engine wrote and read no token for HAENGT_S seconds; /health says
   "haengt": true (shown only; restarting stays with the API-Wächter, Einstellungen → Spark → Betrieb → Hängende Dienste
   neu starten).
+- Notbremse (memory.notbremse, off by default; only where CPU and GPU share one memory, hardware.profil()
+  "gemeinsam"): below memory.notbremse_gib GiB MemAvailable new requests get 503 "memory" and the longest running
+  stream is ended, one every BREMSE_S seconds, before DGX OS starts killing processes; it lets go again
+  BREMSE_LUFT_GIB above the limit.
 Journal lines start with "llmtor:" and hold only fixed words and numbers, never a prompt or an answer.
 """
 import asyncio
@@ -52,12 +56,14 @@ from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.responses import JSONResponse, Response, StreamingResponse
 
 import einordnung
+import hardware
 import mandanten
 import modellblick
 import modelle
 from textnorm import defuse_marks
 from common import (BILD_MAX, dauerlauf, STAGE_LOW, BodyLimit, GateFull, KeyedCORS, PrioGate, api_key_dependency, client_ok, check_memory,
-                    ENTWICKLER_PLAETZE, LLM_ALIAS, entwickler_ok, inside, load_config, outside_view, quiet_access_log, stage_of)
+                    ENTWICKLER_PLAETZE, LLM_ALIAS, entwickler_ok, inside, load_config, mem_available_gib, outside_view, quiet_access_log,
+                    stage_of)
 
 UNIT_ENGINE, UNIT_SEHEN, UNIT_HELFER = "speech-spark-llm", "speech-spark-sehen", "speech-spark-helfer"
 TOP_MAX = modelle.LOGPROBS_MAX  # top_logprobs the engine is started with (--max-logprobs)
@@ -70,7 +76,9 @@ HELFER_START_S = 600           # the helper engine's start in the background is 
 HELFER = "helfer"              # the model name that asks for the helper model
 ECHT_S = 15                    # the engine is asked which model it serves at most this often
 FERTIG_MAX = 20                # finished requests kept for Modell-Rechner genau
-ERGEBNISSE = ("fertig", "abgebrochen", "zeit", "fehler")
+ERGEBNISSE = ("fertig", "abgebrochen", "zeit", "fehler", "bremse")
+BREMSE_S = 2                   # how often the Notbremse looks at the memory
+BREMSE_LUFT_GIB = 2            # GiB above the limit before the Notbremse lets go again
 HAENGT_S = 90                  # seconds with running requests but no token read or written: the engine hangs
 # the request fields that pass; everything else (prompt_token_ids, input_ids, stop_token_ids, logit_bias, guided_*,
 # best_of …) is dropped before the engine sees it
@@ -259,6 +267,7 @@ stats = {"requests": 0, "refused": 0, "failures": 0, "tokens_in": 0, "tokens_out
 canary = {"status": "loading", "ms": None, "t": 0.0}
 fertig = deque(maxlen=FERTIG_MAX)     # the last finished requests: fixed words and numbers (_ende)
 haengt = {"an": False, "zaehler": None, "t": 0.0}
+bremse = {"an": False, "n": 0}     # the Notbremse: on now, streams it ended since start
 echt = {"t": None, "port": 0, "id": "", "anders": False}   # what the engine said it serves (laufend)
 sehen = {"used": 0.0, "lock": None}
 helfer = {"used": 0.0, "start": None}
@@ -390,6 +399,9 @@ async def _forward(port, body, request):
         wants = (so.get("include_usage") is True, so.get("include_usage") is True and so.get("continuous_usage_stats") is True)
         # a client's tokens per day count from the closing usage piece (mandanten), all others for the totals
         body = {**body, "stream_options": {"include_usage": True, "continuous_usage_stats": True}}
+    if bremse["an"]:
+        print("llmtor: bremse abgelehnt", flush=True)
+        raise HTTPException(503, "memory")
     await mandanten.halten(kunde, "llm")   # E3: "Hintergrund" waits while somebody speaks on the Spark (before its slot)
     if kunde is not None and not mandanten.herein(kunde):
         mandanten.melden(kunde, "parallel", "llm")
@@ -461,17 +473,24 @@ async def _forward(port, body, request):
         print(f"llmtor: antwort {r.status_code}", flush=True)
         return Response(content, status_code=r.status_code, media_type="application/json")
 
+    ticket["strom"] = True              # the Notbremse may end this one (bremse_runde)
+
     async def pieces():
         ergebnis = "abgebrochen"        # the client went away (the generator is closed): the engine is told by aclose
         try:
             async for line in r.aiter_lines():
+                if ticket.get("bremse"):
+                    ergebnis = "bremse"
+                    print("llmtor: bremse beendet", flush=True)
+                    break
                 line, schluss = _stueck(line, ticket, wants)
                 if schluss is not None:
                     await _count(schluss, kunde)
                 if line is not None:
                     yield (line + "\n").encode()
-            ergebnis = "fertig"
-            print("llmtor: antwort gestreamt", flush=True)
+            else:
+                ergebnis = "fertig"
+                print("llmtor: antwort gestreamt", flush=True)
         except httpx.TimeoutException:
             ergebnis = "zeit"
             stats["failures"] += 1
@@ -688,7 +707,7 @@ async def health(request: Request):
         served, out["status"] = "", "error"
     return {**out, "model": served, "canary_ms": canary["ms"], "uptime_s": round(time.time() - started), **stats,
             "tor": gate.view() if gate is not None else None, "anfragen": anfragen(), "fertig": list(fertig),
-            "haengt": haengt["an"]}
+            "haengt": haengt["an"], "bremse": bremse["an"], "bremse_n": bremse["n"]}
 
 
 def anfragen():
@@ -796,8 +815,47 @@ async def haengt_runde(now):
         print(f"llmtor: haengt {int(now - haengt['t'])} s", flush=True)
 
 
+def _bremse_grenze():
+    """The Notbremse's limit in GiB, None while it is off or the GPU has a memory of its own (DGX Station)."""
+    m = load_config().get("memory") or {}
+    if m.get("notbremse") is not True or not hardware.profil().get("gemeinsam"):
+        return None
+    g = m.get("notbremse_gib", 6)
+    return float(g) if isinstance(g, (int, float)) and not isinstance(g, bool) and 2 <= g <= 32 else 6.0
+
+
+def bremse_runde(frei=None):
+    """One look of the Notbremse (fixed rule): below the limit, on, and the longest running stream is ended."""
+    grenze = _bremse_grenze()
+    if grenze is None:
+        if bremse["an"]:
+            bremse["an"] = False
+            print("llmtor: bremse aus", flush=True)
+        return
+    frei = mem_available_gib() if frei is None else frei
+    if not bremse["an"] and frei < grenze:
+        bremse["an"] = True
+        print(f"llmtor: bremse an {int(frei)} GiB", flush=True)
+    elif bremse["an"] and frei >= grenze + BREMSE_LUFT_GIB:
+        bremse["an"] = False
+        print(f"llmtor: bremse aus {int(frei)} GiB", flush=True)
+    if bremse["an"] and frei < grenze and gate is not None:
+        laufend_ = [t for t in gate.tickets.values() if not t.get("bremse") and t.get("strom")]
+        if laufend_:
+            aelteste = min(laufend_, key=lambda t: t["id"])
+            aelteste["bremse"] = True
+            bremse["n"] += 1
+
+
+async def bremse_loop():
+    while True:
+        await asyncio.sleep(BREMSE_S)
+        bremse_runde()
+
+
 @app.on_event("startup")
 async def _start():
+    dauerlauf("llmtor", "bremse", bremse_loop)
     dauerlauf("llmtor", "kanarie", kanarie_loop)
     dauerlauf("llmtor", "haengt", haengt_loop)
     dauerlauf("llmtor", "sehen-leerlauf", sehen_leerlauf_loop)

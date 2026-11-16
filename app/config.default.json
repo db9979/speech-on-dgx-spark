@@ -118,7 +118,9 @@
   },
   "memory": {
     "reserve_gib": 10,
-    "guard": true
+    "guard": true,
+    "notbremse": false,
+    "notbremse_gib": 6
   },
   "watch": {
     "watchdog": true,

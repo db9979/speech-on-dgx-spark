@@ -285,7 +285,7 @@ def messen(einheiten=None, cfg=None, gpu=None, client=None, uhr=time.monotonic):
     key = (cfg.get("api") or {}).get("key", "")
     t0 = uhr()
     c = client or httpx.Client()
-    dienste, anfragen, vllm, kanarie, fertig = {}, [], {}, None, []
+    dienste, anfragen, vllm, kanarie, fertig, bremse = {}, [], {}, None, [], None
     try:
         for d, (uid, sec, eport, sport, bedarf) in DIENSTE.items():
             s = cfg.get(sec) or {}
@@ -324,6 +324,8 @@ def messen(einheiten=None, cfg=None, gpu=None, client=None, uhr=time.monotonic):
             anfragen += zeilen(h.get("anfragen"), "llm" if d == "llm" else d)
             if d == "llm":
                 fertig = fertige(h.get("fertig"))
+                if h:
+                    bremse = {"an": h.get("bremse") is True, "n": _zahl(h.get("bremse_n"), 1e9) or 0}
             if d == "llm" and h:
                 st = h.get("status") if h.get("status") in ("ready", "loading", "error", "down") else None
                 kanarie = {"status": st, "ms": _zahl(h.get("canary_ms"), 1e7)}
@@ -333,7 +335,7 @@ def messen(einheiten=None, cfg=None, gpu=None, client=None, uhr=time.monotonic):
     gpu = gpu if isinstance(gpu, dict) else None
     return {"v": 1, "dienste": dienste, "anfragen": anfragen[:BILD_MAX * 2], "vllm": vllm, "kanarie": kanarie,
             "gpu": gpu_mehr() if gpu is not None else {}, "speicher": speicher((gpu or {}).get("processes")),
-            "mem": _mem(), "fertig": fertig, "nvrm": nvrm() if gpu is not None else None, "dauer_ms": int((uhr() - t0) * 1000)}
+            "mem": _mem(), "fertig": fertig, "bremse": bremse, "nvrm": nvrm() if gpu is not None else None, "dauer_ms": int((uhr() - t0) * 1000)}
 
 
 def _mem():

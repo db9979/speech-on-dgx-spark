@@ -59,7 +59,8 @@ ZUSTAND_NAMEN = {"geladen": ("geladen", "loaded"), "laedt": ("lädt", "loading")
                  "aus": ("aus", "off"), "fehler": ("Fehler", "error"), "fehlt": ("nicht eingerichtet", "not set up"),
                  "haengt": ("hängt", "hangs")}
 ERGEBNIS_NAMEN = {"fertig": ("fertig", "done"), "abgebrochen": ("abgebrochen", "cancelled"),
-                  "zeit": ("Zeit abgelaufen", "timed out"), "fehler": ("Fehler", "error")}
+                  "zeit": ("Zeit abgelaufen", "timed out"), "fehler": ("Fehler", "error"),
+                  "bremse": ("Notbremse", "emergency brake")}
 EREIGNIS_NAMEN = {"geladen": ("geladen", "loaded"), "laedt": ("wird geladen", "is loading"), "entladen": ("entladen", "unloaded"),
                   "aus": ("aus", "off"), "fehler": ("Fehler", "error"), "fehlt": ("nicht eingerichtet", "not set up"),
                   "warteschlange_voll": ("Warteschlange voll, Anfrage abgelehnt", "queue full, request refused"),
@@ -71,7 +72,8 @@ EREIGNIS_NAMEN = {"geladen": ("geladen", "loaded"), "laedt": ("wird geladen", "i
                   "modell": ("anderes Modell", "other model"),
                   "haengt": ("hängt: liest und schreibt keine Tokens", "hangs: reads and writes no tokens"),
                   "ohne_auftrag": ("rechnet an Anfragen, die niemand mehr will", "computes requests nobody waits for"),
-                  "gpu_speicher": ("GPU hat Speicher verweigert", "GPU refused memory")}
+                  "gpu_speicher": ("GPU hat Speicher verweigert", "GPU refused memory"),
+                  "bremse": ("Notbremse greift: zu wenig Speicher frei", "emergency brake on: too little memory free")}
 DROSSEL_NAMEN = {"leerlauf": ("Leerlauf", "idle"), "taktgrenze": ("Taktgrenze", "clock cap"),
                  "leistungsgrenze": ("Leistungsgrenze", "power cap"), "hw_bremse": ("Hardware-Bremse", "hardware slowdown"),
                  "sync": ("Sync-Boost", "sync boost"), "waerme": ("zu warm", "too warm"), "hw_waerme": ("zu warm (Hardware)", "too warm (hardware)"),
@@ -87,7 +89,9 @@ HINWEISE = {"kv_voll": ("Der KV-Cache ist fast voll: lange Gespräche werden lan
                        "The language model hangs: requests run, but no tokens come."),
             "ohne_auftrag": ("Die Engine rechnet mehr Anfragen, als das LLM-Tor kennt: abgebrochene laufen weiter.",
                              "The engine computes more requests than the LLM-Tor knows: cancelled ones keep running."),
-            "gpu_speicher": ("Die GPU hat in der letzten Stunde Speicher verweigert.", "The GPU refused memory in the last hour.")}
+            "gpu_speicher": ("Die GPU hat in der letzten Stunde Speicher verweigert.", "The GPU refused memory in the last hour."),
+            "bremse": ("Die Notbremse greift: zu wenig Speicher frei, das Sprachmodell nimmt keine neuen Anfragen an.",
+                       "The emergency brake is on: too little memory free, the language model takes no new requests.")}
 OHNE_AUFTRAG_N = 3     # looks in a row (3 s each) with more requests in the engine than in the gate
 ZUSTAENDE = modellblick.ZUSTAENDE
 VLLM_ZAHLEN = tuple(modellblick.ZAEHLER) + ("kv_tokens",)
@@ -95,7 +99,7 @@ VLLM_ZAHLEN = tuple(modellblick.ZAEHLER) + ("kv_tokens",)
 _lock = threading.Lock()
 _stand = {"letzt": None, "t": None, "raten": {}, "fenster": deque(maxlen=FENSTER_S // 3 + 5), "geladen": False,
           "gesichert": 0.0, "zustand": {}, "episode": set(), "kanarie": None, "voll": {}, "verdraengt": None,
-          "modell": {}, "tag": None, "woche": None, "ohne": 0, "nvrm": None}
+          "modell": {}, "tag": None, "woche": None, "ohne": 0, "nvrm": None, "bremse": False}
 _kurz, _tag, _woche = deque(maxlen=KURZ), deque(maxlen=TAG), deque(maxlen=WOCHE)
 _ereignisse = deque(maxlen=EREIGNISSE)
 
@@ -151,7 +155,14 @@ def pruefen(b):
             "kanarie": {"status": k.get("status") if k.get("status") in ("ready", "loading", "error", "down") else None,
                         "ms": _zahl(k.get("ms"), 1e7)} if k else None,
             "gpu": gpu, "speicher": speicher, "mem": {k: _zahl(mem.get(k), 65536) for k in ("frei", "gesamt")},
-            "fertig": modellblick.fertige(b.get("fertig")), "nvrm": _nvrm(b.get("nvrm"))}
+            "fertig": modellblick.fertige(b.get("fertig")), "nvrm": _nvrm(b.get("nvrm")), "bremse": _bremse(b.get("bremse"))}
+
+
+def _bremse(v):
+    """The Notbremse as {"an", "n"} (on now, answers it ended since the LLM-Tor started), or None."""
+    if not isinstance(v, dict) or not isinstance(v.get("an"), bool) or _zahl(v.get("n"), 1e9) is None:
+        return None
+    return {"an": v["an"], "n": int(v["n"])}
 
 
 def _nvrm(v):
@@ -235,6 +246,10 @@ def _ereignisse_ableiten(m, now):
         _ereignis("gpu_speicher", "", int(nv - st["nvrm"]), now)
     if nv is not None:
         st["nvrm"] = nv
+    an = (m.get("bremse") or {}).get("an") is True
+    if an and not st["bremse"]:
+        _ereignis("bremse", "llm", now=now)
+    st["bremse"] = an
 
 
 def _ohne_auftrag(m):
@@ -411,6 +426,8 @@ def hinweise(m, raten):
         out.append("ohne_auftrag")
     if (m.get("nvrm") or {}).get("h1"):
         out.append("gpu_speicher")
+    if (m.get("bremse") or {}).get("an"):
+        out.append("bremse")
     return out
 
 
@@ -442,7 +459,8 @@ def ansicht(zeit="20m", cfg=None):
     if v is not None:
         md = _modell("llm", cfg)
         innen = dict({k: v.get(k) for k in ("laufen", "warten", "kv", "kv_tokens", "verdraengt")}, **(raten.get("llm") or {}),
-                     modell=md[0], modell_en=md[1], kontext=_kontext(cfg), kanarie=m.get("kanarie"))
+                     modell=md[0], modell_en=md[1], kontext=_kontext(cfg), kanarie=m.get("kanarie"),
+                     bremse=m.get("bremse"))
     g = dict(m["gpu"], **{k: (gpu or {}).get(k) for k in ("name", "util", "temp", "power", "clock", "grenze")})
     g["drossel_namen"] = [list(DROSSEL_NAMEN[w]) for w in g.get("drossel") or [] if w in DROSSEL_NAMEN]
     g["nvrm"] = m.get("nvrm")

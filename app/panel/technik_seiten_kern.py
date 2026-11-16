@@ -1480,7 +1480,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Betrieb: Logs und Live
     "betrieb": {
-        "stand": "38f5cdf389",
+        "stand": "25e719969c",
         "bezug": {
             "dienstwacht.FAIL_N": ["s5"], "dienstwacht.REPEAT": ["s5"], "backup.KEEP": ["s9"],
             "tracelog.safe": ["s3"], "tracelog.Rec": ["s3", "s6"], "tracelog.finish": ["s8", "s9"],
@@ -1712,13 +1712,18 @@ SEITEN = {
                  "liest und schreibt {llm_tor.HAENGT_S} s lang kein Token, meldet es „hängt“. Rechnet die Engine "
                  "{modellgenau.OHNE_AUFTRAG_N} Blicke lang mehr Anfragen, als das Tor kennt, ist das ein Ereignis; die "
                  "Ablehnungen von GPU-Speicher zählt modellblick.nvrm aus dem Kernel-Log, höchstens alle "
-                 "{modellblick.NVRM_S} s, ohne eine Zeile zu behalten.",
+                 "{modellblick.NVRM_S} s, ohne eine Zeile zu behalten. Die Notbremse (memory.notbremse, aus) greift nur, "
+                 "wo CPU und GPU einen Speicher teilen: unter der Grenze nimmt das Tor nichts Neues an und beendet alle "
+                 "{llm_tor.BREMSE_S} s die älteste gestreamte Antwort, bis {llm_tor.BREMSE_LUFT_GIB} GiB mehr frei sind.",
                  "The LLM-Tor keeps the last {llm_tor.FERTIG_MAX} finished requests with their result (done, cancelled, "
                  "timed out, error) and the name of a Spark client; when a device leaves in the middle of an answer it "
                  "closes the stream to the engine and vLLM stops. When requests run but the engine reads and writes no "
                  "token for {llm_tor.HAENGT_S} s, it reports „hängt“. When the engine computes more requests than the "
                  "gate knows for {modellgenau.OHNE_AUFTRAG_N} looks, that is an event; modellblick.nvrm counts the GPU "
-                 "memory refusals in the kernel log, at most every {modellblick.NVRM_S} s, without keeping a line."),
+                 "memory refusals in the kernel log, at most every {modellblick.NVRM_S} s, without keeping a line. "
+                 "The emergency brake (memory.notbremse, off) acts only where CPU and GPU share one memory: below the "
+                 "limit the gate takes nothing new and ends the oldest streamed answer every {llm_tor.BREMSE_S} s until "
+                 "{llm_tor.BREMSE_LUFT_GIB} GiB more are free."),
             ]),
             (("Sicherung", "Backup"), [
                 ("Einmal am Tag packt das Panel in einer Pause users/, voices/, config.json, das Panel-Passwort und die "

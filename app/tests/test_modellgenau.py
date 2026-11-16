@@ -51,7 +51,7 @@ def metrik(laufen=3, kv=0.41, treffer=900, fragen=1000, an=740, entwurf=1000, sc
 
 
 def look(zustand="geladen", voll=0, kanarie="ready", wartet_s=0.8, kv=41.0, raus=10000, verdraengt=0, drossel=None,
-         treffer=900, fragen=1000, engine=3, nvrm=None, fertig=()):
+         treffer=900, fragen=1000, engine=3, nvrm=None, fertig=(), bremse=None):
     """A look as the Wärter sends it in its status (modellblick.messen)."""
     v = modellblick.metriken(metrik(laufen=engine, kv=kv / 100, raus=raus, verdraengt=verdraengt, treffer=treffer, fragen=fragen))
     return {"v": 1, "dienste": {"llm": {"zustand": zustand, "plaetze": 8, "laufen": 3, "warten": 1, "voll": voll,
@@ -63,14 +63,15 @@ def look(zustand="geladen", voll=0, kanarie="ready", wartet_s=0.8, kv=41.0, raus
                          {"d": "asr", "z": "laeuft", "stufe": 2, "art": "hoeren", "s": 0.6, "folge": False, "rein": None, "raus": None}],
             "vllm": {"llm": v}, "kanarie": {"status": kanarie, "ms": 38},
             "gpu": {"drossel": drossel if drossel is not None else ["taktgrenze"], "pstate": "P0", "takt_max": 3003, "takt_speicher": 4266},
-            "speicher": {"llm": 62.0, "asr": 8.1, "tts-engine": 14.0}, "nvrm": nvrm, "fertig": list(fertig),
+            "speicher": {"llm": 62.0, "asr": 8.1, "tts-engine": 14.0}, "nvrm": nvrm, "fertig": list(fertig), "bremse": bremse,
             "mem": {"frei": 40.2, "gesamt": 119.7}}
 
 
 def leer():
     with modellgenau._lock:
         modellgenau._stand.update(letzt=None, t=None, raten={}, geladen=True, gesichert=0.0, zustand={}, episode=set(),
-                                  kanarie=None, voll={}, verdraengt=None, tag=None, woche=None, ohne=0, nvrm=None)
+                                  kanarie=None, voll={}, verdraengt=None, tag=None, woche=None, ohne=0, nvrm=None,
+                                  bremse=False)
         modellgenau._stand["fenster"].clear()
         for q in (modellgenau._kurz, modellgenau._tag, modellgenau._woche, modellgenau._ereignisse):
             q.clear()
@@ -128,6 +129,16 @@ class Fern(unittest.TestCase):
         self.assertEqual(a["gpu"]["nvrm"], {"h1": 1, "h24": 3})
         self.runde(1_800_000_015, 1015.0, engine=3)
         self.assertNotIn("ohne_auftrag", [h["id"] for h in modellgenau.ansicht("20m", {})["hinweise"]])
+
+    def test_emergency_brake_shows(self):
+        out = self.runde(1_800_000_000, 1000.0, bremse={"an": False, "n": 0})
+        out += self.runde(1_800_000_003, 1003.0, bremse={"an": True, "n": 1})
+        out += self.runde(1_800_000_006, 1006.0, bremse={"an": True, "n": 2})
+        self.assertEqual(out.count("rechner: ereignis bremse llm"), 1)
+        a = modellgenau.ansicht("20m", {})
+        self.assertIn("bremse", [h["id"] for h in a["hinweise"]])
+        self.assertEqual(a["innen"]["bremse"], {"an": True, "n": 2})
+        self.assertIsNone(modellgenau.pruefen({"bremse": {"an": "ja", "n": 1}})["bremse"])
 
     def test_finished_requests_with_result_and_client(self):
         ok = {"t": 1_800_000_000, "art": "programm", "stufe": 1, "s": 4.2, "rein": 900, "raus": 120, "kunde": "Open WebUI",
@@ -440,6 +451,58 @@ class Ende(unittest.TestCase):
             asyncio.run(t.haengt_runde(300.0))
             self.assertFalse(t.haengt["an"])
         self.assertEqual(out.getvalue(), f"llmtor: haengt {t.HAENGT_S} s\nllmtor: haengt nicht mehr\n")
+
+    def notbremse(self, an=True, gemeinsam=True, gib=6):
+        cfg = {"memory": {"notbremse": an, "notbremse_gib": gib}}
+        return [mock.patch.object(self.t, "load_config", return_value=cfg),
+                mock.patch.object(self.t.hardware, "profil", return_value={"gemeinsam": gemeinsam})]
+
+    def test_emergency_brake(self):
+        """alzeo 4 (Dominik 2026-11-16 „alles“): below the limit no new request, the oldest stream is ended, one per
+        round; it lets go BREMSE_LUFT_GIB above; never on a computer whose GPU has its own memory, never while off."""
+        t = self.t
+        self.addCleanup(t.bremse.update, an=False, n=0)
+        g = common.PrioGate(4)
+
+        async def drei():
+            return [await g.enter(common.STAGE_NORMAL, art="gespraech") for _ in range(3)]
+        a, b, c = asyncio.run(drei())
+        a["strom"] = b["strom"] = True          # c answers without a stream: it cannot be ended in the middle
+        with mock.patch.object(t, "gate", g), redirect_stdout(io.StringIO()) as out:
+            for p in self.notbremse():
+                p.start()
+            try:
+                t.bremse_runde(frei=9.0)
+                self.assertFalse(t.bremse["an"])
+                t.bremse_runde(frei=5.5)
+                self.assertTrue(t.bremse["an"])
+                self.assertEqual((a.get("bremse"), b.get("bremse")), (True, None))     # the oldest first
+                t.bremse_runde(frei=5.5)
+                self.assertTrue(b.get("bremse"))
+                self.assertIsNone(c.get("bremse"))
+                with self.assertRaises(t.HTTPException) as e:
+                    asyncio.run(t._forward(1, {"messages": []}, mock.Mock()))
+                self.assertEqual(e.exception.status_code, 503)
+                t.bremse_runde(frei=7.0)                      # above the limit, not yet BREMSE_LUFT_GIB above
+                self.assertTrue(t.bremse["an"])
+                t.bremse_runde(frei=8.0)
+                self.assertFalse(t.bremse["an"])
+            finally:
+                mock.patch.stopall()
+        self.assertEqual(t.bremse["n"], 2)
+        self.assertIn("llmtor: bremse an 5 GiB", out.getvalue())
+        self.assertIn("llmtor: bremse abgelehnt", out.getvalue())
+        for an, gemeinsam in ((False, True), (True, False)):            # off, or a DGX Station: nothing happens
+            t.bremse.update(an=False)
+            with mock.patch.object(t, "gate", g), redirect_stdout(io.StringIO()):
+                for p in self.notbremse(an, gemeinsam):
+                    p.start()
+                try:
+                    t.bremse_runde(frei=1.0)
+                finally:
+                    mock.patch.stopall()
+            self.assertFalse(t.bremse["an"])
+            self.assertIsNone(c.get("bremse"))
 
     def test_kernel_log_counts_only(self):
         modellblick._nvrm.update(t=None, wert=None)

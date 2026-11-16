@@ -6418,6 +6418,14 @@
 "text": "Am Handy (Web-App) und in der iPhone-App ein neues Gespräch beginnen: unter dem Gesicht und den Vorschlägen stehen „Zuletzt“ und die drei neuesten Gespräche; Antippen setzt eins fort. In einem Gespräch ist das Gesicht in der iPhone-App kleiner als bisher.",
 "thread": "Assistent-Seite entschlacken",
 "test": "test_gespraechsliste.Static.test_a_list_instead_of_the_drop_down"
+},
+{
+"id": "P932",
+"v": 1490,
+"titel": "Notbremse vor vollem Speicher",
+"text": "Als Admin Einstellungen → Spark → Betrieb: „Notbremse“ ist aus, darunter „Notbremse unter“ 6 GiB. Einschalten und speichern: Sprechen und Hören starten dabei nicht neu. Zustand → Modell-Rechner genau zeigt keinen Hinweis, solange genug Speicher frei ist. Danach wieder ausschalten, wenn du sie nicht willst.",
+"thread": "Monitoring auf tars stark ausbauen",
+"test": "test_modellgenau.Ende.test_emergency_brake"
 }
 ]
 }

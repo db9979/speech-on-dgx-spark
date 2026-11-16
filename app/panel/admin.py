@@ -861,6 +861,12 @@ def validate(new):
         v = mu.get(k)
         if isinstance(v, bool) or not isinstance(v, int) or not lo <= v <= hi:
             raise HTTPException(400, f"music {k}: {lo} bis {hi}")
+    mem = new["memory"]   # Notbremse (llm_tor.bremse_runde): a switch and a limit in GiB, nothing else
+    if not isinstance(mem.get("notbremse", False), bool):
+        raise HTTPException(400, "memory notbremse must be true or false")
+    nb = mem.get("notbremse_gib", 6)
+    if isinstance(nb, bool) or not isinstance(nb, (int, float)) or not 2 <= nb <= 32:
+        raise HTTPException(400, "Notbremse: 2 bis 32 GiB")
     w = new["watch"]
     if not isinstance(w.get("warn_gib"), (int, float)) or not 2 <= w["warn_gib"] <= 64:
         raise HTTPException(400, "watch warn_gib must be 2..64")
@@ -1101,7 +1107,8 @@ def _save_locked(new, old, by):
     if (old.get("chat") or {}).get("spark_clients") is True and (new.get("chat") or {}).get("spark_clients") is not True:
         steuer.clients_zu()   # Funktionen → Spark-Clients off: the services close for the clients too
     # the API key is read per request, so changing it needs no restart
-    mem_changed = new["memory"] != old.get("memory")
+    ohne_bremse = lambda m: {k: v for k, v in (m or {}).items() if k not in ("notbremse", "notbremse_gib")}  # noqa: E731
+    mem_changed = ohne_bremse(new["memory"]) != ohne_bremse(old.get("memory"))   # the Notbremse is read each round
     actions = {}  # unit name -> start | stop | restart
     for n in SERVICES:
         if new[n] != old[n] or mem_changed:
