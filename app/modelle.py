@@ -182,6 +182,9 @@ def pruefe_eintrag(m):
         raise Fehler("schalter")
     if m["engine"] in ("sdcpp", "acestepcpp") and not isinstance(m.get("variante"), str):
         raise Fehler("variante")
+    e = m.get("empfohlen", [])
+    if not isinstance(e, list) or len(set(e)) != len(e) or not set(e) <= set(hardware.KLASSEN):
+        raise Fehler("empfohlen")
     if "trust_remote_code" in json.dumps(m):
         raise Fehler("trust_remote_code")
     if m["engine"] == "vllm":
@@ -273,7 +276,9 @@ def _aus_basis(m, davor):
         raise Fehler("basis")
     if not isinstance(m.get("vllm", {}), dict) or not isinstance(m.get("anfrage", {}), dict):
         raise Fehler("felder")
-    return {**b, **m, "vllm": {**b["vllm"], **m.get("vllm", {})}, "anfrage": {**b["anfrage"], **m.get("anfrage", {})}}
+    # the recommendation belongs to the entry that names it, never to its variants
+    return {**{k: x for k, x in b.items() if k != "empfohlen"}, **m, "vllm": {**b["vllm"], **m.get("vllm", {})},
+            "anfrage": {**b["anfrage"], **m.get("anfrage", {})}}
 
 
 def _alt_anteil(m):
@@ -1703,7 +1708,8 @@ def eigen_ok(m):
     pruefe_eintrag(m)
     if not (m.get("eigen") is True and str(m["id"]).startswith("eigen-") and m["engine"] == "vllm"
             and m["art"] in VLLM_ARCH and REV.match(m["revision"]) and m.get("messen") == "auf_wunsch"
-            and m.get("vllm", {}).get("venv", "llm") == "llm" and not {"quantization", "docker"} & set(m.get("vllm", {}))):
+            and m.get("vllm", {}).get("venv", "llm") == "llm" and not {"quantization", "docker"} & set(m.get("vllm", {}))
+            and "empfohlen" not in m):        # only a checked catalog entry is recommended
         raise Fehler("eigen")
     return m
 
@@ -1772,13 +1778,46 @@ def eigen_vorschlag(info, art, repo, total_gib, mit_token=False):
 # understanding. The hits are data: each one only gets the quick rules below (the full check of eigen_vorschlag runs
 # again on „Hinzufügen“, on the pinned commit), nothing is downloaded or added by searching.
 HF_SUCHE = ("https://huggingface.co/api/models?search={q}&filter=safetensors&sort=downloads&direction=-1&limit=40"
-            "&expand[]=config&expand[]=tags&expand[]=safetensors&expand[]=downloads&expand[]=cardData&expand[]=gated")
+            "&expand[]=config&expand[]=tags&expand[]=safetensors&expand[]=downloads&expand[]=cardData&expand[]=gated"
+            "&expand[]=pipeline_tag")
 SUCHE_Q = re.compile(r"^[A-Za-z0-9][A-Za-z0-9 ._/-]{1,59}$")
 SUCHE_MAX = 20
 SUCHE_ANTWORT_MAX = 4 * 1024 * 1024
 # bytes per weight of a dtype in the safetensors header (packed 4-bit formats come as U8 or I8)
 DTYPE_BYTES = {"F64": 8, "I64": 8, "F32": 4, "I32": 4, "U32": 4, "BF16": 2, "F16": 2, "I16": 2, "U16": 2,
                "F8_E4M3": 1, "F8_E5M2": 1, "F8_E8M0": 1, "I8": 1, "U8": 1, "BOOL": 1}
+
+
+# „Empfehlung“ in the search (Dominik 2026-11-16 „wie wäre es noch mit einer empfehlung welches model gut passen würde?
+# je nach anwendung“, „1-3“): fixed rules, never a model's judgement. The task Hugging Face names (pipeline_tag) must
+# fit the kind (an embedding or a voice is no language model); the hits that fit come first, by the format the
+# computer runs best (FORMAT_RANG), then by downloads; the first of them that also fits beside the running models
+# gets the star, with its reasons (format, memory).
+SUCHE_AUFGABEN = {"llm": ("text-generation", "image-text-to-text"), "sehen": ("image-text-to-text",)}
+FORMATE = ("nvfp4", "fp8", "int", "bf16")
+FORMAT_RANG = {True: {"nvfp4": 3, "fp8": 2, "int": 1, "bf16": 1},      # a GPU that runs NVFP4 (hardware.FP4)
+               False: {"fp8": 3, "int": 2, "bf16": 2, "nvfp4": 0}}
+
+
+def format_wort(repo, par=None):
+    """The weights' format from the name and the dtypes of the safetensors header: nvfp4, fp8, int or bf16."""
+    n = str(repo).lower()
+    par = par or {}
+    f8 = sum(v for k, v in par.items() if k.startswith("F8_") and isinstance(v, int))
+    alle = sum(v for v in par.values() if isinstance(v, int)) or 1
+    if "fp4" in n:
+        return "nvfp4"
+    if "fp8" in n or f8 * 2 > alle:
+        return "fp8"
+    if any(w in n for w in ("awq", "gptq", "int4", "int8", "w4a16", "w8a8", "bnb")):
+        return "int"
+    return "bf16"
+
+
+def empfohlen(art, kat, profil):
+    """The checked catalog model this kind of computer should take for art (modelle.json "empfohlen"), else ""."""
+    k = hardware.klasse(profil)
+    return next((mid for mid, m in kat.items() if m["art"] == art and k in m.get("empfohlen", ())), "")
 
 
 def such_url(q):
@@ -1789,18 +1828,23 @@ def such_url(q):
     return HF_SUCHE.format(q=urllib.request.quote(q, safe=""))
 
 
-def such_treffer(items, art, total_gib, kat=None):
-    """The hits for the page: [{repo, downloads, lizenz, gb, need_gib, nein}], „nein“ a fixed word when a rule already
-    says no (zugang, code, format, architektur, budget, schon); names that do not match REPO are dropped."""
+def such_treffer(items, art, total_gib, kat=None, profil=None, raum_gib=None, mit_token=False):
+    """The hits for the page: [{repo, downloads, lizenz, gb, need_gib, format, nein, aufgabe, empfohlen}], „nein“ a fixed
+    word when a rule already says no (schon, zugang, aufgabe, code, format, architektur, budget); names that do not match
+    REPO are dropped. The fitting ones first (FORMAT_RANG for this computer, then downloads), the others after them;
+    „empfohlen“ for the first fitting one whose need is known and at most raum_gib (the room beside the other
+    running models), with „warum“ {format, need_gib, raum_gib}. A model that needs an approval only with the token."""
     if art not in VLLM_ARCH:
         raise Fehler("art")
     if not isinstance(items, list):
         raise Fehler("antwort")
     kat = katalog() if kat is None else kat
+    profil = profil or hardware.profil()
+    rang = FORMAT_RANG[profil.get("id") in hardware.FP4]
     da = {m.get("repo") for m in kat.values()}
     out = []
     for x in items:
-        if not isinstance(x, dict) or len(out) >= SUCHE_MAX:
+        if not isinstance(x, dict) or len(out) >= 2 * SUCHE_MAX:
             continue
         repo = x.get("id") if isinstance(x.get("id"), str) else ""
         if not REPO.match(repo) or ".." in repo:
@@ -1810,15 +1854,19 @@ def such_treffer(items, art, total_gib, kat=None):
         arch = (cfg.get("architectures") or [""])[0] if isinstance(cfg.get("architectures"), list) else ""
         st = x.get("safetensors") if isinstance(x.get("safetensors"), dict) else {}
         par = st.get("parameters") if isinstance(st.get("parameters"), dict) else {}
-        byte = sum(v * DTYPE_BYTES.get(k, 2) for k, v in par.items() if isinstance(v, int) and v >= 0)
+        par = {k: v for k, v in par.items() if isinstance(k, str) and isinstance(v, int) and not isinstance(v, bool) and v >= 0}
+        byte = sum(v * DTYPE_BYTES.get(k, 2) for k, v in par.items())
         gib = byte / 2**30 if byte else None
         need = round(gib + KV_GIB[art]) if gib is not None else None
         card = x.get("cardData") if isinstance(x.get("cardData"), dict) else {}
         lizenz = _wort(card.get("license") if isinstance(card.get("license"), str) else "", 32) or "unbekannt"
+        aufgabe = _wort(x.get("pipeline_tag") if isinstance(x.get("pipeline_tag"), str) else "", 32)
         if repo in da:
             nein = "schon"
-        elif x.get("gated") or x.get("private") or x.get("disabled"):
+        elif x.get("private") or x.get("disabled") or (x.get("gated") and not mit_token):
             nein = "zugang"
+        elif aufgabe and aufgabe not in SUCHE_AUFGABEN[art]:
+            nein = "aufgabe"
         elif "custom_code" in tags or "auto_map" in json.dumps(cfg):
             nein = "code"
         elif "safetensors" not in tags and not par:
@@ -1832,7 +1880,15 @@ def such_treffer(items, art, total_gib, kat=None):
         d = x.get("downloads")
         out.append({"repo": repo, "downloads": d if isinstance(d, int) and d >= 0 else 0, "lizenz": lizenz,
                     "gewerblich": lizenz in FREI, "gb": round(byte / 1e9, 1) if byte else None, "need_gib": need,
-                    "nein": nein})
+                    "format": format_wort(repo, par), "aufgabe": aufgabe, "nein": nein, "empfohlen": False})
+    out.sort(key=lambda h: (h["nein"] != "", -rang[h["format"]] if not h["nein"] else 0, -h["downloads"]))
+    out = out[:SUCHE_MAX]
+    for h in out:
+        if not h["nein"] and h["need_gib"] is not None and (raum_gib is None or h["need_gib"] <= raum_gib):
+            h["empfohlen"] = True
+            h["warum"] = {"format": h["format"], "need_gib": h["need_gib"],
+                          "raum_gib": round(raum_gib if raum_gib is not None else total_gib, 1)}
+            break
     return out
 
 

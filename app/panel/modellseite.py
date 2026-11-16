@@ -213,6 +213,7 @@ def seite(cfg=None, total_gib=None, messung=None, lang="de", gestartet=False, we
     arten = []
     for art, namen in modelle.ARTEN.items():
         rows = []
+        emp = modelle.empfohlen(art, kat, profil)      # the checked recommendation for this kind of computer
         for mid, m in kat.items():
             if m["art"] != art:
                 continue
@@ -220,7 +221,7 @@ def seite(cfg=None, total_gib=None, messung=None, lang="de", gestartet=False, we
             nein = _waehlbar(art, mid, cfg, total_gib, kat, messung, profil) if an and art in modelle.TAUSCH else "art"
             rows.append({"id": mid, "name": m["name"]["en" if i else "de"], "engine": m["engine"], "need_gib": m["need_gib"],
                          "waehlbar": not nein, "nein": "" if nein in ("art", "schon", "wahl") else nein,
-                         "eigen": bool(m.get("eigen")), "messbar": an and m["engine"] == "vllm",
+                         "eigen": bool(m.get("eigen")), "messbar": an and m["engine"] == "vllm", "empfohlen": mid == emp,
                          # how the configuration runs it (VoiceDesign on demand), else the catalog's way
                          "gemessen": m["gemessen"], "betrieb": (laufend.get(mid) or {}).get("betrieb") or m["betrieb"], "lizenz": m["lizenz"], "gewerblich": m["gewerblich"],
                          "aktiv": mid in laufend, "gib": (laufend.get(mid) or {}).get("gib"), "fest": bool(m["revision"]),
@@ -232,7 +233,7 @@ def seite(cfg=None, total_gib=None, messung=None, lang="de", gestartet=False, we
                          # „Nur laden“ (stage B1c): a pinned model of the cache that is not on the disk yet
                          "laden": bool(an and m["engine"] in modelle.ENTFERNBAR and m["revision"]
                                        and (m["repo"], m["revision"]) not in platte)})
-        arten.append({"art": art, "name": namen[i], "modelle": rows})
+        arten.append({"art": art, "name": namen[i], "modelle": rows, "empfohlen": emp})
     laeuft = ((_laeuft() if laeuft is None else laeuft) or wechselt) if an else False
     misst = bool(_misst() if misst is None else misst)
     stand = (_stand() if stand is None else stand) if misst else []
@@ -810,6 +811,15 @@ def _zeige(m):
                               "kann_sehen", "werkzeuge")}
 
 
+def _raum(cfg, art, q):
+    """The room for a model of art beside the others that run: the budget's free memory plus what art's own models
+    take now (the new one would replace them)."""
+    if art not in modelle.ARTEN:
+        return None
+    b = modelle.budget(cfg, q[0], q[3], q[8])
+    return round(b["frei"] + sum(x["gib"] for x in b["teile"] if x["art"] == art), 1)
+
+
 @router.post("/api/admin/modelle/eigen/suche", dependencies=[Depends(auth)])
 async def eigen_suche(request: Request):
     """„Suchen“ (Dominik 2026-10-17 „3a“): Hugging Face's public search through netguard; the hits get the quick rules
@@ -833,8 +843,10 @@ async def eigen_suche(request: Request):
             items = r.json()
         except ValueError:
             raise modelle.Fehler("antwort")
-        q = await asyncio.to_thread(_quelle, load_config())
-        treffer = modelle.such_treffer(items, art, q[0], q[3])
+        cfg = load_config()
+        q = await asyncio.to_thread(_quelle, cfg)
+        tok = q[9]["hf_token"]
+        treffer = modelle.such_treffer(items, art, q[0], q[3], q[8], _raum(cfg, art, q), tok["gesetzt"] and not tok["abgelehnt"])
     except modelle.Fehler as e:
         print(f"modelle: suche abgelehnt {e}", flush=True)
         raise HTTPException(503 if str(e) == "netz" else 400, GRUND.get(str(e), "ungültig"))

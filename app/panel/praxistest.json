@@ -6498,6 +6498,14 @@
 "text": "In der Spark-Konsole (https://<ip>:31010) → Modelle → Eigenes Modell von Hugging Face: Art wählen, ein Suchwort tippen und „Suchen“: Auswahl, Text, Treffer und die Stelle auf der Seite bleiben stehen, auch eine Minute lang ohne Klick; ebenso im Panel unter Zustand → Modelle, während ein Wechsel läuft (Feld „Nur herunterladen“ unter Mehr → Bibliothek).",
 "thread": "Modellkatalog für Spark und DGX Station bauen",
 "test": "test_felder_halten.ImBrowser.test_typed_fields_focus_box_and_scroll_stay"
+},
+{
+"id": "P942",
+"v": 1498,
+"titel": "Empfehlung in der Modellsuche",
+"text": "Zustand → Modelle → Sprachmodell (mit Eigene Modelle an): oben steht „⭐ Geprüfte Empfehlung für DGX Spark …“, die Karte des empfohlenen Modells hat den Stern und steht vorne. Bei Hugging Face „qwen“ suchen: passende Treffer stehen oben, ein NVFP4-Modell vor FP8 und BF16, genau einer hat „⭐ Empfohlen: NVFP4 … · ~N GiB von M frei“; Qwen3-Embedding steht unten mit „andere Aufgabe (feature-extraction)“, Qwen3-TTS ebenso. In der Spark-Konsole → Modelle dasselbe, dazu der Kasten „Geprüfte Empfehlung“ je Anwendung mit „Laden“.",
+"thread": "Modellkatalog für Spark und DGX Station bauen",
+"test": "test_empfehlung.Regel.test_fitting_first_by_format_then_downloads_and_one_star"
 }
 ]
 }

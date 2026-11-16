@@ -3,6 +3,7 @@
   "modelle": [
     {
       "id": "qwen36-35b-a3b-nvfp4",
+      "empfohlen": ["gb10"],
       "art": "llm",
       "name": {
         "de": "Qwen3.6 35B A3B NVFP4 (schnell, sieht)",
@@ -44,6 +45,7 @@
     },
     {
       "id": "qwen38-flash-next-fp4",
+      "empfohlen": ["gb300"],
       "art": "llm",
       "name": {
         "de": "Qwen3.8 Flash Next FP4 (Docker, sieht, nur privat)",
@@ -124,6 +126,7 @@
     },
     {
       "id": "qwen3-4b-instruct-2507-fp8",
+      "empfohlen": ["gb10", "gb300"],
       "art": "helfer",
       "name": {"de": "Qwen3 4B Instruct 2507 FP8 (Hilfsmodell)", "en": "Qwen3 4B Instruct 2507 FP8 (helper model)"},
       "engine": "vllm",
@@ -145,6 +148,7 @@
     },
     {
       "id": "qwen3-vl-8b-fp8",
+      "empfohlen": ["gb10", "gb300"],
       "art": "sehen",
       "name": {
         "de": "Qwen3-VL 8B FP8",
@@ -177,6 +181,7 @@
       "gewerblich": true,
       "gemessen": false,
       "id": "qwen3-asr-1.7b",
+      "empfohlen": ["gb10", "gb300"],
       "art": "asr",
       "name": {
         "de": "Qwen3-ASR 1.7B",
@@ -283,6 +288,7 @@
       "gewerblich": true,
       "gemessen": false,
       "id": "qwen3-tts-1.7b",
+      "empfohlen": ["gb10", "gb300"],
       "art": "tts",
       "name": {
         "de": "Qwen3-TTS 1.7B",
@@ -357,6 +363,7 @@
     {
       "gemessen": false,
       "id": "flux2-klein-4b-q8",
+      "empfohlen": ["gb10", "gb300"],
       "art": "bild",
       "variante": "4b-q8",
       "engine": "sdcpp",
@@ -409,6 +416,7 @@
     {
       "gemessen": false,
       "id": "ace-step-15-2b",
+      "empfohlen": ["gb10", "gb300"],
       "art": "musik",
       "variante": "2b",
       "engine": "acestepcpp",

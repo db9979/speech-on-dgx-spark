@@ -119,6 +119,15 @@ const gib=x=>x==null?'–':(Math.round(x*10)/10)+' GiB';
 // Modelle (modellseite.py, the panel's own endpoints): switch, measure, own models from Hugging Face; every change with
 // a code. The page polls while a switch or a measurement runs.
 const EIGEN_ARTEN=['llm','sehen'];
+// the search's star and the checked recommendation (Dominik 2026-11-16 „1-3“): fixed rules of the panel, shown as they come
+const FORMAT={nvfp4:'NVFP4',fp8:'FP8',int:'INT4/8',bf16:'BF16'};
+const NEIN={schon:t('schon im Katalog','already in the catalog'),zugang:t('privat oder mit Freigabe','private or gated'),aufgabe:t('andere Aufgabe','another task'),
+  code:t('braucht eigenen Code','needs code of its own'),format:t('keine safetensors','no safetensors'),architektur:t('Bauart unbekannt','unknown architecture'),budget:t('zu groß','too big')};
+function treffer(x){const w=x.warum||{},zahl=[FORMAT[x.format]||'',x.need_gib!=null?'~'+gib(x.need_gib):'',x.lizenz||'',x.downloads+' Downloads'].filter(Boolean).join(' · ');
+  return `<div class="row">${x.nein?`<span class="k"><b>${esc(x.repo)}</b> · ${esc((NEIN[x.nein]||t('geht nicht','not possible'))+(x.nein==='aufgabe'&&x.aufgabe?' ('+x.aufgabe+')':''))}</span>`:
+    `<button class="btn ${x.empfohlen?'':'sec'}" type="button" data-m="nimm" data-repo="${esc(x.repo)}">${esc(x.repo)}</button>`}
+    ${x.empfohlen?`<span class="pill ok">${esc(t('Empfohlen','Recommended')+': '+(FORMAT[w.format]||'')+' · ~'+gib(w.need_gib)+' '+t('von','of')+' '+gib(w.raum_gib)+' '+t('frei','free'))}</span>`:''}
+    <span class="k">${esc(zahl)}</span></div>`}
 let MOD=null,MOD_T=null,MOD_FUND=null;
 async function modelle(msg){const el=$('tab-modelle');clearTimeout(MOD_T);
   try{MOD=await (await api('/api/admin/modelle?lang='+(EN?'en':'de'))).json()}catch(e){el.innerHTML=`<p class="k">${esc(e.message)}</p>`;return}
@@ -127,7 +136,7 @@ function modDraw(msg){const el=$('tab-modelle'),d=MOD,b=d.budget||{},teile=b.tei
   const start=w.start?`<div class="card" style="margin-top:14px"><h2>${esc(t('Läuft gerade','Running now'))}</h2><div><b>${esc(w.start.kopf||'')}</b></div>
       ${(w.start.zeilen||[]).map(z=>`<div class="row"><span class="pill ${z.zustand==='ok'?'ok':z.zustand==='jetzt'?'warn':'grey'}">${esc(z.zustand==='ok'?'✓':z.zustand==='jetzt'?'…':'·')}</span> ${esc(z.name)} <span class="k">${esc(z.zeit||'')}</span></div>`).join('')}
       <div class="k">${esc(w.start.rest||'')}</div></div>`:busy?`<div class="row"><span class="pill warn">${esc(w.misst?t('Messung läuft','Measuring'):t('Wechsel läuft','Switching'))}</span></div>`:'';
-  const arten=(d.arten||[]).map(a=>{const rows=a.modelle.map(m=>`<tr><td><b>${esc(m.name)}</b>${m.eigen?` <span class="pill grey">${esc(t('eigen','own'))}</span>`:''}<div class="k mono">${esc(m.engine)}</div></td>
+  const arten=(d.arten||[]).map(a=>{const rows=a.modelle.map(m=>`<tr><td><b>${esc(m.name)}</b>${m.empfohlen?` <span class="pill ok">${esc(t('Empfohlen','Recommended'))}</span>`:''}${m.eigen?` <span class="pill grey">${esc(t('eigen','own'))}</span>`:''}<div class="k mono">${esc(m.engine)}</div></td>
       <td>${m.aktiv?`<span class="pill ok">${esc(t('läuft','running'))}</span>`:`<span class="pill grey">${esc(t('nicht geladen','not loaded'))}</span>`}</td>
       <td class="mono">${esc(gib(m.aktiv&&m.gib!=null?m.gib:m.need_gib))}</td>
       <td class="mono">${m.messung&&m.messung.tok_s!=null?esc(m.messung.tok_s)+' tok/s':'–'}</td>
@@ -137,9 +146,13 @@ function modDraw(msg){const el=$('tab-modelle'),d=MOD,b=d.budget||{},teile=b.tei
     const zur=(w.alte||{})[a.art];
     return rows?`<div class="card" style="margin-top:14px"><h2>${esc(a.name)}</h2>${zur?`<div class="row"><button class="btn sec" type="button" data-m="zurueck" data-art="${esc(a.art)}"${busy?' disabled':''}>${esc(t('Vorheriges zurückholen','Bring back the previous one'))}</button></div>`:''}
       <table><tr><th>${esc(t('Modell','Model'))}</th><th>${esc(t('Zustand','State'))}</th><th>${esc(t('Speicher','Memory'))}</th><th>${esc(t('Tempo','Speed'))}</th><th></th></tr>${rows}</table></div>`:''}).join('');
+  // the checked recommendation for this computer per kind (modelle.json „empfohlen“), before any own model
+  const emp=(d.arten||[]).map(a=>[a,a.modelle.find(m=>m.empfohlen)]).filter(x=>x[1]);
+  const empf=emp.length?`<div class="card" style="margin-top:14px"><h2>${esc(t('Geprüfte Empfehlung','Checked recommendation'))}</h2><div class="k">${esc(t('Je Anwendung das geprüfte Modell, das zu diesem Rechner passt','Per use the checked model that fits this computer')+(d.geraet?' ('+d.geraet+')':'')+'.')}</div>
+    ${emp.map(([a,m])=>`<div class="row"><span class="k">${esc(a.name)}:</span> <b>${esc(m.name)}</b> ${m.aktiv?`<span class="pill ok">${esc(t('läuft','running'))}</span>`:m.waehlbar?`<button class="btn" type="button" data-m="wechseln" data-art="${esc(a.art)}" data-id="${esc(m.id)}"${busy?' disabled':''}>${esc(t('Laden','Load'))}</button>`:`<span class="pill grey">${esc(t('nicht geladen','not loaded'))}</span>`}</div>`).join('')}</div>`:'';
   const f=MOD_FUND;
   const eigen=`<div class="card" style="margin-top:14px"><h2>${esc(t('Eigenes Modell von Hugging Face','Own model from Hugging Face'))}</h2>
-    <div class="k">${esc(t('Nur Gewichte als safetensors, kein Code aus dem Repository, eine Architektur, die der Spark kennt. Geladen wird erst beim Wechseln.','Weights as safetensors only, no code from the repository, an architecture the Spark knows. It is downloaded only when you switch to it.'))}</div>
+    <div class="k">${esc(t('Nur Gewichte als safetensors, kein Code aus dem Repository, eine Architektur, die der Spark kennt. Geladen wird erst beim Wechseln. Passende Treffer stehen oben, den Stern bekommt nach fester Regel der erste mit dem besten Format für diesen Rechner und Platz neben den laufenden Modellen.','Weights as safetensors only, no code from the repository, an architecture the Spark knows. It is downloaded only when you switch to it. Fitting hits come first; by a fixed rule the star goes to the first with the best format for this computer and room beside the running models.'))}</div>
     <div class="row"><select id="kmart" aria-label="${esc(t('Art','Kind'))}">${EIGEN_ARTEN.map(x=>`<option value="${x}">${esc((d.arten||[]).find(a=>a.art===x)?.name||x)}</option>`).join('')}</select>
       <input id="kmq" maxlength="80" placeholder="${esc(t('Suchen, z. B. qwen3 nvfp4','Search, e.g. qwen3 nvfp4'))}" aria-label="${esc(t('Suche','Search'))}"><button class="btn sec" type="button" data-m="suche">${esc(t('Suchen','Search'))}</button></div>
     <div id="kmtreffer" data-halten></div>
@@ -151,7 +164,7 @@ function modDraw(msg){const el=$('tab-modelle'),d=MOD,b=d.budget||{},teile=b.tei
     <div class="row"><span class="k" id="kmmsg">${esc(msg||'')}</span></div>${start}
     <div class="card" style="margin-top:14px"><h2>${esc(t('Speicher','Memory'))}</h2>
       <div class="big">${esc(gib(teile.reduce((a,x)=>a+(x.gib||0),0)))} / ${esc(gib(b.gesamt))}</div>
-      <div class="row">${teile.map(x=>`<span class="pill">${esc(x.name)} · ${esc(gib(x.gib))}</span>`).join(' ')}</div></div>${arten}${eigen}`);
+      <div class="row">${teile.map(x=>`<span class="pill">${esc(x.name)} · ${esc(gib(x.gib))}</span>`).join(' ')}</div></div>${empf}${arten}${eigen}`);
   // only while something runs (a finished start stays on the page but asks for nothing more)
   if(busy||(w.start&&!w.start.ende))MOD_T=setTimeout(()=>{if(TAB==='modelle')modelle()},5000)}
 async function modAct(a,b){const m=x=>{const el=$('kmmsg');if(el)el.textContent=x};const L='?lang='+(EN?'en':'de');
@@ -161,7 +174,7 @@ async function modAct(a,b){const m=x=>{const el=$('kmmsg');if(el)el.textContent=
     if(a==='messen'){MOD=await post('/api/admin/modelle/messen'+L,{id:b.dataset.id});return modDraw(t('Messung angefragt. Das Sprachmodell pausiert währenddessen.','Measurement requested. The language model pauses meanwhile.'))}
     if(a==='weg'){MOD=await (await api('/api/admin/modelle/eigen/'+encodeURIComponent(b.dataset.id)+L,{method:'DELETE'})).json();MOD_FUND=null;return modDraw(t('Gelöscht.','Deleted.'))}
     if(a==='suche'){const d=await post('/api/admin/modelle/eigen/suche',{art:$('kmart').value,q:$('kmq').value});
-      $('kmtreffer').innerHTML=(d.treffer||[]).map(x=>`<div class="row"><button class="btn sec" type="button" data-m="nimm" data-repo="${esc(x.repo)}">${esc(x.repo)}</button> <span class="k">${esc(x.lizenz||'')} · ${esc(x.downloads)} Downloads</span></div>`).join('')||`<p class="k">${esc(t('Nichts gefunden.','Nothing found.'))}</p>`;return}
+      $('kmtreffer').innerHTML=(d.treffer||[]).map(treffer).join('')||`<p class="k">${esc(t('Nichts gefunden.','Nothing found.'))}</p>`;return}
     if(a==='nimm'){$('kmrepo').value=b.dataset.repo;return modAct('pruefen')}
     if(a==='pruefen'){const art=$('kmart').value,d=await post('/api/admin/modelle/eigen/pruefen',{art,repo:$('kmrepo').value.trim()});MOD_FUND=Object.assign(d.vorschlag,{_art:art});return modDraw()}
     if(a==='dazu'&&MOD_FUND){MOD=await post('/api/admin/modelle/eigen'+L,{art:MOD_FUND._art,repo:MOD_FUND.repo,revision:MOD_FUND.revision});MOD_FUND=null;return modDraw(t('Hinzugefügt. Mit „Laden“ wird es geholt und gestartet.','Added. “Load” downloads and starts it.'))}

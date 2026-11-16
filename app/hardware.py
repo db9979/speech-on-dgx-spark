@@ -29,6 +29,12 @@ PROFILE = {
 }
 KENNUNG = (("GB300", "gb300"), ("GB10", "gb10"))     # the GPU's name contains … → profile (first match wins)
 FELDER = ("id", "gemeinsam", "pool_gib", "ram_gib", "system_gib")
+# the recommendation in the catalog (modelle.json "empfohlen", Dominik 2026-11-16 „1-3“): which kind of computer a
+# profile counts as; another GPU with at least STATION_AB_GIB of its own memory like the Station, else like the Spark
+KLASSEN = ("gb10", "gb300")
+STATION_AB_GIB = 200
+# the profiles whose GPU runs NVFP4 (Blackwell): the search puts NVFP4 first there, elsewhere FP8
+FP4 = ("gb10", "gb300")
 
 
 def _ram_gib():
@@ -71,6 +77,13 @@ def gueltig(p):
                                                    or not 0 < x <= 4096 for x in zahlen):
         return None
     return p
+
+
+def klasse(p):
+    """gb10 or gb300: the kind of computer whose recommendation fits this profile."""
+    if p.get("id") in KLASSEN:
+        return p["id"]
+    return "gb300" if p.get("id") == "andere" and not p.get("gemeinsam") and p.get("pool_gib", 0) >= STATION_AB_GIB else "gb10"
 
 
 def text(p, lang="de"):
