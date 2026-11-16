@@ -309,7 +309,7 @@ SEITEN = {
         "heute": [("guard_ok", ("verbunden", "connected")), ("guard_bad", ("gesperrt", "blocked"))],
     },
     "teilen": {
-        "stand": "7e7d6c7f5a",
+        "stand": "c4d413cdd5",
         "bezug": {
             "teilen.CODE_SECS": ["s2"], "teilen.schluessel": ["s3"], "teilen.regeln": ["s4"], "tlstor.server_context": ["s5"],
             "tlstor.allowed": ["s5"], "steuer.call": ["s6"], "tarswart.check": ["s7"], "tarswart.COMMANDS": ["s7"], "tarswart.systemupdate_tun": ["s7"],

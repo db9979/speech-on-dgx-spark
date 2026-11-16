@@ -148,6 +148,8 @@ LIST = {
     ("POST", "/api/update/rollback"): (CONFIRM, "Spark", "Zurück zur vorigen Version", "Back to the previous version"),
     ("POST", "/api/admin/modelle/wechseln"): (CONFIRM, "Spark", "Ein Modell wechseln", "Switch a model"),
     ("POST", "/api/admin/modelle/platz"): (CONFIRM, "Spark", "Lange Gespräche einstellen", "Set long conversations"),
+    ("POST", "/api/admin/modelle/neustart"): (CONFIRM, "Spark", "Sprachmodell mit Katalog-Einstellungen neu starten",
+                                             "Restart the language model with its catalog settings"),
     ("POST", "/api/admin/modelle/zurueck"): (CONFIRM, "Spark", "Das vorige Modell zurückholen", "Bring back the previous model"),
 
     ("DELETE", "/api/admin/fernzugang/verlauf"): (CONFIRM, "Spark", "Verlauf des Fernzugangs löschen", "Delete the remote access history"),

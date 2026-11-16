@@ -23,6 +23,7 @@ from common import STATE, read_json, write_json  # noqa: E402
 DATEI = os.path.join(STATE, "llm-start.json")          # the running (or last) switch or restart, steps and times
 ZEITEN = os.path.join(STATE, "llm-startzeiten.json")   # per model id the seconds its last start took
 ENGINE = os.path.join(STATE, "speech-spark-llm.json")  # engine.sh's state of speech-spark-llm (loading, blocked …)
+STARTS = os.path.join(STATE, "llm-starts.json")        # Startprotokoll: per kind the last starts and their settings
 # (word, de, en); a switch goes through all six, „Lange Gespräche“ and a restart start at „anhalten“ or „starten“
 SCHRITTE = (("pruefen", "Prüfen: Katalog, fester Stand, Speicher", "Checking: catalog, pinned commit, memory"),
             ("dateien", "Dateien laden und gegen Prüfsummen prüfen", "Fetching files and checking their hashes"),
@@ -238,6 +239,87 @@ def rest_min(x):
     vor = x["seit"].get("starten")
     lauf = x["dauer_s"] - vor if vor is not None and x["n"] >= 4 else 0
     return max(1, -(-(x["erwartet_s"] - lauf + (60 if x["n"] <= 4 else 30)) // 60))
+
+
+# ---------------------------------------------------------------- Startprotokoll (model catalog stage B1d)
+# alzeo idea 4 (Dominik 2026-11-16 „1-5“): per kind the last five starts of its engine with the settings it started
+# with, how long it took until it answered and how many tokens of context its memory holds. modelle.py start-args
+# (engine.sh) writes the start, `nachtragen` the rest from the engine's journal; only ids, numbers and fixed words.
+BUCH_ARTEN = ("llm", "sehen", "helfer")
+BUCH_MAX = 5
+KV = re.compile(r"GPU KV cache size: ([\d,]{1,15}) tokens")
+SIG = re.compile(r"[0-9a-f]{16}")
+ID = re.compile(r"[a-z0-9][a-z0-9.-]{0,47}")
+BUCH_FELDER = ("zeit", "id", "gpu_gib", "kontext", "profil", "bereit_s", "kv_tokens")
+
+
+def merken(art, mid, sig, gpu_gib, kontext, profil, now=None, path=STARTS):
+    """engine.sh starts the engine of art with these settings: the newest first, the last BUCH_MAX per kind."""
+    if art not in BUCH_ARTEN or not ID.fullmatch(str(mid)) or not SIG.fullmatch(str(sig)):
+        raise ValueError("start")
+    d = read_json(path, {})
+    alt = [e for e in (d.get(art) or []) if isinstance(e, dict)][:BUCH_MAX - 1]
+    d[art] = [{"zeit": int(_jetzt(now)), "id": mid, "sig": sig, "gpu_gib": float(gpu_gib), "kontext": int(kontext),
+               "profil": str(profil)[:16]}] + alt
+    write_json(path, d, indent=1)
+
+
+def letzter(art, path=STARTS):
+    """The newest start of art as written (with its signature), or None."""
+    e = (read_json(path, {}).get(art) or [None])[0]
+    return e if isinstance(e, dict) else None
+
+
+def nachtragen(art, journal_text, path=STARTS):
+    """The newest start's load time and context room from the engine's journal (journalctl -o short-unix: each line
+    begins with its time), written once when the engine said it is ready. True when it wrote."""
+    d = read_json(path, {})
+    e = (d.get(art) or [None])[0]
+    if not isinstance(e, dict) or "bereit_s" in e or not isinstance(e.get("zeit"), int):
+        return False
+    kv = bereit = None
+    for zeile in _text(journal_text).splitlines():
+        t, _, rest = zeile.partition(" ")
+        try:
+            t = float(t)
+        except ValueError:
+            continue
+        if t < e["zeit"] - 5:              # a start before this one
+            continue
+        m = KV.search(rest)
+        if m:
+            kv = int(m.group(1).replace(",", ""))
+        if TEILE[-1][3].search(rest):
+            bereit = max(1, int(t) - e["zeit"])
+    if bereit is None:
+        return False
+    e["bereit_s"] = bereit
+    if kv is not None:
+        e["kv_tokens"] = kv
+    write_json(path, d, indent=1)
+    return True
+
+
+def buch(path=STARTS):
+    """What the page shows: per kind the starts without their signature."""
+    d = read_json(path, {})
+    return {a: [{k: e[k] for k in BUCH_FELDER if k in e} for e in (d.get(a) or []) if isinstance(e, dict)][:BUCH_MAX]
+            for a in BUCH_ARTEN if d.get(a)}
+
+
+def buch_pruefen(x):
+    """The panel's check of what the model computer sent: the shape `buch` gives, else {}."""
+    def gut(e):
+        return (isinstance(e, dict) and set(e) <= set(BUCH_FELDER) and isinstance(e.get("zeit"), int)
+                and ID.fullmatch(str(e.get("id", ""))) is not None and isinstance(e.get("gpu_gib"), (int, float))
+                and 0 <= e["gpu_gib"] <= 4096 and isinstance(e.get("kontext"), int) and 0 <= e["kontext"] <= 10**7
+                and re.fullmatch(r"[a-z0-9_]{0,16}", str(e.get("profil", ""))) is not None
+                and all(isinstance(e.get(k, 0), int) and not isinstance(e.get(k, 0), bool) and 0 <= e.get(k, 0) < 10**9
+                        for k in ("bereit_s", "kv_tokens")))
+    if not isinstance(x, dict):
+        return {}
+    return {a: [dict(e) for e in x[a][:BUCH_MAX]] for a in BUCH_ARTEN
+            if isinstance(x.get(a), list) and x[a] and all(gut(e) for e in x[a][:BUCH_MAX])}
 
 
 # rundlauf's and the shell's words for why a switch went back -> what a person reads (the page, the apps, the notice)

@@ -90,6 +90,8 @@ function mdKachel(a,w){const m=a.modelle.find(x=>x.aktiv);
   const wahl=w.an&&!w.laeuft&&!w.misst&&(a.modelle.some(x=>!x.aktiv&&(x.waehlbar||x.messbar))||(w.eigene&&['llm','sehen'].includes(a.art)));
   return `<div class="mdkachel${m?' mdf-'+a.art+(m.betrieb==='resident'?'':' mdbb'):''}${MD_OFFEN===a.art?' offen':''}"><span class="mut">${esc(a.name)}</span><b>${esc(m?m.name:t('keins','none'))}</b>`+
     `<span class="mut mdzahl">${esc(m?mdKurz(m):'')}</span>`+
+    // Rezept-Abgleich (stage B1b): it runs with other settings than its catalog entry gives now
+    (m&&a.art==='llm'&&w.abweichung?`<span><span class="pill warn">${esc(t('Einstellung geändert','Settings changed'))}</span> <button type="button" class="b sm" data-mdn="1">${esc(t('Neu starten','Restart'))}</button></span>`:'')+
     (wahl?`<span><button type="button" class="b sm" data-mdo="${esc(a.art)}" aria-expanded="${MD_OFFEN===a.art}">${esc(MD_OFFEN===a.art?t('Schließen','Close'):t('Wechseln','Switch'))}</button></span>`:'')+`</div>`}
 // „Wechseln“: the kind's models as cards
 function mdKarte(m,a,w){const x=m.messung||{},probe=['revision','ungeprueft'].includes(m.nein)&&m.messbar;
@@ -152,6 +154,7 @@ function mdKnoepfe(d){const main=$('mdmain');
     if(r.value===p.jetzt){$('mdmsg').textContent=t('Das ist schon eingestellt.','That is set already.');return}
     const n=(p.wahl.find(x=>x.id===r.value)||{}).name||r.value;
     mdPost('/api/admin/modelle/platz',{platz:r.value},t('„'+n+'“ einstellen? Das Sprachmodell startet dafür neu und antwortet ein paar Minuten nicht.','Set "'+n+'"? The language model restarts for it and does not answer for a few minutes.'))};
+  main.querySelectorAll('[data-mdn]').forEach(b=>b.onclick=()=>mdPost('/api/admin/modelle/neustart',{},t('Das Sprachmodell mit den Einstellungen aus dem Katalog neu starten? Es antwortet dafür ein paar Minuten nicht.','Restart the language model with the settings from the catalog? It does not answer for a few minutes.')));
   main.querySelectorAll('[data-mdz]').forEach(b=>b.onclick=()=>mdPost('/api/admin/modelle/zurueck',{art:b.dataset.mdz},t('Das vorige Modell zurückholen?','Bring back the previous model?')));
   main.querySelectorAll('[data-mde]').forEach(b=>b.onclick=()=>mdPost('/api/admin/modelle/eigen/'+encodeURIComponent(b.dataset.mde),null,t('Dieses eigene Modell aus der Liste und von der Platte löschen?','Delete this own model from the list and from the disk?'),'DELETE'));
   main.querySelectorAll('[data-mdo]').forEach(b=>b.onclick=()=>{MD_OFFEN=MD_OFFEN===b.dataset.mdo?'':b.dataset.mdo;loadModelle(MD_SEITE)});
@@ -165,14 +168,22 @@ function mdKnoepfe(d){const main=$('mdmain');
   if($('mdqs')){$('mdqs').onclick=mdSuchen;$('mdq').onkeydown=e=>{if(e.key==='Enter')mdSuchen()}}
   if($('mdpv'))$('mdpv').onclick=()=>mdPost('/api/admin/modelle/probe',null,t('Die Frage zum ausprobierten Modell verwerfen? Gewechselt wird nichts.','Discard the question about the tried model? Nothing is switched.'),'DELETE');
   const mehr=$('mdmehr');if(mehr)mehr.ontoggle=()=>{MD_MEHR=mehr.open}}
+// Startprotokoll (stage B1d): per kind the last starts, how long until it answered, how much context fits
+function mdStarts(d){const st=d.starts||[];if(!st.length)return '';
+  const zahl=n=>n==null?'–':Number(n).toLocaleString(L==='en'?'en':'de');
+  return `<div><h3>${esc(t('Letzte Starts','Last starts'))}</h3>`+st.map(a=>`<table class="mdstarts"><caption>${esc(a.name)}</caption><thead><tr><th>${esc(t('Wann','When'))}</th><th>${esc(t('Modell','Model'))}</th>`+
+    `<th class="n">${esc(t('Speicher','Memory'))}</th><th class="n">${esc(t('Kontext','Context'))}</th><th class="n">${esc(t('Bereit nach','Ready after'))}</th><th class="n">${esc(t('Platz (Tokens)','Room (tokens)'))}</th></tr></thead><tbody>`+
+    a.starts.map(x=>`<tr><td>${esc(new Date(x.zeit*1000).toLocaleString(L==='en'?'en':'de'))}</td><td>${esc(x.name)}${x.geraet?` <span class="mut">${esc(x.geraet)}</span>`:''}</td>`+
+      `<td class="n">${esc(mdGib(x.gpu_gib))}</td><td class="n">${esc(zahl(x.kontext))}</td><td class="n">${esc(x.bereit_s!=null?Math.round(x.bereit_s/60*10)/10+' min':'–')}</td><td class="n">${esc(zahl(x.kv_tokens))}</td></tr>`).join('')+
+    `</tbody></table>`).join('')+`<div class="mut vb-note">${esc(t('„Platz“: so viele Tokens passen in den Gesprächsspeicher, alle Gespräche zusammen.','“Room”: this many tokens fit into the context store, all conversations together.'))}</div></div>`}
 let MD_SEITE=null;
 async function loadModelle(daten){const main=$('mdmain'),msg=$('mdmsg');if(!main)return;msg.textContent='';
   let d=daten;if(!d)try{d=await (await api('/api/admin/modelle'+(L==='en'?'?lang=en':''))).json()}catch(e){msg.textContent=e.message;return}
   const w=d.wechsel||{};
   MD_SEITE=d;if(MD_OFFEN&&!d.arten.some(a=>a.art===MD_OFFEN))MD_OFFEN='';
   main.innerHTML=mdWechsel(w)+mdProbe(w)+mdBalken(d.budget)+`<div class="mdkacheln">${d.arten.filter(a=>a.modelle.length).map(a=>mdKachel(a,w)).join('')}</div>`+mdWahl(d,w)+
-    `<details class="mdmehr" id="mdmehr"${MD_MEHR?' open':''}><summary>${esc(t('Mehr: Lange Gespräche, Messwerte, Messen, Zurückholen','More: long conversations, measurements, measuring, bringing back'))}</summary>`+
-    `<div class="vb-two">${mdPlatz(w)}${mdBudget(d.budget)}${d.arten.map(a=>mdArt(a,w,d)).join('')}</div>`+
+    `<details class="mdmehr" id="mdmehr"${MD_MEHR?' open':''}><summary>${esc(t('Mehr: Lange Gespräche, Messwerte, Messen, Zurückholen, letzte Starts','More: long conversations, measurements, measuring, bringing back, last starts'))}</summary>`+
+    `<div class="vb-two">${mdPlatz(w)}${mdBudget(d.budget)}${d.arten.map(a=>mdArt(a,w,d)).join('')}${mdStarts(d)}</div>`+
     `<div class="mut vb-note">${d.geraet?esc(t('Gerät: ','Computer: ')+d.geraet)+' · ':''}${esc(d.messung_zeit?t('Letzte Messung: ','Last measurement: ')+new Date(d.messung_zeit*1000).toLocaleString(L==='en'?'en':'de'):t('Noch keine Messung. „Messen“ beim Modell (mit Funktionen → Modelle wechseln) oder auf dem Spark: sudo speech-spark modelle messen','No measurement yet. „Measure“ at the model (with Features → Routing models) or on the Spark: sudo speech-spark modelle messen'))}`+
     ` · ${esc(t('„~“ heißt geschätzt.','“~” means estimated.'))}</div></details>`;
   mdKnoepfe(d);if(typeof labelTables==='function')labelTables();

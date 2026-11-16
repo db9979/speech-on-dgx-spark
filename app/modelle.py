@@ -22,8 +22,9 @@ Hugging Face cache (SHA-256 for large files, the git blob hash for small ones).
 Command line (as the panel's service user, from speech-spark.sh): liste · feld <id> repo|revision · messliste <was …> · vorbereiten <id> ·
 pruefen <id> [revision] · vllm-args <id> [--port N] [--revision R] [--ohne-mtp] · messen-lauf <id> [--port N]
 [--einheit unit] [--revision R] · ergebnis · venv <id>|llm|sehen|helfer · start-args llm|sehen|helfer (engine.sh) · signatur llm|sehen|helfer
-(install.sh) · docker-bild <id> · docker-args <id> --revision R --name N --uid U --gid G [--ohne-mtp] (mess_docker) ·
-fest <repo> · erlaubt (install.sh dl, engine.sh: the pinned commit of a speech model and the file kinds to fetch).
+(install.sh) · neustart-pruefen (speech-spark-wechsel) · docker-bild <id> ·
+docker-args <id> --revision R --name N --uid U --gid G [--ohne-mtp] (mess_docker) · fest <repo> ·
+erlaubt (install.sh dl, engine.sh: the pinned commit of a speech model and the file kinds to fetch).
 
 An entry with a Docker recipe (vllm "docker", DOCKER) runs as a container only while it is measured (Dominik
 2026-10-17: Docker only on tars, only for model engines): pinned image, no network, its socket put on 127.0.0.1 by
@@ -687,6 +688,44 @@ def start_args(art, cfg, messung=None, kat=None, hf_home=None):
     pruefen(hf_ordner(m, hf_home), rev, hashes=False)
     zeiger(hf_ordner(m, hf_home), rev)
     return vllm_args(m, port, rev) + ["--max-logprobs", str(LOGPROBS_MAX)]
+
+
+def start_merken(art, cfg):
+    """Startprotokoll (stage B1d): engine.sh starts art with what start_args gave; kept by llmstart.merken with the
+    signature install.sh compares. Never stops the start: a full disk only loses the line in the protocol."""
+    import llmstart
+    try:
+        m, _ = rolle(art, cfg)
+        llmstart.merken(art, m["id"], signatur(art, cfg), m.get("gpu_gib", 0), m.get("kontext", 0),
+                        hardware.profil()["id"])
+    except (OSError, ValueError, Fehler):
+        print(f"modelle: startprotokoll {art} fehler", file=sys.stderr, flush=True)
+
+
+def abweichung(art, cfg, kat=None, path=None):
+    """Rezept-Abgleich (stage B1b, alzeo idea 1): the engine of art started with other settings than its catalog entry
+    gives now (an update changed the entry, a start before it, a recipe saved while it was off). False when nothing
+    was started here or the kind has no model."""
+    import llmstart
+    e = llmstart.letzter(art) if path is None else llmstart.letzter(art, path)
+    if not e:
+        return False
+    try:
+        return e.get("sig") != signatur(art, cfg, kat=kat)
+    except (Fehler, KeyError, ValueError):
+        return False
+
+
+def neustart_anfragen(cfg, starten, laeuft=False, kat=None, path=None):
+    """„Neu starten“ on the running language model's card: only when it runs with other settings (abweichung); the
+    wish for root (art neustart), then starten() starts WECHSEL_UNIT. Raises Fehler (laeuft, schon, start)."""
+    if laeuft:
+        raise Fehler("laeuft")
+    if not abweichung("llm", cfg, kat, path):
+        raise Fehler("schon")
+    wunsch_schreiben("neustart", "llm")
+    if not starten():
+        raise Fehler("start")
 
 
 # ---------------------------------------------------------------- files in the Hugging Face cache
@@ -1536,8 +1575,10 @@ def entfernbar(mid, cfg, now=None, path=WECHSEL, kat=None, hf_home=None):
 
 
 def _wunsch_ok(art, was):
-    """A switch (a kind, an id or "zurueck") or „Lange Gespräche“ (art platz, one of PLATZ)."""
-    return (art in TAUSCH and (was == "zurueck" or bool(ID.match(str(was))))) or (art == "platz" and was in PLATZ)
+    """A switch (a kind, an id or "zurueck"), „Lange Gespräche“ (art platz, one of PLATZ) or a restart with the
+    entry's settings now (art neustart, llm)."""
+    return ((art in TAUSCH and (was == "zurueck" or bool(ID.match(str(was))))) or (art == "platz" and was in PLATZ)
+            or (art == "neustart" and was == "llm"))
 
 
 def wunsch_schreiben(art, was, path=WUNSCH):
@@ -2044,8 +2085,16 @@ def cli(args, log=print):
             log(signatur(args[1], load_config()))
             return 0
         if cmd == "start-args":
-            for a in start_args(args[1], load_config()):
+            cfg = load_config()
+            for a in start_args(args[1], cfg):
                 log(a)
+            start_merken(args[1], cfg)
+            return 0
+        if cmd == "neustart-pruefen":
+            # root checks again what the panel checked: the language model runs with other settings than its entry
+            if not abweichung("llm", load_config()):
+                raise Fehler("schon")
+            log("neustart llm")
             return 0
         if cmd == "messen-lauf":
             m = eintrag(args[1])

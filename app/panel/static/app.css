@@ -1934,6 +1934,7 @@ body.inchats:not(.appview):not(.kbd) .cx-comp{padding-right:96px}
 .mdkarten{display:grid;gap:8px;margin:8px 0}.mdkarte{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:8px 10px}
 .mdkarte .mdkopf{min-width:0;overflow-wrap:anywhere}.mdkarte .mdtun{grid-row:1/span 2;grid-column:2;display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
 .mdkarte.aus{opacity:.6}.mdwahl h4{margin:14px 0 4px}.mdwahl #mdq{flex:1;min-width:140px}.mdmehr{margin-top:12px}.mdmehr>summary{cursor:pointer;font-weight:600;margin-bottom:10px}
+.mdstarts{width:100%;margin-bottom:8px}.mdstarts caption{text-align:left;font-weight:600;padding:4px 0}
 /* Zustand → Werkstatt (werkstatt.js, Dominik 2026-10-21 „1“): four tiles, the results left, one result right; Klar 6
    (Redesign Stufe 6): the tiles as quiet buttons with a line symbol in the text colour, numbers in tabular digits,
    notes on a hairline instead of a tinted box, the progress bar one colour */

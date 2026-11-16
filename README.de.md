@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.488** Startprotokoll und „Neu starten“, wenn das Sprachmodell nicht mehr so läuft, wie der Katalog sagt
 - **V01.1.487** Modell-Rechner genau: „Chat-Modell innen“ zeigt nur das Chat-Modell mit Namen, der Verlauf zeigt Werte, Skalen und Zeitachse
 - **V01.1.486** Eigene Modelle mit vollem Rezept: Kontext, Speicher, MTP und Parser einstellen, danach als Katalogzeile übernehmen
 - **V01.1.485** Modelle in GiB statt Anteil: derselbe Katalog passt auf DGX Spark und später DGX Station
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.481** CarPlay: die letzten Antworten mit Daumen hoch oder runter bewerten oder per Sprache ein Issue dazu erstellen, mit dem Ton-Protokoll der App
 - **V01.1.480** Dungeon-Prüfung 15.11., Punkt 10: dungeon.py und dungeon.js aufgeteilt, ohne sichtbare Änderung: die 78 Endpunkte in eigener Datei mit eigenem Router, die Regel-Seite des Admins in eigenem Skript
 - **V01.1.479** ROT-FIX: Kalender-Seitentest wackelt nicht mehr
-- **V01.1.478** ROT-FIX: Test der Hinweis-Blase misst in einem Schritt
 
 
 

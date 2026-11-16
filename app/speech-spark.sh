@@ -572,6 +572,33 @@ platz_setzen() {  # $1 = one of modelle.PLATZ
   return 0
 }
 
+# Rezept-Abgleich (model catalog stage B1b): the language model runs with other settings than its catalog entry gives
+# now; „Neu starten“ on Zustand → Modelle restarts it with them, after modelle.py checked that again here
+neustart_setzen() {
+  local out jetzt pause=0
+  out=$(as_panel_user ../modelle.py neustart-pruefen) \
+    || { grep '^modelle: ' <<<"$out" || true; echo "modelle: neustart abgelehnt"; return 1; }
+  jetzt=$(as_panel_user ../modelle.py jetzt llm 2>/dev/null | tail -n1); [ "$jetzt" = - ] && jetzt=""
+  echo "modelle: neustart startet"
+  if can_pause && as_panel_user wartung.py status | grep -q '^Keine Wartungspause'; then
+    as_panel_user wartung.py llm 30 && pause=1 || echo "modelle: neustart ohne wartungspause"
+  fi
+  llmschritt schritt neustart 3 "$jetzt"
+  systemctl stop speech-spark-llm.service || true
+  mem_settle
+  llmschritt schritt neustart 4 "$jetzt"
+  systemctl start speech-spark-llm.service || true
+  if as_panel_user ../modelle.py rundlauf; then
+    llmschritt ende ok
+    echo "modelle: neustart ok"
+  else
+    llmschritt ende zurueck
+    echo "modelle: neustart fehler"
+  fi
+  [ "$pause" = 1 ] && { as_panel_user wartung.py weiter || true; }
+  return 0
+}
+
 cmd_wunsch_intern() {
   local art was out
   out=$(as_panel_user ../modelle.py wunsch-nehmen) || true
@@ -579,6 +606,7 @@ cmd_wunsch_intern() {
   if im_gang "$MESS_UNIT" "$MESS_WUNSCH_UNIT"; then echo "modelle: wechsel abgelehnt misst"; return 1; fi
   [[ "${was:-}" =~ ^[a-z0-9][a-z0-9.-]{1,47}$ ]] || { echo "modelle: wechsel abgelehnt wunsch"; return 1; }
   if [ "$art" = platz ]; then platz_setzen "$was"; return; fi
+  if [ "$art" = neustart ]; then neustart_setzen; return; fi
   if [ "$was" = zurueck ]; then
     out=$(as_panel_user ../modelle.py zurueck-ziel "$art") || true
     was=$(tail -n1 <<<"$out")

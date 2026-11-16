@@ -655,10 +655,11 @@ class Seite(unittest.TestCase):
         self.assertNotIn("fetch(", js)
         # stage E4: the page changes only through the two switch endpoints and „Messen“ (behind Funktionen → Modelle
         # wechseln), „Lange Gespräche“ (same switch) and „Verwerfen“ after „Ausprobieren“; stage E5 adds the own models
-        # (behind Funktionen → Eigene Modelle): add, delete, the search and the check, which change nothing
+        # (behind Funktionen → Eigene Modelle): add, delete, the search and the check, which change nothing; stage B1b
+        # „Neu starten“ when the language model runs with other settings than its entry (same switch)
         self.assertEqual(sorted(set(re.findall(r"mdPost\('(/api/[a-z/]+)'", js))),
                          ["/api/admin/modelle/eigen", "/api/admin/modelle/eigen/", "/api/admin/modelle/messen",
-                          "/api/admin/modelle/platz", "/api/admin/modelle/probe", "/api/admin/modelle/wechseln",
+                          "/api/admin/modelle/neustart", "/api/admin/modelle/platz", "/api/admin/modelle/probe", "/api/admin/modelle/wechseln",
                           "/api/admin/modelle/zurueck"])
         self.assertEqual(re.findall(r"api\('(/api/admin/modelle/[a-z/]+)',\{method:'POST'", js),
                          ["/api/admin/modelle/eigen/suche", "/api/admin/modelle/eigen/pruefen"])

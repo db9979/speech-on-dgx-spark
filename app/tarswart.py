@@ -20,9 +20,12 @@ a time (at most WINDOW seconds off) and a one-time number (each is taken once).
                                 starts root's fixed unit (gputakt.anwenden), which reads the value itself
     logs <teil> <n>             the last n (at most MAX_LINES) log lines of a model unit
     modelle                     what Zustand → Modelle needs from here: memory, measurement, switches,
-                                own models, whether a switch or a measurement runs
+                                own models, whether a switch or a measurement runs, the Startprotokoll and whether
+                                the language model runs with other settings than its entry (Rezept-Abgleich)
     wechseln <art> <id|zurueck> a switch with the fixed rules (modelle.wechsel_anfragen), then speech-spark-wechsel
     messen <id>                 Zustand → Modelle „Messen“ (modelle.messen_anfragen), then speech-spark-messen-wunsch
+    neustart                    Rezept-Abgleich: the language model again with its entry's settings now, only when it
+                                runs with others (modelle.neustart_anfragen), then speech-spark-wechsel
     eigen_dazu {entry}          an own model (modelle.eigen_speichern checks it again)
     eigen_weg <id>              an own model off the list and its files off the disk (modelle.eigen_loeschen)
     eigen_rezept <id> {fields}  an own model's recipe (modelle.eigen_aendern checks every field again)
@@ -86,10 +89,11 @@ MAX_LINES = 2000
 MAX_SEEN = 5000        # one-time numbers kept (each lives WINDOW * 2 seconds)
 RATE = (40, 10)        # at most 40 requests in 10 seconds (the panel asks for the status every few seconds)
 ACTIONS = ("start", "stop", "restart")
-COMMANDS = ("status", "einheit", "einstellen", "logs", "modelle", "wechseln", "messen", "platz", "eigen_dazu", "eigen_weg",
-            "eigen_rezept", "weiter", "update", "werkstatt", "werkstatt_auftrag", "werkstatt_eins", "werkstatt_weg", "systemupdate",
-            "systemupdate_tun", "pakete", "stimmen", "stimme_ablegen", "stimme_weg", "clients", "client_neu",
-            "client_aendern", "client_weg", "clients_schalten")
+COMMANDS = ("status", "einheit", "einstellen", "logs", "modelle", "wechseln", "messen", "platz", "neustart",
+            "eigen_dazu", "eigen_weg", "eigen_rezept", "weiter", "update", "werkstatt", "werkstatt_auftrag",
+            "werkstatt_eins", "werkstatt_weg", "systemupdate", "systemupdate_tun", "pakete", "stimmen",
+            "stimme_ablegen", "stimme_weg", "clients", "client_neu", "client_aendern", "client_weg",
+            "clients_schalten")
 UPDATE_UNIT = "speech-spark-update"
 PAUSE_KEYS = ("on", "parts", "since", "until", "channel")   # what the panel needs of the pause (never who)
 WITH_DATA = ("einstellen", "eigen_dazu", "eigen_rezept", "werkstatt_auftrag", "stimme_ablegen", "client_neu", "client_aendern",
@@ -238,7 +242,17 @@ def modelle_daten():
             "messung": messung, "wechsel": read_json(modelle.WECHSEL, {}),
             "eigene": modelle.eigene(), "laeuft": _wechsel_laeuft(), **_messung_laeuft(),
             "start": llmstart.hier(load_config(), messung),     # what the language model does while it starts
-            "profil": hardware.profil()}                         # which kind of computer (DGX Spark, DGX Station)
+            "profil": hardware.profil(),                         # which kind of computer (DGX Spark, DGX Station)
+            "starts": _starts(), "abweichung": modelle.abweichung("llm", load_config())}
+
+
+def _starts():
+    """The Startprotokoll; the newest start's load time and context room taken from its engine's journal once."""
+    for art in llmstart.BUCH_ARTEN:
+        e = llmstart.letzter(art)
+        if e and "bereit_s" not in e:
+            llmstart.nachtragen(art, lambda u=OWN_LLM_UNITS[art]: journal(u, 600, "short-unix"))
+    return llmstart.buch()
 
 
 def _messung_laeuft():
@@ -284,6 +298,23 @@ def platz(was):
         print(f"waerter: platz abgelehnt {e}", flush=True)
         return {"ok": False, "fehler": str(e)}
     print("waerter: platz ok", flush=True)
+    return {"ok": True}
+
+
+def neustart():
+    """Rezept-Abgleich: „Neu starten“ (modelle.neustart_anfragen with this computer's settings), then
+    speech-spark-wechsel restarts the language model with what its entry gives now."""
+    def starten():
+        return run(["sudo", "-n", "/usr/bin/systemctl", "start", "--no-block", modelle.WECHSEL_UNIT], timeout=20)[0] == 0
+    if _misst():
+        print("waerter: neustart abgelehnt misst", flush=True)
+        return {"ok": False, "fehler": "misst"}
+    try:
+        modelle.neustart_anfragen(load_config(), starten, _wechsel_laeuft())
+    except modelle.Fehler as e:
+        print(f"waerter: neustart abgelehnt {e}", flush=True)
+        return {"ok": False, "fehler": str(e)}
+    print("waerter: neustart ok", flush=True)
     return {"ok": True}
 
 
@@ -578,6 +609,10 @@ async def _wart(request, stimme):
             return JSONResponse(systemupdate_tun(*args) if len(args) == 1 else systemupdate_tun(""))
         if cmd == "weiter":
             return JSONResponse(weiter())
+        if cmd == "neustart":
+            if args:
+                raise ValueError("befehl")
+            return JSONResponse(neustart())
         if cmd == "update":
             return JSONResponse(update())
         if cmd == "eigen_weg":

@@ -79,6 +79,8 @@ GRUND = {"art": "Diese Art lässt sich nicht wechseln.", "unbekannt": "Das Model
          # „Lange Gespräche“
          "platz": "Diese Auswahl gibt es nicht.", "suche": "Suchwort mit Buchstaben, Zahlen, Leerzeichen, Punkt, Strich.", "kontext": "Dieses Modell kann so lange Gespräche nicht.", "dateien": "Die Dateien ließen sich nicht ganz löschen."}
 STATUS = {"laeuft": 409, "misst": 409, "start": 503, "start_messen": 503, "rechner": 503}
+# the words the model computer may answer a restart with (Rezept-Abgleich); "schon": it runs as its entry says
+NEUSTART_GRUND = ("laeuft", "misst", "schon", "start")
 EIGEN_BODY = 512
 # the Rezept-Editor's own answers (stage B1); every field of modelle.REZEPT_FELDER answers with its name
 REZEPT_GRUND = {"schon": "Am Rezept hat sich nichts geändert.", "felder": "Unbekanntes Feld im Rezept.",
@@ -132,20 +134,32 @@ def _starten(unit=modelle.WECHSEL_UNIT):
 
 
 def _quelle(cfg):
-    """(total_gib, messung, laeuft, kat, alte switches, misst, stand, start, profil) of the computer the models run on;
+    """(total_gib, messung, laeuft, kat, alte switches, misst, stand, start, profil, buch) of the computer the models run on;
     HTTPException 503 when that is another one and it does not answer. laeuft, misst and stand are None here (asked
     when needed); start is what the language model does while it switches or starts (llmstart); profil its hardware
-    (hardware.py; a model computer before stage A sends none: the reference, a DGX Spark)."""
+    (hardware.py; a model computer before stage A sends none: the reference, a DGX Spark); buch the Startprotokoll and
+    whether the language model runs with other settings than its entry (stage B1b/B1d; none from an older one)."""
     if steuer.remote(cfg):
         d = steuer.modelle(cfg)
         if d is None:
             raise HTTPException(503, GRUND["rechner"])
         stand = modelle.stand("\n".join(x for x in d.get("stand", []) if isinstance(x, str))) if d.get("misst") else []
         return (d["gesamt_gib"], d["messung"], d["laeuft"], modelle.katalog(eigene=d["eigene"]), d["wechsel"],
-                d.get("misst", False), stand, d.get("start"), hardware.gueltig(d.get("profil")) or hardware.profil())
+                d.get("misst", False), stand, d.get("start"), hardware.gueltig(d.get("profil")) or hardware.profil(),
+                {"starts": llmstart.buch_pruefen(d.get("starts")), "abweichung": d.get("abweichung") is True})
     messung = read_json(modelle.MESSUNG, {})
     return (modelle.gesamt_gib(), messung, None, modelle.katalog(), None, None, None,
-            llmstart.hier(cfg, messung), hardware.profil())
+            llmstart.hier(cfg, messung), hardware.profil(), {"starts": _starts_hier(), "abweichung": modelle.abweichung("llm", cfg)})
+
+
+def _starts_hier():
+    """The Startprotokoll on this computer, the newest start's load time taken from its engine's journal once."""
+    from common import journal
+    for art in llmstart.BUCH_ARTEN:
+        e = llmstart.letzter(art)
+        if e and "bereit_s" not in e:
+            llmstart.nachtragen(art, lambda u=f"speech-spark-{art}": journal(u, 600, "short-unix"))
+    return llmstart.buch()
 
 
 def _fehler(e, was="wechsel"):
@@ -166,7 +180,7 @@ def _waehlbar(art, mid, cfg, total_gib, kat, messung, profil=None):
 def seite(cfg=None, total_gib=None, messung=None, lang="de", gestartet=False, wechselt=False):
     """What the page shows: {arten: [{art, name, modelle: [...]}], budget, messung_zeit}."""
     cfg = load_config() if cfg is None else cfg
-    q_gib, q_messung, laeuft, kat, wechsel, misst, stand, start, profil = _quelle(cfg)
+    q_gib, q_messung, laeuft, kat, wechsel, misst, stand, start, profil, buch = _quelle(cfg)
     total_gib = q_gib if total_gib is None else total_gib
     messung = q_messung if messung is None else messung
     i = 1 if lang == "en" else 0
@@ -209,12 +223,24 @@ def seite(cfg=None, total_gib=None, messung=None, lang="de", gestartet=False, we
     wechsel = {"an": an, "laeuft": laeuft, "misst": misst or gestartet, "stand": stand, "platz": platz, "probe": probe,
                "start": _start_zeigen(start, kat, i),
                "alte": modelle.alte(cfg, kat=kat, daten=wechsel) if an else {},
-               "tage": modelle.ALT_TAGE, "eigene": _eigen_an(cfg)}
+               "tage": modelle.ALT_TAGE, "eigene": _eigen_an(cfg),
+               # Rezept-Abgleich (stage B1b): the running language model started with other settings than its entry
+               "abweichung": bool(an and buch["abweichung"] and not laeuft and cfg.get("llm", {}).get("enabled"))}
     # the bar's parts (Dominik 2026-10-18: one colored piece per model, the tiles below in the same color)
     teile = [{"id": x["id"], "name": kat[x["id"]]["name"]["en" if i else "de"], "art": x["art"], "gib": x["gib"],
               "betrieb": x["betrieb"]} for x in b["teile"]]
     return {"arten": arten, "budget": dict(b, teile=teile), "messung_zeit": messung.get("zeit"),
-            "wechsel": wechsel, "geraet": hardware.text(profil, "en" if i else "de")}
+            "wechsel": wechsel, "geraet": hardware.text(profil, "en" if i else "de"), "starts": _starts_zeigen(buch, kat, i)}
+
+
+def _starts_zeigen(buch, kat, i):
+    """Startprotokoll (stage B1d) for the page: per kind its name and the last starts with the model's name."""
+    out = []
+    for art, liste in buch["starts"].items():
+        rows = [dict(e, name=(kat.get(e["id"]) or {}).get("name", {}).get("en" if i else "de", e["id"]),
+                     geraet=hardware.PROFILE.get(e.get("profil"), {}).get("en" if i else "de", "")) for e in liste]
+        out.append({"art": art, "name": modelle.ARTEN[art][i], "starts": rows})
+    return out
 
 
 def _anderswo(r, profil, i):
@@ -307,7 +333,7 @@ def for_live(now=None):
     if _live["t"] is None or now - _live["t"] > LIVE_EVERY:
         try:
             cfg = load_config()
-            total_gib, _, laeuft, kat, _, misst, _, start, profil = _quelle(cfg)
+            total_gib, _, laeuft, kat, _, misst, _, start, profil, _ = _quelle(cfg)
             b = modelle.budget(cfg, total_gib, kat, profil)
             _live["v"] = {"on": True, "frei": b["frei"], "regel": b["regel"]}
             if cfg.get("llm", {}).get("enabled"):   # after the move: the catalog name of the model that really runs
@@ -460,6 +486,49 @@ def _platz(request, was):
     guard.log("modelle_wechsel", detail=f"Lange Gespräche: {modelle.PLATZ_NAMEN[was][0]}")
     _live["t"] = None
     return seite(lang="en" if request.query_params.get("lang") == "en" else "de", wechselt=True)
+
+
+@router.post("/api/admin/modelle/neustart", dependencies=[Depends(auth), Depends(admin_code)])
+async def admin_neustart(request: Request):
+    """Rezept-Abgleich (stage B1b, alzeo idea 1): „Neu starten“ when the language model runs with other settings than
+    its catalog entry gives now; root (speech-spark-wechsel) checks that again and restarts it, here or there."""
+    guard.limit(request, "modelle_wechsel", None, True)
+    await core.json_body(request, MAX_BODY)
+    return await asyncio.to_thread(_neustart, request)   # off the loop (systemctl)
+
+
+def _neustart(request):
+    if not _an():
+        print("modelle: neustart abgelehnt aus", flush=True)
+        raise HTTPException(409, "Modelle wechseln ist aus (Funktionen → Modelle wechseln).")
+    cfg = load_config()
+    if steuer.remote(cfg):
+        d = steuer.call("neustart", (), cfg=cfg, timeout=30)
+        if not isinstance(d, dict):
+            _fehler("rechner", "neustart")
+        if d.get("ok") is not True:
+            _neustart_fehler(d.get("fehler") if d.get("fehler") in NEUSTART_GRUND else "wunsch")
+    else:
+        if _misst():
+            _fehler("misst", "neustart")
+        try:
+            modelle.neustart_anfragen(cfg, _starten, _laeuft())
+        except modelle.Fehler as e:
+            if str(e) == "start":
+                print("modelle: neustart start fehler", flush=True)
+                raise HTTPException(503, GRUND["start"])
+            _neustart_fehler(str(e))
+    print("modelle: neustart angefragt", flush=True)
+    guard.log("modelle_wechsel", detail="Neustart mit den Einstellungen aus dem Katalog")
+    _live["t"] = None
+    return seite(lang="en" if request.query_params.get("lang") == "en" else "de", wechselt=True)
+
+
+def _neustart_fehler(word):
+    if word == "schon":
+        print("modelle: neustart abgelehnt schon", flush=True)
+        raise HTTPException(409, "Das Sprachmodell läuft schon so, wie es im Katalog steht.")
+    _fehler(word, "neustart")
 
 
 @router.post("/api/admin/modelle/wechseln", dependencies=[Depends(auth), Depends(admin_code)])
