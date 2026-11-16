@@ -335,7 +335,7 @@ def messen(einheiten=None, cfg=None, gpu=None, client=None, uhr=time.monotonic):
     gpu = gpu if isinstance(gpu, dict) else None
     return {"v": 1, "dienste": dienste, "anfragen": anfragen[:BILD_MAX * 2], "vllm": vllm, "kanarie": kanarie,
             "gpu": gpu_mehr() if gpu is not None else {}, "speicher": speicher((gpu or {}).get("processes")),
-            "mem": _mem(), "fertig": fertig, "bremse": bremse, "nvrm": nvrm() if gpu is not None else None, "dauer_ms": int((uhr() - t0) * 1000)}
+            "mem": _mem(), "uhr": round(uhr(), 3), "fertig": fertig, "bremse": bremse, "nvrm": nvrm() if gpu is not None else None, "dauer_ms": int((uhr() - t0) * 1000)}
 
 
 def _mem():

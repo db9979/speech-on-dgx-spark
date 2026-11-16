@@ -90,6 +90,7 @@ function mgChart(box,K){if(!box)return;const W=800,H=60,n=K.length;
       <svg class="mgchart" data-k="${k}" data-top="${top}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"></svg></div>`}).join('')
     +`<div class="mgcr"><span></span><div class="mgachse"><span>${esc(mgZeit(K[0].t))}</span><span>${esc(mgZeit(K[Math.floor((n-1)/2)].t))}</span><span>${esc(t('jetzt','now'))}</span></div></div>`);
   box.querySelectorAll('svg[data-k]').forEach(svg=>{const k=svg.dataset.k,top=+svg.dataset.top,cls=MG_SERIEN.find(x=>x[0]===k)[3];
+    svg.textContent='';   // setHtml keeps the same nodes when nothing in the text changed: draw them anew, never twice
     for(const y of [1,H/2,H-1])svg.appendChild(mgSvg('line',{x1:0,x2:W,y1:y,y2:y,class:'mggrid'}));
     let d='',pen=false;K.forEach((p,i)=>{const v=p[k];if(v==null){pen=false;return}const x=i/(n-1)*W,y=H-2-Math.min(1,v/top)*(H-4);d+=(pen?'L':'M')+x.toFixed(1)+' '+y.toFixed(1);pen=true});
     svg.appendChild(mgSvg('path',{d,class:'mgline '+cls}));svg.appendChild(mgSvg('line',{x1:0,x2:0,y1:0,y2:H,class:'mgcur',visibility:'hidden'}))});

@@ -111,6 +111,18 @@ class Fern(unittest.TestCase):
         self.assertEqual(len(a["kurve"]), 2)
         self.assertEqual(a["gpu"]["drossel_namen"], [["Taktgrenze", "clock cap"]])
 
+    def test_a_cached_look_again_keeps_the_rate(self):
+        """Dominik 2026-11-16 (Verlauf mit Zacken): the Wärter's status is cached, so the sampler may get the same look
+        twice; that is no zero between two rates, and the rate uses the time between the measurements themselves."""
+        self.status = {"betrieb": dict(look(raus=10000), uhr=500.0)}
+        with redirect_stdout(io.StringIO()):
+            modellgenau.probe(None, {}, now=1_800_000_000, mono=1000.0)
+            self.status = {"betrieb": dict(look(raus=10600), uhr=503.0)}
+            modellgenau.probe(None, {}, now=1_800_000_004, mono=1004.5)     # the panel's own clock: 4.5 s
+            modellgenau.probe(None, {}, now=1_800_000_007, mono=1007.5)     # the very same look again
+        k = modellgenau.ansicht("20m", {})["kurve"]
+        self.assertEqual([p["tok"] for p in k], [None, 200.0, 200.0])      # 600 tokens in the computer's 3 s
+
     def test_hangs_orphans_and_refused_memory(self):
         """alzeo ideas (Dominik 2026-11-16 „alles“): hängt, requests nobody waits for, the driver refusing memory."""
         out = self.runde(1_800_000_000, 1000.0, nvrm={"h1": 0, "h24": 2})
@@ -578,6 +590,8 @@ class Seitenbild(unittest.TestCase):
                     self.assertEqual(await pg.evaluate("document.querySelectorAll('#zmgbody .mgtab')[0].querySelectorAll('tbody tr').length"), 3)
                     self.assertEqual(await pg.evaluate("document.querySelectorAll('#zmgbody .mgtab')[1].querySelectorAll('tbody tr').length"), 3)
                     self.assertTrue(await pg.evaluate("[...document.querySelectorAll('#zmgbody [data-w]')].every(e=>e.style.width.endsWith('%'))"))
+                    self.assertEqual(await pg.evaluate("document.querySelectorAll('#zmgcharts svg path').length"), 3)
+                    await pg.evaluate("mgDraw();mgDraw()")              # drawn again with the same text: still one line each
                     self.assertEqual(await pg.evaluate("document.querySelectorAll('#zmgcharts svg path').length"), 3)
                     self.assertIn("tok/s", await pg.inner_text("#zmgcharts"))          # the value now and the scale beside
                     box = await pg.evaluate("(()=>{const s=document.querySelector('#zmgcharts svg');s.scrollIntoView({block:'center'});"

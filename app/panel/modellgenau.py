@@ -155,6 +155,7 @@ def pruefen(b):
             "kanarie": {"status": k.get("status") if k.get("status") in ("ready", "loading", "error", "down") else None,
                         "ms": _zahl(k.get("ms"), 1e7)} if k else None,
             "gpu": gpu, "speicher": speicher, "mem": {k: _zahl(mem.get(k), 65536) for k in ("frei", "gesamt")},
+            "uhr": _zahl(b.get("uhr"), 1e12),
             "fertig": modellblick.fertige(b.get("fertig")), "nvrm": _nvrm(b.get("nvrm")), "bremse": _bremse(b.get("bremse"))}
 
 
@@ -349,9 +350,15 @@ def probe(gpu=None, cfg=None, now=None, mono=None):
         fenster = _stand["fenster"]
         while fenster and mono - fenster[0]["mono"] > FENSTER_S:
             fenster.popleft()
-        raten = _raten(alt, m, (mono - t_alt) if t_alt is not None else 0, fenster)
-        _ereignisse_ableiten(m, now)
-        fenster.append(dict(m, mono=mono))
+        gleich = alt is not None and m.get("uhr") is not None and m["uhr"] == alt.get("uhr")
+        if gleich:      # the same look again (the Wärter's status is cached): no new rates, no zero between two
+            raten = _stand["raten"]
+        else:           # the time between two looks on the computer that measured them, else on this one
+            dt = m["uhr"] - alt["uhr"] if alt is not None and m.get("uhr") is not None and alt.get("uhr") is not None \
+                else (mono - t_alt) if t_alt is not None else 0
+            raten = _raten(alt, m, dt, fenster)
+            _ereignisse_ableiten(m, now)
+            fenster.append(dict(m, mono=mono))
         _stand.update(letzt=m, t=mono, raten=raten, gpu=gpu if isinstance(gpu, dict) else None)
         p = _punkt(now, m, raten, gpu if isinstance(gpu, dict) else None, frei)
         _kurz.append(p)
