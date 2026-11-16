@@ -255,6 +255,10 @@ class Rating(Base):
         c, uid = profile("FaeEmil")
         self.assertEqual(faelle.phrase("Das war falsch."), "schlecht")
         self.assertEqual(faelle.phrase("Gut so!"), "gut")
+        # CarPlay by voice (Dominik 2026-11-16 „4a“): the thumb words too
+        self.assertEqual(faelle.phrase("Daumen runter"), "schlecht")
+        self.assertEqual(faelle.phrase("Daumen hoch!"), "gut")
+        self.assertIsNone(faelle.phrase("Daumen hoch für das Wetter morgen"))
         self.assertIsNone(faelle.phrase("Das war falsch, sag mir das Wetter"))
         c.post("/api/chat", json={"messages": [{"role": "user", "content": "Hallo"}]})
         r = c.post("/api/chat", json={"messages": [{"role": "user", "content": "Das war falsch"}]})

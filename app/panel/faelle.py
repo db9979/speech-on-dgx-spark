@@ -103,8 +103,8 @@ REFUSAL = re.compile(r"(?i)\b(kann ich (leider |noch |dir |dir leider |dir noch 
                      r"i can(no|')t do that|i (do not|don't) have access)\b")
 # "Das war falsch" / "Gut so" right after an answer: the person's whole message, fixed words
 _BAD = re.compile(r"(?i)^\s*(nein,?\s*)?(das|es)\s+(war|ist)\s+(falsch|nicht richtig|verkehrt)\s*[.!]*\s*$|"
-                  r"^\s*falsche antwort\s*[.!]*\s*$|^\s*that was wrong\s*[.!]*\s*$")
-_GOOD = re.compile(r"(?i)^\s*(gut so|passt so|richtig so|das war (gut|richtig)|genau richtig|that was (good|right))"
+                  r"^\s*(falsche antwort|daumen runter)\s*[.!]*\s*$|^\s*(that was wrong|thumbs down)\s*[.!]*\s*$")
+_GOOD = re.compile(r"(?i)^\s*(gut so|passt so|richtig so|das war (gut|richtig)|genau richtig|daumen hoch|that was (good|right)|thumbs up)"
                    r"\s*[.!]*\s*$")
 _lock = threading.Lock()
 _recent = {}          # rid -> summary of a finished turn (memory only)

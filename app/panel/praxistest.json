@@ -6330,6 +6330,14 @@
 "titel": "Dungeon: Reiter „Regeln“ nach der Aufteilung",
 "text": "Als Admin Dungeon-Master öffnen, Reiter „Regeln“: Katalog, eigene Geschichten und „Geschichte planen“ öffnen wie bisher, ein Eintrag lässt sich ansehen und ändern. Danach eine Runde öffnen und einen Zug schicken: alles wie vorher.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P921",
+"v": 1481,
+"titel": "CarPlay: Antworten bewerten und Issue erstellen",
+"text": "Im Auto mit Bewerten oder Probleme melden frei: zwei Fragen stellen, dann „Antworten bewerten“ antippen. Die letzten Antworten stehen mit deiner Frage da. Eine antippen, „Falsche Antwort“ wählen: kurz „Danke, notiert.“, die Zeile zeigt danach den Daumen runter. Nochmal eine Antwort antippen, „Issue erstellen“: das Mikrofon geht auf, das Auto zeigt „Was war falsch?“, einen Satz sagen. Spark sagt, ob das Issue auf GitHub ist oder als Entwurf unter Ich → Probleme melden liegt; im Entwurf stehen Frage, Antwort, Weg und das App-Protokoll. Direkt nach einer Antwort „Daumen hoch“ sagen: Spark sagt „Danke, freut mich.“",
+"thread": "Bewerten und Fehler melden in CarPlay",
+"test": "test_carplay.Verdicts.test_one_flat_list_per_answer"
 }
 ]
 }

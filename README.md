@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.481** CarPlay: rate the last answers with thumbs up or down, or create an issue for one by voice, with the app's sound log attached
 - **V01.1.480** Dungeon review 15 Nov, point 10: dungeon.py and dungeon.js split, no visible change: the 78 endpoints in their own file with their own router, the admin's rules page in its own script
 - **V01.1.479** RED FIX: calendar page test no longer flaky
 - **V01.1.478** RED-FIX: the notes bubble test measures in one step
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.474** ROT-FIX Dungeon phone bar: the bar no longer grows with the text (status one line with "…", suggestions one row to swipe); with GitHub's wider font it took more than half the height, which made test_the_phone_table_head_fight_field_group_and_hero a lasting flake, now checked with wide letters
 - **V01.1.473** The ladybug covers nothing: on the computer in the side menu beside the microphone, on the phone with room beside it; a guard test checks every page
 - **V01.1.472** Dungeon Master: fights of 6 to 7 turns at most at the same win rate, bosses measured again, no checks question to the model where the panel already decides
-- **V01.1.471** Ideas from OpenFuse 3: fill PDF forms, save them as a new document and mail them as an answer
 
 
 

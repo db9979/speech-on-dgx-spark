@@ -1088,15 +1088,16 @@ def _around(t, staff, now):
     return out[-MAX_LINES:]
 
 
-def create_answer(uid, name, channel, aid, text="", staff=False, now=None):
-    """A draft bound to one kept answer of the caller (its own only). Raises HTTPException (404 when it is gone)."""
+def create_answer(uid, name, channel, aid, text="", staff=False, now=None, applog=""):
+    """A draft bound to one kept answer of the caller (its own only). Raises HTTPException (404 when it is gone).
+    applog: the app's Ton-Protokoll (CarPlay „Issue erstellen“), outside data, anonymized like every line."""
     now = time.time() if now is None else now
     with _lock:
         a = _answers.get(aid) if AID.fullmatch(str(aid or "")) else None
     if not a or a["uid"] != uid or now - a["t"] > ANSWER_S:
         raise HTTPException(404, "Diese Antwort ist zu alt oder nicht deine.")
     desc = clean_text(text) or "(Beschreibung folgt)"
-    d = create(uid, name, channel, desc, "antwort", 10, reqs=False, sysinfo=True, staff=staff, now=now)
+    d = create(uid, name, channel, desc, "antwort", 10, reqs=False, sysinfo=True, staff=staff, now=now, applog=applog)
     k = known()
     an = Anon(k)
     an.n = dict(d.get("counts") or {})
@@ -1346,17 +1347,27 @@ async def post_draft(request: Request):
 
 @router.post("/api/report/answer", dependencies=[Depends(assistant)])
 async def post_answer(request: Request):
-    """{id, text}: „Melden“ under an answer: a draft bound to that answer of the caller's own (the last 24 hours);
-    with „Direkt an GitHub senden“ on it goes out right away (see direct)."""
+    """{id, text, ask?, applog?}: „Melden“ under an answer: a draft bound to that answer of the caller's own (the last
+    24 hours); with „Direkt an GitHub senden“ on it goes out right away (see direct). ask (CarPlay „Issue erstellen“,
+    Dominik 2026-11-16): no text yet, the next spoken message (once, within three minutes) becomes the description,
+    like after „Mach ein Issue draus“. applog: the app's Ton-Protokoll, only from the app."""
     who = caller(request)
     guard.limit(request, "report", uid=who["uid"] or None, admin=who["staff"])
-    b = await core.json_body(request, 4096)
+    b = await core.json_body(request, MAX_APPLOG + 4096)
     if not AID.fullmatch(str(b.get("id") or "")) or not isinstance(b.get("text", ""), str):
         raise HTTPException(400, "id and text")
+    applog = b.get("applog") if isinstance(b.get("applog"), str) and who["channel"] == "app" else ""
+    ask = b.get("ask") is True and not b.get("text") and bool(who["uid"])
     d = await asyncio.to_thread(create_answer, who["uid"], who["name"], who["channel"], b["id"], b.get("text", ""),
-                                who["staff"] and who["logs"])
+                                who["staff"] and who["logs"], None, applog)
     _live_mark("Antwort-Entwurf angelegt", who["channel"])
     said = await direct(d, who["uid"], who["channel"]) if len(d["parts"]["text"]) >= 3 and b.get("text") else ""
+    if ask:
+        with _lock:
+            _wait[who["uid"]] = (d["id"], time.time())
+        print(f"meldung: Antwort-Entwurf {d['id']} | wartet auf Beschreibung | {len(d['parts']['applog'])} App-Zeilen",
+              flush=True)
+        said = "Was war falsch? Sag es mir in einem Satz."
     d = _read(d["id"]) or d
     return dict(view(d, who["uid"]), preview=preview(d), raw=d.get("raw"), said=said)
 

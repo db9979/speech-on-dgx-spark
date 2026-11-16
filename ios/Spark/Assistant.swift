@@ -89,24 +89,26 @@ final class Conversation: ObservableObject {
 
     /// 👍/👎 under an answer (POST /api/chat/rate). 👎 with one of five reasons, a short text and, only when the
     /// person says so, the question. A vote can be changed.
+    /// label: already translated (String), so the same five reasons serve the phone's picker and the CarPlay rows
     struct RateReason: Identifiable {
         let id: String
-        let label: LocalizedStringKey
+        let label: String
     }
     static let rateReasons = [
-        RateReason(id: "werkzeug", label: "falsches Werkzeug"), RateReason(id: "antwort", label: "falsche Antwort"),
-        RateReason(id: "langsam", label: "zu langsam"), RateReason(id: "verstanden", label: "nicht verstanden"),
-        RateReason(id: "aussprache", label: "falsch ausgesprochen")]
+        RateReason(id: "werkzeug", label: String(localized: "falsches Werkzeug")), RateReason(id: "antwort", label: String(localized: "falsche Antwort")),
+        RateReason(id: "langsam", label: String(localized: "zu langsam")), RateReason(id: "verstanden", label: String(localized: "nicht verstanden")),
+        RateReason(id: "aussprache", label: String(localized: "falsch ausgesprochen"))]
     /// „Hätte nachsehen sollen in …“ (faelle.SOLL on the Spark): only the chosen key goes along
     static let rateSoll = [
-        RateReason(id: "dokumente", label: "meinen Dokumenten"), RateReason(id: "erstellt", label: "erstellten Dokumenten"),
-        RateReason(id: "kalender", label: "Kalender"), RateReason(id: "mail", label: "Mails"),
-        RateReason(id: "geraete", label: "Geräten"), RateReason(id: "erinnerung", label: "Erinnerungen"),
-        RateReason(id: "web", label: "Web"), RateReason(id: "verlauf", label: "früheren Gesprächen")]
+        RateReason(id: "dokumente", label: String(localized: "meinen Dokumenten")), RateReason(id: "erstellt", label: String(localized: "erstellten Dokumenten")),
+        RateReason(id: "kalender", label: String(localized: "Kalender")), RateReason(id: "mail", label: String(localized: "Mails")),
+        RateReason(id: "geraete", label: String(localized: "Geräten")), RateReason(id: "erinnerung", label: String(localized: "Erinnerungen")),
+        RateReason(id: "web", label: String(localized: "Web")), RateReason(id: "verlauf", label: String(localized: "früheren Gesprächen"))]
 
-    func rate(_ id: UUID, good: Bool, reason: String = "", note: String = "", question: Bool = false, soll: String = "") async {
+    @discardableResult
+    func rate(_ id: UUID, good: Bool, reason: String = "", note: String = "", question: Bool = false, soll: String = "") async -> Bool {
         guard let i = messages.firstIndex(where: { $0.id == id }), let rid = messages[i].rateId,
-              let api = SparkAPI.current else { return }
+              let api = SparkAPI.current else { return false }
         var body: [String: Any] = ["id": rid, "good": good]
         if !good {
             body["grund"] = reason
@@ -118,8 +120,10 @@ final class Conversation: ObservableObject {
             _ = try await api.post("api/chat/rate", body)
             if let j = messages.firstIndex(where: { $0.id == id }) { messages[j].rated = good }
             notice = good ? String(localized: "Danke!") : String(localized: "Danke, notiert.")
+            return true
         } catch {
             self.error = error.localizedDescription
+            return false
         }
     }
     /// „Melden“ under an answer (POST /api/report/answer): a report bound to exactly this answer. The Spark keeps a
@@ -138,6 +142,59 @@ final class Conversation: ObservableObject {
             self.error = error.localizedDescription
         }
     }
+    /// „Antworten bewerten“ in CarPlay (Dominik 2026-11-16 „1a 2a 3a 4a“): one of the newest answers that can still get
+    /// a 👍/👎 or a report, with the question before it (only for the row; nothing of it goes into the Ton-Protokoll)
+    struct CarAnswer {
+        let id: UUID
+        let question: String
+        let answer: String
+        let rated: Bool?
+        let reported: Bool
+        let canRate: Bool
+        let canReport: Bool
+    }
+    static let carAnswersMax = 5
+    /// the last lines of the Ton-Protokoll that go with a report from the car (fixed words only, AudioEngine.note)
+    static let carReportLines = 60
+
+    func carAnswers() -> [CarAnswer] {
+        var out: [CarAnswer] = []
+        for (i, m) in messages.enumerated().reversed() where m.role == "assistant" && !m.text.isEmpty {
+            let rate = allowed.rate && m.rateId != nil
+            let report = allowed.report && m.reportId != nil
+            guard rate || report else { continue }
+            let q = i > 0 && messages[i - 1].role == "user" ? messages[i - 1].text : ""
+            out.append(CarAnswer(id: m.id, question: q, answer: m.text, rated: m.rated, reported: m.reported != nil,
+                                 canRate: rate, canReport: report))
+            if out.count >= Self.carAnswersMax { break }
+        }
+        return out
+    }
+
+    /// „Issue erstellen“ in CarPlay: a report bound to exactly this answer, with the last lines of the Ton-Protokoll
+    /// (POST /api/report/answer with ask). The Spark then waits for the description: the microphone opens at once
+    /// (the voice window asks „Was war falsch?“) and the next words go to the Spark as they are, never to a game or a
+    /// reminder; the Spark answers by its fixed rule (sent as an issue, or a draft under Ich → Probleme melden).
+    func carReport(_ id: UUID) async -> Bool {
+        guard let i = messages.firstIndex(where: { $0.id == id }), let aid = messages[i].reportId,
+              let api = SparkAPI.current else { return false }
+        let body: [String: Any] = ["id": aid, "text": "", "ask": true,
+                                   "applog": AudioEngine.diary.suffix(Self.carReportLines).joined(separator: "\n")]
+        do {
+            _ = try await api.post("api/report/answer", body)
+        } catch {
+            self.error = error.localizedDescription
+            return false
+        }
+        if let j = messages.firstIndex(where: { $0.id == id }) {
+            messages[j].reported = String(localized: "Entwurf angelegt. Du findest ihn bei „Problem melden“ in den Einstellungen.")
+        }
+        if phase == .speaking || phase == .thinking || phase == .transcribing { stop("neue Frage") }
+        reportNext = true
+        listen(preroll: 0, fromWake: false)
+        return true
+    }
+
     /// „Nochmal nachschauen“ under an answer marked „Nicht belegt“: the question before it once more, a tool a must
     func recheck(_ id: UUID) {
         guard let i = messages.firstIndex(where: { $0.id == id }), i > 0, messages[i - 1].role == "user" else { return }
@@ -283,6 +340,8 @@ final class Conversation: ObservableObject {
     private(set) var lastEnd = ""
     /// „Erinnerung sprechen“ (CarPlay): the next question is a reminder („Erinnere mich …“ goes in front)
     private(set) var remindNext = false
+    /// „Issue erstellen“ (CarPlay): the next words are the report's description (the Spark waits for it)
+    private(set) var reportNext = false
     /// „Dungeon-Master spielen“ (CarPlay, Dominik 2026-10-23 „Alles umsetzten“, 2026-10-24 Punkte 8-13): what is said
     /// goes to the game (POST /api/profile/dungeon/auto, dungeon_auto.py), not to the assistant. The Spark answers fixed
     /// questions and commands about the own hero by its rules or takes it as the hero's action; the app never decides
@@ -592,6 +651,7 @@ final class Conversation: ObservableObject {
             AudioEngine.note("Ende: " + (why.isEmpty ? "ohne Grund, Zeile \(line)" : why))
         }
         remindNext = false
+        reportNext = false
         game = false
         gameWait = false
         gameAsk = nil
@@ -970,6 +1030,12 @@ final class Conversation: ObservableObject {
                     leaveGame()
                     carEnd(sad: false)
                     base(inGame ? "Spiel verlassen" : "Danke gesagt")
+                    return
+                }
+                // „Issue erstellen“: the words are the description, sent as they are (never a game action or a reminder)
+                if reportNext {
+                    reportNext = false
+                    await send(text, api)
                     return
                 }
                 // „Erinnerung sprechen“: the words become a reminder (the Spark's own reminder tool decides the rest)

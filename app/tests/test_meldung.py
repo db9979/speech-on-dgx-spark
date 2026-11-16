@@ -562,6 +562,38 @@ class AnswerReports(Base):
         self.assertEqual(sorted(d["skip"]), sorted(x["n"] for x in d["lines"] if x["part"] == "qa"))
         self.assertNotIn("RpBruno", json.dumps(d["preview"]))
 
+    def test_carplay_report_asks_and_takes_the_app_log(self):
+        """CarPlay „Issue erstellen“ (Dominik 2026-11-16 „3a“): no text yet, the Spark waits for the spoken description
+        (the next message, like after „Mach ein Issue draus“); the app's Ton-Protokoll goes along, anonymized, and
+        only from the app's own key, never from a browser login."""
+        helpers.set_config(iphone=True)
+        try:
+            p, uid = profile("RpCarla")
+            p.put("/api/profile/settings", json={"app_on": True})
+            a = client()
+            a.headers[profiles.DEVICE_HEADER] = profiles.add_device("RpCarla App", uid, scope="app")
+            aid = self.aid(self.ask(a, "Wie spät ist es?", client="app"))
+            self.assertTrue(aid)
+            d = a.post("/api/report/answer", json={"id": aid, "text": "", "ask": True,
+                                                  "applog": "CarPlay: verbunden\nRpCarla 10.1.2.3"}).json()
+            self.assertEqual(d["said"], "Was war falsch? Sag es mir in einem Satz.")
+            log = [x["line"] for x in d["lines"] if x["part"] == "applog"]
+            self.assertEqual(log[0], "CarPlay: verbunden")
+            self.assertNotIn("RpCarla", log[1])
+            self.assertNotIn("10.1.2.3", log[1])
+            self.assertTrue(meldung.waits(uid))
+            self.ask(a, "Die Uhrzeit war eine Stunde falsch", client="app")
+            self.assertFalse(meldung.waits(uid))
+            self.assertEqual(meldung._read(d["id"])["parts"]["text"], "Die Uhrzeit war eine Stunde falsch")
+            # a browser login sends no app log, and a text makes no wait
+            aid = self.aid(self.ask(p, "Wie spät ist es?"))
+            d = p.post("/api/report/answer", json={"id": aid, "text": "falsch", "ask": True, "applog": "x y z"}).json()
+            self.assertEqual([x for x in d["lines"] if x["part"] == "applog"], [])
+            self.assertFalse(meldung.waits(uid))
+            self.assertEqual(d["said"], "")
+        finally:
+            helpers.set_config(iphone=False)
+
     def test_tool_results_go_along_unticked(self):
         """Issue 1 (2026-11-13): whether the tool or the model was wrong shows only with what the tool gave back."""
         c, uid = profile("RpTilo")

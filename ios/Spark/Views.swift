@@ -1167,7 +1167,7 @@ struct RateSheet: View {
                 Section("Was war falsch?") {
                     Picker("Grund", selection: $reason) {
                         Text("ohne Grund").tag("")
-                        ForEach(Conversation.rateReasons) { r in Text(r.label).tag(r.id) }
+                        ForEach(Conversation.rateReasons) { r in Text(verbatim: r.label).tag(r.id) }
                     }
                     .pickerStyle(.inline)
                     .labelsHidden()
@@ -1178,7 +1178,7 @@ struct RateSheet: View {
                 Section("Hätte nachsehen sollen in (freiwillig)") {
                     Picker("Hätte nachsehen sollen in", selection: $soll) {
                         Text("weiß nicht").tag("")
-                        ForEach(Conversation.rateSoll) { r in Text(r.label).tag(r.id) }
+                        ForEach(Conversation.rateSoll) { r in Text(verbatim: r.label).tag(r.id) }
                     }
                     .pickerStyle(.menu)
                 }

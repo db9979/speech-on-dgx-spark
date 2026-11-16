@@ -494,6 +494,7 @@ def app_hello(prof=Depends(own_profile), request: Request = None):
             "panel": features.allowed("iphonepanel", prof["id"]), "areas": panel_rights(prof["id"]),
             # "Problem melden" in the settings (meldung.py): admin switch and the profile's own
             "report": features.allowed("melden", prof["id"]),
+            "rate": features.allowed("bewerten", prof["id"]),   # 👍/👎 in CarPlay („Antworten bewerten“)
             # "Vom Spark erstellt" (docmake.py): the made documents to look at, download and share
             "make": features.allowed("erstellen", prof["id"]),
             # calls between profiles (anrufe.py): call buttons in a chat of two, CallKit, VoIP push only with this on

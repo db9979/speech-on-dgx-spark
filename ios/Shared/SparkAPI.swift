@@ -138,6 +138,8 @@ struct Allowed: Equatable, Codable {
     var adminRole = ""
     /// "Problem melden" (meldung.py): admin switch chat.report, not blocked for this profile
     var report = false
+    /// 👍/👎 on answers (faelle.py, admin switch chat.rate): the row „Antworten bewerten“ in CarPlay
+    var rate = false
     /// "Vom Spark erstellt" (docmake.py): admin switch chat.doc_make, not blocked for this profile
     var make = false
     /// Anrufe (anrufe.py): voice and video in a chat of two, ringing through CallKit (Calls.swift)
@@ -378,7 +380,7 @@ struct SparkAPI {
                        panel: d["panel"] as? Bool ?? false,
                        areas: Set(((d["areas"] as? [String: Any]) ?? [:]).compactMap { $0.value as? Bool == true ? $0.key : nil }),
                        adminRole: ["admin", "manager"].contains(d["admin_role"] as? String ?? "") ? d["admin_role"] as? String ?? "" : "",
-                       report: d["report"] as? Bool ?? false, make: d["make"] as? Bool ?? false,
+                       report: d["report"] as? Bool ?? false, rate: d["rate"] as? Bool ?? false, make: d["make"] as? Bool ?? false,
                        calls: d["calls"] as? Bool ?? false, keep: d["keep"] as? Bool ?? false,
                        bargeHold: d["barge_hold"] as? Bool ?? false)
     }

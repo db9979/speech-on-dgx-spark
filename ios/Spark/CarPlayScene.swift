@@ -41,6 +41,14 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
     private var faceLater = false
     private var day: CPListItem?
     private var remind: CPListItem?
+    /// „Antworten bewerten“ (Dominik 2026-11-16 „1a 2a 3a 4a“): the last answers, each with one flat list of verdicts
+    private var rateRow: CPListItem?
+    /// what decides which rows the main list has: the released areas and whether 👍/👎 or reports are allowed
+    private struct Rows: Equatable {
+        let areas: Set<String>
+        let verdicts: Bool
+    }
+    private static func rows(_ a: Allowed) -> Rows { Rows(areas: a.areas, verdicts: a.rate || a.report) }
     /// „Hörstücke": the list behind the row and what it shows, redrawn when the player plays or pauses
     private var hsSub: CPListTemplate?
     private var hsList: [HsSpur] = []
@@ -98,11 +106,19 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
             self?.remindMe()
         }
         self.remind = remind
-        let list = CPListTemplate(title: "Spark", sections: [CPListSection(items: items(talk.allowed.areas))])
+        let rateRow = CPListItem(text: String(localized: "Antworten bewerten"),
+                                 detailText: String(localized: "Daumen oder Issue zu den letzten Antworten"),
+                                 image: UIImage(systemName: "hand.thumbsup"))
+        rateRow.handler = { [weak self] _, done in
+            done()
+            self?.answers()
+        }
+        self.rateRow = rateRow
+        let list = CPListTemplate(title: "Spark", sections: [CPListSection(items: items(Self.rows(talk.allowed)))])
         self.list = list
         interfaceController.setRootTemplate(list, animated: false, completion: nil)
         // hello often arrives after the car connected: the rows for Kalender and E-Mail follow it
-        watchAreas = talk.$allowed.map(\.areas).removeDuplicates().receive(on: RunLoop.main).sink { [weak self] a in
+        watchAreas = talk.$allowed.map(Self.rows).removeDuplicates().receive(on: RunLoop.main).sink { [weak self] a in
             guard let self, let list = self.list else { return }
             list.updateSections([CPListSection(items: self.items(a))])
         }
@@ -148,6 +164,10 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
                                 image: FaceStill.image(kind, .sad) ?? UIImage(systemName: "hourglass"), repeats: false),
             CPVoiceControlState(identifier: "remind", titleVariants: [String(localized: "Woran soll ich dich erinnern?")],
                                 image: FaceStill.image(kind, .listen) ?? UIImage(systemName: "bell"), repeats: true),
+            CPVoiceControlState(identifier: "report", titleVariants: [String(localized: "Was war falsch?")],
+                                image: FaceStill.image(kind, .listen) ?? UIImage(systemName: "ladybug"), repeats: true),
+            CPVoiceControlState(identifier: "thanks", titleVariants: [String(localized: "Danke, notiert.")],
+                                image: FaceStill.image(kind, .idle) ?? UIImage(systemName: "checkmark"), repeats: false),
             CPVoiceControlState(identifier: "mic", titleVariants: [String(localized: "Mikrofon in der App erlauben")],
                                 image: FaceStill.image(kind, .sad) ?? UIImage(systemName: "mic.slash"), repeats: false)])
     }
@@ -192,8 +212,10 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
 
     /// The rows: talking, a new conversation, and with Kalender and E-Mail released the assistant reads them aloud
     /// (plan kalender-mail Stufe 4: the car shows no text, the answer is spoken like any other).
-    private func items(_ areas: Set<String>) -> [CPListItem] {
+    private func items(_ rows: Rows) -> [CPListItem] {
+        let areas = rows.areas
         var out = [start, day, repeatRow].compactMap { $0 }
+        if rows.verdicts, let rateRow { out.append(rateRow) }
         if Conversation.shared.allowed.reminders, let remind { out.append(remind) }
         if areas.contains("calendar") {
             let cal = CPListItem(text: String(localized: "Termine vorlesen"), detailText: String(localized: "Was heute und morgen ansteht"),
@@ -474,6 +496,91 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
         if talk.phase != .idle && talk.phase != .waiting { talk.stop("Spiel verlassen") }
     }
 
+    /// „Antworten bewerten“ (Dominik 2026-11-16): the last five answers, the question large and the answer's start small,
+    /// the icon shows a verdict already given. Only tapping, nothing to type; with none yet the car says so for a moment.
+    private func answers() {
+        AudioEngine.note("CarPlay: Knopf Bewerten")
+        guard let interface, let list, interface.topTemplate === list else { return }
+        let rows = Conversation.shared.carAnswers().map { a -> CPListItem in
+            let icon = a.rated == true ? "hand.thumbsup.fill" : a.rated == false ? "hand.thumbsdown.fill" : a.reported ? "ladybug.fill" : "text.bubble"
+            let row = CPListItem(text: a.question.isEmpty ? String(localized: "Antwort") : "„" + String(a.question.prefix(80)) + "“",
+                                 detailText: String(a.answer.prefix(90)), image: UIImage(systemName: icon))
+            row.handler = { [weak self] _, done in
+                done()
+                self?.verdicts(a)
+            }
+            return row
+        }
+        guard !rows.isEmpty else { flash("none"); return }
+        let sub = CPListTemplate(title: String(localized: "Antworten bewerten"), sections: [CPListSection(items: rows)])
+        interface.pushTemplate(sub, animated: true) { _, _ in }
+    }
+
+    /// One flat list for one answer (2a): 👍 „Passt“, 👎 with each of the five reasons of the app, „Issue erstellen“.
+    /// One tap and done: CarPlay allows few levels, so no second list of reasons.
+    private func verdicts(_ a: Conversation.CarAnswer) {
+        guard let interface else { return }
+        var rows: [CPListItem] = []
+        if a.canRate {
+            let up = CPListItem(text: String(localized: "Passt"), detailText: String(localized: "Daumen hoch"),
+                                image: UIImage(systemName: "hand.thumbsup"))
+            up.handler = { [weak self] _, done in
+                done()
+                self?.verdict(a.id, good: true, reason: "")
+            }
+            rows.append(up)
+            for r in Conversation.rateReasons {
+                let down = CPListItem(text: r.label.prefix(1).uppercased() + r.label.dropFirst(), detailText: String(localized: "Daumen runter"),
+                                      image: UIImage(systemName: "hand.thumbsdown"))
+                down.handler = { [weak self] _, done in
+                    done()
+                    self?.verdict(a.id, good: false, reason: r.id)
+                }
+                rows.append(down)
+            }
+        }
+        if a.canReport {
+            let bug = CPListItem(text: String(localized: "Issue erstellen"), detailText: String(localized: "Sag kurz, was falsch war"),
+                                 image: UIImage(systemName: "ladybug"))
+            bug.handler = { [weak self] _, done in
+                done()
+                self?.issue(a.id)
+            }
+            rows.append(bug)
+        }
+        let title = a.question.isEmpty ? String(localized: "Antwort") : "„" + String(a.question.prefix(40)) + "“"
+        interface.pushTemplate(CPListTemplate(title: title, sections: [CPListSection(items: rows)]), animated: true) { _, _ in }
+    }
+
+    /// A 👍 or 👎 (POST /api/chat/rate, the same as under the answer in the app); the car shows „Danke, notiert“ for a
+    /// moment and goes back to the main list.
+    private func verdict(_ id: UUID, good: Bool, reason: String) {
+        AudioEngine.note(good ? "CarPlay: Knopf Daumen hoch" : "CarPlay: Knopf Daumen runter")
+        interface?.popToRootTemplate(animated: true) { _, _ in }
+        reachable { [weak self] in
+            Task { [weak self] in
+                let ok = await Conversation.shared.rate(id, good: good, reason: reason)
+                AudioEngine.note(ok ? "CarPlay: Bewertung gesendet" : "CarPlay: Bewertung ging nicht")
+                self?.flash(ok ? "thanks" : "fail")
+            }
+        }
+    }
+
+    /// „Issue erstellen“ (3a): the report is bound to the answer and carries the last lines of the Ton-Protokoll; the
+    /// microphone opens at once for the description („Was war falsch?“), the Spark says the outcome.
+    private func issue(_ id: UUID) {
+        AudioEngine.note("CarPlay: Knopf Issue erstellen")
+        guard micAllowed() else { return }
+        interface?.popToRootTemplate(animated: true) { _, _ in }
+        reachable { [weak self] in
+            Task { [weak self] in
+                let ok = await Conversation.shared.carReport(id)
+                AudioEngine.note(ok ? "CarPlay: Bericht angelegt" : "CarPlay: Bericht ging nicht")
+                if !ok { self?.flash("fail") }
+            }
+        }
+    }
+
     /// „Erinnerung sprechen“: listens at once, the voice window asks „Woran soll ich dich erinnern?“.
     private func remindMe() {
         AudioEngine.note("CarPlay: Knopf Erinnerung")
@@ -538,7 +645,7 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
     private func show(_ phase: Conversation.Phase) {
         let state: String?
         switch phase {
-        case .listening: state = Conversation.shared.remindNext ? "remind" : "listen"
+        case .listening: state = Conversation.shared.remindNext ? "remind" : Conversation.shared.reportNext ? "report" : "listen"
         case .transcribing, .thinking: state = "think"
         case .speaking: state = "speak"
         case .idle, .waiting: state = nil

@@ -517,3 +517,35 @@ class CodeReview(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Verdicts(unittest.TestCase):
+    """Dominik 2026-11-16 „1a 2a 3a 4a“: 👍/👎 and „Issue erstellen“ for the last answers in the car, only tapping."""
+
+    def test_row_only_with_rating_or_reports(self):
+        car = read("CarPlayScene.swift")
+        self.assertIn('String(localized: "Antworten bewerten")', car)
+        self.assertIn("if rows.verdicts, let rateRow { out.append(rateRow) }", car)
+        self.assertIn("Rows(areas: a.areas, verdicts: a.rate || a.report)", car)
+        self.assertIn('"rate": features.allowed("bewerten", prof["id"])', open(os.path.join(APP, "panel", "iphone.py"), encoding="utf-8").read())
+
+    def test_one_flat_list_per_answer(self):
+        car = read("CarPlayScene.swift")
+        v = body(car, "private func verdicts(")
+        self.assertIn("for r in Conversation.rateReasons", v)   # the app's five reasons, one source
+        self.assertIn('"Issue erstellen"', v)
+        self.assertNotIn("verdicts(", v.split("\n", 1)[1])     # no second level of lists
+        a = read("Assistant.swift")
+        self.assertIn("static let carAnswersMax = 5", a)
+        self.assertIn("allowed.rate && m.rateId != nil", body(a, "func carAnswers()"))
+
+    def test_issue_listens_for_the_description_with_the_log(self):
+        a = read("Assistant.swift")
+        r = body(a, "func carReport(")
+        self.assertIn('"ask": true', r)
+        self.assertIn("AudioEngine.diary.suffix(Self.carReportLines)", r)
+        self.assertIn("reportNext = true", r)
+        self.assertIn("reportNext = false", body(a, "private func base("))
+        car = read("CarPlayScene.swift")
+        self.assertIn('Conversation.shared.reportNext ? "report"', car)
+        self.assertIn("guard micAllowed() else { return }", body(car, "private func issue("))

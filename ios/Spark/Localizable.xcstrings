@@ -1,6 +1,76 @@
 {
   "sourceLanguage": "de",
   "strings": {
+    "Antworten bewerten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rate answers"
+          }
+        }
+      }
+    },
+    "Daumen oder Issue zu den letzten Antworten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thumbs or an issue for the last answers"
+          }
+        }
+      }
+    },
+    "Passt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Good"
+          }
+        }
+      }
+    },
+    "Daumen hoch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thumbs up"
+          }
+        }
+      }
+    },
+    "Daumen runter": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thumbs down"
+          }
+        }
+      }
+    },
+    "Issue erstellen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create issue"
+          }
+        }
+      }
+    },
+    "Sag kurz, was falsch war": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Say briefly what was wrong"
+          }
+        }
+      }
+    },
     "%@ anrufen?": {
       "localizations": {
         "en": {
