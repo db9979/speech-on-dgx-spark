@@ -11,7 +11,7 @@ is seen at once and can be taken back.
    the old conversation but one card through vorgaenge.put (kind CARD, key „gemerkt:<convo>“, at most CARD_MAX facts
    as lines, the ids and revs in daten "fakten"): „Stimmt“ confirms them (gedaechtnis.confirm), „Rückgängig“ takes
    them back (take_back), „Ansehen …“ opens Ich → Gedächtnis. Not urgent, never said (say=False): it stands in the
-   line „Noch offen“ above the next conversation, under Offen and as a number on the card Gedächtnis of Heute
+   counter „● N“ of the next conversation, under Offen and as a number on the card Gedächtnis of Heute
    (today.py). After OFFEN_TAGE days the card goes; the fact stays „gelernt, nicht bestätigt“.
 3. Rückgängig: POST /api/profile/memory/{id}/undo {"rev"}: only while the fact is unchanged since rev (else 409
    „inzwischen geändert“), only the own profile's facts (the file is the session's own). A new fact goes, a fixed place

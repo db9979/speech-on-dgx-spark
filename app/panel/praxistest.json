@@ -6402,6 +6402,22 @@
 "text": "Nach dem nächsten Start des Sprachmodells (Wechsel, „Lange Gespräche“ oder ein Update, das es neu startet) unter Zustand → Modelle → „Mehr“: unter „Letzte Starts“ steht der Start mit Modell, Speicher, Kontext, „Bereit nach … min“ und „Platz (Tokens)“. Die Kachel „Sprachmodell“ zeigt kein „Einstellung geändert“. Nach einem späteren Update, das den Eintrag des Sprachmodells ändert, ohne dass es neu startete, steht dort „Einstellung geändert“ mit „Neu starten“; der Knopf startet es mit den neuen Einstellungen, die Seite zeigt die Schritte wie bei „Lange Gespräche“.",
 "thread": "Modellkatalog für Spark und DGX Station bauen",
 "test": "test_startprotokoll.Seite.test_the_page_shows_it_and_restarts_only_when_it_differs"
+},
+{
+"id": "P930",
+"v": 1489,
+"titel": "Assistent: Startbild und eine Karte",
+"text": "Am Rechner Assistent öffnen und oben „Neu“ klicken: eine Karte, in der Mitte das Gesicht groß, darunter „Probier mal“ und „Zuletzt“ mit drei Gesprächen; keine Spalte mit Schaltern, keine Gesprächsliste daneben. Eine Frage stellen: das Gesicht steht klein links im Kopf, daneben „Bereit.“, das Gespräch in der Mitte. „⋯“ zeigt Hey Spark, Raum, Freihändig, Vorlesen, Gespräch einstellen und Löschen; der runde Knopf im Eingabefeld hört zu und wird während der Antwort zum Stopp. Der Knopf links im Kopf öffnet die Gespräche als Leiste, ein Klick daneben schließt sie.",
+"thread": "Assistent-Seite entschlacken",
+"test": "test_ui_browser.Browser.test_assistant_fills_the_window"
+},
+{
+"id": "P931",
+"v": 1489,
+"titel": "Assistent am Handy und iPhone: Zuletzt",
+"text": "Am Handy (Web-App) und in der iPhone-App ein neues Gespräch beginnen: unter dem Gesicht und den Vorschlägen stehen „Zuletzt“ und die drei neuesten Gespräche; Antippen setzt eins fort. In einem Gespräch ist das Gesicht in der iPhone-App kleiner als bisher.",
+"thread": "Assistent-Seite entschlacken",
+"test": "test_gespraechsliste.Static.test_a_list_instead_of_the_drop_down"
 }
 ]
 }

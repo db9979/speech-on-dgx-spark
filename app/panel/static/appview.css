@@ -42,6 +42,10 @@ body.appview.inchat #apface{display:flex;flex-direction:column;align-items:cente
 body.appview #apface #face{width:min(200px,50vw);transition:width .3s ease}
 body.appview.apmsgs #apface #face{width:96px}
 body.appview.kbd.apmsgs #apface #face{width:64px}
+/* „Zuletzt“ (chat.js fillZuletzt) under the suggestions while the conversation is empty (Vorschlag 3, 2026-11-16) */
+body.appview.inchat.apstart #chatlog{flex:none;contain:none}
+body.appview.inchat.apstart .dzul:not([hidden]){display:block;flex:none;margin:4px auto auto}
+@media (max-height:700px){body.appview.inchat.apstart .dzul:not([hidden]){display:none}}   /* a short phone keeps the face and the suggestions */
 #aphint{color:var(--mut);text-align:center;font-size:14px;margin:12px 20px 0;line-height:1.4}body.appview.apmsgs #aphint{display:none}
 body.appview #chatlog:empty::before{display:none}
 body.appview.inchat #chatlog{display:flex!important;flex:1;min-height:0;overflow-y:auto;padding:8px 4px 4px}

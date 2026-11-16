@@ -258,6 +258,8 @@ class Page(unittest.TestCase):
                 profiles.convo_meta(uid, "t0000000b02", name="Kalender <b>Woche</b>", pin=True)
                 await pg.evaluate("(async()=>{goSec('chat');await convos.sync();fillConvos()})()")
                 await self.until(pg, "document.querySelectorAll('#cvlrows [data-cid]').length>=2")
+                await pg.click("#cvlbtn")   # the list opens over the conversation (Vorschlag 3, 2026-11-16)
+                await self.until(pg, "!!$('convolist').offsetParent")
                 heads = await pg.evaluate("[...document.querySelectorAll('#cvlrows .ld-grp')].map(e=>e.textContent)")
                 self.assertEqual(heads[0], "Angeheftet")
                 row = "document.querySelector('#cvlrows [data-cid=t0000000b02]')"

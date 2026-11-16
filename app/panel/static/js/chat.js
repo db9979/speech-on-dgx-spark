@@ -553,7 +553,7 @@ voiceShow();
 try{$('chatwake').checked=localStorage.getItem('wake')==='1'}catch{}
 $('chatwake').onchange=()=>{try{localStorage.setItem('wake',$('chatwake').checked?'1':'0')}catch{}if($('chatwake').checked)startWake();else if(!(window.room&&room.on))stopWake()};
 // started once it is known who uses this page (see guestLock)
-$('talk').onclick=()=>{audioCtx();if(MOBILE.matches&&$('talk').classList.contains('ans')){$('chatstop').click();return}if(chat.rec)stopListening(false);else startListening()};
+$('talk').onclick=()=>{audioCtx();if($('talk').closest('.composer')&&$('talk').classList.contains('ans')){$('chatstop').click();return}if(chat.rec)stopListening(false);else startListening()};
 $('chatstop').onclick=()=>{endTurn();chatSay(t('Gestoppt.','Stopped.'));if(chat.queue.length){chat.qHeld=true;chatQueueDraw()}};
 // Nachschieben (Idee aus OpenFuse, Dominik 2026-11-15): a question typed while the Spark still answers waits in a
 // visible line above the field and goes out on its own, in order, once the answer and its voice are over. Stopp
@@ -649,10 +649,9 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden)convoLook(
 setInterval(()=>convoLook(false),30000);
 // Gespräche als Liste (Dominik 2026-11-14, Plan gespraeche-ablegen): left in the card the conversations grouped by
 // Heute, Gestern, Letzte 7 Tage and Älter (ldDayGroup), the open one in the accent, rows from the list building blocks (ld-row) and drawn
-// in parts with a fixed key (keyFill: an unchanged row stays the same node). A wide card shows the list beside the
-// conversation; a narrow one (and the phone) opens it over the conversation with the list button. Titles and texts go
-// in as text only (esc).
-const CV_WIDE=760;   // px of the card (its border box: the list's own room counts)  from which the list stands beside the conversation
+// in parts with a fixed key (keyFill: an unchanged row stays the same node). Since Vorschlag 3 „Sprechen zuerst“
+// (2026-11-16) the list opens over the conversation with the list button at every width; the start view shows the
+// three newest as „Zuletzt“. Titles and texts go in as text only (esc).
 const convoTs=x=>new Date(x).toLocaleTimeString(L==='en'?'en-GB':'de-DE',{hour:'2-digit',minute:'2-digit'});
 function convoWhen(ts){const d=new Date(ts),n=ldDay(ts);if(n<1)return convoTs(ts);
   if(n<7)return d.toLocaleDateString(L==='en'?'en-GB':'de-DE',{weekday:'short'});
@@ -660,18 +659,25 @@ function convoWhen(ts){const d=new Date(ts),n=ldDay(ts);if(n<1)return convoTs(ts
 // the line below the title: the last answer, as plain text in one line
 function convoLine(c){const m=(c.msgs||[]).slice().reverse().find(x=>x.role==='assistant')||(c.msgs||[]).at(-1);
   return m?md.plain(String(m.content||'')).replace(/\s+/g,' ').slice(0,120):''}
+const convoRow=(c,topics)=>`<div class="ld-row${c.id===chat.cid?' on':''}" role="button" tabindex="0" data-cid="${esc(c.id)}"${c.id===chat.cid?' aria-current="true"':''}>`+
+  `<span class="ld-ico" aria-hidden="true">${ic(topics&&CV_IC[c.area]||'chat')}</span><span class="ld-mid"><b>${esc(convoName(c))}</b><small>${esc(convoLine(c))}</small></span>`+
+  `<span class="ld-right">${c.pin&&topics?`<span class="cvpin" title="${esc(t('Angeheftet','Pinned'))}">${ic('pin')}</span>`:''}<span class="ld-when">${esc(convoWhen(c.updated))}</span></span></div>`;
+// „Zuletzt“ in the start view (Assistent-Seite entschlacken, Vorschlag 3): the three newest own conversations besides
+// the open one, the same rows as the list; a pick opens it like a pick in the list
+const ZULETZT=3;
+function fillZuletzt(own,topics){const z=$('dzul');if(!z)return;const l=own.filter(c=>c.id!==chat.cid).slice(0,ZULETZT);
+  const parts=l.length?[['h',`<div class="ld-grp"><span>${esc(t('Zuletzt','Recent'))}</span></div>`]].concat(l.map(c=>['c:'+c.id,convoRow(c,topics)])):[];
+  keyFill(z,parts);z.hidden=!l.length}
 function fillConvos(){const topics=!!window.TOPICS_ON&&!!PROFILE,own=convos.load().slice().sort((a,b)=>b.updated-a.updated);
   const arch=topics?convos.arch.filter(a=>!own.some(c=>c.id===a.id)):[],l=own.concat(arch),parts=[];let g=null;
   const pinned=topics?l.filter(c=>c.pin):[],rest=l.filter(c=>!pinned.includes(c));
-  const row=c=>['c:'+c.id,`<div class="ld-row${c.id===chat.cid?' on':''}" role="button" tabindex="0" data-cid="${esc(c.id)}"${c.id===chat.cid?' aria-current="true"':''}>`+
-      `<span class="ld-ico" aria-hidden="true">${ic(topics&&CV_IC[c.area]||'chat')}</span><span class="ld-mid"><b>${esc(convoName(c))}</b><small>${esc(convoLine(c))}</small></span>`+
-      `<span class="ld-right">${c.pin&&topics?`<span class="cvpin" title="${esc(t('Angeheftet','Pinned'))}">${ic('pin')}</span>`:''}<span class="ld-when">${esc(convoWhen(c.updated))}</span></span></div>`];
+  const row=c=>['c:'+c.id,convoRow(c,topics)];
   if(pinned.length){parts.push(['g:pin',`<div class="ld-grp"><span>${esc(t('Angeheftet','Pinned'))}</span></div>`]);pinned.forEach(c=>parts.push(row(c)))}
   for(const c of rest){const h=ldDayGroup(c.updated);if(h!==g){g=h;parts.push(['g:'+h,`<div class="ld-grp"><span>${esc(h)}</span></div>`])}parts.push(row(c))}
   if(!l.length)parts.push(['leer',`<div class="ld-empty">${ic('chat')}<span>${esc(t('Noch keine früheren Gespräche.','No earlier conversations yet.'))}</span></div>`]);
   // the archive (Gespräche nach Thema): older ones on request, a page at a time
   if(topics&&convos.archMore!==false&&own.length)parts.push(['arch',`<button type="button" class="b cvarch" data-arch="1">${esc(t('Ältere Gespräche laden','Load older conversations'))}</button>`]);
-  keyFill($('cvlrows'),parts);
+  keyFill($('cvlrows'),parts);fillZuletzt(own,topics);
   const c=chat.cid&&l.find(x=>x.id===chat.cid);if(!$('convotitle').isContentEditable)$('convotitle').textContent=c?convoName(c):t('Neues Gespräch','New conversation');
   $('convodel').disabled=!chat.cid;$('cvpinbtn').hidden=$('cvnamebtn').hidden=!(topics&&c&&own.includes(c));
   if(c)$('cvpinbtn').setAttribute('aria-pressed',String(!!c.pin));if(typeof offlineKeep==='function')offlineKeep()}   // verlauf.js loads after this file
@@ -710,15 +716,16 @@ $('cvnamebtn').onclick=()=>{const h=$('convotitle');if(!chat.cid||h.isContentEdi
   const done=keep=>{h.onkeydown=h.onblur=null;h.contentEditable='false';h.classList.remove('cvedit');const v=h.textContent.replace(/\s+/g,' ').trim().slice(0,60);
     if(keep&&v!==was)convoMeta({name:v});else h.textContent=was};
   h.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();done(true)}else if(e.key==='Escape'){e.preventDefault();done(false)}};h.onblur=()=>done(true)};
-$('cvlrows').addEventListener('keydown',e=>{const r=e.target.closest('[data-cid]');if(r&&(e.key==='Enter'||e.key===' ')){e.preventDefault();convoPick(r.dataset.cid)}});
+for(const id of ['cvlrows','dzul'])$(id).addEventListener('keydown',e=>{const r=e.target.closest('[data-cid]');if(r&&(e.key==='Enter'||e.key===' ')){e.preventDefault();convoPick(r.dataset.cid)}});
+$('dzul').addEventListener('click',e=>{const r=e.target.closest('[data-cid]');if(r)convoPick(r.dataset.cid)});
 // the list over the conversation (narrow card, phone): open with the list button, closes with a pick, Escape or the button
 function convoList(open){const c=$('convocard');if(!c)return;if(open&&typeof setView==='function'&&MOBILE.matches)setView('log');
   c.classList.toggle('lsopen',!!open);$('cvlbtn').setAttribute('aria-expanded',String(!!open));if(open)fillConvos()}
 $('cvlbtn').onclick=()=>{if(typeof closeSheet==='function')closeSheet();convoList(!$('convocard').classList.contains('lsopen'))};
 $('cvlnew').onclick=()=>{convoList(false);$('chatnew').click()};
 $('convolist').addEventListener('keydown',e=>{if(e.key==='Escape'&&$('convocard').classList.contains('lsopen')){convoList(false);$('cvlbtn').focus()}});
-// wide or narrow: only when the card's width changes, never in every frame
-if(window.ResizeObserver)new ResizeObserver(es=>{for(const e of es){const w=(e.borderBoxSize&&e.borderBoxSize[0]?e.borderBoxSize[0].inlineSize:e.target.offsetWidth)>=CV_WIDE;if(w!==e.target.classList.contains('cvwide'))requestAnimationFrame(()=>e.target.classList.toggle('cvwide',w))}}).observe($('convocard'));   // after the frame: no ResizeObserver loop error
+// a click beside the open list closes it (on a computer it is a drawer over the conversation)
+document.addEventListener('click',e=>{if($('convocard').classList.contains('lsopen')&&!e.target.closest('#convolist,#cvlbtn,.modal,#apsheet'))convoList(false)});
 function openConvo(id,picked){const c=id&&(convos.load().find(x=>x.id===id)||convos.arch.find(x=>x.id===id));chat.cid=c?c.id:null;chat.picked=!!(c&&picked);chat.msgs=c?c.msgs.slice():[];if(c&&c.area)chat.msgs.area=c.area;chat.saved=chat.msgs.length;chat.known=PROFILE&&c?c.id:null;chat.fresh=false;
   $('chatlog').innerHTML='';$('chattiming').textContent='';chat.msgs.forEach(m=>{const b=chatLog(m.role,m.content);deletable(b,m);if(m.att||m.via)attRender(b,m.att,false,m.via);if(m.vg&&window.vgMount)vgMount(b,m);if(m.mem&&window.gmChips)b.appendChild(gmChips(m.mem))});fillConvos();if(!chat.msgs.length&&typeof moreStart==='function')moreStart()}
 // What stood under an answer (sources, own documents, a document made), kept with the message so every device and a

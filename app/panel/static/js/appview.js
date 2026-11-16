@@ -36,11 +36,12 @@ function moveIn(el,target,prepend){if(!el||marks.has(el))return;const m=document
 function moveOut(back){for(const [el,m] of marks){if(back&&m.parentNode)m.parentNode.insertBefore(el,m);m.remove()}marks.clear()}
 // phone.js asks first where the face goes (see placeFace there)
 window.apRender=()=>render();   // chat.js: the Vorlesen switch changed
-window.apFace=()=>{if(!ON)return false;B.classList.remove('mempty');B.classList.toggle('apmsgs',$('chatlog').children.length>0);return true};
+// apstart: no question and answer yet, so „Zuletzt“ (chat.js fillZuletzt) stands under the suggestions
+window.apFace=()=>{if(!ON)return false;const l=$('chatlog');B.classList.remove('mempty');B.classList.toggle('apmsgs',l.children.length>0);B.classList.toggle('apstart',!l.querySelector('.msg'));return true};
 function enter(){ON=true;B.classList.add('appview');
   if(typeof MVIEW!=='undefined'){MVIEW='face';B.classList.remove('mempty')}
   // the face back to its place in the chat first (phone.js may have put it into the header), then into the app's spot
-  const f=$('face');if(typeof homes!=='undefined'&&homes.has(f)){const h=homes.get(f);h.parentNode.insertBefore(f,h);h.remove();homes.delete(f)}
+  const f=$('face');if(typeof unpark==='function')unpark(f)
   moveIn(f,face,true);moveIn($('wakeind'),mic);moveIn($('roomothers'),mic);moveIn($('talk'),mic);moveIn($('chatstate'),mic);
   const ti=$('chattext');if(ti.dataset.ph==null)ti.dataset.ph=ti.placeholder;ti.placeholder=t('Oder schreiben …','Or type …');
   try{history.replaceState(Object.assign({},history.state||{},{ap:0}),'')}catch{}hd=0;pend=false;
@@ -57,7 +58,7 @@ const OWN_FULL=new Set(['dungeon','spiel']);
 function ownSec(){const sec=document.querySelector('main>section.on');return !!sec&&OWN.has(sec.id)}
 function ownOpen(){const sec=document.querySelector('main>section.on');return !B.classList.contains('appage')&&$('profmodal').style.display!=='grid'&&!!sec&&OWN.has(sec.id)&&!OWN_FULL.has(sec.id)}
 function secTab(sec){return !sec||sec.id==='chat'?'spark':sec.id==='chats'?'chats':OWN.has(sec.id)?ownTab():'manage'}
-function leave(stillPhone){const page=B.classList.contains('appage');ON=false;B.classList.remove('appview','appage','apmsgs','aptabs','apsub');sheet.hidden=true;
+function leave(stillPhone){const page=B.classList.contains('appage');ON=false;B.classList.remove('appview','appage','apmsgs','apstart','aptabs','apsub');sheet.hidden=true;
   // on a wider screen phone.js has put its parts back already: only the face (never touched by phone.js here) moves
   const f=$('face'),fm=marks.get(f);if(fm){fm.parentNode.insertBefore(f,fm);fm.remove();marks.delete(f)}
   const ti=$('chattext');if(ti.dataset.ph!=null){ti.placeholder=ti.dataset.ph;delete ti.dataset.ph}

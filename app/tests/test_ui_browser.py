@@ -238,42 +238,50 @@ class Browser(unittest.TestCase):
         self.run_async(go())
 
     def test_assistant_fills_the_window(self):
-        """Assistent on computers (V01.0.327): face and history reach the bottom of the window, the page itself
-        does not scroll, only the history does, and no card scrolls sideways; narrow windows put the face above the history."""
+        """Assistent on computers (V01.0.327): the card reaches the bottom of the window, the page itself does not
+        scroll, only the history does, and nothing scrolls sideways. Since Vorschlag 3 „Sprechen zuerst“ (2026-11-16)
+        one card at every width: the start view with the big face while the conversation is empty, then the face
+        small in the head, the microphone in the text field, the switches in the head's ⋯ menu."""
         async def go():
             async with async_playwright() as p:
                 for w, h in ((1440, 900), (1920, 1080), (900, 1000)):
                     br, pg, errors = await self.page(p, w, h, csp=True)
                     try:
-                        await pg.evaluate("goSec('chat')")
+                        await pg.evaluate("goSec('chat');$('chatnew').click()")
                         await pg.wait_for_timeout(300)
+                        start = await pg.evaluate("""(()=>{const f=$('face').getBoundingClientRect(),s=$('stage');
+                            return {inst:s.contains($('face')),shown:getComputedStyle(s).display!=='none',fw:f.width,
+                                    mic:!!document.querySelector('.composer #talk'),dempty:document.body.classList.contains('dempty')}})()""")
+                        self.assertEqual(start, dict(start, inst=True, shown=True, mic=True, dempty=True), f"{w}: Startbild")
+                        self.assertGreaterEqual(start["fw"], 120, f"{w}: Gesicht im Startbild zu klein")
                         await pg.evaluate("for(let i=0;i<40;i++)chatLog(i%2?'bot':'user','Zeile '+i)")
                         await pg.wait_for_timeout(300)
                         box = await pg.evaluate("""(()=>{const r=e=>document.querySelector(e).getBoundingClientRect(),
-                            s=r('#chat .stage'),c=r('#chat .convo'),l=$('chatlog');
-                            return {sb:s.bottom,st:s.top,cb:c.bottom,ct:c.top,page:document.documentElement.scrollHeight,
+                            c=r('#chat .convo'),l=$('chatlog'),f=$('face').getBoundingClientRect(),h=r('#chat .convohead');
+                            return {cb:c.bottom,ct:c.top,page:document.documentElement.scrollHeight,
+                                    head:$('dslot').contains($('face'))&&f.top>=h.top-1&&f.bottom<=h.bottom+1&&f.width<=48,
+                                    stage:getComputedStyle($('stage')).display,toggles:$('dpop').contains($('chatwake')),
                                     logs:l.scrollHeight>l.clientHeight,
-                                    wide:['#chat .stage','#chat .convo','#chatlog','#chat .composer'].filter(e=>{const x=document.querySelector(e);
+                                    wide:['#chat .convo','#chatlog','#chat .composer','#chat .convohead'].filter(e=>{const x=document.querySelector(e);
                                         return x.scrollWidth>x.clientWidth+1&&!['hidden','clip'].includes(getComputedStyle(x).overflowX)})}})()""")
                         self.assertGreater(box["cb"], h - 50, f"{w}: Verlauf endet bei {box['cb']}")
                         self.assertLessEqual(box["cb"], h, f"{w}: Verlauf ragt unten heraus")
                         self.assertLessEqual(box["page"], h + 1, f"{w}: Seite rollt")
                         self.assertTrue(box["logs"], f"{w}: Verlauf rollt nicht in sich")
                         self.assertEqual(box["wide"], [], f"{w}: waagrechter Rollbalken")   # V01.0.331: the face card's glow
-                        # reminders under the face (a meeting's long tasks, 2026-10-20): never wider than the card,
+                        self.assertTrue(box["head"], f"{w}: Gesicht nicht klein im Kopf")
+                        self.assertEqual(box["stage"], "none", f"{w}: Startbild bleibt im Gespräch")
+                        self.assertTrue(box["toggles"], f"{w}: Schalter nicht im ⋯-Menü")
+                        # reminders above the text field (a meeting's long tasks, 2026-10-20): never wider than the card,
                         # cut off on both sides; the text ends in „…“ instead
                         side = await pg.evaluate("""(()=>{REM_ON=true;const d=Date.now()+864e5,x='Rundschreiben an die Entwickler mit den Vorgaben für den Agenten-Entwicklertag und der Bitte, sich vorab Gedanken zu machen';
                             rem.list=[{id:'u1',due:d,text:x},{id:'u2',due:d+60e3,text:x+' (zweite)'}];rem.show();
-                            const s=document.querySelector('#chat .stage').getBoundingClientRect(),l=$('remlist').getBoundingClientRect();
+                            const s=document.querySelector('#chat .convo').getBoundingClientRect(),l=$('remlist').getBoundingClientRect();
                             const out=[...document.querySelectorAll('#remlist .rem')].some(e=>{const r=e.getBoundingClientRect();return r.left<s.left-1||r.right>s.right+1});
                             rem.list=[];rem.show();return {l:l.left-s.left,r:s.right-l.right,out}})()""")
                         self.assertGreaterEqual(side["l"], -1, f"{w}: Erinnerungen links abgeschnitten")
                         self.assertGreaterEqual(side["r"], -1, f"{w}: Erinnerungen rechts abgeschnitten")
                         self.assertFalse(side["out"], f"{w}: eine Erinnerung ragt aus der Karte")
-                        if w > 1100:
-                            self.assertAlmostEqual(box["sb"], box["cb"], delta=1)   # both cards equally tall
-                        else:
-                            self.assertLessEqual(box["sb"], box["ct"])   # small face bar above the history
                         self.assertEqual(errors, [], w)
                     finally:
                         await br.close()

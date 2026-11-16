@@ -1,5 +1,5 @@
 // Alles Offene im Assistenten (vorgaenge.py, plan assistent-zentrale/plan.md Stufe 1+2, Dominik 2026-10-20 „ok“): one
-// store of this profile's Vorgänge for the card in the conversation, the line „Noch offen“ above it and the page Offen
+// store of this profile's Vorgänge for the card in the conversation, the counter „● N“ with its list (a line „Noch offen“ above it in the phone's computer layout) and the page Offen
 // (Braucht dich · Später · Erledigt, list left, card right). A message of the conversation carries only the number
 // ("vg"); the card is drawn from the store, so a button pressed on one device changes the card on every one (stream
 // /api/profile/vorgaenge/stream sends only numbers, then ?seit=<rev>). The buttons are names the Spark sent
@@ -117,18 +117,25 @@ function vgFillAtt(d){const x=VG.items.get(d.dataset.vg);if(!x)return;d.textCont
 // a note of Von selbst or a reminder that rang with a card: the card here at once, the saved one comes with convoLook
 window.vgLive=(id,text)=>{if(!document.querySelector('#chatlog .vgmsg[data-vg="'+id+'"]')){const b=chatLog('assistant',text);b.classList.add('pro');vgMount(b,{vg:id})}
   vgLoad(false).then(()=>{if(typeof convoLook==='function')convoLook(true)})};
-// „Noch offen: 3“ above the conversation; open it for the titles, a tap opens the card on the page Offen
+// „Noch offen: 3“ above the conversation on a phone in the computer layout; open it for the titles, a tap opens the
+// card on the page Offen. On a computer (Vorschlag 3 „Sprechen zuerst“, 2026-11-16) the same list stands open in the
+// menu of the counter „● N“ in the conversation's head (#dzahl, phone.js dPop) instead of a line above the conversation.
 // what needs one now, newest first: the strip here, the counter „● N“ in the phone's bar (appview.js)
 const vgNeed=()=>VG_ON?[...VG.items.values()].filter(x=>x.gruppe==='braucht').sort((a,b)=>b.t-a.t):[];
 function vgStrip(){const log=$('chatlog');if(!log)return;let s=$('vgstrip');
-  const need=vgNeed();
-  if(!VG_ON||!need.length){if(s)s.remove();return}
-  if(!s){s=icEl('div','vgstrip');s.id='vgstrip';log.before(s)}
-  s.textContent='';const head=icEl('button','vgs-h');head.type='button';head.setAttribute('aria-expanded',String(VG.open));
-  head.append(icEl('b','',t('Noch offen: ','Still open: ')+need.length),icEl('span','mut',VG.counts.spaeter?' · '+VG.counts.spaeter+t(' später',' later'):''),icEl('span','vgs-c',VG.open?'▴':'▾'));
-  head.onclick=()=>{VG.open=!VG.open;vgStrip()};s.appendChild(head);
-  if(VG.open){for(const x of need.slice(0,6)){const r=icEl('button','vgs-r');r.type='button';r.append(icEl('span','mut',vgName(x)),icEl('span','',x.titel));r.onclick=()=>vgShow(x.id);s.appendChild(r)}
+  const need=vgNeed(),pop=typeof MOBILE!=='undefined'&&!MOBILE.matches?$('dsoffen'):null,z=$('dzahl');
+  if(z){const n=need.length;z.hidden=!pop||!n;$('dzahln').textContent=n>99?'99+':String(n);z.setAttribute('aria-label',n+' '+t('braucht dich','need you'));z.classList.toggle('bad',need.some(x=>x.dringend))}
+  if(!VG_ON||!need.length){if(s)s.remove();if(pop)pop.hidden=true;return}
+  if(!s){s=icEl('div','vgstrip');s.id='vgstrip'}
+  if(pop?s.parentNode!==pop:s.nextElementSibling!==log){if(pop)pop.appendChild(s);else log.before(s)}
+  const open=!!pop||VG.open;
+  s.textContent='';const head=icEl(pop?'div':'button','vgs-h');
+  head.append(icEl('b','',t('Noch offen: ','Still open: ')+need.length),icEl('span','mut',VG.counts.spaeter?' · '+VG.counts.spaeter+t(' später',' later'):''));
+  if(!pop){head.type='button';head.setAttribute('aria-expanded',String(VG.open));head.append(icEl('span','vgs-c',VG.open?'▴':'▾'));head.onclick=()=>{VG.open=!VG.open;vgStrip()}}
+  s.appendChild(head);
+  if(open){for(const x of need.slice(0,6)){const r=icEl('button','vgs-r');r.type='button';r.append(icEl('span','mut',vgName(x)),icEl('span','',x.titel));r.onclick=()=>vgShow(x.id);s.appendChild(r)}
     s.appendChild(icLink(t('Alles auf der Seite Offen','Everything on the page Open'),()=>vgShow('')))}}
+if(typeof MOBILE!=='undefined')MOBILE.addEventListener('change',()=>vgStrip());
 function vgShow(id){VG.sel=id;if(id){const x=VG.items.get(id);if(x)VG.grp=x.gruppe}icTabSet('offen','show');goSec('offen')}
 // ---------------------------------------------------------------- the page Offen (OWN_PAGES vgbox)
 const VG_GRP=[['braucht',t('Braucht dich','Needs you')],['spaeter',t('Später','Later')],['erledigt',t('Erledigt','Done')]];

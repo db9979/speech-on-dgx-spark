@@ -322,7 +322,8 @@ struct ChatView: View {
             if talk.offlineShown { OfflineBanner().transition(.move(edge: .top).combined(with: .opacity)) }
             if !talk.rooms.isEmpty { RoomBanner() }
             FaceView(mood: talk.mood, mic: talk.level, out: { Demo.out ?? talk.audio.outLevel }, kind: talk.allowed.face, acts: talk.allowed.faceLife ? talk.faceActs : nil)
-                .frame(maxHeight: talk.messages.isEmpty ? 260 : 130)
+                // Assistent-Seite entschlacken (Vorschlag 3, 2026-11-16): big while empty, small in a conversation
+                .frame(maxHeight: talk.messages.isEmpty ? 260 : 80)
                 .padding(.top, 8)
                 .onTapGesture { talk.tap() }
                 .animation(.easeInOut(duration: 0.3), value: talk.messages.isEmpty)
@@ -336,6 +337,7 @@ struct ChatView: View {
                                 .foregroundStyle(.secondary)
                                 .multilineTextAlignment(.center)
                                 .frame(maxWidth: .infinity)
+                            ZuletztListe()
                         }
                         ForEach(talk.messages) { m in
                             if m.role != "user", let v = m.vg { VorgangImGespraech(id: v, message: m).id(m.id) } else { Bubble(message: m).id(m.id) }
@@ -689,7 +691,7 @@ struct HistoryView: View {
                         Button {
                             talk.resume(c)
                             dismiss()
-                        } label: { row(c) }
+                        } label: { Self.row(c) }
                         .foregroundStyle(.primary)
                     }
                 }
@@ -699,7 +701,7 @@ struct HistoryView: View {
     }
 
     /// One row: the title, the last answer in one line, the time on the right (today the hour, else day and month).
-    private func row(_ c: SavedConvo) -> some View {
+    static func row(_ c: SavedConvo) -> some View {
         let answer: [String: Any]? = c.msgs.last { ($0["role"] as? String) == "assistant" }
         let last: String = answer?["content"] as? String ?? ""
         let title: String = !c.name.isEmpty ? c.name : (c.title.isEmpty ? String(localized: "Gespräch") : c.title)
@@ -732,6 +734,39 @@ struct HistoryView: View {
             Merken.keepConvos(got)
         } catch { failed = error.localizedDescription }
         loading = false
+    }
+}
+
+/// „Zuletzt“ under the empty conversation (Assistent-Seite entschlacken, Vorschlag 3 „Sprechen zuerst“, Dominik
+/// 2026-11-16, like the panel's start view): the three newest conversations besides the open one, the rows of the
+/// Verlauf; what the app kept last time at once, then the Spark's list. A tap goes on with it.
+struct ZuletztListe: View {
+    @EnvironmentObject var talk: Conversation
+    @State private var list: [SavedConvo] = []
+
+    private var shown: [SavedConvo] {
+        Array(list.filter { $0.id != talk.convoId }.sorted { $0.updated > $1.updated }.prefix(3))
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            if !shown.isEmpty {
+                Text("Zuletzt").font(.caption).foregroundStyle(.secondary).padding(.bottom, 6)
+                ForEach(shown) { (c: SavedConvo) in
+                    Button { talk.resume(c) } label: { HistoryView.row(c).padding(.vertical, 8) }
+                        .foregroundStyle(.primary)
+                    if c.id != shown.last?.id { Divider() }
+                }
+            }
+        }
+        .frame(maxWidth: 520)
+        .frame(maxWidth: .infinity)
+        .padding(.top, 12)
+        .task {
+            if let demo = Demo.convos { list = demo; return }
+            if let k = Merken.convoList() { list = k.list }
+            if let got = try? await SparkAPI.current?.convos() { list = got; Merken.keepConvos(got) }
+        }
     }
 }
 

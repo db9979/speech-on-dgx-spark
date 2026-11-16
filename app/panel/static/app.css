@@ -106,8 +106,7 @@ body.inchat #fab{display:none}
 .face .spin{transform-origin:100px 104px;opacity:0;transition:opacity .3s}
 .face[data-mode=think] .spin,.face[data-mode=search] .spin{opacity:1;animation:spin 2.2s linear infinite}   /* only while it shows: an SVG turn is drawn by the main thread in every picture (Tippen geht vor) */
 
-.talkwrap{display:grid;grid-template-columns:minmax(300px,5fr) 6fr;gap:16px;align-items:start}
-@media (max-width:860px){.talkwrap{grid-template-columns:1fr}}
+.talkwrap{display:flex;flex-direction:column}
 .stage{display:flex;flex-direction:column;align-items:center;text-align:center;padding:26px 20px 20px;position:relative;overflow:hidden}
 #face{width:min(160px,44vw);aspect-ratio:1;cursor:pointer;position:relative;-webkit-tap-highlight-color:transparent}
 #face svg{width:100%;height:100%;overflow:visible}
@@ -154,14 +153,11 @@ body.inchat #fab{display:none}
 .wakeind{display:flex;justify-content:center;align-items:center;gap:7px;font-size:12px;color:var(--mut);margin:-4px 0 6px}.wakeind[hidden]{display:none}.wakeind i{width:8px;height:8px;border-radius:50%;background:#22c55e;animation:wk 1.6s ease-in-out infinite}.wakeind.paused i{background:var(--mut);animation:none}@keyframes wk{50%{opacity:.25}}
 .bubble .src{margin-top:8px;padding-top:6px;border-top:1px solid var(--line);font-size:12px;display:flex;flex-direction:column;gap:2px}.bubble .src span{color:var(--mut)}.bubble .src a{color:var(--acc);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .convohead{display:flex;gap:8px;align-items:center;padding:12px 14px 10px 18px;border-bottom:1px solid var(--line)}.convohead select{flex:1;min-width:0;width:auto;padding:6px 10px;font-size:13px}.convohead .ib{padding:7px 9px}
-/* Gespräche als Liste (2026-11-14, chat.js fillConvos): a wide card has the list on its left, a narrow card (and the
-   phone) opens it over the conversation with the list button; rows are the list building blocks (ld-row) */
+/* Gespräche als Liste (2026-11-14, chat.js fillConvos): the list button opens it over the conversation (on a computer
+   as a drawer on the left since Vorschlag 3, 2026-11-16); rows are the list building blocks (ld-row) */
 .convo{position:relative}
 .cvl{display:none;flex-direction:column;min-height:0;background:var(--card)}
-.convo.cvwide{padding-left:var(--cvl-w)}
-.convo.cvwide .cvl{display:flex;position:absolute;left:0;top:0;bottom:0;width:var(--cvl-w);border-right:1px solid var(--line);border-radius:var(--r) 0 0 var(--r)}
-.convo:not(.cvwide).lsopen .cvl{display:flex;position:absolute;inset:0;z-index:6;border-radius:inherit}
-.convo.cvwide #cvlbtn{display:none}
+.convo.lsopen .cvl{display:flex;position:absolute;inset:0;z-index:6;border-radius:inherit}
 .cvlhead{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 12px 6px 16px}
 .cvlhead h3{margin:0;font:var(--t-head)}.cvlhead .ib{padding:7px 9px}
 .cvlfind{display:flex;align-items:center;gap:8px;margin:4px 12px 8px;padding:7px 10px;border:0;border-radius:var(--r-ctl);background:var(--fill);color:var(--mut);font:var(--t-sub);cursor:pointer;text-align:left}
@@ -189,41 +185,55 @@ body.inchat #fab{display:none}
    below does not lay out and draw every bubble of a long conversation again */
 #chatlog{contain:strict}
 #chatlog:empty::before{content:attr(data-empty);margin:auto;color:var(--mut);text-align:center;max-width:260px}
-/* Assistent on computers (V01.0.327): face and history reach the bottom of the window, only the history scrolls;
-   wide screens give the history the extra width, narrow windows put a small face bar on top */
+/* the microphone in the text field (phones since V01.0.2xx, computers since Vorschlag 3): one round button, the
+   microphone while the field is empty, a stop while an answer runs, the arrow to send once text stands there */
+body.inchat .composer .mic{width:42px;height:42px;padding:0;justify-content:center;flex:none;border-radius:50%}
+body.inchat .composer .mic #talklbl{display:none}body.inchat .composer .mic svg{width:18px;height:18px}
+body.inchat .composer .mic.ans .i-mic{display:none}body.inchat .composer .mic.ans .i-stop{display:block}
+body.inchat .composer.hastext .mic{display:none}body.inchat .composer:not(.hastext) .send{display:none}
+/* the computer's pieces of the Assistent (phone.js DMOVES); hidden on a phone */
+.dslot,.dzmenu,.dmenu,.dzul,.dfoot:empty{display:none}
+.dzul{width:min(520px,calc(100% - 40px));margin:6px auto 0;box-sizing:border-box}
+.dfoot{display:flex;flex-direction:column;gap:6px;padding:0 12px}.dfoot .chips,.dfoot .rems{margin:0;min-height:0;justify-content:flex-start}
+#convodel .dlbl{display:none}
+/* Assistent on computers (Assistent-Seite entschlacken, Vorschlag 3 „Sprechen zuerst“, Dominik 2026-11-16): one card
+   that fills the window (only the conversation scrolls). While it is empty, the start view: the face big, its state,
+   the suggestions (saetze.js moreStart) and „Zuletzt“; then the face small in the head and the conversation in a
+   reading width in the middle. List, ⋯ and „● N“ open over it, nothing moves when they open. */
 @media (min-width:761px){
   html:has(body.inchat){scrollbar-gutter:auto}
   body.inchat{height:var(--apph,100dvh);overflow:hidden;display:flex;flex-direction:column}
   body.inchat main{flex:1;min-height:0;width:100%;max-width:none;box-sizing:border-box;display:flex;flex-direction:column;padding:16px 20px 8px}
   body.inchat section#chat.on{flex:1;min-height:0;display:flex;flex-direction:column}
-  body.inchat .talkwrap{flex:1;min-height:0;align-items:stretch;grid-template-columns:320px minmax(0,1fr)}
-  body.inchat .stage{justify-content:center;overflow-x:hidden;overflow-y:auto}
-  body.inchat .convo{height:auto;min-height:0}
-  body.inchat #chatlog{min-height:0}
+  body.inchat .talkwrap{flex:1;min-height:0}
+  body.inchat .convo{flex:1;height:auto;min-height:0}
+  body.inchat #chatlog{min-height:0;padding-inline:max(18px,calc((100% - 800px)/2))}
   body.inchat .msg{max-width:min(88%,860px)}
   body.inchat #credit{padding:0 16px 6px;font-size:10.5px}
-}
-/* Webanwendung 4 (V01.0.750): the face column stays narrow, the history gets the room; the buttons and switches
-   stand one below the other in it */
-@media (min-width:1101px){
-  body.inchat .stage{padding:18px 16px}
-  body.inchat .stage #face{width:120px;max-width:120px}
-  body.inchat .stage .ctrls{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;max-width:240px;margin-left:auto;margin-right:auto}
-  body.inchat .stage .ctrls #talk{grid-column:1/-1;order:-1;justify-content:center;width:100%}
-  body.inchat .stage .ctrls .ib{justify-content:center;width:100%}
-  body.inchat .stage .opts.toggles{display:flex;flex-direction:column;align-items:stretch;gap:10px;width:100%;max-width:240px;margin-left:auto;margin-right:auto}
-  body.inchat .stage .opts.toggles .tgl{justify-content:space-between;flex-direction:row-reverse;width:100%}
-  body.inchat .stage .opts.toggles #chatset{align-self:center;margin-top:4px}
-}
-@media (min-width:761px) and (max-width:1100px){
-  body.inchat .talkwrap{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr)}
-  body.inchat .stage{display:grid;grid-template-columns:140px 1fr;column-gap:22px;align-items:center;justify-items:start;text-align:left;padding:14px 22px}
-  body.inchat .stage #face{width:110px;grid-row:1/span 9;grid-column:1}
-  body.inchat .stage>*:not(#face){grid-column:2}
-  body.inchat .stage .state{margin:0}
-  body.inchat .stage .ctrls{margin:6px 0 0;justify-content:flex-start}
-  body.inchat .stage .opts{margin-top:8px;justify-content:flex-start}
-  body.inchat .stage .hint,body.inchat .stage #chattiming{display:none}
+  body.inchat .composer,body.inchat .dfoot{width:min(100%,824px);margin-inline:auto;box-sizing:border-box}
+  body.inchat .composer{border-top:0}
+  .dmenu,.dzmenu{display:block}.dzahl[hidden]{display:none}
+  .convohead{min-height:60px;box-sizing:border-box}
+  body.inchat:not(.dempty) .dslot{display:block;flex:none}.dslot #face{width:36px}
+  .convohead #convotitle{flex:0 1 auto}
+  .convohead #chatstate{flex:none;margin:0 auto 0 0;min-height:0;font:var(--t-sub);color:var(--mut);white-space:nowrap}
+  body.inchat.dempty .convohead #convotitle{margin-right:auto}
+  .convohead .wakeind{margin:0;flex:none}
+  .dzahl{font-variant-numeric:tabular-nums}.dzahl .adot{width:8px;height:8px;border-radius:50%;background:var(--warn);flex:none}.dzahl.bad .adot{background:var(--bad)}
+  .dpop{min-width:260px;padding:6px 12px}.dsoffen{min-width:320px;max-width:min(420px,80vw);padding:4px}
+  .dpop .opts.toggles{flex-direction:column;align-items:stretch;gap:2px;margin:0}
+  .dpop .tgl{justify-content:space-between;flex-direction:row-reverse;padding:6px 0;margin:0}
+  .dpop .ib{width:100%;gap:8px;border:0;border-top:1px solid var(--line);border-radius:0;padding:10px 0;background:none;justify-content:flex-start}
+  .dpop #convodel{color:var(--bad)}.dpop #convodel .dlbl{display:inline}.dpop #convodel:disabled{display:none}
+  .dsoffen .vgstrip{border:0;margin:0;padding:0}
+  .convo.lsopen .cvl{inset:0 auto 0 0;width:min(var(--list-w),100%);border-right:1px solid var(--line);border-radius:var(--r) 0 0 var(--r);box-shadow:var(--shadow)}
+  .stage{display:none}
+  .stage .ctrls,.stage .hint,.stage .mbar{display:none}
+  body.inchat.dempty .stage{display:flex;margin-top:auto;padding:24px 20px 6px;overflow:visible}
+  body.inchat.dempty #face{width:168px}
+  body.inchat.dempty #chatlog{flex:none;contain:none;overflow:visible;padding-top:4px;padding-bottom:4px}
+  body.inchat.dempty #chatlog:empty{display:none}
+  body.inchat.dempty .dzul{display:block;margin-bottom:auto}   /* empty and hidden without conversations: it still centres the start view */
 }
 .msg{display:flex;gap:8px;align-items:flex-end;max-width:88%;animation:pop .22s ease}
 .msg.user{align-self:flex-end;flex-direction:row-reverse}
@@ -280,11 +290,10 @@ body[data-face=wave] .av i{width:16px;height:2.5px;border-radius:2px;background:
   body.inchat section#chat.on{flex:1;min-height:0;display:flex;flex-direction:column}
   body.inchat #chatsecure{margin:8px 10px 0;font-size:13px}
   body.inchat .talkwrap{flex:1;min-height:0;display:flex;flex-direction:column;gap:0;align-items:stretch}
-  body.inchat .card.stage,body.inchat .card.convo{border:0;border-radius:0;box-shadow:none;background:none}
+  body.inchat .card.convo{border:0;border-radius:0;box-shadow:none;background:none}
   body.inchat .stage{flex:1;justify-content:center;padding:12px 16px}
   body.inchat:not(.mempty) .stage{display:none}
-  body.inchat .convo{height:auto;flex:none}
-  body.inchat:not(.mempty) .convo{flex:1;min-height:0}
+  body.inchat .convo{flex:1;height:auto;min-height:0}
   body.inchat.mempty #chatlog{display:none}
   body.inchat #chatlog{padding:12px 12px 6px}
   body.inchat.mempty header h1{display:flex}body.inchat:not(.mempty) header h1{display:none}
@@ -297,14 +306,11 @@ body[data-face=wave] .av i{width:16px;height:2.5px;border-radius:2px;background:
   .mtoggles .chips{margin:0;min-height:0;width:100%}.mtoggles .rems{margin:0;width:100%}
   body.inchat .composer{padding:8px 10px calc(8px + env(safe-area-inset-bottom));border-top:0;align-items:flex-end}
   body.inchat .composer textarea{font-size:16px;min-height:46px}
-  body.inchat .composer .mic{width:52px;height:52px;padding:0;justify-content:center;flex:none;border-radius:50%}
-  body.inchat .composer .mic #talklbl{display:none}body.inchat .composer .mic svg{width:22px;height:22px}
-  body.inchat .composer .mic.ans .i-mic{display:none}body.inchat .composer .mic.ans .i-stop{display:block}
-  body.inchat .composer.hastext .mic{display:none}body.inchat .composer:not(.hastext) .send{display:none}
+  body.inchat .composer .mic{width:52px;height:52px}body.inchat .composer .mic svg{width:22px;height:22px}
   body.inchat .composer .send{width:52px;height:52px}
   body.inchat #face{width:min(260px,64vw)}
   /* face view (default on phones): only the face, its state and two buttons; the history is one tap away */
-  body.inchat.mempty .convo{display:none}
+  body.inchat.mempty .convo>:not(.stage){display:none}
   body.inchat.mempty .stage{gap:18px}
   body.inchat.mempty .mbar{display:flex}
   .mbar{display:none;gap:10px 12px;flex-wrap:wrap;justify-content:center;margin-top:8px;padding:0 12px;max-width:100%;box-sizing:border-box}.mbar .b{display:flex;white-space:nowrap;align-items:center;gap:8px;min-height:48px;padding:10px 18px;border-radius:999px;font-size:15px}.mbar svg{width:20px;height:20px}
@@ -1628,6 +1634,7 @@ textarea.factedit{width:100%;margin:0 0 6px}
 @keyframes lzshine{0%{background-position:100% 0}100%{background-position:0 0}}
 .lz-stale>*:not(.lz-chip):not(.lz-skrow){opacity:.55;transition:opacity .2s}
 .lz-chip{display:inline-flex;align-items:center;gap:5px;max-width:100%;margin:4px 0;font-size:11.5px;font-weight:600;border-radius:99px;padding:1px 9px;background:color-mix(in srgb,var(--acc) 12%,transparent);color:var(--acc);white-space:normal}
+.lz-chip[hidden]{display:none}   /* the empty chips above the conversation (#merknote, #mpchip) drew a line */
 .merknote[hidden]{display:none}   /* Apps merken sich den letzten Stand (merken.js): the age of the kept conversations */
 .lz-chip.w{background:color-mix(in srgb,var(--warn) 15%,transparent);color:var(--warn)}
 .lz-err{margin:8px 0;padding:10px 12px;border:1px solid color-mix(in srgb,var(--bad) 40%,var(--line));border-radius:12px;background:color-mix(in srgb,var(--bad) 5%,var(--card));display:flex;flex-wrap:wrap;gap:8px;align-items:center;min-width:0}

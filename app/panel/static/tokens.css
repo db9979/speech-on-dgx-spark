@@ -53,7 +53,7 @@
 /* Abstände im 4/8-Raster und feste Höhen (nichts springt; ein Skelett hat dieselbe Höhe) */
 :root{--s1:4px;--s2:8px;--s3:12px;--s4:16px;--s5:20px;--s6:24px;--s8:32px;--s10:40px;--s12:48px;
   --h-ctl:28px;--h-row:46px;--h-item:52px;--h-nav:30px;--h-log:28px;--h-tile:104px;--h-bar:52px;--h-touch:44px;
-  --side-w:232px;--list-w:380px;--cvl-w:272px;--detail-max:660px}
+  --side-w:232px;--list-w:380px;--detail-max:660px}
 /* the side menu as symbols only on an iPad upright and narrow windows (Web-App aufräumen 6a, 2026-11-16) */
 @media (min-width:761px) and (max-width:1100px){:root{--side-w:72px}}
 

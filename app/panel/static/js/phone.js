@@ -1,5 +1,5 @@
-// Phone layout (< 760 px): messenger-style chat, face view and menu sheet.
-// ---------------------------------------------------------------- phone layout
+// Assistent layout: phones (< 760 px) like a messenger, computers as one card that starts with the face.
+// ---------------------------------------------------------------- phone and computer layout
 // Below 760 px the conversation is laid out like a messenger: a slim top bar (small face, state,
 // profile, menu), the history in the middle and a fixed bar at the bottom (text field, mic). The
 // elements are moved, not copied, so all handlers keep working; they move back on wider screens.
@@ -8,26 +8,50 @@ const mtog=document.createElement('div');mtog.className='mtoggles';
 const MOVES=[[()=>$('chatstate'),()=>$('mslot').nextElementSibling,'after'],[()=>$('profbtn'),()=>$('mmenu'),'before'],
   [()=>$('chatwake').closest('label'),()=>$('msetwake'),'in'],[()=>document.querySelector('.opts.toggles'),()=>mtog,'in'],[()=>$('chattiming'),()=>mtog,'in'],[()=>$('remlist'),()=>mtog,'in'],
   [()=>$('talk'),()=>document.querySelector('.composer'),'in'],[()=>$('cvlbtn'),()=>$('mconvo'),'row'],[()=>$('convodel'),()=>$('mconvo'),'row']];
+// Computers (Assistent-Seite entschlacken, Vorschlag 3 „Sprechen zuerst“, Dominik 2026-11-16): one card instead of
+// face column, list and conversation. The microphone sits in the text field (a stop while an answer runs), „Neu“ in
+// the head, the switches, „Gespräch einstellen“ and „Löschen“ in its ⋯ menu, times and reminders above the text field;
+// face, state and „lauscht“ stand big in the start view while the conversation is empty and small in the head after
+const DMOVES=[[()=>$('talk'),()=>document.querySelector('.composer'),'in'],[()=>$('chatnew'),()=>$('dzahl').parentNode,'before'],
+  [()=>document.querySelector('.opts.toggles'),()=>$('dpop'),'in'],[()=>$('convodel'),()=>$('dpop'),'in'],
+  [()=>$('chattiming'),()=>$('dfoot'),'in'],[()=>$('remlist'),()=>$('dfoot'),'in']];
 const homes=new Map();
+function park(e,tg,how){if(!e||!tg||homes.has(e))return;const mark=document.createComment('home');e.parentNode.insertBefore(mark,e);homes.set(e,mark);
+  if(how==='after')tg.after(e);else if(how==='before')tg.before(e);else if(how==='row')tg.querySelector('.rowin').appendChild(e);else tg.appendChild(e)}
+function unpark(e){const mark=e&&homes.get(e);if(!mark)return;mark.parentNode.insertBefore(e,mark);mark.remove();homes.delete(e)}
 // Phones open on the face alone (view "face"); "Verlauf" switches to the messenger view ("log").
 let MVIEW='face';try{MVIEW=localStorage.getItem('mview')==='log'?'log':'face'}catch{}
 function setView(v){MVIEW=v;try{localStorage.setItem('mview',v)}catch{}placeFace();if(v==='log')$('chatlog').scrollTop=1e9}
 $('mlog').onclick=()=>setView('log');$('mback').onclick=()=>setView('face');$('mset').onclick=()=>openSet();
 function placeFace(){if(window.apFace&&apFace())return;   // the app view (appview.js) has its own place for the face
-  const big=!MOBILE.matches||MVIEW==='face';
-  document.body.classList.toggle('mempty',MOBILE.matches&&big);
-  const f=$('face'),home=homes.get(f);
-  if(MOBILE.matches&&!big){if(!home){const m=document.createComment('face');f.parentNode.insertBefore(m,f);homes.set(f,m)}$('mslot').appendChild(f)}
-  else if(home){home.parentNode.insertBefore(f,home);home.remove();homes.delete(f)}}
-function layout(){const m=MOBILE.matches;
-  if(m&&!mtog.parentNode){const conv=document.querySelector('.convo');conv.insertBefore(mtog,document.querySelector('.composer'));
+  const f=$('face'),B=document.body;
+  if(!MOBILE.matches){const msgs=!!$('chatlog').querySelector('.msg');B.classList.remove('mempty');B.classList.toggle('dempty',!msgs);
+    if(homes.has(f)&&f.parentNode!==$('dslot'))unpark(f);   // from the phone's bar
+    if(msgs){park(f,$('dslot'),'in');park($('chatstate'),$('convotitle'),'after');park($('wakeind'),$('chatstate'),'after');park($('roomothers'),$('wakeind'),'after')}
+    else [f,$('chatstate'),$('wakeind'),$('roomothers')].forEach(unpark);
+    return}
+  B.classList.remove('dempty');
+  const big=MVIEW==='face';
+  B.classList.toggle('mempty',big);
+  if(!big){park(f,$('mslot'),'in')}else unpark(f)}
+let MODE='';
+function layout(){const m=MOBILE.matches?'m':'d';
+  if(MODE&&MODE!==m)for(const e of [...homes.keys()])if(e!==$('face'))unpark(e);
+  MODE=m;
+  if(m==='m'&&!mtog.parentNode){const conv=document.querySelector('.convo');conv.insertBefore(mtog,document.querySelector('.composer'));
     let row=$('mconvo').querySelector('.rowin');if(!row){row=document.createElement('div');row.className='rowin';$('mconvo').appendChild(row)}}
-  for(const [el,target,how] of MOVES){const e=el(),tg=target();if(!e)continue;
-    if(m&&!homes.has(e)){const mark=document.createComment('home');e.parentNode.insertBefore(mark,e);homes.set(e,mark);
-      if(how==='after')tg.after(e);else if(how==='before')tg.before(e);else if(how==='row')tg.querySelector('.rowin').appendChild(e);else tg.appendChild(e)}
-    else if(!m&&homes.has(e)){const mark=homes.get(e);mark.parentNode.insertBefore(e,mark);mark.remove();homes.delete(e)}}
-  if(!m&&mtog.parentNode)mtog.remove();placeFace()}
+  if(m==='d'&&mtog.parentNode)mtog.remove();
+  for(const [el,target,how] of m==='m'?MOVES:DMOVES)park(el(),target(),how);
+  placeFace()}
 new MutationObserver(placeFace).observe($('chatlog'),{childList:true});
+// the two small menus of the computer's head: ⋯ (switches, Gespräch einstellen, Löschen) and „● N“ (what needs one
+// under Offen, the list of offen.js vgStrip); one open at a time, a click elsewhere, Escape or a button in it closes
+const DPOPS=[['dmore','dpop'],['dzahl','dsoffen']];
+function dPop(which){for(const [b,p] of DPOPS){const open=b===which&&$(p).hidden;$(p).hidden=!open;$(b).setAttribute('aria-expanded',String(open))}}
+for(const [b,p] of DPOPS){$(b).addEventListener('click',e=>{e.stopPropagation();dPop(b)});
+  $(p).addEventListener('click',e=>{if(e.target.closest('button'))setTimeout(()=>dPop(''),0)})}
+document.addEventListener('click',e=>{if(!e.target.closest('.dmenu,.dzmenu'))dPop('')});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&DPOPS.some(([,p])=>!$(p).hidden))dPop('')});
 MOBILE.addEventListener('change',layout);
 // the class only when it changes (empty ↔ text), not a class write in every keystroke; "hastext", not "typing":
 // .typing::after are the answer's moving dots, which redrew the whole page sixty times a second while text stood here

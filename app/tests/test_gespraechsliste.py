@@ -1,6 +1,7 @@
-"""Gespräche übersichtlich ablegen (Dominik 2026-11-14, Schritt 1): the conversations of the assistant as a list beside
-the conversation (grouped by Heute, Gestern, Letzte 7 Tage, Älter, the open one in the accent) instead of a drop-down, a
-narrow card opens the list over the conversation; under an answer one grey line for what it used and the actions only on
+"""Gespräche übersichtlich ablegen (Dominik 2026-11-14, Schritt 1): the conversations of the assistant as a list (grouped
+by Heute, Gestern, Letzte 7 Tage, Älter, the open one in the accent) instead of a drop-down; since Vorschlag 3 „Sprechen
+zuerst“ (2026-11-16) the list button opens it over the conversation at every width (a drawer on a computer), the start
+view shows the three newest as „Zuletzt“; under an answer one grey line for what it used and the actions only on
 pointing (a phone: after a tap), the rare ones behind „⋯“, nothing jumps. Static checks everywhere, the page in a real
 browser where Playwright and Chromium exist; the groups are seeded relative to now, so no test reads the clock."""
 import os
@@ -33,11 +34,15 @@ class Static(unittest.TestCase):
             self.assertNotIn("convosel", read("js", name), name)
         # rows from the list building blocks, drawn in parts with a fixed key, texts only escaped
         self.assertIn("keyFill($('cvlrows'),parts)", js)
-        self.assertIn('class="ld-row', js[js.index("function fillConvos"):])
+        self.assertIn('class="ld-row', js[js.index("const convoRow"):js.index("function fillConvos")])
         self.assertIn("esc(convoName(c))", js)
-        # the wide view changes the card's padding: switched one frame later, or Chromium reports a ResizeObserver loop
-        # as a page error (Dauer-Wackler test_profile_gets_the_same_shell, V01.1.457)
-        self.assertIn("requestAnimationFrame(()=>e.target.classList.toggle('cvwide',w))", js)
+        # no list beside the conversation any more (Vorschlag 3): no wide view, nothing that measures the card
+        for name in ("chat.js", "phone.js", "appview.js"):
+            self.assertNotIn("cvwide", read("js", name), name)
+        self.assertNotIn("cvwide", read("app.css"))
+        # one row builder for the list and „Zuletzt“
+        self.assertIn("const row=c=>['c:'+c.id,convoRow(c,topics)]", js)
+        self.assertIn("convoRow(c,topics)])", js[js.index("function fillZuletzt"):])
         self.assertIn("const convoName=c=>(window.TOPICS_ON&&c.name)||c.title||'…'", js)
         # one source for the groups: the app view's sheet takes the same helpers
         av = read("js", "appview.js")
@@ -84,19 +89,30 @@ class Page(unittest.TestCase):
                 self.seed(uid)
                 await pg.evaluate("(async()=>{goSec('chat');await convos.sync();fillConvos()})()")
                 await self.until(pg, "document.querySelectorAll('#cvlrows [data-cid]').length>=3")
-                # wide: the list beside the conversation, groups in order, the list button hidden
-                await self.until(pg, "$('convocard').classList.contains('cvwide')")
+                # the list is not beside the conversation: the list button opens it, groups in order
+                self.assertTrue(await pg.evaluate("!!$('cvlbtn').offsetParent"))
+                self.assertFalse(await pg.evaluate("!!$('convolist').offsetParent"))
+                await pg.click("#cvlbtn")
+                await self.until(pg, "!!$('convolist').offsetParent")
                 heads = await pg.evaluate("[...document.querySelectorAll('#cvlrows .ld-grp')].map(e=>e.textContent)")
                 self.assertEqual(heads, ["Heute", "Gestern", "Älter"])
-                self.assertFalse(await pg.evaluate("!!$('cvlbtn').offsetParent"))
+                # a drawer on the left: the conversation keeps its place beside it
+                box = await pg.evaluate("(()=>{const l=$('convolist').getBoundingClientRect(),c=$('convocard').getBoundingClientRect();return [l.left-c.left,l.width,c.width]})()")
+                self.assertLess(abs(box[0]), 2)
+                self.assertLess(box[1], box[2] / 2)
                 # a click opens it, the title follows, the row is the open one; a row that did not change stays the
-                # same node (keyFill)
+                # same node (keyFill); the pick closes the list
                 row = await pg.evaluate_handle("document.querySelector('#cvlrows [data-cid=c0000000a03]')")
                 await pg.click("#cvlrows [data-cid=c0000000a02]")
-                await self.until(pg, "chat.cid==='c0000000a02'")
+                await self.until(pg, "chat.cid==='c0000000a02'&&!$('convolist').offsetParent")
                 self.assertEqual(await pg.evaluate("$('convotitle').textContent"), "Termine Dienstag")
                 self.assertTrue(await pg.evaluate("document.querySelector('#cvlrows [data-cid=c0000000a02]').classList.contains('on')"))
                 self.assertTrue(await pg.evaluate("r=>r.isConnected", row))
+                # a click beside the open list closes it
+                await pg.click("#cvlbtn")
+                await self.until(pg, "!!$('convolist').offsetParent")
+                await pg.mouse.click(1500, 500)
+                await self.until(pg, "!$('convolist').offsetParent")
                 # the actions under an answer: invisible until pointing, the rare ones behind „⋯“
                 await pg.evaluate("""(()=>{const el=[...document.querySelectorAll('#chatlog .bubble')].at(-1);
                   const acts=document.createElement('div');acts.className='macts';acts.appendChild(rateBar('x'));
@@ -116,11 +132,8 @@ class Page(unittest.TestCase):
                 self.assertEqual(await pg.evaluate("document.querySelector('#chatlog .msg:last-child').offsetHeight"), h0)
                 await pg.click("#chatlog .macts .mmore")
                 self.assertTrue(await pg.evaluate("!!document.querySelector('#chatlog .macts .rpabar').offsetParent"))
-                # narrow (an iPad upright; up to 1100 px the side menu shows only symbols since 2026-11-16, so 1000 px
-                # leaves the card wide enough for the list beside it): the list opens over the conversation with the
-                # button, a pick closes it
+                # narrow (an iPad upright): the same, the list over the conversation, a pick closes it
                 await pg.set_viewport_size({"width": 820, "height": 900})
-                await self.until(pg, "!$('convocard').classList.contains('cvwide')")
                 self.assertFalse(await pg.evaluate("!!$('convolist').offsetParent"))
                 await pg.click("#cvlbtn")
                 await self.until(pg, "!!$('convolist').offsetParent")

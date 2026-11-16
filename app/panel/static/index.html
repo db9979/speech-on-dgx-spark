@@ -914,36 +914,38 @@
 <section id="chat">
   <div id="chatsecure" class="note" style="display:none">Der Browser erlaubt das Mikrofon nur über https. Öffne das Panel über <a id="chathttps" href="#"></a> und bestätige einmal die Zertifikatswarnung (das Zertifikat ist selbst erstellt). Tippen geht auch hier.</div>
   <div class="talkwrap">
-    <div class="card stage">
-      <div id="face" class="face" data-mode="idle" role="button" aria-label="Sprechen">      </div>
-      <div id="wakeind" class="wakeind" hidden><i></i><span>lauscht auf „Hey Spark“</span></div>
-      <div id="roomothers" class="wakeind room" hidden><i></i><span></span></div>
-      <div id="chatstate" class="state">Bereit.</div>
-      <div class="ctrls">
-        <button class="ib" id="chatnew" title="Neues Gespräch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5"/></svg><span>Neu</span></button>
-        <button class="mic" id="talk"><svg class="i-mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><svg class="i-stop" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg><span id="talklbl">Sprechen</span></button>
-        <button class="ib" id="chatstop" disabled><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg><span>Stopp</span></button>
-      </div>
-      <div class="opts toggles">
-        <label class="tgl" title="Dauerhaft lauschen, das Wort startet das Gespräch (Bildschirm bleibt an)"><input type="checkbox" id="chatwake"><i></i><span>„Hey Spark“</span></label>
-        <label class="tgl" id="roomtgl" style="display:none" title="Raum-Modus: hört dem Gespräch im Raum zu und hilft in Pausen; endet von selbst"><input type="checkbox" id="chatroom"><i></i><span>Raum</span></label>
-        <label class="tgl" title="Nach der Antwort automatisch wieder zuhören"><input type="checkbox" id="chathands"><i></i><span>Freihändig</span></label>
-        <label class="tgl" title="Antworten auf diesem Gerät vorlesen"><input type="checkbox" id="chatvoice" checked><i></i><span>Vorlesen</span></label>
-        <button class="ib" id="chatset" type="button" title="Gespräch einstellen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg><span>Gespräch einstellen</span></button>
-      </div>
-      <div class="mbar"><button class="b" id="mset" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg><span>Gespräch einstellen</span></button><button class="b" id="mlog" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg><span>Verlauf</span></button><button class="b" id="mpic" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.8"/><path d="M21 16l-5-5-8 8"/></svg><span>Bild</span></button></div>
-      <div class="mut hint">Leertaste, „Sprechen“ oder ein Klick aufs Gesicht: zuhören bzw. die laufende Antwort unterbrechen.</div>
-      <div id="chattiming" class="chips"></div>
-      <div id="remlist" class="rems" hidden></div>
-    </div>
     <div class="card convo" id="convocard"><aside class="cvl" id="convolist" aria-label="Gespräche"><div class="cvlhead"><h3>Gespräche</h3><button class="ib" id="cvlnew" type="button" title="Neues Gespräch" aria-label="Neues Gespräch"><i data-ic="plus"></i></button></div><button type="button" class="cvlfind" id="convofind" title="In früheren Gesprächen suchen"><i data-ic="find"></i><span>In allen Gesprächen suchen</span></button><div class="cvlrows" id="cvlrows"></div></aside>
-      <div class="convohead"><button class="ib" id="cvlbtn" type="button" title="Gespräche" aria-label="Gespräche" aria-controls="convolist" aria-expanded="false"><i data-ic="side"></i></button><h2 id="convotitle">Verlauf</h2><button class="ib" id="cvnamebtn" type="button" title="Umbenennen" aria-label="Umbenennen" hidden><i data-ic="pen"></i></button><button class="ib" id="cvpinbtn" type="button" title="Anheften" aria-label="Anheften" aria-pressed="false" hidden><i data-ic="pin"></i></button><button class="b profchip" id="profbtn" type="button" title="Profil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span id="profname">Gast</span></button><button class="ib" id="convodel" title="Dieses Gespräch löschen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></button></div>
+      <div class="convohead"><span class="dslot" id="dslot"></span><button class="ib" id="cvlbtn" type="button" title="Gespräche" aria-label="Gespräche" aria-controls="convolist" aria-expanded="false"><i data-ic="hist"></i></button><h2 id="convotitle">Verlauf</h2><button class="ib" id="cvnamebtn" type="button" title="Umbenennen" aria-label="Umbenennen" hidden><i data-ic="pen"></i></button><button class="ib" id="cvpinbtn" type="button" title="Anheften" aria-label="Anheften" aria-pressed="false" hidden><i data-ic="pin"></i></button><span class="ic-menu dzmenu"><button class="ib dzahl" id="dzahl" type="button" hidden aria-haspopup="true" aria-expanded="false" aria-controls="dsoffen" title="Braucht dich"><span class="adot"></span><b id="dzahln">0</b></button><div class="ic-pop dsoffen" id="dsoffen" hidden></div></span><span class="ic-menu dmenu"><button class="ib" id="dmore" type="button" title="Mehr" aria-label="Mehr" aria-haspopup="true" aria-expanded="false" aria-controls="dpop"><i data-ic="more"></i></button><div class="ic-pop dpop" id="dpop" hidden></div></span><button class="b profchip" id="profbtn" type="button" title="Profil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span id="profname">Gast</span></button><button class="ib" id="convodel" title="Dieses Gespräch löschen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg><span class="dlbl">Dieses Gespräch löschen</span></button></div>
+      <div class="stage" id="stage">
+        <div id="face" class="face" data-mode="idle" role="button" aria-label="Sprechen">      </div>
+        <div id="wakeind" class="wakeind" hidden><i></i><span>lauscht auf „Hey Spark“</span></div>
+        <div id="roomothers" class="wakeind room" hidden><i></i><span></span></div>
+        <div id="chatstate" class="state">Bereit.</div>
+        <div class="ctrls">
+          <button class="ib" id="chatnew" title="Neues Gespräch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5"/></svg><span>Neu</span></button>
+          <button class="mic" id="talk"><svg class="i-mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><svg class="i-stop" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg><span id="talklbl">Sprechen</span></button>
+          <button class="ib" id="chatstop" disabled><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg><span>Stopp</span></button>
+        </div>
+        <div class="opts toggles">
+          <label class="tgl" title="Dauerhaft lauschen, das Wort startet das Gespräch (Bildschirm bleibt an)"><input type="checkbox" id="chatwake"><i></i><span>„Hey Spark“</span></label>
+          <label class="tgl" id="roomtgl" style="display:none" title="Raum-Modus: hört dem Gespräch im Raum zu und hilft in Pausen; endet von selbst"><input type="checkbox" id="chatroom"><i></i><span>Raum</span></label>
+          <label class="tgl" title="Nach der Antwort automatisch wieder zuhören"><input type="checkbox" id="chathands"><i></i><span>Freihändig</span></label>
+          <label class="tgl" title="Antworten auf diesem Gerät vorlesen"><input type="checkbox" id="chatvoice" checked><i></i><span>Vorlesen</span></label>
+          <button class="ib" id="chatset" type="button" title="Gespräch einstellen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg><span>Gespräch einstellen</span></button>
+        </div>
+        <div class="mbar"><button class="b" id="mset" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg><span>Gespräch einstellen</span></button><button class="b" id="mlog" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg><span>Verlauf</span></button><button class="b" id="mpic" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.8"/><path d="M21 16l-5-5-8 8"/></svg><span>Bild</span></button></div>
+        <div class="mut hint">Leertaste, „Sprechen“ oder ein Klick aufs Gesicht: zuhören bzw. die laufende Antwort unterbrechen.</div>
+        <div id="chattiming" class="chips"></div>
+        <div id="remlist" class="rems" hidden></div>
+      </div>
       <div id="guestnote" class="intro sm guestnote" hidden></div>
       <span id="merknote" class="lz-chip merknote" hidden></span>
       <span id="mpchip" class="lz-chip mpchip" role="status" hidden></span>
       <div id="chatlog"></div>
+      <div class="dzul" id="dzul" hidden></div>
       <div id="chatpics" class="pics" hidden></div>
       <div id="chatq" class="chatq" role="status" hidden></div>
+      <div class="dfoot" id="dfoot"></div>
       <div class="composer"><button class="ib attach" id="chatpic" type="button" title="Bild anhängen" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.8"/><path d="M21 16l-5-5-8 8"/></svg></button><input type="file" id="chatpicfile" accept="image/*" multiple hidden><label for="chattext" class="srl">Frage an den Assistenten</label><textarea id="chattext" rows="1" data-zeilen="6" data-senden="chatsend" placeholder="oder hier tippen, Enter sendet"></textarea><button class="send" id="chatsend" title="Senden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button></div>
     </div>
   </div>
