@@ -25,7 +25,6 @@ change ("rechner: hinweis <art> an|aus"). The model computer's values are data: 
 their range are taken, words only from fixed lists.
 """
 import os
-import re
 import sys
 import threading
 import time
@@ -33,6 +32,7 @@ from collections import deque
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import rechner  # noqa: E402
+from rechner import DIENST_ID, DIENST_NAMEN  # noqa: E402  (one place: the model computer's look needs them too)
 from common import ON_DEMAND_UNITS, OWN_LLM_UNITS, UNITS, run  # noqa: E402
 
 VERLAUF = 400          # samples per computer, one every 3 s (the sampler): 20 minutes
@@ -62,24 +62,6 @@ LEERLAUF_PCT = 5       # % of the whole CPU: below it the biggest service does n
 ZEILEN = 6             # services listed per card, the others count for the rest
 DARIN = 3              # the panel's biggest parts in its line „darin“
 REST_MIN = 0.5         # % below which no rest line is shown
-DIENST_ID = re.compile(r"[a-z][a-z0-9-]{0,23}")
-# the services' names (de, en): the ids rechner.dienste_cpu gives (speech-spark-<id>.service, docker) and the
-# chips „Dienste“; an unknown own unit shows its id
-DIENST_NAMEN = {"asr": ("Spracherkennung", "Speech recognition"), "asr-engine": ("Spracherkennung (Engine)", "Speech recognition (engine)"),
-                "tts": ("Sprachausgabe", "Speech output"), "tts-engine": ("Sprachausgabe (Engine)", "Speech output (engine)"),
-                "tts-design": ("Stimmen gestalten", "Voice design"),
-                "tts-klon": ("Eigene Stimmen", "Own voices"), "llm": ("Sprachmodell", "Language model"),
-                "llmtor": ("LLM-Tor", "LLM-Tor"), "sehen": ("Bildverständnis", "Image understanding"),
-                "helfer": ("Hilfsmodell", "Helper model"), "bild": ("Bilder malen", "Painting pictures"), "musik": ("Musik machen", "Making music"),
-                "werkstatt": ("Werkstatt", "Werkstatt"),
-                "lokaltest": ("Schnelltest lokaler Änderungen", "Quick test of local changes"),
-                "lokaltest-umgebung": ("Testumgebung lokaler Änderungen", "Test environment of local changes"), "github": ("An GitHub geben", "Hand to GitHub"), "auftrag": ("Code-Auftrag (OpenCode)", "Code order (OpenCode)"), "waerter": ("Wärter", "Wärter"), "panel": ("Panel", "Panel"),
-                "turn": ("Anrufe (TURN)", "Calls (TURN)"), "notasr": ("Notbetrieb-Erkennung", "Emergency recognition"),
-                "gehaeuse": ("Gehäuse", "Case"), "systemupdate": ("System-Updates", "System updates"), "gpu-takt": ("GPU-Taktgrenze", "GPU clock cap"), "clients-fw": ("Spark-Clients (Firewall)", "Spark clients (firewall)"), "konsole": ("Spark-Konsole", "Spark-Konsole"), "koppelcode": ("Assistent koppeln", "Pair an assistant"), "koppeln": ("Spark koppeln", "Pair a Spark"), "schirm": ("Steuerzentrale", "Control centre"),
-                "guacd": ("Bildschirm (guacd)", "Screen (guacd)"), "tlstor": ("TLS-Tor", "TLS gate"),
-                "watch": ("API-Wächter", "API watchdog"), "update": ("Update", "Update"), "wechsel": ("Modellwechsel", "Model switch"),
-                "messen-wunsch": ("Modelle messen", "Measuring models"),
-                "docker": ("Modell in Docker", "Model in Docker"), "rest": ("System und Rest", "System and rest")}
 # the parts inside the panel (rechenteile.py); a background job („bg:<job>“) shows its fixed name from the code
 TEIL_NAMEN = {"anfragen": ("Anfragen und Seiten", "Requests and pages"), "bedeutungssuche": ("Bedeutungssuche", "Meaning search"),
               "nachsortieren": ("Nachsortieren", "Re-ranking"), "wissenmessen": ("Wissen messen", "Measuring knowledge"),

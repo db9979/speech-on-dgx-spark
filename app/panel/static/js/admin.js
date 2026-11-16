@@ -218,7 +218,9 @@ function zRCard(c){const card=document.createElement('div');card.className='card
   const stale=c.id==='modell'&&!c.ok;card.classList.toggle('zrstale',stale);
   const h=document.createElement('h2'),nm=document.createElement('span'),pl=document.createElement('span');nm.textContent=zRName(c);
   pl.className='pill '+(c.stufe||'');pl.textContent=stale?t('antwortet nicht','not answering')+(c.stumm_s!=null?t(' seit ',' for ')+zDur(c.stumm_s):''):c.stufe==='ok'?t('alles gut','all good'):c.stufe==='bad'?t('Fehler','Error'):t('Hinweis','Note');
-  h.append(nm,pl);const meta=document.createElement('div');meta.className='mut zrmeta';
+  h.append(nm,pl);if(c.id==='modell'&&typeof mgOpen==='function'){const go=document.createElement('button');go.type='button';go.className='b zrgenau';
+    go.textContent=t('Genauer','In detail');go.title=t('Zustand → Modell-Rechner genau','Status → Model computer in detail');go.onclick=e=>{e.stopPropagation();mgOpen()};h.appendChild(go)}
+  const meta=document.createElement('div');meta.className='mut zrmeta';
   meta.textContent=[c.geraet,c.system,c.laeuft_s!=null?t('läuft seit ','up ')+zDur(c.laeuft_s):'',c.version].filter(Boolean).join(' · ');card.append(h,meta);
   h.prepend(zRBild(c));
   const K=c.kurven||{},hw=c.hinweise||[],g=c.gpu||{},modell=c.id==='modell';

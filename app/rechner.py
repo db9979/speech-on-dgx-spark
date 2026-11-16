@@ -28,6 +28,24 @@ CGROUP = "/sys/fs/cgroup/system.slice"
 _EIGEN = re.compile(r"speech-spark-([a-z][a-z0-9-]{0,23})\.service")
 DIENSTE_MAX = 24       # entries at most (more own units do not exist)
 _dienst = {}           # the counters of the last measurement: {"t": monotonic, "u": {part: µs}}
+DIENST_ID = re.compile(r"[a-z][a-z0-9-]{0,23}")
+# the services' names (de, en): the ids rechner.dienste_cpu gives (speech-spark-<id>.service, docker) and the
+# chips „Dienste“; an unknown own unit shows its id
+DIENST_NAMEN = {"asr": ("Spracherkennung", "Speech recognition"), "asr-engine": ("Spracherkennung (Engine)", "Speech recognition (engine)"),
+                "tts": ("Sprachausgabe", "Speech output"), "tts-engine": ("Sprachausgabe (Engine)", "Speech output (engine)"),
+                "tts-design": ("Stimmen gestalten", "Voice design"),
+                "tts-klon": ("Eigene Stimmen", "Own voices"), "llm": ("Sprachmodell", "Language model"),
+                "llmtor": ("LLM-Tor", "LLM-Tor"), "sehen": ("Bildverständnis", "Image understanding"),
+                "helfer": ("Hilfsmodell", "Helper model"), "bild": ("Bilder malen", "Painting pictures"), "musik": ("Musik machen", "Making music"),
+                "werkstatt": ("Werkstatt", "Werkstatt"),
+                "lokaltest": ("Schnelltest lokaler Änderungen", "Quick test of local changes"),
+                "lokaltest-umgebung": ("Testumgebung lokaler Änderungen", "Test environment of local changes"), "github": ("An GitHub geben", "Hand to GitHub"), "auftrag": ("Code-Auftrag (OpenCode)", "Code order (OpenCode)"), "waerter": ("Wärter", "Wärter"), "panel": ("Panel", "Panel"),
+                "turn": ("Anrufe (TURN)", "Calls (TURN)"), "notasr": ("Notbetrieb-Erkennung", "Emergency recognition"),
+                "gehaeuse": ("Gehäuse", "Case"), "systemupdate": ("System-Updates", "System updates"), "gpu-takt": ("GPU-Taktgrenze", "GPU clock cap"), "clients-fw": ("Spark-Clients (Firewall)", "Spark clients (firewall)"), "konsole": ("Spark-Konsole", "Spark-Konsole"), "koppelcode": ("Assistent koppeln", "Pair an assistant"), "koppeln": ("Spark koppeln", "Pair a Spark"), "schirm": ("Steuerzentrale", "Control centre"),
+                "guacd": ("Bildschirm (guacd)", "Screen (guacd)"), "tlstor": ("TLS-Tor", "TLS gate"),
+                "watch": ("API-Wächter", "API watchdog"), "update": ("Update", "Update"), "wechsel": ("Modellwechsel", "Model switch"),
+                "messen-wunsch": ("Modelle messen", "Measuring models"),
+                "docker": ("Modell in Docker", "Model in Docker"), "rest": ("System und Rest", "System and rest")}
 
 
 def lesen(path):

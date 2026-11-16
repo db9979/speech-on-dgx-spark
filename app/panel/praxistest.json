@@ -6362,6 +6362,22 @@
 "text": "Am iPhone Heute → Kalender, E-Mail, Listen und Offen öffnen: der Inhalt geht über die ganze Breite ohne Rahmen drumherum, unten steht keine Zeile „Speech auf DGX Spark …“ mehr. Die steht nur noch ganz unten unter Heute und unter Verwalten, über der Tab-Leiste.",
 "thread": "Web-App aufräumen und neu ordnen",
 "test": "test_leere_seiten.Browser.test_the_footer_stands_at_the_bottom_on_a_phone"
+},
+{
+"id": "P925",
+"v": 1484,
+"titel": "Modell-Rechner genau",
+"text": "Als Admin Zustand → Überblick, an der Karte des Modell-Rechners „Genauer“. Eine Frage im Chat stellen und gleich hinschauen: unter Anfragen steht eine Zeile „Sprachmodell · Gespräch · normal“ mit Sekunden und Tokens, nie der Text. Kacheln, Sprachmodell innen (KV-Cache, Prefix-Cache, MTP), GPU und Verlauf (20 min, 24 Std., 7 Tage) füllen sich; Zurück führt zum Überblick. Zustand → Live zeigt beim Sprachmodell „N laufen, M warten, X tok/s“.",
+"thread": "Monitoring auf tars stark ausbauen",
+"test": "test_modellgenau.Seitenbild.test_page"
+},
+{
+"id": "P926",
+"v": 1484,
+"titel": "Modell-Rechner genau: zuletzt fertig und abgebrochen",
+"text": "Als Admin Zustand → Modell-Rechner genau öffnen. Im Chat am Handy eine lange Antwort anfordern und die App mitten in der Antwort schließen: unter „Zuletzt fertig“ steht eine Zeile „abgebrochen“, die Zeile darüber nach einer normalen Frage „fertig“, nie ein Text. Bei „GPU“ steht „Speicher verweigert (Treiber)“ mit zwei Zahlen. Beim Sprachmodell steht „geladen“, nicht „hängt“.",
+"thread": "Monitoring auf tars stark ausbauen",
+"test": "test_modellgenau.Ende.test_a_stream_the_client_leaves_is_cancelled"
 }
 ]
 }

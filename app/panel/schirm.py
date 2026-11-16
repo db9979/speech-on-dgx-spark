@@ -31,6 +31,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from fastapi import APIRouter, HTTPException, Request  # noqa: E402
 
 import guard  # noqa: E402
+import modellgenau  # noqa: E402
 from steuerzentrale import HEADER, KEY, PFAD  # noqa: E402,F401  (one place for the key's file, header and path)
 
 UNIT = "speech-spark-schirm"
@@ -134,7 +135,7 @@ def zustand(now=None, c=None):
             "schrift": c.get("schirm_schrift", "auto") if c.get("schirm_schrift") in SCHRIFT else "auto",
             "zeiten": [zahl(c, "schirm_an"), zahl(c, "schirm_aus")], "live_an": live.on(),
             "live": live.snapshot("monitor", now), "rechner": rechnerblick.fuer_status(now),
-            "tag": _glance(now), "hinweise": _alerts(now)}
+            "tag": _glance(now), "hinweise": _alerts(now), "genau": modellgenau.fuer_live(True)}
 
 
 def for_live(c=None, now=None):

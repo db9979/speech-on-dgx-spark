@@ -228,6 +228,7 @@
 "test_modelle_docker": 0.0,
 "test_modelle_einfach": 0.2,
 "test_modelle_fest": 0.5,
+"test_modellgenau": 16.4,
 "test_morgen_termine": 0.2,
 "test_motorstart": 1.8,
 "test_musik": 1.7,

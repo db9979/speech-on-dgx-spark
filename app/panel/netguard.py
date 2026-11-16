@@ -131,6 +131,7 @@ DIRECT_OK = {
     "fernbild": ("lokal", "guacd auf 127.0.0.1:4822 und ein eigener Port auf 127.0.0.1 für genau eine Verbindung von guacd zur Leitung des Ankers"),
     "fernzugang": ("lokal", "nur die Route zur Heimnetz-Adresse eines koppelnden Ankers nachschlagen (UDP connect, es geht kein Paket hinaus)"),
     "bedarf": ("lokal", "die eigene Engine bei Bedarf (sd-server, ace-server) auf 127.0.0.1 (image.engine_port, music.engine_port), nur der Bild- und der Musik-Dienst fragen sie"),
+    "modellblick": ("lokal", "Modell-Rechner genau: nur die eigenen Dienste und Engines auf 127.0.0.1 (/health, /metrics), Ports aus der eigenen Konfiguration"),
     "llm_tor": ("lokal", "das LLM-Tor fragt nur die eigenen Engines auf 127.0.0.1 (llm.engine_port, llm.sehen_port)"),
     "tlstor": ("lokal", "das TLS-Tor reicht nur an die eigenen Dienste auf 127.0.0.1 weiter (asr, tts, llm, image.port, music.port)"),
     "steuer": ("lokal", "der Wärter des eigenen Modell-Rechners (common.model_url, gepinntes Zertifikat, Wärter-Schlüssel)"),

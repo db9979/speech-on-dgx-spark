@@ -340,6 +340,17 @@ def signed_low(scope):
     return stage == STAGE_LOW and signed
 
 
+# the kinds of request a gate names (PrioGate.bild, Zustand → Überblick → Modell-Rechner genau): fixed words only, the
+# panel has their names (modellgenau.ARTEN_NAMEN)
+ARTEN = ("gespraech", "programm", "entwickler", "sehen", "helfer", "systemone", "hoeren", "sprechen", "stimme_entwerfen",
+         "eigene_stimme")
+BILD_MAX = 32          # rows of requests a gate shows at most
+
+
+def _zahl(v):
+    return v if isinstance(v, int) and not isinstance(v, bool) and 0 <= v < 10 ** 9 else None
+
+
 class GateFull(Exception):
     """Too many requests wait already."""
 
@@ -359,6 +370,7 @@ class PrioGate:
         self.slots, self.age, self.lease, self.most, self.clock = max(1, int(slots)), age, lease, most, clock
         self.folge = folge
         self.running = {}       # ticket -> start
+        self.tickets = {}       # ticket id -> ticket of the running ones (stage, kind, tokens: bild)
         self.waiting = []       # [stage, arrival, seq, future, ticket, fest, folge]
         self.seq = 0
         self.stats = {"waited": 0, "overtook": 0, "waited_max_ms": 0, "full": 0, "first_ahead": 0}
@@ -368,6 +380,7 @@ class PrioGate:
         for t, s in list(self.running.items()):
             if now - s > self.lease:
                 del self.running[t]
+                self.tickets.pop(t, None)
         return len(self.running)
 
     def _rank(self, w, now):
@@ -385,24 +398,29 @@ class PrioGate:
             if not best[6]:
                 best[4]["first_ahead"] = sum(1 for w in self.waiting if w[6] and w[2] < best[2])
             self.running[best[4]["id"]] = now
+            self.tickets[best[4]["id"]] = best[4]
             best[3].set_result(True)
 
-    async def enter(self, stage=STAGE_NORMAL, fest=False, folge=False):
+    async def enter(self, stage=STAGE_NORMAL, fest=False, folge=False, art="", kunde=""):
         """Waits for a slot. Returns the ticket: {"id", "waited_ms", "overtook"}; pass it to leave(). fest: the stage
-        never rises while waiting (the LLM-Tor's developer key stays last, Entwickeln auf dem Pi)."""
+        never rises while waiting (the LLM-Tor's developer key stays last, Entwickeln auf dem Pi). art: a fixed word
+        of ARTEN for Zustand → Überblick → Modell-Rechner genau (bild); kunde: the name an admin gave a Spark client
+        (never a profile); the caller may add "rein"/"raus" (tokens) to the ticket while it runs."""
         import asyncio
         self.seq += 1
-        ticket = {"id": self.seq, "waited_ms": 0, "overtook": 0}
+        stage = stage if stage in (STAGE_LOW, STAGE_NORMAL, STAGE_HIGH) else STAGE_NORMAL
+        ticket = {"id": self.seq, "waited_ms": 0, "overtook": 0, "stufe": stage, "art": art if art in ARTEN else "",
+                  "folge": folge is True, "kunde": kunde[:40] if isinstance(kunde, str) else ""}
         if not self.waiting and self._busy() < self.slots:
             self.running[ticket["id"]] = self.clock()
+            self.tickets[ticket["id"]] = ticket
             return ticket
         if len(self.waiting) >= self.most:
             self.stats["full"] += 1
             raise GateFull()
         t0 = self.clock()
         fut = asyncio.get_running_loop().create_future()
-        self.waiting.append([stage if stage in (STAGE_LOW, STAGE_NORMAL, STAGE_HIGH) else STAGE_NORMAL, t0, self.seq, fut, ticket,
-                             fest is True, folge is True])
+        self.waiting.append([stage, t0, self.seq, fut, ticket, fest is True, folge is True])
         self._grant()
         while not fut.done():   # a slot whose lease ran out frees itself: look again now and then
             try:
@@ -432,10 +450,26 @@ class PrioGate:
     def leave(self, ticket):
         """Gives the slot back (twice is harmless)."""
         if ticket and self.running.pop(ticket["id"], None) is not None:
+            self.tickets.pop(ticket["id"], None)
             self._grant()
 
     def view(self):
         return dict(self.stats, running=self._busy(), waiting=len(self.waiting), slots=self.slots)
+
+    def bild(self, most=BILD_MAX):
+        """The requests in this gate without any content (Modell-Rechner genau): running first, then waiting, each
+        {"z": "laeuft"|"wartet", "stufe", "art", "s" seconds, "folge", "rein", "raus", "kunde"}; at most `most` rows."""
+        now, out = self.clock(), []
+        self._busy()
+        for i, t0 in sorted(self.running.items(), key=lambda x: x[1]):
+            t = self.tickets.get(i) or {}
+            out.append({"z": "laeuft", "stufe": t.get("stufe", STAGE_NORMAL), "art": t.get("art", ""),
+                        "s": round(max(0.0, now - t0), 1), "folge": bool(t.get("folge")),
+                        "rein": _zahl(t.get("rein")), "raus": _zahl(t.get("raus")), "kunde": t.get("kunde", "")})
+        for w in sorted(self.waiting, key=lambda w: w[1]):
+            out.append({"z": "wartet", "stufe": w[0], "art": w[4].get("art", ""), "s": round(max(0.0, now - w[1]), 1),
+                        "folge": bool(w[6]), "rein": None, "raus": None, "kunde": w[4].get("kunde", "")})
+        return out[:most]
 
     @staticmethod
     def headers(ticket):
@@ -705,6 +739,30 @@ MODEL_LOG_UNITS = {"wechsel": "speech-spark-wechsel"}
 # unit (install.sh --werkstatt, only werkstatt.py's checked wish starts it): watched and shown on the model computer's
 # card (Monitoring, Steuerzentrale), never started or stopped by the panel's `einheit`
 ON_DEMAND_UNITS = {"bild": "speech-spark-bild", "musik": "speech-spark-musik", "werkstatt": "speech-spark-werkstatt"}
+
+
+def einheiten_stand(units, lauf=None):
+    """{unit: {"state", "seit", "eintritt", "da"}} from one systemctl show for all units (blocks in the asked order);
+    "da" is False for a unit that is not installed (LoadState not-found, e.g. the Werkstatt without --werkstatt).
+    lauf: the caller's run (the Wärter's, which its self-tests replace)."""
+    code, out = (lauf or run)(["systemctl", "show", *units, "-p", "Id,ActiveState,ActiveEnterTimestampMonotonic,LoadState"])
+    got = {}
+    for block in out.split("\n\n") if code == 0 else []:
+        props = dict(x.split("=", 1) for x in block.splitlines() if "=" in x)
+        unit = props.get("Id", "").removesuffix(".service")
+        if unit not in units:
+            continue
+        state = props.get("ActiveState", "")
+        state = state if re.fullmatch(r"[a-z\-]{1,20}", state) else "unknown"
+        try:
+            t = int(props.get("ActiveEnterTimestampMonotonic", "0")) / 1e6
+        except ValueError:
+            t = 0
+        got[unit] = {"state": state, "seit": round(time.monotonic() - t) if state == "active" and t else None,
+                     "eintritt": int(t * 1e6), "da": props.get("LoadState") != "not-found"}
+    return {u: got.get(u, {"state": "unknown", "seit": None, "eintritt": 0}) for u in units}
+
+
 # the Wärter on the model computer (tarswart.py, plan Raspberry-Pi split B4): behind the TLS-Tor, own key
 WAERTER_PORT = 31007
 # Notbetrieb mit Parakeet on the panel computer (B5c, panel/notbetrieb.py): asr_proxy.py with SPEECH_SPARK_NOTASR=1

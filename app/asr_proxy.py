@@ -195,7 +195,7 @@ async def health(request: Request):
         "avg_latency_s": round(sum(lat) / len(lat), 3) if lat else None,
         "avg_rtf": round(sum(rtf) / len(rtf), 3) if rtf else None,
         "avg_ttft_s": round(sum(ttft) / len(ttft), 3) if ttft else None,
-        "timestamps": False, "queue": gate.view(),
+        "timestamps": False, "queue": gate.view(), "anfragen": gate.bild(),   # numbers only (Modell-Rechner genau)
     }
 
 
@@ -282,7 +282,7 @@ async def transcriptions(request: Request):
     try:
         kunde = getattr(request.state, "client", None)
         await mandanten.halten(kunde, "asr")   # E3: a background client waits while somebody speaks
-        ticket = await gate.enter(stage_of(request), fest=mandanten.fest(kunde))
+        ticket = await gate.enter(stage_of(request), fest=mandanten.fest(kunde), art="hoeren")
     except GateFull:
         raise HTTPException(503, "ASR busy: too many recordings waiting")
     try:

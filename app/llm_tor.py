@@ -30,7 +30,12 @@ This service sits on llm.port (31006, on the network like the speech APIs) and a
   not the shared api.key; only its SHA-256 is known here (entwickeln.schluessel_sha256, "" while the admin switch is
   off). Such a request may only chat and list the models, is always last in line (stage "hinten", never aged up:
   speech goes first) and passes a gate of its own with common.ENTWICKLER_PLAETZE slots (entwickler_tor);
-- counts: requests, tokens read and written (numbers only, in memory, on /health for the panel).
+- counts: requests, tokens read and written (numbers only, in memory, on /health for the panel);
+- the last FERTIG_MAX finished requests with their result (fertig, abgebrochen, zeit, fehler) for Modell-Rechner
+  genau: kind, stage, seconds, tokens and the name an admin gave a Spark client, never content;
+- "hängt" (haengt_loop): requests run, but the engine wrote and read no token for HAENGT_S seconds; /health says
+  "haengt": true (shown only; restarting stays with the API-Wächter, Einstellungen → Spark → Betrieb → Hängende Dienste
+  neu starten).
 Journal lines start with "llmtor:" and hold only fixed words and numbers, never a prompt or an answer.
 """
 import asyncio
@@ -39,6 +44,7 @@ import math
 import secrets
 import subprocess
 import time
+from collections import deque
 
 import httpx
 import uvicorn
@@ -47,9 +53,10 @@ from fastapi.responses import JSONResponse, Response, StreamingResponse
 
 import einordnung
 import mandanten
+import modellblick
 import modelle
 from textnorm import defuse_marks
-from common import (dauerlauf, STAGE_LOW, BodyLimit, GateFull, KeyedCORS, PrioGate, api_key_dependency, client_ok, check_memory,
+from common import (BILD_MAX, dauerlauf, STAGE_LOW, BodyLimit, GateFull, KeyedCORS, PrioGate, api_key_dependency, client_ok, check_memory,
                     ENTWICKLER_PLAETZE, LLM_ALIAS, entwickler_ok, inside, load_config, outside_view, quiet_access_log, stage_of)
 
 UNIT_ENGINE, UNIT_SEHEN, UNIT_HELFER = "speech-spark-llm", "speech-spark-sehen", "speech-spark-helfer"
@@ -62,6 +69,9 @@ SEHEN_START_S = 300            # the image engine has this long to load on deman
 HELFER_START_S = 600           # the helper engine's start in the background is given up after this long
 HELFER = "helfer"              # the model name that asks for the helper model
 ECHT_S = 15                    # the engine is asked which model it serves at most this often
+FERTIG_MAX = 20                # finished requests kept for Modell-Rechner genau
+ERGEBNISSE = ("fertig", "abgebrochen", "zeit", "fehler")
+HAENGT_S = 90                  # seconds with running requests but no token read or written: the engine hangs
 # the request fields that pass; everything else (prompt_token_ids, input_ids, stop_token_ids, logit_bias, guided_*,
 # best_of …) is dropped before the engine sees it
 FELDER = ("messages", "stream", "stream_options", "max_tokens", "max_completion_tokens", "temperature", "top_p", "top_k",
@@ -247,10 +257,14 @@ started = time.time()
 stats = {"requests": 0, "refused": 0, "failures": 0, "tokens_in": 0, "tokens_out": 0, "systemone": 0, "sehen": 0,
          "helfer": 0, "helfer_laedt": 0, "entwickler": 0, "entwickler_voll": 0}
 canary = {"status": "loading", "ms": None, "t": 0.0}
+fertig = deque(maxlen=FERTIG_MAX)     # the last finished requests: fixed words and numbers (_ende)
+haengt = {"an": False, "zaehler": None, "t": 0.0}
 echt = {"t": None, "port": 0, "id": "", "anders": False}   # what the engine said it serves (laufend)
 sehen = {"used": 0.0, "lock": None}
 helfer = {"used": 0.0, "start": None}
 gate = None
+nebenbei = {}              # System One questions running beside the gate (fixed kind, stage, start): health "anfragen"
+nebenbei_n = [0]
 entwickler_tor = None      # the developer key's own gate (common.ENTWICKLER_PLAETZE slots, no ageing)
 
 
@@ -309,33 +323,84 @@ def _systemctl(*args):
 
 async def _count(data, kunde=None):
     u = data.get("usage") if isinstance(data, dict) else None
-    if isinstance(u, dict):
+    if isinstance(u, dict) and not isinstance(u.get("prompt_tokens"), bool):
         stats["tokens_in"] += int(u.get("prompt_tokens") or 0)
         stats["tokens_out"] += int(u.get("completion_tokens") or 0)
         if kunde is not None:
             mandanten.tokens_zaehlen(kunde, int(u.get("prompt_tokens") or 0) + int(u.get("completion_tokens") or 0))
 
 
+def _art(dev, kunde, port, c):
+    """The fixed kind of a chat request for Modell-Rechner genau (common.ARTEN)."""
+    if dev:
+        return "entwickler"
+    if kunde is not None:
+        return "programm"
+    if port == c.get("sehen_port"):
+        return "sehen"
+    if port == c.get("helfer_port"):
+        return "helfer"
+    return "gespraech"
+
+
+def _stueck(line, ticket, wants):
+    """One line of a stream: the engine sends the usage in every piece (continuous_usage_stats, so Modell-Rechner
+    genau sees the tokens of a running request); the client gets only what it asked for (wants: (include_usage,
+    continuous_usage_stats)). Returns (line or None to drop it, the closing usage piece or None)."""
+    if not line.startswith("data: {") or '"usage"' not in line:
+        return line, None
+    try:
+        d = json.loads(line[6:])
+    except ValueError:
+        return line, None
+    u = d.get("usage") if isinstance(d, dict) else None
+    if not isinstance(u, dict):
+        return line, None
+    for k, w in (("prompt_tokens", "rein"), ("completion_tokens", "raus")):
+        v = u.get(k)
+        if isinstance(v, int) and not isinstance(v, bool) and v >= 0:
+            ticket[w] = v
+    schluss = not d.get("choices")
+    if schluss:
+        return (line if wants[0] else None), d
+    if wants[1]:
+        return line, None
+    if wants[0]:
+        d["usage"] = None
+    else:
+        d.pop("usage", None)
+    return "data: " + json.dumps(d, ensure_ascii=False, separators=(",", ":")), None
+
+
 async def _forward(port, body, request):
     """Sends the checked body to an engine; streams back piece by piece, counting the usage piece. A request with the
-    developer key first takes a slot of its own gate, then waits last in line at the engine's gate (never aged up)."""
+    developer key first takes a slot of its own gate, then waits last in line at the engine's gate (never aged up).
+    A stream always asks the engine for the usage in every piece (the running request's tokens for Modell-Rechner
+    genau, numbers only); the client gets the usage only as it asked for it (_stueck)."""
     global gate
     if gate is None:
         gate = PrioGate(aktiv()[0]["vllm"].get("max_seqs", 8))
     dev = getattr(request.state, "entwickler", False) is True
     kunde = getattr(request.state, "client", None)
     dgate, dticket = (_entwickler_gate(), None) if dev else (None, None)
-    if kunde is not None and body.get("stream"):   # a client's tokens per day count from the usage piece
-        body = {**body, "stream_options": {"include_usage": True}}
+    art = _art(dev, kunde, port, cfg())
+    wants = (False, False)
+    if body.get("stream"):
+        so = body.get("stream_options") if isinstance(body.get("stream_options"), dict) else {}
+        wants = (so.get("include_usage") is True, so.get("include_usage") is True and so.get("continuous_usage_stats") is True)
+        # a client's tokens per day count from the closing usage piece (mandanten), all others for the totals
+        body = {**body, "stream_options": {"include_usage": True, "continuous_usage_stats": True}}
     await mandanten.halten(kunde, "llm")   # E3: "Hintergrund" waits while somebody speaks on the Spark (before its slot)
     if kunde is not None and not mandanten.herein(kunde):
         mandanten.melden(kunde, "parallel", "llm")
         raise HTTPException(429, "parallel")
     try:
         if dev:
-            dticket = await dgate.enter(STAGE_LOW, fest=True)
+            dticket = await dgate.enter(STAGE_LOW, fest=True, art=art)
             stats["entwickler"] += 1
-        ticket = await gate.enter(STAGE_LOW, fest=True) if dev else await gate.enter(stage_of(request), fest=mandanten.fest(kunde))
+        name = str(kunde.get("name") or "") if isinstance(kunde, dict) else ""     # an admin's name for a Spark client
+        ticket = await gate.enter(STAGE_LOW, fest=True, art=art) if dev else \
+            await gate.enter(stage_of(request), fest=mandanten.fest(kunde), art=art, kunde=name)
     except GateFull:
         if dticket:
             dgate.leave(dticket)
@@ -352,19 +417,32 @@ async def _forward(port, body, request):
             dgate.leave(dticket)
         if kunde is not None:
             mandanten.raus(kunde)
-    canary["t"] = time.monotonic()
+    canary["t"] = t0 = time.monotonic()
     if not body.get("stream"):
+        ergebnis = "fehler"
         try:
             r = await client.post(_url(port, modelle.CHAT), json=body)
+            ergebnis = "fertig" if r.status_code == 200 else "fehler"
+        except httpx.TimeoutException:
+            ergebnis = "zeit"
+            stats["failures"] += 1
+            print("llmtor: fehler engine zeit", flush=True)
+            raise HTTPException(503, "engine")
         except httpx.HTTPError:
             stats["failures"] += 1
             print("llmtor: fehler engine nicht erreichbar", flush=True)
             raise HTTPException(503, "engine")
+        except asyncio.CancelledError:
+            ergebnis = "abgebrochen"
+            raise
         finally:
             frei()
+            _ende(ticket, t0, ergebnis)
         try:
-            await _count(r.json(), kunde)
-        except ValueError:
+            data = r.json()
+            await _count(data, kunde)
+            _tokens(ticket, data.get("usage"))
+        except (ValueError, AttributeError):
             pass
         print(f"llmtor: antwort {r.status_code}", flush=True)
         return Response(r.content, status_code=r.status_code, media_type="application/json")
@@ -384,21 +462,28 @@ async def _forward(port, body, request):
         return Response(content, status_code=r.status_code, media_type="application/json")
 
     async def pieces():
+        ergebnis = "abgebrochen"        # the client went away (the generator is closed): the engine is told by aclose
         try:
             async for line in r.aiter_lines():
-                if line.startswith("data: {") and '"usage"' in line:
-                    try:
-                        await _count(json.loads(line[6:]), kunde)
-                    except ValueError:
-                        pass
-                yield (line + "\n").encode()
+                line, schluss = _stueck(line, ticket, wants)
+                if schluss is not None:
+                    await _count(schluss, kunde)
+                if line is not None:
+                    yield (line + "\n").encode()
+            ergebnis = "fertig"
             print("llmtor: antwort gestreamt", flush=True)
+        except httpx.TimeoutException:
+            ergebnis = "zeit"
+            stats["failures"] += 1
+            print("llmtor: fehler beim streamen zeit", flush=True)
         except httpx.HTTPError:
+            ergebnis = "fehler"
             stats["failures"] += 1
             print("llmtor: fehler beim streamen", flush=True)
         finally:
             await r.aclose()
             frei()
+            _ende(ticket, t0, ergebnis)
     return StreamingResponse(pieces(), media_type="text/event-stream")
 
 
@@ -532,6 +617,16 @@ async def systemone(request: Request):
         stats["helfer"] += 1
     state = einordnung.clean_state(body.get("state"))
     fence = secrets.token_hex(8)
+    nebenbei_n[0] += 1
+    nr = nebenbei_n[0]
+    nebenbei[nr] = {"t": time.monotonic(), "art": "helfer" if wer == HELFER else "systemone", "stufe": stage_of(request)}
+    try:
+        return await _systemone_fragen(questions, state, fence, served, port, wer)
+    finally:
+        nebenbei.pop(nr, None)
+
+
+async def _systemone_fragen(questions, state, fence, served, port, wer):
     answers, masses = {}, []
     for name, q in questions.items():
         n = len(q["criteria"]) if q["type"] != "noul" else 2
@@ -591,7 +686,18 @@ async def health(request: Request):
         served = (await laufend())[1]
     except modelle.Fehler:
         served, out["status"] = "", "error"
-    return {**out, "model": served, "canary_ms": canary["ms"], "uptime_s": round(time.time() - started), **stats}
+    return {**out, "model": served, "canary_ms": canary["ms"], "uptime_s": round(time.time() - started), **stats,
+            "tor": gate.view() if gate is not None else None, "anfragen": anfragen(), "fertig": list(fertig),
+            "haengt": haengt["an"]}
+
+
+def anfragen():
+    """The running and waiting requests without any content (Modell-Rechner genau): the gate's rows (common.PrioGate
+    .bild) and the System One questions beside it."""
+    now = time.monotonic()
+    neben = [{"z": "laeuft", "stufe": x["stufe"], "art": x["art"], "s": round(now - x["t"], 1), "folge": False,
+              "rein": None, "raus": None} for x in list(nebenbei.values())]
+    return ((gate.bild() if gate is not None else []) + neben)[:BILD_MAX]
 
 
 async def kanarie_loop():
@@ -633,9 +739,67 @@ async def sehen_leerlauf_loop():
             print("llmtor: helfer gestoppt leerlauf" if rc == 0 else "llmtor: helfer stop fehler", flush=True)
 
 
+def _tokens(ticket, usage):
+    """The tokens of a finished answer that did not stream (its usage) into the ticket, numbers only."""
+    if isinstance(usage, dict):
+        for k, f in (("rein", "prompt_tokens"), ("raus", "completion_tokens")):
+            v = usage.get(f)
+            if isinstance(v, int) and not isinstance(v, bool) and 0 <= v < 10**9:
+                ticket[k] = v
+
+
+def _ende(ticket, t0, ergebnis):
+    """One finished request for Modell-Rechner genau (fertig): kind, stage, seconds, tokens, client name, result."""
+    ergebnis = ergebnis if ergebnis in ERGEBNISSE else "fehler"
+    if ergebnis == "abgebrochen":
+        print("llmtor: abgebrochen vom geraet", flush=True)
+    fertig.append({"t": int(time.time()), "art": ticket.get("art", ""), "stufe": ticket.get("stufe", 1),
+                   "s": round(max(0.0, time.monotonic() - t0), 1), "rein": ticket.get("rein"), "raus": ticket.get("raus"),
+                   "kunde": ticket.get("kunde", ""), "ergebnis": ergebnis})
+
+
+async def _zaehler(port):
+    """Tokens read and written so far by the engine (its /metrics), None without an answer."""
+    try:
+        r = await client.get(_url(port, "/metrics"), timeout=2)
+        m = modellblick.metriken(r.text) if r.status_code == 200 else {}
+    except httpx.HTTPError:
+        return None
+    if m.get("tok_rein") is None and m.get("tok_raus") is None:
+        return None
+    return (m.get("tok_rein") or 0) + (m.get("tok_raus") or 0)
+
+
+async def haengt_loop(warte=5, uhr=time.monotonic):
+    """Requests run, but the engine read and wrote no token for HAENGT_S seconds: it hangs (fixed rule, shown only)."""
+    while True:
+        await asyncio.sleep(warte)
+        await haengt_runde(uhr())
+
+
+async def haengt_runde(now):
+    laeuft = gate is not None and gate.view().get("running", 0) > 0
+    z = None
+    if laeuft:
+        try:
+            z = await _zaehler((await laufend())[2])
+        except modelle.Fehler:
+            z = None
+    if not laeuft or z is None or z != haengt["zaehler"]:
+        if haengt["an"] and (not laeuft or z is not None):
+            print("llmtor: haengt nicht mehr", flush=True)
+            haengt["an"] = False
+        haengt.update(zaehler=z, t=now)
+        return
+    if not haengt["an"] and now - haengt["t"] >= HAENGT_S:
+        haengt["an"] = True
+        print(f"llmtor: haengt {int(now - haengt['t'])} s", flush=True)
+
+
 @app.on_event("startup")
 async def _start():
     dauerlauf("llmtor", "kanarie", kanarie_loop)
+    dauerlauf("llmtor", "haengt", haengt_loop)
     dauerlauf("llmtor", "sehen-leerlauf", sehen_leerlauf_loop)
 
 

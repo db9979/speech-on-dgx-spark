@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.484** Model computer in detail: requests without content, queues, the language model inside, GPU with throttling and refused memory, finished requests with their result, "hangs" and history on one page under Status, also for the Spark alone
 - **V01.1.483** RED-FIX: the iPhone app builds again (away date and poll error line)
 - **V01.1.482** Tidying the web app: a calmer head and one counter on the phone, small cards, the bottom bar no longer cut off in Safari, 5 tabs, own pages without a card in a card, the side menu on an iPad upright with symbols only
 - **V01.1.481** CarPlay: rate the last answers with thumbs up or down, or create an issue for one by voice, with the app's sound log attached
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.477** Dungeon review 15 Nov, point 7: the new round step by step (world, story, the round, your hero; a bar on top, "Next" and "Back", "Start the round" only at the hero, without a title back to step 3) and the card "Like last time": one tap starts a freely told round with world, tone, times, way of telling, rule depth and reading aloud of the last round and its hero (dungeon.quick, fixed rules, only free living heroes); the healer test no longer depends on the clock (P919)
 - **V01.1.476** Dungeon review 15 Nov, points 6 and 8: a smaller action bar on the phone (status with "waiting for …" in one line, wish and further buttons behind "⋯ More", ▾ folds it to field and send arrow, kept per device), date, moons and time of day in one line above the story, "Roll a vault" and "Roll the map again" in the game master console under "Map" instead of under the map (P918)
 - **V01.1.475** Quiet notes on top: only a small sign "● N notes" beside the bug, one cause in one line
-- **V01.1.474** ROT-FIX Dungeon phone bar: the bar no longer grows with the text (status one line with "…", suggestions one row to swipe); with GitHub's wider font it took more than half the height, which made test_the_phone_table_head_fight_field_group_and_hero a lasting flake, now checked with wide letters
 
 
 

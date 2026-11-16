@@ -526,6 +526,8 @@ Live-Übersicht, Logs, Wächter, Sicherung, Update, Hilfe und die Admin-Seiten.
 | `app/panel/loopwacht.py` | Hänge-Wächter: Logzeile mit der Stelle, wenn das Panel hängt; systemd startet es neu |
 | `app/mandanten.py` | Spark-Clients: Schlüssel je Client mit Rechten, Vorrangklasse und Grenzen, nur aus dem Heimnetz; /v1/spark/faehigkeiten |
 | `app/panel/meldung.py` | Probleme melden als GitHub-Issue |
+| `app/modellblick.py` | Blick auf den Modell-Rechner (Wärter oder Panel ohne Pi): Dienste, Warteschlangen, vLLM, GPU; nur 127.0.0.1 |
+| `app/panel/modellgenau.py` | Zustand → Modell-Rechner genau: Anfragen ohne Inhalt, Warteschlangen, GPU, Speicher, Verlauf, Ereignisse |
 | `app/panel/modellseite.py` | Zustand → Modelle: Katalog, Speicher-Budget, Messen, Wechseln und Zurückholen, eigene Modelle hinzufügen und löschen |
 | `app/panel/monitor.py` | Messwerte: GPU, Speicher, CPU |
 | `app/panel/nas.py` | Speicher und NAS: Speicherorte (NAS, Cloud), eine Anmeldung pro Ort für Kopie und Sicherung |
@@ -869,6 +871,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `state/modelle-probe.json` | Welches Modell gerade ausprobiert wird (Zustand → Modelle „Ausprobieren“), Sekunden | – | nein |
 | `state/modelle-wechsel.json` | Je Art das Modell vor dem letzten Wechsel (7 Tage zurückholbar) | – | nein |
 | `state/modelle-wunsch.json` | Wunsch des Panels für den nächsten Modellwechsel oder „Lange Gespräche“, Sekunden | – | nein |
+| `state/modellgenau.json` | Modell-Rechner genau: Verlauf 24 Std. und 7 Tage (Zahlen) und die letzten Ereignisse (feste Wörter) | – | nein |
 | `state/musik-test-2b-1.mp3` | Probestück 1 mit 2B (Musik testen) | – | nein |
 | `state/musik-test-2b-2.mp3` | Probestück 2 mit 2B (Musik testen) | – | nein |
 | `state/musik-test-2b-klein-1.mp3` | Probestück 1 mit 2B klein (Musik testen) | – | nein |
@@ -3111,6 +3114,12 @@ Gilt bei: [Schritt 4](#kn-betrieb-s4)
 - Was weg ist, zeigt der Hinweis oben auf den Admin-Seiten, nur hinter dem Zeichen „● N Hinweise“ neben dem Käfer. Dienste am selben Gerät werden eine Zeile (dienstwacht.gruppen): gleicher Rechner nach einem kurzen Hash des Hosts, die NAS-Dienste (Sicherung, Wissensordner, Ablage, Zustand der NAS) immer; nie mit Adresse.
 - Die Proben gehen über den Wächter, zählen aber nicht auf der Live-Liste und lösen nie „Notaus von selbst“ aus.
 
+#### Modell-Rechner genau
+
+- Alle 3 s schaut modellblick.messen auf dem Rechner mit den Modellen nur bei den eigenen Diensten auf 127.0.0.1 nach, je höchstens 0.5 s und zusammen höchstens 2.0 s: Zustand je Dienst, die Warteschlangen (common.PrioGate.bild: Art, Stufe, Sekunden, Tokens), die Zähler jeder vLLM-Engine aus /metrics, warum die GPU drosselt und den Speicher je Dienst. Mit Pi schickt der Wärter das in seinem Zustand mit, ohne Pi fragt das Panel selbst. modellgenau.pruefen nimmt nur bekannte Schlüssel, Zahlen im Bereich und feste Wörter.
+- Das LLM-Tor bittet die Engine bei jedem Stream um die Zähler in jedem Stück (continuous_usage_stats) und gibt dem Programm nur, was es selbst verlangt hat. Ereignisse folgen festen Regeln (Zustand gewechselt, Warteschlange voll, länger als 5 s gewartet, KV-Cache ab 90 %, Drosseln wegen Wärme oder Leistung, Probeantwort) mit je einer Zeile „rechner: ereignis …“.
+- Das LLM-Tor merkt sich die letzten 20 fertigen Anfragen mit Ergebnis (fertig, abgebrochen, Zeit abgelaufen, Fehler) und dem Namen eines Spark-Clients; geht ein Gerät mitten in der Antwort weg, schließt es den Stream zur Engine, und vLLM hört auf. Laufen Anfragen, aber die Engine liest und schreibt 90 s lang kein Token, meldet es „hängt“. Rechnet die Engine 3 Blicke lang mehr Anfragen, als das Tor kennt, ist das ein Ereignis; die Ablehnungen von GPU-Speicher zählt modellblick.nvrm aus dem Kernel-Log, höchstens alle 60 s, ohne eine Zeile zu behalten.
+
 #### Sicherung
 
 - Einmal am Tag packt das Panel in einer Pause users/, voices/, config.json, das Panel-Passwort und die Dateien aus backup.STATE_FILES. Der Schlüssel state/secret.key und die Anmeldeschlüssel sind nicht dabei; Datenbanken werden als stimmige Kopie gesichert.
@@ -3139,6 +3148,7 @@ Gilt bei: [Schritt 4](#kn-betrieb-s4)
 - Zustand → Logs → Diagnose: Zeilen nach Bereich, Fehler und Warnungen, mit festem Hinweis.
 - Zustand → Live: laufende Anfragen, Wächter-Entscheidungen und Dienste als Bild.
 - Zustand → Dienste: was der Dienst-Wächter prüft und die Ausfälle der letzten Tage.
+- Zustand → Modell-Rechner genau: Anfragen je Dienst mit Art, Stufe, Sekunden und Tokens (nie Inhalt), Sprachmodell innen (vLLM), GPU mit Drosselgrund, Speicher je Dienst, Verlauf und Ereignisse; ohne Pi misst das Panel selbst.
 
 #### Im Code
 
@@ -3154,8 +3164,10 @@ Gilt bei: [Schritt 4](#kn-betrieb-s4)
 - `app/panel/logfilter.py` `summary`: Zähler und fester Hinweis ([Schritt 12](#kn-betrieb-s12))
 - `app/panel/dienstwacht.py` `round_once`: eine Runde Proben und Meldungen ([Schritt 5](#kn-betrieb-s5))
 - `app/panel/backup.py` `create`: eine Sicherung packen ([Schritt 9](#kn-betrieb-s9))
+- `app/modellblick.py` `messen`: ein Blick auf den Modell-Rechner, nur 127.0.0.1 ([Schritt 4](#kn-betrieb-s4))
+- `app/panel/modellgenau.py` `probe`: Raten, Verlauf und Ereignisse alle 3 s ([Schritt 4](#kn-betrieb-s4))
 
-Selbsttests: `test_tracelog`, `test_live`, `test_logfilter`, `test_log_luecken`, `test_dienstwacht`, `test_hardening`, `test_panel`
+Selbsttests: `test_modellgenau`, `test_tracelog`, `test_live`, `test_logfilter`, `test_log_luecken`, `test_dienstwacht`, `test_hardening`, `test_panel`
 
 ### Sprachmodell
 
@@ -3331,7 +3343,7 @@ flowchart TD
 4. <a id="kn-asr-s4"></a>**An den ASR-Dienst**: Das Panel schickt die Aufnahme mit dem API-Schlüssel an den Proxy. stufe.asr_level legt die Stufe des Profils bei, an einem geteilten Lautsprecher aber nicht. Nur das Panel kann eine Stufe setzen: mit dem Schlüssel aus vorrang-key und nur von dieser Maschine, sonst gilt normal. Eine Abschrift im Hintergrund (abschrift.py) schickt die Stufe hinten mit dem Schlüssel: sie wartet hinter jeder Person und zählt nicht als Sprache (common.signed_low), echte Sprache bricht sie ab.
 5. <a id="kn-asr-s5"></a>**Schlüssel und Größe in Ordnung?**: BodyLimit lehnt zu große Anfragen und solche ohne den richtigen Schlüssel ab, bevor etwas gelesen wird. Ohne eingetragenen Schlüssel darf nur diese Maschine selbst fragen.
 6. <a id="kn-asr-s6"></a>**Engine bereit?**: engine_status fragt /health der Engine. Antwortet sie nicht, liest der Proxy ihren Zustand und den der systemd-Einheit und nennt den Grund.
-7. <a id="kn-asr-s7"></a>**Warten nach Vorrang**: PrioGate lässt so viele Aufnahmen durch, wie die Engine gleichzeitig nimmt (engine_max_seqs). Die anderen warten nach Stufe, dann nach Ankunft. Wer wartet, rückt alle vier Sekunden eine Stufe auf; eine laufende Anfrage wird nie unterbrochen.
+7. <a id="kn-asr-s7"></a>**Warten nach Vorrang**: PrioGate lässt so viele Aufnahmen durch, wie die Engine gleichzeitig nimmt (engine_max_seqs). Die anderen warten nach Stufe, dann nach Ankunft. Wer wartet, rückt alle vier Sekunden eine Stufe auf; eine laufende Anfrage wird nie unterbrochen. Zustand → Modell-Rechner genau sieht je Anfrage nur Art, Stufe und Sekunden, nie die Aufnahme.
 8. <a id="kn-asr-s8"></a>**Abtastrate erlaubt?**: audio_rate_ok liest die Abtastrate aus dem Kopf der Datei (WAV, FLAC, Ogg, WebM) oder fragt ffprobe. Ein Kopf mit erfundener Rate würde beim Umrechnen den Speicher füllen.
 9. <a id="kn-asr-s9"></a>**Erkennen**: Mit Qwen3-ASR geht die Aufnahme an die vLLM-Engine, die nur auf dieser Maschine lauscht; nur prompt, temperature und stream reichen durch, dazu die Kontextwörter aus den Einstellungen. Mit Parakeet erkennt der Proxy selbst auf dem Prozessor, in Stücken von höchstens 90 Sekunden, die an einer leisen Stelle geschnitten werden. Im Notbetrieb mit Parakeet (Panel-Rechner, Modell-Rechner weg) führt common.model_url die Aufnahme zu speech-spark-notasr auf Port 31009, nur für den Rechner selbst: derselbe Proxy mit Parakeet, geladen bei der ersten Aufnahme, entladen nach 10 Minuten ohne eine.
 10. <a id="kn-asr-s10"></a>**Stille, Füllwort oder Echo?**: stille.check verwirft Text aus fast stummen Aufnahmen, ein einzelnes „Ja“ oder „Okay“ mit zu wenig Stimme und die zurückgelesene Namensliste von „Namen fürs Hören“ (stille.context_echo, ab 3 Namen der Liste). Für Profile prüft echo.check, ob der Text die eigene Stimme des Spark von einem anderen Gerät ist, und fremdstimme, ob ein von selbst geöffnetes Mikrofon eine fremde Stimme hörte.
@@ -3437,7 +3449,7 @@ flowchart TD
 7. <a id="kn-tts-s7"></a>**Sprache, Aussprache, Zahlen**: Steht die Sprache auf Auto, rät guess_language an häufigen Wörtern Deutsch oder Englisch, damit ein einzelnes englisches Wort nicht den Ton der ganzen Antwort ändert. Dann gilt die eigene Aussprache-Liste, danach schreibt speak_abbreviations Abkürzungen aus („z. B.“, „ca.“, „€/Monat“) und speak_numbers Datum, Uhrzeit, Geld, Zahlen und Einheiten (km/h, kWh, kg, GB …).
 8. <a id="kn-tts-s8"></a>**Stimme wählen**: Temperatur, top_p und ein fester Seed aus den Einstellungen halten die Stimme von Satz zu Satz gleich. Ein Base-Modell spricht mit einer geklonten Stimme aus voices/ (apply_clone); ein unbekannter Name fällt auf die Standardstimme zurück. Mit „Referenz der eigenen Stimme kürzen“ (tts.ref_max_s) nimmt es statt einer langen Aufnahme ein Stück davon: kurzref.cut_at schneidet einmal an der leisesten Stelle vor der Grenze, die Spracherkennung schreibt das Stück auf, kurzref.keep_words behält davon die Wörter des eigenen Textes (mindestens 70 % gleich, sonst bleibt die ganze Aufnahme). Bis das Stück fertig ist, gilt die ganze Aufnahme. Die Proben der gestalteten Stimmen legt stimmablage.ablegen dort ab, nur als schlichte WAV mit festem Namen (sd-…, eigen-…).
 9. <a id="kn-tts-s9"></a>**Gestreamt mit anderem Tempo?**: vllm-omni nimmt beim Streamen kein Tempo an. Dann streckt tempo.Stretcher den Ton Stück für Stück selbst (WSOLA, die Tonhöhe bleibt).
-10. <a id="kn-tts-s10"></a>**Warten nach Vorrang**: PrioGate lässt so viele Sätze durch, wie die Engine gleichzeitig nimmt (engine_max_seqs, ab Werk 4); die anderen warten nach Stufe, dann nach Ankunft. Innerhalb einer Stufe geht der erste Satz einer Antwort bis zu 2 s vor Folgesätzen, die das Panel mit X-Spark-Folgesatz schickt, solange beim Hörer noch Ton wartet.
+10. <a id="kn-tts-s10"></a>**Warten nach Vorrang**: PrioGate lässt so viele Sätze durch, wie die Engine gleichzeitig nimmt (engine_max_seqs, ab Werk 4); die anderen warten nach Stufe, dann nach Ankunft. Innerhalb einer Stufe geht der erste Satz einer Antwort bis zu 2 s vor Folgesätzen, die das Panel mit X-Spark-Folgesatz schickt, solange beim Hörer noch Ton wartet. Zustand → Modell-Rechner genau sieht je Satz nur Art, Stufe und Sekunden, nie den Text.
 11. <a id="kn-tts-s11"></a>**Engine spricht**: Die Engine erzeugt den Ton. Gestreamt kommt er als Stücke zurück; das erste Stück ist absichtlich klein (initial_chunk_frames), damit der Ton schnell beginnt, auch wenn mehrere Anfragen laufen. „Mehrere Stimmen gleichzeitig“ (tts.engine_decode_batch) bündelt im Decoder bis zu 2 oder 4 Stimmen mit CUDA-Graphen, „Gleichen Anfang merken“ (tts.engine_prefix_cache) lässt die Engine den gleichen Anfang der Sätze einer Stimme wiederverwenden, „Blöcke selbst anpassen“ (tts.engine_chunk_adaptive) lässt vllm-omni die Blockgrößen nach Auslastung wählen. Bündeln steht ab Werk auf 4, die anderen beiden auf aus.
 12. <a id="kn-tts-s12"></a>**Ton zurück**: Der Proxy reicht den Ton unverändert weiter und zählt nur Dauer, Länge und Fehler für das Monitoring, nie den Text.
 
@@ -3944,7 +3956,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Versiegeln**: vault.seal macht aus dem Wert „enc1:“ und ein Fernet-Token (verschlüsselt und gegen Änderung geschützt). Ein schon versiegelter Wert bleibt, wie er ist.
 5. <a id="kn-state-s5"></a>**Atomar schreiben**: common.write_json schreibt in eine frische Zwischendatei daneben, nie durch einen Link, gibt ihr die Rechte der alten Datei (eine neue ist nur für den Dienst lesbar) und tauscht sie dann in einem Schritt aus. Ein Absturz mittendrin lässt die alte Datei ganz.
 6. <a id="kn-state-s6"></a>**Lesen**: Ein versiegelter Wert wird mit dem Schlüssel geöffnet. Passt der Schlüssel nicht (Sicherung von einem anderen Spark), kommt ein leerer Wert zurück und der Zugang muss neu eingetragen werden. Ältere unversiegelte Werte werden gelesen und beim nächsten Speichern versiegelt.
-7. <a id="kn-state-s7"></a>**Kommt in die Sicherung?**: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 52), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 119). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile.
+7. <a id="kn-state-s7"></a>**Kommt in die Sicherung?**: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 52), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 120). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile.
 8. <a id="kn-state-s8"></a>**Umzugs-Sicherung?**: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung.
 9. <a id="kn-state-s9"></a>**Beim Wiederherstellen in Ordnung?**: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt.
 10. <a id="kn-state-s10"></a>**Einsetzen mit Rückweg**: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück.
@@ -3955,7 +3967,7 @@ flowchart TD
 #### Zahlen (aus dem Code)
 
 - **52** Dateien in jeder Sicherung ([Schritt 7](#kn-state-s7))
-- **119** Dateien und Ordner, die mit Grund draußen bleiben ([Schritt 7](#kn-state-s7))
+- **120** Dateien und Ordner, die mit Grund draußen bleiben ([Schritt 7](#kn-state-s7))
 - **8 MB** größte Datei beim Wiederherstellen ([Schritt 9](#kn-state-s9))
 - **12** Zeichen hat das Umzugs-Passwort mindestens ([Schritt 8](#kn-state-s8))
 

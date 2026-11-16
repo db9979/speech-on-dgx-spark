@@ -11,7 +11,9 @@ a time (at most WINDOW seconds off) and a one-time number (each is taken once).
                                 the model choice (common.MODEL_CHOICE: which model runs is this computer's), its
                                 Wartungspause (speech-spark pause, modelle messen: the panel pauses those parts too),
                                 this computer's values for Zustand → Überblick → Rechner (rechner.messen),
-                                its clock (common.uhr: the time and whether a time server set it; Ohne Internet)
+                                its clock (common.uhr: the time and whether a time server set it; Ohne Internet),
+                                and "betrieb" for Zustand → Überblick → Modell-Rechner genau (modellblick.messen:
+                                services, gates, requests without content, vLLM counters, GPU throttling, memory)
     einheit <start|stop|restart> <teil>   only parts of common.UNITS (speech and its engines)
     einstellen {settings}       the panel's speech settings (common.model_settings_take: known keys, same kind,
                                 never addresses, ports or backends, model ids only Qwen's); a changed GPU-Taktgrenze
@@ -64,12 +66,13 @@ import gputakt
 import installiert
 import mandanten
 import llmstart
+import modellblick
 import modelle
 import rechner
 import stimmablage
 import sysupdate
 import werkstatt
-from common import (SPARK_API, CONFIG_PATH, MODEL_LOG_UNITS, ON_DEMAND_UNITS, OWN_LLM_UNITS, UNITS, WAERTER_PORT, BodyLimit, gpu_stats, journal, load_config,
+from common import (SPARK_API, einheiten_stand, CONFIG_PATH, MODEL_LOG_UNITS, ON_DEMAND_UNITS, OWN_LLM_UNITS, UNITS, WAERTER_PORT, BodyLimit, gpu_stats, journal, load_config,
                     WARTUNG_FILE, installed_version, mem_available_gib, model_choice, model_settings_hash, model_settings_take, read_json,
                     UPDATE_PROGRESS, run, shipped, uhr, update_anteil, waerter_key, waerter_sign, write_json)
 
@@ -105,27 +108,6 @@ def version():
             return f.read().strip()[:20]
     except OSError:
         return ""
-
-
-def _states(units):
-    """{unit: {"state", "seit", "eintritt", "da"}} from one systemctl show for all units (blocks in the asked order);
-    "da" is False for a unit that is not installed (LoadState not-found, e.g. the Werkstatt without --werkstatt)."""
-    code, out = run(["systemctl", "show", *units, "-p", "Id,ActiveState,ActiveEnterTimestampMonotonic,LoadState"])
-    got = {}
-    for block in out.split("\n\n") if code == 0 else []:
-        props = dict(x.split("=", 1) for x in block.splitlines() if "=" in x)
-        unit = props.get("Id", "").removesuffix(".service")
-        if unit not in units:
-            continue
-        state = props.get("ActiveState", "")
-        state = state if re.fullmatch(r"[a-z\-]{1,20}", state) else "unknown"
-        try:
-            t = int(props.get("ActiveEnterTimestampMonotonic", "0")) / 1e6
-        except ValueError:
-            t = 0
-        got[unit] = {"state": state, "seit": round(time.monotonic() - t) if state == "active" and t else None,
-                     "eintritt": int(t * 1e6), "da": props.get("LoadState") != "not-found"}
-    return {u: got.get(u, {"state": "unknown", "seit": None, "eintritt": 0}) for u in units}
 
 
 def pause():
@@ -168,11 +150,28 @@ def status():
     except OSError:
         mem = total = None
     cfg = load_config()
-    return {"version": version(), "einheiten": _states(list(WATCHED.values())), "gpu": gpu_stats(),
+    einheiten, gpu = einheiten_stand(list(WATCHED.values()), run), gpu_stats()
+    return {"version": version(), "einheiten": einheiten, "gpu": gpu, "betrieb": _betrieb(einheiten, cfg, gpu),
             "mem_avail_gib": mem, "mem_total_gib": total, "einstellungen": model_settings_hash(cfg), "modellwahl": model_choice(cfg), "pause": pause(),
             "commit": str(installed_version().get("commit") or "")[:40], "update": _update_laeuft(), "update_pct": _update_pct(), "rechner": _rechner(),
             "uhr": uhr(), "spark_api": SPARK_API,
             "clients": sum(not c.get("gesperrt") for c in mandanten.clients()) if mandanten.an(cfg) else 0}
+
+
+def _betrieb(einheiten, cfg, gpu):
+    """Modell-Rechner genau (modellblick.messen): numbers and fixed words only, None when the look fails."""
+    try:
+        d = modellblick.messen(einheiten, cfg, gpu)
+        fehler = ""
+    except Exception as e:
+        d, fehler = None, type(e).__name__[:40]
+    if fehler != _betrieb_fehler[0]:          # one line per change, not one every few seconds
+        _betrieb_fehler[0] = fehler
+        print(f"waerter: betrieb {fehler or 'wieder ok'}", flush=True)
+    return d
+
+
+_betrieb_fehler = [""]
 
 
 def _update_pct():

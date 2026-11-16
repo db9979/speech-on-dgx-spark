@@ -314,6 +314,7 @@ DATEIEN = [
           lokal="Schlüssel der Kopplung: nach einem Umzug wird neu gekoppelt", schutz=("ist ein Schlüssel", "is a key"),
           sonst=True),  # Spark teilen (tarswart.py, steuer.py): written by the pairing, the same on both computers
     state("live-monitors.json", "Wandmonitore", "Wall monitors", lokal="Wandmonitore dieses Geräts"),
+    state("modellgenau.json", "Modell-Rechner genau: Verlauf 24 Std. und 7 Tage (Zahlen) und die letzten Ereignisse (feste Wörter)", "Model computer in detail: history of 24 hours and 7 days (numbers) and the latest events (fixed words)", lokal="Messwerte, kommen von selbst wieder"),
     state("dienste-zustand.json", "Hintergrund-Dienste", "Background services", lokal="Zustand der Hintergrund-Dienste"),
     state("weiche-stats.json", "Weiche-Statistik", "Switch statistics", lokal="Statistik", sonst=True),
     state("bedarf.lock", "Sperre: nur ein Modell bei Bedarf zur Zeit (Bild oder Musik)",

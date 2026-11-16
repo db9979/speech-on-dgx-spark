@@ -354,9 +354,9 @@ class Tor(unittest.TestCase):
         test = self
 
         class Spy(common.PrioGate):
-            async def enter(self, stage=common.STAGE_NORMAL, fest=False):
+            async def enter(self, stage=common.STAGE_NORMAL, fest=False, **kw):
                 test.stages.append((stage, fest))
-                return await super().enter(stage, fest)
+                return await super().enter(stage, fest, **kw)
         llm_tor.gate = Spy(4)
         llm_tor.entwickler_tor = None
         self.addCleanup(setattr, llm_tor, "gate", None)

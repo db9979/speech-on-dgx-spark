@@ -28,7 +28,7 @@ from fastapi.responses import Response, StreamingResponse
 import kurzref
 
 import mandanten
-from common import (dauerlauf, FOLGE_HEADER, BodyLimit, GateFull, KeyedCORS, PrioGate, inside, outside_view, api_key_dependency,
+from common import (BILD_MAX, dauerlauf, FOLGE_HEADER, BodyLimit, GateFull, KeyedCORS, PrioGate, inside, outside_view, api_key_dependency,
                     client_ok, engine_crash_reason, klon_noetig, load_config, quiet_access_log, SpeechMark, stage_of, STATE)
 from textnorm import (MAX_INPUT, apply_pronunciations, clean_text, guess_language, hide_secrets, parse_pronunciations,
                       speak_abbreviations, speak_numbers, speech_markdown)
@@ -418,6 +418,7 @@ async def health(request: Request):
     if "klon" in engines():
         out["klon"] = dict(zip(("status", "error"), await engine_status("klon")))
     out["queue"] = gate("main").view()
+    out["anfragen"] = [x for r in list(gates) for x in gates[r].bild()][:BILD_MAX]   # numbers only (Modell-Rechner genau)
     return out
 
 
@@ -474,6 +475,7 @@ def ohne_eigene(content):
 # Priority for people (panel stufe.py): as many requests at once as the engine takes, the rest wait here
 # by stage instead of in the engine's first-come queue (one gate per engine)
 gates = {}
+ROLLEN_ART = {"main": "sprechen", "design": "stimme_entwerfen", "klon": "eigene_stimme"}   # common.ARTEN
 
 
 def gate(role):
@@ -590,7 +592,8 @@ async def speech(request: Request):
         # a follow-up sentence of an answer that still plays waits behind first sentences (common.FOLGE_HEADER)
         kunde = getattr(request.state, "client", None)
         await mandanten.halten(kunde, "tts")   # E3: a background client waits while somebody speaks
-        ticket = await g.enter(stage_of(request), folge=request.headers.get(FOLGE_HEADER) == "1", fest=mandanten.fest(kunde))
+        ticket = await g.enter(stage_of(request), folge=request.headers.get(FOLGE_HEADER) == "1", fest=mandanten.fest(kunde),
+                               art=ROLLEN_ART.get(role, "sprechen"))
     except GateFull:
         raise HTTPException(503, "TTS busy: too many requests waiting")
     stats["requests"] += 1

@@ -39,6 +39,7 @@ import anmeldehinweis
 import dungeon_live
 import guard
 import features
+import modellgenau
 import quellenangabe
 import schwachstellen_stand
 import steckbrief
@@ -1040,6 +1041,19 @@ def llm_seen(ok, code="", now=None):
 def restarted(name, reason, done):
     """The watchdog (health.py) restarted a service, or would have but may not."""
     event("Dienste", f"{name} {'neu gestartet' if done else 'nicht neu gestartet'} · {str(reason)[:60]}")
+
+
+def _genau(box):
+    """The line of Modell-Rechner genau at the language model (requests running and waiting there, tokens per second)
+    and at the model computer (all its requests), "" without a look; numbers only."""
+    try:
+        g = modellgenau.fuer_live(box == "qwen")
+    except Exception:
+        return ""
+    if not g:
+        return ""
+    out = f" · {_n(g.get('laufen'))} laufen" + (f", {_n(g['warten'])} warten" if g.get("warten") else "")
+    return out + (f" · {_n(g['tok_s'])} tok/s" if g.get("tok_s") else "")
 
 
 def _svc_now(now):
@@ -2440,6 +2454,8 @@ def snapshot(view="admin", now=None):
             if nbl.get("on"):   # Notbetrieb mit Parakeet: hearing or not, fixed commands, speaker files (numbers only)
                 x["sub"] += ((f" · Parakeet hört · {nbl.get('commands', 0)} Befehle · {nbl.get('fixed', 0)} feste Sätze")
                              if nbl.get("hoert") else f" · Notbetrieb-Sätze {nbl.get('files', 0)} von {nbl.get('need', 0)}")
+        if x["id"] in ("qwen", "modell"):   # Modell-Rechner genau (modellgenau.py): requests and tokens, numbers only
+            x["sub"] += _genau(x["id"])
         if x["id"] == "panelrechner":   # Panel-Rechner: CPU, memory, temperature, disk (numbers only, no name)
             rp = rb.get("panel") or {}
             x["sub"] = (f"CPU {_n(rp.get('cpu'))} % · RAM {_n(rp.get('belegt'), 1)} von {_n(rp.get('total'), 1)} GiB"

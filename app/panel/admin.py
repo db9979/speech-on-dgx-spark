@@ -64,6 +64,7 @@ from core import (  # noqa: E402
     password_set,
     store_password)
 from monitor import history, service_health, system_stats  # noqa: E402
+import modellgenau  # noqa: E402
 import rechnerblick  # noqa: E402
 import rundlauf  # noqa: E402
 import steuer  # noqa: E402
@@ -420,6 +421,13 @@ async def status():
     cfg = load_config()
     healths = await asyncio.gather(*(service_health(name, cfg) for name in SERVICES))
     return await asyncio.to_thread(_status, cfg, dict(zip(SERVICES, healths)))
+
+
+@router.get("/api/admin/modellgenau", dependencies=[Depends(auth)])
+def modellgenau_ansicht(request: Request, zeit: str = "20m"):
+    """Zustand → Überblick → Modell-Rechner genau (modellgenau.py): numbers and fixed words only, no content."""
+    guard.limit(request, "modellgenau", admin=True)
+    return modellgenau.ansicht(zeit if zeit in modellgenau.ZEITEN else "20m")
 
 
 def _status(cfg, healths):

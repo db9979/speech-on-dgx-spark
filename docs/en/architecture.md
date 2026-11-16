@@ -526,6 +526,8 @@ Live overview, logs, watchers, backup, update, help and the admin pages.
 | `app/panel/loopwacht.py` | Hänge-Wächter des Panels: the panel answers every request on one event loop, so one piece of heavy work on it (2026-10-18: Ordner auslassen with thousands of … |
 | `app/mandanten.py` | Spark-Clients: other programs use the Spark's services with a key of their own, with rights, limits and a priority class, only in the home network. |
 | `app/panel/meldung.py` | Probleme melden: a problem report from the panel, the phone apps, Telegram, the voice and the speakers as an issue on GitHub, with anonymized log lines. |
+| `app/modellblick.py` | Modell-Rechner genau: what the computer with the models does right now, for the page Status → Summary → Model computer in detail (panel/modellgenau.py). |
+| `app/panel/modellgenau.py` | Status → Summary → Model computer in detail: what the computer with the models does right now and did lately. |
 | `app/panel/modellseite.py` | Status → Models: the model catalog (app/modelle.py) to look at, for admins only. |
 | `app/panel/monitor.py` | Monitoring: GPU, memory and CPU samples, and the health of the speech services. |
 | `app/panel/nas.py` | NAS-Verbindung. |
@@ -869,6 +871,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/modelle-probe.json` | Which model is being tried (Status → Models "Try"), seconds | – | no |
 | `state/modelle-wechsel.json` | Per kind the model before the last switch (7 days to bring back) | – | no |
 | `state/modelle-wunsch.json` | The panel's wish for the next model switch or "Long conversations", seconds | – | no |
+| `state/modellgenau.json` | Model computer in detail: history of 24 hours and 7 days (numbers) and the latest events (fixed words) | – | no |
 | `state/musik-test-2b-1.mp3` | Sample 1 with 2B (Test music) | – | no |
 | `state/musik-test-2b-2.mp3` | Sample 2 with 2B (Test music) | – | no |
 | `state/musik-test-2b-klein-1.mp3` | Sample 1 with 2B small (Test music) | – | no |
@@ -3111,6 +3114,12 @@ Applies at: [step 4](#kn-betrieb-s4)
 - What is gone shows as the note on top of the admin pages, only behind the sign „● N notes“ beside the bug. Services on the same device become one line (dienstwacht.gruppen): the same computer by a short hash of the host, the NAS services (backup, knowledge folders, filing, NAS status) always; never with an address.
 - The probes go through the guard but do not count on the live list and never trigger the automatic kill switch.
 
+#### Model computer in detail
+
+- Every 3 s modellblick.messen looks on the computer with the models only at its own services on 127.0.0.1, each at most 0.5 s and together at most 2.0 s: the state per service, the queues (common.PrioGate.bild: kind, stage, seconds, tokens), the counters of every vLLM engine from /metrics, why the GPU throttles and the memory per service. With a Pi the Wärter sends it with its status, without a Pi the panel asks itself. modellgenau.pruefen takes only known keys, numbers in range and fixed words.
+- The LLM-Tor asks the engine for the counters in every piece of a stream (continuous_usage_stats) and gives the program only what it asked for itself. Events follow fixed rules (state changed, queue full, waited longer than 5 s, KV cache from 90 %, throttling from heat or power, test answer) with one line „rechner: ereignis …“ each.
+- The LLM-Tor keeps the last 20 finished requests with their result (done, cancelled, timed out, error) and the name of a Spark client; when a device leaves in the middle of an answer it closes the stream to the engine and vLLM stops. When requests run but the engine reads and writes no token for 90 s, it reports „hängt“. When the engine computes more requests than the gate knows for 3 looks, that is an event; modellblick.nvrm counts the GPU memory refusals in the kernel log, at most every 60 s, without keeping a line.
+
 #### Backup
 
 - Once a day in a pause the panel packs users/, voices/, config.json, the panel password and the files of backup.STATE_FILES. The key state/secret.key and the login keys are not in it; databases are saved as a consistent copy.
@@ -3139,6 +3148,7 @@ Applies at: [step 4](#kn-betrieb-s4)
 - Status → Logs → Diagnosis: lines by area, errors and warnings, with a fixed hint.
 - Status → Live: running requests, guard decisions and services as a picture.
 - Status → Services: what the service watch looks at and the outages of the last days.
+- Status → Model computer in detail: requests per service with kind, stage, seconds and tokens (never content), the language model inside (vLLM), the GPU with its throttle reason, memory per service, history and events; without a Pi the panel looks itself.
 
 #### In the code
 
@@ -3154,8 +3164,10 @@ Applies at: [step 4](#kn-betrieb-s4)
 - `app/panel/logfilter.py` `summary`: counts and fixed hint ([step 12](#kn-betrieb-s12))
 - `app/panel/dienstwacht.py` `round_once`: one round of probes and notes ([step 5](#kn-betrieb-s5))
 - `app/panel/backup.py` `create`: pack one backup ([step 9](#kn-betrieb-s9))
+- `app/modellblick.py` `messen`: one look at the model computer, only 127.0.0.1 ([step 4](#kn-betrieb-s4))
+- `app/panel/modellgenau.py` `probe`: rates, history and events every 3 s ([step 4](#kn-betrieb-s4))
 
-Self-tests: `test_tracelog`, `test_live`, `test_logfilter`, `test_log_luecken`, `test_dienstwacht`, `test_hardening`, `test_panel`
+Self-tests: `test_modellgenau`, `test_tracelog`, `test_live`, `test_logfilter`, `test_log_luecken`, `test_dienstwacht`, `test_hardening`, `test_panel`
 
 ### Language model
 
@@ -3331,7 +3343,7 @@ flowchart TD
 4. <a id="kn-asr-s4"></a>**To the ASR service**: The panel sends the recording with the API key to the proxy. stufe.asr_level adds the profile's stage, but not at a shared speaker. Only the panel can set a stage: with the key from vorrang-key and only from this machine, else it is normal. A transcription in the background (abschrift.py) sends the stage last with the key: it waits behind every person and does not count as speech (common.signed_low), real speech cancels it.
 5. <a id="kn-asr-s5"></a>**Key and size fine?**: BodyLimit refuses requests that are too large or lack the right key before anything is read. Without a key set, only this machine itself may ask.
 6. <a id="kn-asr-s6"></a>**Engine ready?**: engine_status asks the engine's /health. If it does not answer, the proxy reads its state and that of the systemd unit and names the reason.
-7. <a id="kn-asr-s7"></a>**Wait by priority**: PrioGate lets as many recordings through as the engine takes at once (engine_max_seqs). The others wait by stage, then by arrival. Whoever waits moves up a stage every four seconds; a running request is never stopped.
+7. <a id="kn-asr-s7"></a>**Wait by priority**: PrioGate lets as many recordings through as the engine takes at once (engine_max_seqs). The others wait by stage, then by arrival. Whoever waits moves up a stage every four seconds; a running request is never stopped. Status → Model computer in detail sees only kind, stage and seconds of each request, never the recording.
 8. <a id="kn-asr-s8"></a>**Sample rate allowed?**: audio_rate_ok reads the sample rate from the file's header (WAV, FLAC, Ogg, WebM) or asks ffprobe. A header with a made-up rate would fill the memory when it is converted.
 9. <a id="kn-asr-s9"></a>**Recognize**: With Qwen3-ASR the recording goes to the vLLM engine, which listens on this machine only; only prompt, temperature and stream pass through, plus the context words from the settings. With Parakeet the proxy recognizes itself on the CPU, in pieces of at most 90 seconds cut at a quiet spot. In emergency mode with Parakeet (panel computer, model computer gone) common.model_url takes the recording to speech-spark-notasr on port 31009, only for the computer itself: the same proxy with Parakeet, loaded at the first recording, unloaded after 10 minutes without one.
 10. <a id="kn-asr-s10"></a>**Silence, filler or echo?**: stille.check drops text from almost silent recordings and a lone „Yes“ or „Okay“ with too little voice and the name list of „Names for listening“ read back as text (stille.context_echo, from 3 names of the list). For profiles echo.check looks whether the text is the Spark's own voice from another device, and fremdstimme whether a microphone that opened by itself heard an unknown voice.
@@ -3437,7 +3449,7 @@ flowchart TD
 7. <a id="kn-tts-s7"></a>**Language, pronunciation, numbers**: When the language is Auto, guess_language guesses German or English from frequent words, so a single English word does not change the tone of the whole answer. Then the own pronunciation list applies, after that speak_abbreviations writes out abbreviations („z. B.“, „ca.“, „€/Monat“) and speak_numbers date, time, money, numbers and units (km/h, kWh, kg, GB …).
 8. <a id="kn-tts-s8"></a>**Pick the voice**: Temperature, top_p and a fixed seed from the settings keep the voice the same from sentence to sentence. A Base model speaks with a cloned voice from voices/ (apply_clone); an unknown name falls back to the default voice. With „Shorten the reference of your own voice“ (tts.ref_max_s) it takes a piece of a long recording instead: kurzref.cut_at cuts once at the quietest point before the limit, speech recognition writes the piece down, kurzref.keep_words keeps the words of the own text (at least 70 % alike, else the whole recording stays). Until the piece is ready, the whole recording applies. stimmablage.ablegen puts the samples of the designed voices there, only as a plain WAV with a fixed name (sd-…, eigen-…).
 9. <a id="kn-tts-s9"></a>**Streamed at another tempo?**: vllm-omni takes no tempo when streaming. Then tempo.Stretcher stretches the sound piece by piece itself (WSOLA, the pitch stays).
-10. <a id="kn-tts-s10"></a>**Wait by priority**: PrioGate lets as many sentences through as the engine takes at once (engine_max_seqs, 4 out of the box); the others wait by stage, then by arrival. Within a stage the first sentence of an answer goes up to 2 s before follow-up sentences, which the panel sends with X-Spark-Folgesatz while the listener still has audio.
+10. <a id="kn-tts-s10"></a>**Wait by priority**: PrioGate lets as many sentences through as the engine takes at once (engine_max_seqs, 4 out of the box); the others wait by stage, then by arrival. Within a stage the first sentence of an answer goes up to 2 s before follow-up sentences, which the panel sends with X-Spark-Folgesatz while the listener still has audio. Status → Model computer in detail sees only kind, stage and seconds of each sentence, never the text.
 11. <a id="kn-tts-s11"></a>**The engine speaks**: The engine makes the sound. Streamed it comes back in pieces; the first piece is small on purpose (initial_chunk_frames) so the sound starts fast, also when several requests run. „Several voices at once“ (tts.engine_decode_batch) batches up to 2 or 4 voices in the decoder with CUDA graphs, „Remember the same beginning“ (tts.engine_prefix_cache) lets the engine reuse the same beginning of a voice's sentences, „Adapt the blocks by itself“ (tts.engine_chunk_adaptive) lets vllm-omni pick the block sizes by the load. Batching is 4 out of the box, the other two are off.
 12. <a id="kn-tts-s12"></a>**Sound back**: The proxy passes the sound on unchanged and counts only time, length and errors for monitoring, never the text.
 
@@ -3944,7 +3956,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Seal**: vault.seal turns the value into „enc1:“ and a Fernet token (encrypted and protected against change). A value already sealed stays as it is.
 5. <a id="kn-state-s5"></a>**Write atomically**: common.write_json writes into a fresh temporary file next to it, never through a link, gives it the rights of the old file (a new one is readable for the service only) and then swaps it in one step. A crash in the middle leaves the old file whole.
 6. <a id="kn-state-s6"></a>**Read**: A sealed value is opened with the key. If the key does not fit (backup from another Spark), an empty value comes back and the account has to be entered again. Older unsealed values are read and sealed the next time they are saved.
-7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 52), otherwise the line gives its reason (dateien.STATE_LOCAL, 119). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
+7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 52), otherwise the line gives its reason (dateien.STATE_LOCAL, 120). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
 8. <a id="kn-state-s8"></a>**Move backup?**: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup.
 9. <a id="kn-state-s9"></a>**Fine when restoring?**: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays.
 10. <a id="kn-state-s10"></a>**Put in place with a way back**: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back.
@@ -3955,7 +3967,7 @@ flowchart TD
 #### Numbers (from the code)
 
 - **52** files in every backup ([step 7](#kn-state-s7))
-- **119** files and folders that stay out with a reason ([step 7](#kn-state-s7))
+- **120** files and folders that stay out with a reason ([step 7](#kn-state-s7))
 - **8 MB** largest file when restoring ([step 9](#kn-state-s9))
 - **12** characters the move password has at least ([step 8](#kn-state-s8))
 

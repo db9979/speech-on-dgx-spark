@@ -359,6 +359,9 @@ def stufen_zeichnen(R, d, lanes, lauf, stufen):
             R.put(bx + bw - 3, y + 1, "●", DIENST.get(s["st"], "m"))
         if key == "llm" and karten.get("modell", {}).get("llm"):
             sub = karten["modell"]["llm"]
+        g = d.get("genau") if key == "llm" and isinstance(d.get("genau"), dict) else {}
+        if g.get("laufen") or g.get("warten"):      # Modell-Rechner genau: the language model's requests and tokens
+            sub += f" · {zahl(g.get('laufen'))} laufen" + (f" · {zahl(g.get('tok_s'))} tok/s" if g.get("tok_s") else "")
         runden = max([sum(1 for st in r.get("steps") or [] if st.get("k") == "llm") for r in lauf] or [0])
         if key == "llm" and runden > 1:
             sub += f" · Runde {runden}"

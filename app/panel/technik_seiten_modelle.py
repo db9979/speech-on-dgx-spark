@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "asr": {
-        "stand": "28926b2429",
+        "stand": "c79bd90d8a",
         "bezug": {
             "parakeet.MAX_AUDIO_S": ["s9"], "common.NOTASR_PORT": ["s9"], "common.NOTASR_IDLE": ["s9"], "admin.test_asr": ["s1"], "admin._test_asr": ["s2", "s4"],
             "common.BodyLimit": ["s5"], "common.PrioGate": ["s7"], "common.audio_rate_ok": ["s8"],
@@ -85,10 +85,12 @@ SEITEN = {
               ("so viele gleichzeitig wie die Engine nimmt", "as many at once as the engine takes"),
               ("PrioGate lässt so viele Aufnahmen durch, wie die Engine gleichzeitig nimmt (engine_max_seqs). Die "
                "anderen warten nach Stufe, dann nach Ankunft. Wer wartet, rückt alle vier Sekunden eine Stufe auf; "
-               "eine laufende Anfrage wird nie unterbrochen.",
+               "eine laufende Anfrage wird nie unterbrochen. Zustand → Modell-Rechner genau sieht je Anfrage nur Art, "
+               "Stufe und Sekunden, nie die Aufnahme.",
                "PrioGate lets as many recordings through as the engine takes at once (engine_max_seqs). The others "
                "wait by stage, then by arrival. Whoever waits moves up a stage every four seconds; a running request "
-               "is never stopped."),
+               "is never stopped. Status → Model computer in detail sees only kind, stage and seconds of each "
+               "request, never the recording."),
               ("stop", ("Schlange voll", "queue full"), ("Besetzt (503)", "Busy (503)"))),
             S("s8", "frage", ("Abtastrate erlaubt?", "Sample rate allowed?"),
               ("{common.RATE_MIN} bis {common.RATE_MAX} Hz", "{common.RATE_MIN} to {common.RATE_MAX} Hz"),
@@ -205,7 +207,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Sprachausgabe
     "tts": {
-        "stand": "ee996e32d9",
+        "stand": "e935c2b2ec",
         "bezug": {
             "textnorm.NUMBER_MODES": ["s7"], "tts_proxy.speech": ["s1"], "tts_proxy.check_reference": ["s8"],
             "tts_proxy.engine_status": ["s4"], "tts_proxy.apply_clone": ["s8"], "textnorm.speech_markdown": ["s5"],
@@ -335,11 +337,12 @@ SEITEN = {
               ("PrioGate lässt so viele Sätze durch, wie die Engine gleichzeitig nimmt (engine_max_seqs, ab Werk 4); die "
                "anderen warten nach Stufe, dann nach Ankunft. Innerhalb einer Stufe geht der erste Satz einer Antwort "
                "bis zu 2 s vor Folgesätzen, die das Panel mit X-Spark-Folgesatz schickt, solange beim Hörer noch Ton "
-               "wartet.",
+               "wartet. Zustand → Modell-Rechner genau sieht je Satz nur Art, Stufe und Sekunden, nie den Text.",
                "PrioGate lets as many sentences through as the engine takes at once (engine_max_seqs, 4 out of the "
                "box); the others wait by stage, then by arrival. Within a stage the first sentence of an answer goes "
                "up to 2 s before follow-up sentences, which the panel sends with X-Spark-Folgesatz while the listener "
-               "still has audio."),
+               "still has audio. Status → Model computer in detail sees only kind, stage and seconds of each "
+               "sentence, never the text."),
               ("stop", ("Schlange voll", "queue full"), ("Besetzt (503)", "Busy (503)"))),
             S("s11", "schritt", ("Engine spricht", "The engine speaks"),
               ("nur auf dieser Maschine, gestreamt", "on this machine only, streamed"),

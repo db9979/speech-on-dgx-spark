@@ -1480,12 +1480,13 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Betrieb: Logs und Live
     "betrieb": {
-        "stand": "4d8150e7c9",
+        "stand": "38f5cdf389",
         "bezug": {
             "dienstwacht.FAIL_N": ["s5"], "dienstwacht.REPEAT": ["s5"], "backup.KEEP": ["s9"],
             "tracelog.safe": ["s3"], "tracelog.Rec": ["s3", "s6"], "tracelog.finish": ["s8", "s9"],
             "tracelog.shown": ["s10"], "live.step": ["s4"], "logfilter.parse": ["s11"],
             "logfilter.summary": ["s12"], "dienstwacht.round_once": ["s5"], "systemupdates.tick": ["s5"], "backup.create": ["s9"],
+            "modellblick.messen": ["s4"], "modellgenau.probe": ["s4"],
             "regeln": ["s4", "s5", "s9"], "regel:Live": ["s4"], "regel:Anfrage-Verlauf": ["s9"],
             "regel:Journal": ["s5"], "regel:Dienst-Wächter": ["s5"], "regel:Sicherungen": ["s9"],
         },
@@ -1645,6 +1646,12 @@ SEITEN = {
              "Status → Live: running requests, guard decisions and services as a picture."),
             ("Zustand → Dienste: was der Dienst-Wächter prüft und die Ausfälle der letzten Tage.",
              "Status → Services: what the service watch looks at and the outages of the last days."),
+            ("Zustand → Modell-Rechner genau: Anfragen je Dienst mit Art, Stufe, Sekunden und Tokens (nie Inhalt), "
+             "Sprachmodell innen (vLLM), GPU mit Drosselgrund, Speicher je Dienst, Verlauf und Ereignisse; ohne Pi "
+             "misst das Panel selbst.",
+             "Status → Model computer in detail: requests per service with kind, stage, seconds and tokens (never "
+             "content), the language model inside (vLLM), the GPU with its throttle reason, memory per service, "
+             "history and events; without a Pi the panel looks itself."),
         ],
         "mehr": [
             (("Dienst-Wächter", "Service watch"), [
@@ -1677,6 +1684,42 @@ SEITEN = {
                  "The probes go through the guard but do not count on the live list and never trigger the automatic "
                  "kill switch."),
             ]),
+            (("Modell-Rechner genau", "Model computer in detail"), [
+                ("Alle 3 s schaut modellblick.messen auf dem Rechner mit den Modellen nur bei den eigenen Diensten auf "
+                 "127.0.0.1 nach, je höchstens {modellblick.TIMEOUT_S} s und zusammen höchstens {modellblick.FRIST_S} s: "
+                 "Zustand je Dienst, die Warteschlangen (common.PrioGate.bild: Art, Stufe, Sekunden, Tokens), die Zähler "
+                 "jeder vLLM-Engine aus /metrics, warum die GPU drosselt und den Speicher je Dienst. Mit Pi schickt der "
+                 "Wärter das in seinem Zustand mit, ohne Pi fragt das Panel selbst. modellgenau.pruefen nimmt nur bekannte "
+                 "Schlüssel, Zahlen im Bereich und feste Wörter.",
+                 "Every 3 s modellblick.messen looks on the computer with the models only at its own services on "
+                 "127.0.0.1, each at most {modellblick.TIMEOUT_S} s and together at most {modellblick.FRIST_S} s: the "
+                 "state per service, the queues (common.PrioGate.bild: kind, stage, seconds, tokens), the counters of "
+                 "every vLLM engine from /metrics, why the GPU throttles and the memory per service. With a Pi the "
+                 "Wärter sends it with its status, without a Pi the panel asks itself. modellgenau.pruefen takes only "
+                 "known keys, numbers in range and fixed words."),
+                ("Das LLM-Tor bittet die Engine bei jedem Stream um die Zähler in jedem Stück (continuous_usage_stats) "
+                 "und gibt dem Programm nur, was es selbst verlangt hat. Ereignisse folgen festen Regeln (Zustand "
+                 "gewechselt, Warteschlange voll, länger als {modellgenau.WARTEN_LANG_S} s gewartet, KV-Cache ab "
+                 "{modellgenau.KV_VOLL} %, Drosseln wegen Wärme oder Leistung, Probeantwort) mit je einer Zeile "
+                 "„rechner: ereignis …“.",
+                 "The LLM-Tor asks the engine for the counters in every piece of a stream (continuous_usage_stats) and "
+                 "gives the program only what it asked for itself. Events follow fixed rules (state changed, queue "
+                 "full, waited longer than {modellgenau.WARTEN_LANG_S} s, KV cache from {modellgenau.KV_VOLL} %, "
+                 "throttling from heat or power, test answer) with one line „rechner: ereignis …“ each."),
+                ("Das LLM-Tor merkt sich die letzten {llm_tor.FERTIG_MAX} fertigen Anfragen mit Ergebnis (fertig, "
+                 "abgebrochen, Zeit abgelaufen, Fehler) und dem Namen eines Spark-Clients; geht ein Gerät mitten in der "
+                 "Antwort weg, schließt es den Stream zur Engine, und vLLM hört auf. Laufen Anfragen, aber die Engine "
+                 "liest und schreibt {llm_tor.HAENGT_S} s lang kein Token, meldet es „hängt“. Rechnet die Engine "
+                 "{modellgenau.OHNE_AUFTRAG_N} Blicke lang mehr Anfragen, als das Tor kennt, ist das ein Ereignis; die "
+                 "Ablehnungen von GPU-Speicher zählt modellblick.nvrm aus dem Kernel-Log, höchstens alle "
+                 "{modellblick.NVRM_S} s, ohne eine Zeile zu behalten.",
+                 "The LLM-Tor keeps the last {llm_tor.FERTIG_MAX} finished requests with their result (done, cancelled, "
+                 "timed out, error) and the name of a Spark client; when a device leaves in the middle of an answer it "
+                 "closes the stream to the engine and vLLM stops. When requests run but the engine reads and writes no "
+                 "token for {llm_tor.HAENGT_S} s, it reports „hängt“. When the engine computes more requests than the "
+                 "gate knows for {modellgenau.OHNE_AUFTRAG_N} looks, that is an event; modellblick.nvrm counts the GPU "
+                 "memory refusals in the kernel log, at most every {modellblick.NVRM_S} s, without keeping a line."),
+            ]),
             (("Sicherung", "Backup"), [
                 ("Einmal am Tag packt das Panel in einer Pause users/, voices/, config.json, das Panel-Passwort und die "
                  "Dateien aus backup.STATE_FILES. Der Schlüssel state/secret.key und die Anmeldeschlüssel sind nicht "
@@ -1699,8 +1742,10 @@ SEITEN = {
             ("logfilter.summary", ("Zähler und fester Hinweis", "counts and fixed hint")),
             ("dienstwacht.round_once", ("eine Runde Proben und Meldungen", "one round of probes and notes")),
             ("backup.create", ("eine Sicherung packen", "pack one backup")),
+            ("modellblick.messen", ("ein Blick auf den Modell-Rechner, nur 127.0.0.1", "one look at the model computer, only 127.0.0.1")),
+            ("modellgenau.probe", ("Raten, Verlauf und Ereignisse alle 3 s", "rates, history and events every 3 s")),
         ],
-        "tests": ["test_tracelog", "test_live", "test_logfilter", "test_log_luecken", "test_dienstwacht", "test_hardening",
+        "tests": ["test_modellgenau", "test_tracelog", "test_live", "test_logfilter", "test_log_luecken", "test_dienstwacht", "test_hardening",
                   "test_panel"],
         "heute": [],
     },
