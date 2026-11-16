@@ -65,7 +65,7 @@ ANTEIL_MAX = 0.80
 GPU_GIB_MAX = 1024     # gpu_gib of one engine: what vLLM reserves for weights and context, in GiB (any computer)
 MESS_PORT = 31016
 VLLM_KEYS = ("reasoning_parser", "tool_call_parser", "mtp", "max_seqs", "quantization", "bilder_pro_frage", "kv_cache_dtype",
-             "venv", "docker", "entwurf", "batched_tokens")
+             "venv", "docker", "entwurf", "entwurf_revision", "batched_tokens")
 # a separate draft model for speculative decoding (Gemma 4's „assistant“, Dominik 2026-11-13 „1“): only a repository
 # name; fetched and checked like the weights, only for an entry still measured (no pinned revision), its MoE on Triton
 # (the recipe for Blackwell desktops: the drafter's default fused MoE path is not built there)
@@ -224,8 +224,12 @@ def _pruefe_vllm(m):
         raise Fehler("venv")
     if "docker" in v and (v["docker"] not in DOCKER or m["art"] != "llm" or "venv" in v):
         raise Fehler("docker")
+    # the draft model: on an entry still measured its newest commit, on a pinned entry (an own recipe) its own pinned one
+    er = v.get("entwurf_revision")
     if "entwurf" in v and (not isinstance(v["entwurf"], str) or not REPO.match(v["entwurf"]) or not v.get("mtp")
-                           or m["revision"] or "docker" in v):
+                           or "docker" in v or (bool(m["revision"]) != bool(er)) or (er and not REV.match(str(er)))):
+        raise Fehler("entwurf")
+    if er is not None and "entwurf" not in v:
         raise Fehler("entwurf")
 
 
@@ -496,8 +500,10 @@ def vllm_args(m, port=MESS_PORT, revision="", mtp=True, uds="", pool_gib=None):
     if m["kann_sehen"]:      # a text-only model gets no picture flag at all
         a += ["--limit-mm-per-prompt.image", str(v.get("bilder_pro_frage", 2))]
     if mtp and v.get("mtp") and v.get("entwurf"):
-        a += ["--speculative-config", json.dumps({"model": v["entwurf"], "num_speculative_tokens": v["mtp"],
-                                                  "moe_backend": ENTWURF_MOE})]
+        spec = {"model": v["entwurf"], "num_speculative_tokens": v["mtp"], "moe_backend": ENTWURF_MOE}
+        if v.get("entwurf_revision"):
+            spec["revision"] = v["entwurf_revision"]
+        a += ["--speculative-config", json.dumps(spec)]
     elif mtp and v.get("mtp"):
         a += ["--speculative-config", json.dumps({"method": "mtp", "num_speculative_tokens": v["mtp"]})]
     return a + (DOCKER[v["docker"]]["args"] if uds else [])
@@ -878,8 +884,8 @@ def vorbereiten(m, hf_home=None):
     commit. A pinned revision is fetched exactly; an empty one takes the newest commit (only to measure)."""
     commit = _laden(m["repo"], m["revision"], hf_ordner(m, hf_home))
     entwurf = (m.get("vllm") or {}).get("entwurf") if m["engine"] == "vllm" else None
-    if entwurf:      # the draft model beside it, the newest commit (only entries still measured have one)
-        _laden(entwurf, "", hf_ordner({"repo": entwurf}, hf_home))
+    if entwurf:      # the draft model beside it: its pinned commit (an own recipe), else the newest
+        _laden(entwurf, m["vllm"].get("entwurf_revision", ""), hf_ordner({"repo": entwurf}, hf_home))
     return commit
 
 
@@ -1811,6 +1817,102 @@ def probe_stand(kat, messung, laufend, misst, path=PROBE, now=None):
     rj = (messung.get("modelle") or {}).get(jetzt) or {}
     return {"id": mid, "art": art, "fertig": fertig, "ok": fertig and r.get("ok") is not False,
             "tok_s": r.get("tok_s") if fertig else None, "jetzt_id": jetzt, "jetzt_tok_s": rj.get("tok_s")}
+
+# Rezept-Editor (Dominik 2026-11-16 „1-6“, model catalog stage B1): an own entry gets the engine settings a catalog
+# entry has, from fixed ranges and fixed words only (never a flag of its own). The checked numbers of a recipe that
+# changed are gone with it: the model is measured again. A good recipe leaves as a ready catalog line (katalog_zeile).
+PARSER_NAMEN = ("qwen3", "qwen3_coder", "qwen3_xml", "hermes", "gemma4", "llama3_json", "mistral", "deepseek_r1")
+REZEPT_ZAHLEN = {"kontext": (2048, 262144), "gpu_gib": (1, GPU_GIB_MAX), "max_seqs": (1, 16), "mtp": (0, 8),
+                 "batched_tokens": (2048, 32768), "bilder_pro_frage": (1, 8)}
+REZEPT_WOERTER = {"kv_cache_dtype": KV, "reasoning_parser": PARSER_NAMEN, "tool_call_parser": PARSER_NAMEN}
+REZEPT_FELDER = tuple(REZEPT_ZAHLEN) + tuple(REZEPT_WOERTER) + ("entwurf", "entwurf_revision")
+OBEN = ("kontext", "gpu_gib")          # fields of the entry itself; the others live in its "vllm"
+
+
+def rezept(m):
+    """The recipe of an entry for the form: every field of REZEPT_FELDER, "" or 0 where it has none."""
+    v = m.get("vllm") or {}
+    out = {k: (m.get(k) if k in OBEN else v.get(k)) for k in REZEPT_FELDER}
+    return {k: (x if x is not None else (0 if k in REZEPT_ZAHLEN else "")) for k, x in out.items()}
+
+
+def rezept_anwenden(m, felder, total_gib):
+    """The own entry m with the recipe fields set (only REZEPT_FELDER; "" or 0 takes a field out). Raises Fehler with a
+    fixed word: felder (unknown field or wrong kind), a field's name (out of range or unknown word), budget (does not
+    fit this computer), and every rule of eigen_ok."""
+    if not isinstance(m, dict) or not m.get("eigen"):
+        raise Fehler("eigen")
+    if not isinstance(felder, dict) or set(felder) - set(REZEPT_FELDER) or not felder:
+        raise Fehler("felder")
+    n = json.loads(json.dumps(m))
+    v = n.setdefault("vllm", {})
+    for k, x in felder.items():
+        ziel = n if k in OBEN else v
+        if k in REZEPT_ZAHLEN:
+            lo, hi = REZEPT_ZAHLEN[k]
+            if isinstance(x, bool) or not isinstance(x, (int, float)) or (k != "gpu_gib" and x != int(x)):
+                raise Fehler(k)
+            if x == 0 and k not in OBEN:
+                ziel.pop(k, None)
+                continue
+            if not lo <= x <= hi:
+                raise Fehler(k)
+            ziel[k] = round(float(x), 1) if k == "gpu_gib" else int(x)
+        elif not isinstance(x, str):
+            raise Fehler(k)
+        elif x == "":
+            ziel.pop(k, None)
+        elif k in REZEPT_WOERTER and x not in REZEPT_WOERTER[k]:
+            raise Fehler(k)
+        elif k == "entwurf" and (not REPO.match(x) or ".." in x):
+            raise Fehler(k)
+        elif k == "entwurf_revision" and not REV.match(x):
+            raise Fehler(k)
+        else:
+            ziel[k] = x
+    if "bilder_pro_frage" in v and not n["kann_sehen"]:
+        raise Fehler("bilder_pro_frage")
+    n["werkzeuge"] = n["art"] == "llm" and "tool_call_parser" in v
+    if n["gpu_gib"] / total_gib > ANTEIL_MAX:
+        raise Fehler("budget")
+    return eigen_ok(n)
+
+
+def eigen_aendern(mid, felder, total_gib, cfg, path=EIGENE, messung_path=MESSUNG):
+    """Saves a changed recipe of an own entry; never of one that runs now (it would start differently than measured).
+    Its measurement goes: the numbers belonged to the old recipe. Returns the new entry."""
+    alle = [_alt_anteil(x) for x in eigene(path)]
+    i = next((j for j, x in enumerate(alle) if x.get("id") == mid), None)
+    if i is None:
+        raise Fehler("unbekannt")
+    kat = katalog()
+    if any(jetzt_id(a, cfg, kat) == mid for a in TAUSCH):
+        raise Fehler("aktiv")
+    alt = {k: x for k, x in alle[i].items() if k != "zeit"}
+    n = rezept_anwenden(alt, felder, total_gib)
+    if n == alt:
+        raise Fehler("schon")
+    alle[i] = dict(n, zeit=alle[i].get("zeit", int(time.time())))
+    write_json(path, {"modelle": alle}, indent=1)
+    messung = read_json(messung_path, {})
+    if mid in (messung.get("modelle") or {}):
+        del messung["modelle"][mid]
+        write_json(messung_path, messung, indent=1)
+    return n
+
+
+def katalog_zeile(m, messung):
+    """„In den Katalog übernehmen“: the own entry as a ready line for modelle.json (no "eigen", no time, the id without
+    "eigen-"), pinned as it is; gemessen only when its last measurement went through."""
+    if not m.get("eigen"):
+        raise Fehler("eigen")
+    r = (messung.get("modelle") or {}).get(m["id"]) or {}
+    z = {k: x for k, x in m.items() if k not in ("eigen", "zeit")}
+    z["id"] = m["id"][len("eigen-"):]
+    z["gemessen"] = r.get("ok") is True
+    pruefe_eintrag(z)
+    return json.dumps(z, ensure_ascii=False, indent=2)
+
 
 def eigene(path=EIGENE):
     return [m for m in read_json(path, {}).get("modelle") or [] if isinstance(m, dict)]

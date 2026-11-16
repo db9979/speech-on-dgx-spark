@@ -173,6 +173,7 @@ LIST = {
     ("POST", "/api/admin/modelle/messen"): (CONFIRM, "Spark", "Ein Modell messen", "Measure a model"),
     ("POST", "/api/admin/modelle/eigen"): (CONFIRM, "Spark", "Ein eigenes Modell hinzufügen", "Add an own model"),
     ("DELETE", "/api/admin/modelle/eigen/{mid}"): (CONFIRM, "Spark", "Ein eigenes Modell löschen", "Delete an own model"),
+    ("PUT", "/api/admin/modelle/eigen/{mid}/rezept"): (CONFIRM, "Spark", "Rezept eines eigenen Modells ändern", "Change an own model's recipe"),
 }
 
 

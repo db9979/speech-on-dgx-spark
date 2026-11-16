@@ -1922,6 +1922,7 @@ body.inchats:not(.appview):not(.kbd) .cx-comp{padding-right:96px}
 .mdbalken .mdzeile{justify-content:space-between}.mdkacheln{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin:12px 0}
 .mdkachel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:grid;gap:3px;align-content:start;min-width:0}
 .mdkachel.offen{border-color:var(--acc)}.mdkachel b{overflow-wrap:anywhere}.mdzahl{font-size:12px;font-variant-numeric:tabular-nums}
+.mdrezept{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px 12px;margin-top:8px}.mdrezept label{display:flex;flex-direction:column;font-size:12.5px}.mdrezept .row,.mdrezept .vb-note,.mdrezept .mdzeile{grid-column:1/-1}.mdzeile{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;user-select:all}
 /* the memory bar's colors per kind (--mdf-bild, --mdf-musik in tokens.css), the tiles carry the same one as their legend (Dominik 2026-10-18) */
 .mdf-llm{--md:#5b6cf0}.mdf-sehen{--md:#a855f7}.mdf-asr{--md:#10b981}.mdf-tts{--md:#06b6d4}.mdf-bild{--md:var(--mdf-bild)}.mdf-musik{--md:var(--mdf-musik)}.mdf-klein{--md:#84cc16}
 .mdf-sys{--md:#8b95ab}.mdf-res{--md:#c3cad8}:root[data-theme=dark] .mdf-res{--md:#4a536a}@media (prefers-color-scheme:dark){:root:not([data-theme=light]) .mdf-res{--md:#4a536a}}

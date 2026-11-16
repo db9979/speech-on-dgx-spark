@@ -68,7 +68,7 @@ function mdPlatz(w){const p=w.platz;if(!p||w.laeuft||w.misst)return '';
     `<div class="mut vb-note">${esc(t('Alle Gespräche teilen sich einen Gesprächsspeicher. Mehr Platz kostet Speicher, der Bildern, Musik und dem Sehen-Modell fehlt. Das Sprachmodell startet dafür neu.','All conversations share one context store. More room costs memory that pictures, music and the vision model then lack. The language model restarts for it.'))}</div></div>`}
 async function mdPost(url,body,frage,method='POST'){if(!confirm(frage))return;const msg=$('mdmsg');msg.textContent='';
   // the answer is the page itself (after „Messen“ already showing the measurement that starts in a moment)
-  try{const r=await api(url+(L==='en'?'?lang=en':''),method==='POST'?{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:{method});
+  try{const r=await api(url+(L==='en'?'?lang=en':''),method==='POST'||method==='PUT'?{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:{method});
     let d=null;try{d=await r.json()}catch(_){}loadModelle(d&&d.arten?d:null)}catch(e){msg.textContent=e.message}}
 // „Läuft jetzt“: the memory bar and one tile per kind with the model it runs
 let MD_OFFEN='',MD_MEHR=false;const MD_TREFFER={};
@@ -96,10 +96,25 @@ function mdKarte(m,a,w){const x=m.messung||{},probe=['revision','ungeprueft'].in
   const tun=m.aktiv?`<span class="pill ok">${esc(mdLaeuft(m))}</span>`:m.waehlbar?`<button type="button" class="b sm" data-mdw="${esc(a.art)}" data-mdid="${esc(m.id)}">${esc(t('Wechseln','Switch'))}</button>`:
     probe?`<button type="button" class="b sm" data-mdp="${esc(m.id)}">${esc(t('Ausprobieren','Try'))}</button>`:`<span class="mut">${esc(t(...(MD_NEIN[m.nein]||['nicht wählbar','not selectable'])))}</span>`;
   const weg=w.eigene&&m.eigen&&!m.aktiv?` <button type="button" class="b sm danger" data-mde="${esc(m.id)}">${esc(t('Löschen','Delete'))}</button>`:'';
+  const rez=w.eigene&&m.rezept?` <button type="button" class="b sm" data-mdr="${esc(m.id)}" aria-expanded="${MD_REZEPT===m.id}">${esc(t('Rezept','Recipe'))}</button>`:'';
   const zeile=[x.ok===false?t('Messung abgebrochen','measurement broke off'):x.tok_s!=null?x.tok_s+t(' tok/s gemessen',' tok/s measured')+(m.gemessen_auf?t(' auf ',' on ')+m.gemessen_auf:''):probe?t('noch nicht gemessen','not measured yet'):'',
     (m.gemessen?'':'~')+mdGib(m.aktiv&&m.gib!=null?m.gib:m.need_gib),m.betrieb==='resident'?t('immer geladen','always loaded'):t('bei Bedarf','on demand'),m.lizenz].filter(Boolean).join(' · ');
   return `<div class="mdkarte${!m.aktiv&&!m.waehlbar&&!probe?' aus':''}"><div class="mdkopf"><b>${esc(m.name)}</b>${m.gewerblich?'':` <span class="pill warn">${esc(t('nur privat','private use only'))}</span>`}${m.eigen?` <span class="pill">${esc(t('eigenes','own'))}</span>`:''}</div>`+
-    `<div class="mdtun">${tun}${weg}</div><div class="mut mdzahl">${esc(zeile)}</div></div>`}
+    `<div class="mdtun">${tun}${rez}${weg}</div><div class="mut mdzahl">${esc(zeile)}</div>${MD_REZEPT===m.id?mdRezept(m):''}</div>`}
+// Rezept-Editor (stage B1): the own model's engine settings, fixed ranges; saving drops its measurement
+const MD_RZ=[['kontext','Kontext (Tokens)','Context (tokens)',2048,262144],['gpu_gib','Speicher (GiB)','Memory (GiB)',1,1024],['max_seqs','Anfragen gleichzeitig','Requests at once',1,16],
+  ['mtp','MTP-Tokens (0 = aus)','MTP tokens (0 = off)',0,8],['batched_tokens','Tokens pro Schritt (0 = Standard)','Tokens per step (0 = default)',0,32768],['bilder_pro_frage','Bilder pro Frage (0 = Standard)','Pictures per question (0 = default)',0,8]];
+const MD_RW=[['kv_cache_dtype','KV-Cache','KV cache',['','fp8']],['reasoning_parser','Denk-Parser','Reasoning parser',['','qwen3','qwen3_coder','qwen3_xml','hermes','gemma4','llama3_json','mistral','deepseek_r1']],
+  ['tool_call_parser','Werkzeug-Parser','Tool parser',['','qwen3','qwen3_coder','qwen3_xml','hermes','gemma4','llama3_json','mistral','deepseek_r1']]];
+let MD_REZEPT='',MD_ZEILE='';
+function mdRezept(m){const r=m.rezept||{};
+  return `<div class="mdrezept">`+MD_RZ.map(([k,de,en,lo,hi])=>`<label>${esc(t(de,en))} <input type="number" data-rz="${k}" min="${lo}" max="${hi}" step="${k==='gpu_gib'?'0.1':'1'}" value="${esc(String(r[k]||0))}"></label>`).join('')+
+    MD_RW.map(([k,de,en,l])=>`<label>${esc(t(de,en))} <select data-rz="${k}">${l.map(x=>`<option value="${esc(x)}"${(r[k]||'')===x?' selected':''}>${esc(x||t('keiner','none'))}</option>`).join('')}</select></label>`).join('')+
+    `<label>${esc(t('Entwurfsmodell','Draft model'))} <input data-rz="entwurf" maxlength="190" placeholder="anbieter/name" value="${esc(r.entwurf||'')}" autocomplete="off" spellcheck="false"></label>`+
+    `<label>${esc(t('Stand des Entwurfsmodells','Draft model commit'))} <input data-rz="entwurf_revision" maxlength="40" value="${esc(r.entwurf_revision||'')}" autocomplete="off" spellcheck="false"></label>`+
+    `<div class="row"><button type="button" class="b sm" id="mdrzok">${esc(t('Speichern','Save'))}</button> <button type="button" class="b sm" id="mdrzk">${esc(t('Katalogzeile zeigen','Show catalog line'))}</button></div>`+
+    (MD_ZEILE?`<pre class="mdzeile">${esc(MD_ZEILE)}</pre>`:'')+
+    `<div class="mut vb-note">${esc(t('Nur feste Bereiche und Wörter. Speichern verwirft die alte Messung: danach „Messen“. Die Katalogzeile kann in den festen Katalog übernommen werden.','Fixed ranges and words only. Saving drops the old measurement: then "Measure". The catalog line can go into the fixed catalog.'))}</div></div>`}
 function mdTreffer(art){const l=MD_TREFFER[art];if(!l)return '';if(!l.length)return `<div class="mut vb-note">${esc(t('Nichts gefunden.','Nothing found.'))}</div>`;
   return l.map(h=>`<div class="mdkarte${h.nein?' aus':''}"><div class="mdkopf"><b>${esc(h.repo)}</b>${h.gewerblich?'':` <span class="pill warn">${esc(t('nur privat','private use only'))}</span>`}</div>`+
     `<div class="mdtun">${h.nein?`<span class="mut">${esc(t(...(MD_NEIN[h.nein]||['geht nicht','not possible'])))}</span>`:`<button type="button" class="b sm" data-mdh="${esc(h.repo)}">${esc(t('Hinzufügen','Add'))}</button>`}</div>`+
@@ -143,6 +158,10 @@ function mdKnoepfe(d){const main=$('mdmain');
   main.querySelectorAll('[data-mdp]').forEach(b=>b.onclick=()=>{const m=d.arten.flatMap(y=>y.modelle).find(y=>y.id===b.dataset.mdp);
     mdPost('/api/admin/modelle/messen',{id:b.dataset.mdp,probe:true},t('„'+(m?m.name:b.dataset.mdp)+'“ ausprobieren? Der Spark lädt es falls nötig und misst es; das Sprachmodell pausiert für etwa 10 bis 25 Minuten. Danach fragt die Seite, ob gewechselt wird.','Try "'+(m?m.name:b.dataset.mdp)+'"? The Spark downloads it if needed and measures it; the language model pauses for about 10 to 25 minutes. Afterwards the page asks whether to switch.'))});
   main.querySelectorAll('[data-mdh]').forEach(b=>b.onclick=()=>mdDazu(b.dataset.mdh));
+  main.querySelectorAll('[data-mdr]').forEach(b=>b.onclick=()=>{MD_REZEPT=MD_REZEPT===b.dataset.mdr?'':b.dataset.mdr;MD_ZEILE='';loadModelle(MD_SEITE)});
+  if($('mdrzok'))$('mdrzok').onclick=()=>{const f={};main.querySelectorAll('.mdrezept [data-rz]').forEach(x=>{f[x.dataset.rz]=x.type==='number'?Number(x.value||0):x.value.trim()});
+    mdPost('/api/admin/modelle/eigen/'+encodeURIComponent(MD_REZEPT)+'/rezept',f,t('Rezept speichern? Die alte Messung gilt dann nicht mehr; danach neu messen.','Save the recipe? The old measurement no longer counts; measure again afterwards.'),'PUT')};
+  if($('mdrzk'))$('mdrzk').onclick=async()=>{try{MD_ZEILE=(await (await api('/api/admin/modelle/eigen/'+encodeURIComponent(MD_REZEPT)+'/katalogzeile')).json()).zeile||''}catch(e){$('mdmsg').textContent=e.message;return}loadModelle(MD_SEITE)};
   if($('mdqs')){$('mdqs').onclick=mdSuchen;$('mdq').onkeydown=e=>{if(e.key==='Enter')mdSuchen()}}
   if($('mdpv'))$('mdpv').onclick=()=>mdPost('/api/admin/modelle/probe',null,t('Die Frage zum ausprobierten Modell verwerfen? Gewechselt wird nichts.','Discard the question about the tried model? Nothing is switched.'),'DELETE');
   const mehr=$('mdmehr');if(mehr)mehr.ontoggle=()=>{MD_MEHR=mehr.open}}

@@ -80,6 +80,12 @@ GRUND = {"art": "Diese Art lässt sich nicht wechseln.", "unbekannt": "Das Model
          "platz": "Diese Auswahl gibt es nicht.", "suche": "Suchwort mit Buchstaben, Zahlen, Leerzeichen, Punkt, Strich.", "kontext": "Dieses Modell kann so lange Gespräche nicht.", "dateien": "Die Dateien ließen sich nicht ganz löschen."}
 STATUS = {"laeuft": 409, "misst": 409, "start": 503, "start_messen": 503, "rechner": 503}
 EIGEN_BODY = 512
+# the Rezept-Editor's own answers (stage B1); every field of modelle.REZEPT_FELDER answers with its name
+REZEPT_GRUND = {"schon": "Am Rezept hat sich nichts geändert.", "felder": "Unbekanntes Feld im Rezept.",
+                "entwurf": "Das Entwurfsmodell braucht einen Namen wie anbieter/name, einen festen Stand (40 Zeichen) und MTP über 0.",
+                "budget": "So passt das Modell nicht in den Speicher dieses Rechners.",
+                "aktiv": "Das Modell läuft gerade. Erst zu einem anderen wechseln, dann das Rezept ändern."}
+REZEPT_WOERTER = set(GRUND) | set(REZEPT_GRUND) | set(modelle.REZEPT_FELDER)
 
 
 def _eigen_an(cfg=None):
@@ -184,7 +190,9 @@ def seite(cfg=None, total_gib=None, messung=None, lang="de", gestartet=False, we
                          "aktiv": mid in laufend, "gib": (laufend.get(mid) or {}).get("gib"), "fest": bool(m["revision"]),
                          "messung": {k: r[k] for k in MESSWERTE if k in r},
                          # numbers from another kind of computer (a measurement before stage A was on the Spark)
-                         "gemessen_auf": _anderswo(r, profil, i)})
+                         "gemessen_auf": _anderswo(r, profil, i),
+                         # Rezept-Editor (stage B1): the own entry's engine settings for the form
+                         **({"rezept": modelle.rezept(m)} if m.get("eigen") and m["engine"] == "vllm" else {})})
         arten.append({"art": art, "name": namen[i], "modelle": rows})
     laeuft = ((_laeuft() if laeuft is None else laeuft) or wechselt) if an else False
     misst = bool(_misst() if misst is None else misst)
@@ -595,6 +603,53 @@ async def eigen_dazu(request: Request):
     guard.log("modelle_eigen", detail=f"hinzugefügt: {m['name']['de']}")
     _live["t"] = None
     return await asyncio.to_thread(seite, lang="en" if request.query_params.get("lang") == "en" else "de")
+
+
+@router.put("/api/admin/modelle/eigen/{mid}/rezept", dependencies=[Depends(auth), Depends(admin_code)])
+async def eigen_rezept(request: Request, mid: str):
+    """Rezept-Editor (Dominik 2026-11-16 „1-6“, stage B1): an own model's engine settings from fixed ranges and words;
+    the model computer checks every field again (modelle.eigen_aendern) and drops the old measurement."""
+    guard.limit(request, "modelle_eigen", None, True)
+    _eigen_tor(request)
+    felder = await core.json_body(request, EIGEN_BODY)
+    cfg = load_config()
+    try:
+        if not modelle.ID.match(mid) or not isinstance(felder, dict):
+            raise modelle.Fehler("unbekannt" if not modelle.ID.match(mid) else "felder")
+        if steuer.remote(cfg):
+            d = steuer.call("eigen_rezept", (mid,), cfg=cfg, daten=felder, timeout=15)
+            if not isinstance(d, dict) or d.get("ok") is not True:
+                raise modelle.Fehler(d.get("fehler") if isinstance(d, dict) and d.get("fehler") in REZEPT_WOERTER else "rechner")
+        else:
+            await asyncio.to_thread(modelle.eigen_aendern, mid, felder, modelle.gesamt_gib(), cfg)
+    except modelle.Fehler as e:
+        word = str(e) if str(e) in REZEPT_WOERTER else "eigen"
+        print(f"modelle: rezept abgelehnt {word}", flush=True)
+        status = {"unbekannt": 404, "rechner": 503, "aktiv": 409, "schon": 409}.get(word, 400)
+        raise HTTPException(status, REZEPT_GRUND.get(word) or GRUND.get(word)
+                            or ("Wert außerhalb des erlaubten Bereichs: " + word))
+    print("modelle: rezept gespeichert", flush=True)
+    guard.log("modelle_eigen", detail=f"Rezept geändert: {mid}")
+    _live["t"] = None
+    return await asyncio.to_thread(seite, lang="en" if request.query_params.get("lang") == "en" else "de")
+
+
+@router.get("/api/admin/modelle/eigen/{mid}/katalogzeile", dependencies=[Depends(auth)])
+async def eigen_katalogzeile(request: Request, mid: str):
+    """„In den Katalog übernehmen“ (stage B1): the own entry as a ready line for modelle.json, nothing is changed."""
+    guard.limit(request, "modelle_eigen", None, True)
+    _eigen_tor(request)
+    q = await asyncio.to_thread(_quelle, load_config())
+    m = q[3].get(mid) if modelle.ID.match(mid) else None
+    try:
+        if m is None:
+            raise modelle.Fehler("unbekannt")
+        zeile = modelle.katalog_zeile(m, q[1] or {})
+    except modelle.Fehler as e:
+        print(f"modelle: katalogzeile abgelehnt {e}", flush=True)
+        raise HTTPException(404 if str(e) == "unbekannt" else 400, GRUND.get(str(e), "ungültig"))
+    print("modelle: katalogzeile gezeigt", flush=True)
+    return {"zeile": zeile}
 
 
 @router.delete("/api/admin/modelle/eigen/{mid}", dependencies=[Depends(auth), Depends(admin_code)])

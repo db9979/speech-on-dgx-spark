@@ -6386,6 +6386,14 @@
 "text": "Nach dem Update: Zustand → Modelle → „Mehr“ zeigt unten „Gerät: DGX Spark (GB10) · … GiB gemeinsam“. Das Sprachmodell startet wie vorher (gleicher Speicher, Zustand → Modelle zeigt dieselbe Belegung), Wechseln und „Lange Gespräche“ gehen wie vorher, eigene Modelle sind noch da.",
 "thread": "Modellkatalog für Spark und DGX Station bauen",
 "test": "test_hardware.Budget.test_the_page_takes_the_model_computers_profile"
+},
+{
+"id": "P928",
+"v": 1486,
+"titel": "Rezept für ein eigenes Modell",
+"text": "Zustand → Modelle, bei einem eigenen Modell (Funktionen → Modelle wechseln → Eigene Modelle an) auf „Rezept“: Kontext, Speicher, MTP mit Entwurfsmodell (Name und fester Stand), Tokens pro Schritt und Parser einstellen, Speichern. Ein falscher Wert gibt einen festen Satz, die alte Messung ist weg, „Messen“ misst neu. „Katalogzeile zeigen“ zeigt die fertige Zeile für den festen Katalog.",
+"thread": "Modellkatalog für Spark und DGX Station bauen",
+"test": "test_rezept.Seite.test_behind_the_switch_and_checked"
 }
 ]
 }

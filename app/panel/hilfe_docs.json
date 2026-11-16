@@ -1701,7 +1701,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": ", Raten weiter je Adresse) und eine Höchstzahl gleichzeitiger Anfragen für Modell, Erkennung und Ausgabe (guard.Slot). Geheimnisse, Rollen und Sicherungen brauchen dazu einen frischen Code oder Passkey (core.confirm_code, 10 Minuten). Ein ganzer Bereich lässt sich mit einem zweiten Schritt für eine Weile entsperren (Regel „Bereich entsperren“, zuerst der Fernzugang: 5 bis 120 Minuten, fernzugang.entsperrt_bis): nur diese Anmeldung, nur vom selben Ort, gesperrt bei Sperren, Abmelden und Notaus; Koppeln und Entfernen fragen trotzdem jedes Mal. Zu den Modellen auf tars geht es nur durch das TLS-Tor; Befehle dort prüft der Wärter (tarswart.check: Unterschrift, Zeit, Einmal-Nummer, einer von 27 festen Befehlen). 4. Wer fragt, sicher erkannt?: Das Profil kommt aus Cookie, App-Schlüssel oder verknüpftem Konto. Am geteilten Lautsprecher reicht der Geräteschlüssel nicht: chat_turn.shared_stranger gibt Persönliches nur frei, wenn die Inhaberstimme in derselben Aufnahme sicher erkannt ist. 5. Freigabe und Sperre: Jede Funktion ist aus, bis der Admin sie freigibt; dann gilt sie für jedes Profil, außer der Admin sperrt einzelne (features.blocked). Was nicht erlaubt ist, wird gar nicht erst als "
+"text": ", Raten weiter je Adresse) und eine Höchstzahl gleichzeitiger Anfragen für Modell, Erkennung und Ausgabe (guard.Slot). Geheimnisse, Rollen und Sicherungen brauchen dazu einen frischen Code oder Passkey (core.confirm_code, 10 Minuten). Ein ganzer Bereich lässt sich mit einem zweiten Schritt für eine Weile entsperren (Regel „Bereich entsperren“, zuerst der Fernzugang: 5 bis 120 Minuten, fernzugang.entsperrt_bis): nur diese Anmeldung, nur vom selben Ort, gesperrt bei Sperren, Abmelden und Notaus; Koppeln und Entfernen fragen trotzdem jedes Mal. Zu den Modellen auf tars geht es nur durch das TLS-Tor; Befehle dort prüft der Wärter (tarswart.check: Unterschrift, Zeit, Einmal-Nummer, einer von 28 festen Befehlen). 4. Wer fragt, sicher erkannt?: Das Profil kommt aus Cookie, App-Schlüssel oder verknüpftem Konto. Am geteilten Lautsprecher reicht der Geräteschlüssel nicht: chat_turn.shared_stranger gibt Persönliches nur frei, wenn die Inhaberstimme in derselben Aufnahme sicher erkannt ist. 5. Freigabe und Sperre: Jede Funktion ist aus, bis der Admin sie freigibt; dann gilt sie für jedes Profil, außer der Admin sperrt einzelne (features.blocked). Was nicht erlaubt ist, wird gar nicht erst als "
 },
 {
 "lang": "de",
@@ -1773,7 +1773,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 13 Werkzeuge nach Text von außen gesperrt (Schritt 6) - 19 Werkzeuge nach einer Mail gesperrt (Schritt 6) - 10 min zählt ein richtiger Code für „Bestätigen“ (Schritt 3) - 27 feste Befehle des Wärters auf tars (Schritt 3) - 3 Notaus-Stufen, die letzte hält jedes Gespräch an (Schritt 2)"
+"text": "- 13 Werkzeuge nach Text von außen gesperrt (Schritt 6) - 19 Werkzeuge nach einer Mail gesperrt (Schritt 6) - 10 min zählt ein richtiger Code für „Bestätigen“ (Schritt 3) - 28 feste Befehle des Wärters auf tars (Schritt 3) - 3 Notaus-Stufen, die letzte hält jedes Gespräch an (Schritt 2)"
 },
 {
 "lang": "de",
@@ -3741,7 +3741,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 600 s lebt ein Kopplungscode (Schritt 2) - 60 s darf die Zeit eines Befehls daneben liegen (Schritt 7) - 27 feste Befehle des Wärters (Schritt 7) - 30 s ohne Antwort bis zum Notbetrieb (Schritt 10) - 80 °C Hinweis, der Panel-Rechner ist warm (Schritt 8) - 10 % Platte frei, darunter ein Hinweis (Schritt 8) - 0.5 GiB Arbeitsspeicher frei am Panel-Rechner, darunter ein Hinweis (Schritt 8) - 5 % CPU, ab der der größte Dienst als „rechnet gerade“ gilt (Schritt 8) - 640 Pixel längste Kante des eigenen Fotos eines Rechners (Schritt 8) - 15 s ohne Frage der Steuerzentrale, dann gilt der Bildschirm als dunkel (Schritt 9)"
+"text": "- 600 s lebt ein Kopplungscode (Schritt 2) - 60 s darf die Zeit eines Befehls daneben liegen (Schritt 7) - 28 feste Befehle des Wärters (Schritt 7) - 30 s ohne Antwort bis zum Notbetrieb (Schritt 10) - 80 °C Hinweis, der Panel-Rechner ist warm (Schritt 8) - 10 % Platte frei, darunter ein Hinweis (Schritt 8) - 0.5 GiB Arbeitsspeicher frei am Panel-Rechner, darunter ein Hinweis (Schritt 8) - 5 % CPU, ab der der größte Dienst als „rechnet gerade“ gilt (Schritt 8) - 640 Pixel längste Kante des eigenen Fotos eines Rechners (Schritt 8) - 15 s ohne Frage der Steuerzentrale, dann gilt der Bildschirm als dunkel (Schritt 9)"
 },
 {
 "lang": "de",
@@ -19741,7 +19741,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "tion and output (guard.Slot). Secrets, roles and backups also need a fresh code or passkey (core.confirm_code, 10 minutes). A whole area can be unlocked for a while with a second step (rule \"unlocking an area\", first remote access: 5 to 120 minutes, fernzugang.entsperrt_bis): this login only, from the same place only, locked on Lock, logout and the kill switch; pairing and removing still ask every time. The models on tars are reached only through the TLS-Tor; commands there are checked by the Wärter (tarswart.check: signature, time, one-time number, one of 27 fixed commands). 4. Who asks, surely known?: The profile comes from the cookie, the app key or a linked account. At a shared speaker the device key is not enough: chat_turn.shared_stranger allows personal things only when the owner's voice is surely recognised in the same recording. 5. Release and block: Every function is off until the admin releases it; then it counts for every profile, unless the admin blocks single ones (features.blocked). What is not allowed is not even offered as a tool. What belongs to a profile stays with it: a browser's push subscription belongs to exactly one profile (push.add takes it from every othe"
+"text": "tion and output (guard.Slot). Secrets, roles and backups also need a fresh code or passkey (core.confirm_code, 10 minutes). A whole area can be unlocked for a while with a second step (rule \"unlocking an area\", first remote access: 5 to 120 minutes, fernzugang.entsperrt_bis): this login only, from the same place only, locked on Lock, logout and the kill switch; pairing and removing still ask every time. The models on tars are reached only through the TLS-Tor; commands there are checked by the Wärter (tarswart.check: signature, time, one-time number, one of 28 fixed commands). 4. Who asks, surely known?: The profile comes from the cookie, the app key or a linked account. At a shared speaker the device key is not enough: chat_turn.shared_stranger allows personal things only when the owner's voice is surely recognised in the same recording. 5. Release and block: Every function is off until the admin releases it; then it counts for every profile, unless the admin blocks single ones (features.blocked). What is not allowed is not even offered as a tool. What belongs to a profile stays with it: a browser's push subscription belongs to exactly one profile (push.add takes it from every othe"
 },
 {
 "lang": "en",
@@ -19813,7 +19813,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 13 tools locked after outside text (step 6) - 19 tools locked after a mail (step 6) - 10 min a right code counts for „Confirm“ (step 3) - 27 fixed commands of the Wärter on tars (step 3) - 3 kill switch stages, the last stops every conversation (step 2)"
+"text": "- 13 tools locked after outside text (step 6) - 19 tools locked after a mail (step 6) - 10 min a right code counts for „Confirm“ (step 3) - 28 fixed commands of the Wärter on tars (step 3) - 3 kill switch stages, the last stops every conversation (step 2)"
 },
 {
 "lang": "en",
@@ -21725,7 +21725,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 600 s a pairing code lives (step 2) - 60 s a command's time may be off (step 7) - 27 fixed commands of the Wärter (step 7) - 30 s without an answer until Notbetrieb (step 10) - 80 °C note, the panel computer is warm (step 8) - 10 % disk free, below it a note (step 8) - 0.5 GiB memory free on the panel computer, below it a note (step 8) - 5 % CPU from which the biggest service counts as „computing now“ (step 8) - 640 Pixel longest edge of a computer's own photo (step 8) - 15 s without a question from the control centre, then the screen counts as dark (step 9)"
+"text": "- 600 s a pairing code lives (step 2) - 60 s a command's time may be off (step 7) - 28 fixed commands of the Wärter (step 7) - 30 s without an answer until Notbetrieb (step 10) - 80 °C note, the panel computer is warm (step 8) - 10 % disk free, below it a note (step 8) - 0.5 GiB memory free on the panel computer, below it a note (step 8) - 5 % CPU from which the biggest service counts as „computing now“ (step 8) - 640 Pixel longest edge of a computer's own photo (step 8) - 15 s without a question from the control centre, then the screen counts as dark (step 9)"
 },
 {
 "lang": "en",

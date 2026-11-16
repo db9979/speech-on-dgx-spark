@@ -25,6 +25,7 @@ a time (at most WINDOW seconds off) and a one-time number (each is taken once).
     messen <id>                 Zustand → Modelle „Messen“ (modelle.messen_anfragen), then speech-spark-messen-wunsch
     eigen_dazu {entry}          an own model (modelle.eigen_speichern checks it again)
     eigen_weg <id>              an own model off the list and its files off the disk (modelle.eigen_loeschen)
+    eigen_rezept <id> {fields}  an own model's recipe (modelle.eigen_aendern checks every field again)
     weiter                      ends this computer's Wartungspause ("Weiter" on the panel)
     update                      starts this computer's own update (speech-spark-update with its own rules: the newest
                                 version with passed GitHub tests, never a version the panel names)
@@ -86,12 +87,12 @@ MAX_SEEN = 5000        # one-time numbers kept (each lives WINDOW * 2 seconds)
 RATE = (40, 10)        # at most 40 requests in 10 seconds (the panel asks for the status every few seconds)
 ACTIONS = ("start", "stop", "restart")
 COMMANDS = ("status", "einheit", "einstellen", "logs", "modelle", "wechseln", "messen", "platz", "eigen_dazu", "eigen_weg",
-            "weiter", "update", "werkstatt", "werkstatt_auftrag", "werkstatt_eins", "werkstatt_weg", "systemupdate",
+            "eigen_rezept", "weiter", "update", "werkstatt", "werkstatt_auftrag", "werkstatt_eins", "werkstatt_weg", "systemupdate",
             "systemupdate_tun", "pakete", "stimmen", "stimme_ablegen", "stimme_weg", "clients", "client_neu",
             "client_aendern", "client_weg", "clients_schalten")
 UPDATE_UNIT = "speech-spark-update"
 PAUSE_KEYS = ("on", "parts", "since", "until", "channel")   # what the panel needs of the pause (never who)
-WITH_DATA = ("einstellen", "eigen_dazu", "werkstatt_auftrag", "stimme_ablegen", "client_neu", "client_aendern",
+WITH_DATA = ("einstellen", "eigen_dazu", "eigen_rezept", "werkstatt_auftrag", "stimme_ablegen", "client_neu", "client_aendern",
              "clients_schalten")
 # what status reports: the units the panel shows and watches
 WATCHED = dict(UNITS, **OWN_LLM_UNITS, **ON_DEMAND_UNITS)
@@ -310,6 +311,18 @@ def eigen_dazu(m):
         print(f"waerter: eigen_dazu abgelehnt {word}", flush=True)
         return {"ok": False, "fehler": word}
     print("waerter: eigen_dazu ok", flush=True)
+    return {"ok": True}
+
+
+def eigen_rezept(mid, felder):
+    if not modelle.ID.match(str(mid)):
+        raise ValueError("befehl")
+    try:
+        modelle.eigen_aendern(mid, felder, modelle.gesamt_gib(), load_config())
+    except modelle.Fehler as e:
+        print(f"waerter: eigen_rezept abgelehnt {e}", flush=True)
+        return {"ok": False, "fehler": str(e)}
+    print("waerter: eigen_rezept ok", flush=True)
     return {"ok": True}
 
 
@@ -548,6 +561,8 @@ async def _wart(request, stimme):
             return JSONResponse(einstellen(daten))
         if cmd == "eigen_dazu":
             return JSONResponse(eigen_dazu(daten))
+        if cmd == "eigen_rezept":
+            return JSONResponse(eigen_rezept(*args, daten) if len(args) == 1 else eigen_rezept("", daten))
         if cmd == "stimme_ablegen":
             return JSONResponse(stimme_ablegen(daten))
         if cmd == "stimmen":
