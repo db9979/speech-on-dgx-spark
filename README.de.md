@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.510** Dokumente: eine Suche in Namen und Inhalt zugleich, Treffer je Dokument mit Ausschnitt, Fundstellen öffnen die Leseansicht genau dort
 - **V01.1.509** Dokumente lesen in einer eigenen Ansicht über die ganze Fläche: öffnet an der Fundstelle, Suchwörter markiert, „1 von N“, Inhaltsverzeichnis, Text oder Original
 - **V01.1.508** Käfer mit rotem Körper, Seitenmenü-Kopf in einer Zeile, am Handy nicht mehr auf „Neuer Chat“
 - **V01.1.507** ROT-FIX: Test „Tippen geht vor“ unabhängig von der Reihenfolge
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.503** Eigene kleine Modelle (ONNX), Probetag nach dem Wechsel und Modellsätze
 - **V01.1.502** Eigene Modelle auch für Hören, Sprechen, Bilder und Musik, mit fester Probe beim Wechsel
 - **V01.1.501** Modelle in zwei Regalen: Geprüft und Eigene, ungeprüft
-- **V01.1.500** Probleme melden: getippter Text bleibt stehen, wenn Ich neu lädt
 
 
 

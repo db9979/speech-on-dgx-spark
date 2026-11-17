@@ -150,7 +150,20 @@ const DOCSORT=[['new',t('Neueste zuerst','Newest first')],['name',t('Name A–Z'
 const DOCCHIP=[['',t('Alle','All')],['due',t('Frist offen','Deadline open')],['reading',t('Wird gelesen','Being read')],['error',t('Nicht lesbar','Not readable')],['shared',t('Für alle','For everyone')],['off',t('Suche aus','Search off')]];
 const DOCPAGE=50;
 // what the list shows; source and sort order stay in this browser (a convenience, works without storage too)
-const DOCV={find:'',src:'',sort:'new',chip:'',tag:'',pick:null,sel:'',max:DOCPAGE};
+const DOCV={find:'',src:'',sort:'new',chip:'',tag:'',pick:null,sel:'',max:DOCPAGE,wo:''};
+// one search over names and content (Dominik 2026-11-17): typing filters the names at once and, after a short pause,
+// asks the content search (POST /api/profile/wissen/search, the assistant's search without the language model);
+// its places are grouped by document: hits {q, by: Map id → [places], busy}
+const DOCHITS={q:'',by:null,busy:false,seq:0,timer:0};
+// the words of a search for marks (the list's snippets here, the Leseansicht in lesen.js)
+const docWorte=q=>String(q||'').toLowerCase().split(/[\s,.;:!?„“"'()]+/).filter(w=>w.length>=2).slice(0,8);
+const docWortRe=q=>{const w=docWorte(q);return w.length?new RegExp(w.map(x=>x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|'),'giu'):null};
+// a piece of text around the first word of the search, the words marked; everything escaped (outside text stays text)
+function docSnip(text,q,len){const s=String(text||'').replace(/\s+/g,' '),re=docWortRe(q);if(!re)return esc(s.slice(0,len));
+  const m=re.exec(s);let a=m?Math.max(0,m.index-Math.round(len/3)):0;if(a>0){const sp=s.indexOf(' ',a);if(sp>0&&sp<m.index)a=sp+1}
+  const part=s.slice(a,a+len);let out='',i=0,x;re.lastIndex=0;
+  while((x=re.exec(part))){out+=esc(part.slice(i,x.index))+'<mark>'+esc(x[0])+'</mark>';i=x.index+x[0].length}
+  return (a>0?'… ':'')+out+esc(part.slice(i))+(a+len<s.length?' …':'')}
 try{const s=JSON.parse(localStorage.getItem('docview')||'{}');if(DOCSORT.some(([k])=>k===s.sort))DOCV.sort=s.sort;if(DOCSRC[s.src])DOCV.src=s.src}catch{}
 const docKeep=()=>{try{localStorage.setItem('docview',JSON.stringify({sort:DOCV.sort,src:DOCV.src}))}catch{}};
 let DOCINFO=null,DOCL=[],DOCO=[];
@@ -262,6 +275,35 @@ function docRow(d,today){const [c,l]=docIco(d),pk=DOCV.pick,brief=docBrief();
     (pk?d.owner?'<span class="ld-pick"></span>':`<input type="checkbox" class="ld-pick" data-pick="${esc(d.id)}"${pk.has(d.id)?' checked':''} aria-label="${esc(t('auswählen','select'))}">`:'')+
     `<span class="ld-ico ${c}" aria-hidden="true">${l}</span><span class="ld-mid"><b>${esc(docTitle(d))}</b><small>${esc(sub)}</small></span>`+
     `<span class="ld-right">${docBadges(d,today)}${when?`<span class="ld-when">${esc(when)}</span>`:''}</span></div>`}
+// a document found in its content: title, kind, the number of places and a snippet with the words marked
+function docHitRow(d,places,q){const [c,l]=docIco(d),brief=docBrief(),n=places.length;
+  const sub=[brief&&d.art,brief&&d.sender,n===1?t('1 Stelle','1 place'):t(`${n} Stellen`,`${n} places`)].filter(Boolean).join(' · ');
+  return `<div class="ld-row dhrow${DOCV.sel===d.id?' on':''}" data-doc="${esc(d.id)}" data-hit="1" role="button" tabindex="0">`+
+    `<span class="ld-ico ${c}" aria-hidden="true">${l}</span><span class="ld-mid"><b>${esc(docTitle(d))}</b><small>${esc(sub)}</small>`+
+    `<span class="ldsnip">${docSnip(places[0].text,q,170)}</span></span></div>`}
+// the content search after a short pause (or at once with Enter); a newer search wins
+function docInhalt(now){clearTimeout(DOCHITS.timer);const q=DOCV.find.trim();
+  if(q.length<3){DOCHITS.q='';DOCHITS.by=null;DOCHITS.busy=false;return}
+  if(DOCHITS.q===q&&(DOCHITS.by||DOCHITS.busy))return;
+  DOCHITS.timer=setTimeout(async()=>{const seq=++DOCHITS.seq;DOCHITS.q=q;DOCHITS.by=null;DOCHITS.busy=true;docRender();
+    try{const r=await (await api('/api/profile/wissen/search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({q,k:30})})).json();
+      if(seq!==DOCHITS.seq)return;const by=new Map();for(const h of r.hits){if(!by.has(h.id))by.set(h.id,[]);by.get(h.id).push(h)}DOCHITS.by=by}
+    catch(x){if(seq!==DOCHITS.seq)return;DOCHITS.by=new Map();$('docmsg').innerHTML=`<span class="err">${esc(x.message)}</span>`}
+    DOCHITS.busy=false;docRender()},now?0:450)}
+const docOrte=id=>DOCHITS.by&&DOCHITS.q===DOCV.find.trim()&&DOCHITS.by.get(id)||[];
+// while searching: „Alles / Nur Namen / Nur Inhalt“, then the documents whose name fits and the ones found in their
+// content (each document once), the content found by the search the assistant uses
+function docSuchListe(l,all,q){const ids=new Set(l.map(d=>d.id)),qq=DOCV.find.trim(),today=docToday();
+  const inh=DOCHITS.by&&DOCHITS.q===qq?[...DOCHITS.by.keys()].map(id=>docFind(id)).filter(d=>d&&!ids.has(d.id)&&(!DOCV.src||docSrc(d)===DOCV.src)):[];
+  const places=inh.reduce((n,d)=>n+docOrte(d.id).length,0),wo=DOCV.wo;
+  const seg=[['',t('Alles','All'),l.length+inh.length],['name',t('Nur Namen','Names only'),l.length],['inhalt',t('Nur Inhalt','Content only'),inh.length]];
+  let h=`<div class="ld-chips docwo" role="group" aria-label="${esc(t('Wo suchen','Where to search'))}">${seg.map(([k,n,c])=>`<button type="button" class="ld-chip${wo===k?' on':''}" data-wo="${k}" aria-pressed="${wo===k}">${esc(n)} <b>${DOCHITS.busy&&k!=='name'?'…':c}</b></button>`).join('')}</div>`;
+  if(wo==='name'||(wo===''&&(l.length||!inh.length&&!DOCHITS.busy))){h+=`<div class="ld-grp"><span>${esc(t('Im Namen','In the name'))}</span><span>${l.length}</span></div>`;
+    h+=l.slice(0,DOCV.max).map(d=>docRow(d,today)).join('')||`<div class="mut ld-empty">${esc(t('Kein Name passt.','No name fits.'))}</div>`}
+  if(wo!=='name'){h+=`<div class="ld-grp"><span>${esc(DOCHITS.busy?t('Im Inhalt: suche …','In the content: searching …'):qq.length<3?t('Im Inhalt: ab 3 Zeichen','In the content: from 3 letters'):
+      t(`Im Inhalt · ${inh.length===1?'1 Dokument':inh.length+' Dokumente'} · ${places===1?'1 Stelle':places+' Stellen'}`,`In the content · ${inh.length===1?'1 document':inh.length+' documents'} · ${places===1?'1 place':places+' places'}`))}</span></div>`;
+    h+=inh.map(d=>docHitRow(d,docOrte(d.id),qq)).join('')||(DOCHITS.busy||qq.length<3?'':`<div class="mut ld-empty">${esc(t('Im Inhalt nichts gefunden.','Nothing found in the content.'))}</div>`)}
+  return h}
 function docRender(){const I=DOCINFO,brief=docBrief(),today=docToday(),q=DOCV.find.trim().toLowerCase(),all=docAll();
   // sources, tags and quick filters offer only what is there; a choice that went away falls back to "all"
   const srcs={};for(const d of all){const s=docSrc(d);srcs[s]=(srcs[s]||0)+1}
@@ -278,16 +320,17 @@ function docRender(){const I=DOCINFO,brief=docBrief(),today=docToday(),q=DOCV.fi
   const tl=Object.values(tags).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]));
   $('docchips').innerHTML=DOCCHIP.map(([k,l],i)=>!k||counts[i]?`<button type="button" class="ld-chip${DOCV.chip===k?' on':''}" data-chip="${k}">${esc(l)} <b>${counts[i]}</b></button>`:'').join('')+
     (tl.length?`<select id="doctagsel" class="ld-chip${DOCV.tag?' on':''}" aria-label="${esc(t('Tag','Tag'))}"><option value="">${esc(t('Alle Tags','All tags'))}</option>${tl.map(([x,n])=>`<option value="${esc(x)}"${x.toLowerCase()===DOCV.tag.toLowerCase()?' selected':''}>${esc(x)} (${n})</option>`).join('')}</select>`:'');
-  $('docchips').hidden=!all.length;$('doctools').classList.toggle('few',!all.length);
+  $('docchips').hidden=!all.length||!!q;$('doctools').classList.toggle('few',!all.length);
   const l=docSorted(base.filter(d=>docHas(d,DOCV.tag)&&docChipOk(d,DOCV.chip,today)),today);
   if(DOCV.pick)for(const id of [...DOCV.pick])if(!DOCL.some(d=>d.id===id))DOCV.pick.delete(id);
   const now=Date.now();let html='',last=null;
-  for(const d of l.slice(0,DOCV.max)){if(DOCV.sort==='new'){const g=docGroup(d,now);
+  if(q){html=docSuchListe(l,all,q);DOCV.wo=DOCV.wo||''}
+  else for(const d of l.slice(0,DOCV.max)){if(DOCV.sort==='new'){const g=docGroup(d,now);
       if(g!==last){last=g;const n=l.filter(x=>docGroup(x,now)===g).length;html+=`<div class="ld-grp"><span>${esc(g)}</span><span>${n}</span></div>`}}
     html+=docRow(d,today)}
-  if(l.length>DOCV.max)html+=`<div class="ld-more"><button class="b" type="button" data-more="1">${esc(t(`Weitere ${Math.min(DOCPAGE,l.length-DOCV.max)} von ${l.length-DOCV.max} zeigen`,`Show ${Math.min(DOCPAGE,l.length-DOCV.max)} more of ${l.length-DOCV.max}`))}</button></div>`;
+  if(!q&&l.length>DOCV.max)html+=`<div class="ld-more"><button class="b" type="button" data-more="1">${esc(t(`Weitere ${Math.min(DOCPAGE,l.length-DOCV.max)} von ${l.length-DOCV.max} zeigen`,`Show ${Math.min(DOCPAGE,l.length-DOCV.max)} more of ${l.length-DOCV.max}`))}</button></div>`;
   $('doclist').innerHTML=html||`<div class="mut ld-empty">${esc(all.length?t('Nichts passt zu Suche und Filter.','Nothing fits the search and filter.'):t('Noch keine Dokumente. Mit „Hinzufügen“ legst du PDFs, Office-Dateien, Texte oder E-Mails ab; der Assistent sucht dann darin.','No documents yet. With "Add" you store PDFs, office files, texts or e-mails; the assistant then searches them.'))}</div>`;
-  $('doccount').textContent=(all.length?(l.length===all.length?t(`${all.length} Dokumente`,`${all.length} documents`):t(`${l.length} von ${all.length} Dokumenten`,`${l.length} of ${all.length} documents`)):'')+docRmLine();
+  $('doccount').textContent=q?t('Suche in Namen und Inhalt','Searching names and content')+docRmLine():(all.length?(l.length===all.length?t(`${all.length} Dokumente`,`${all.length} documents`):t(`${l.length} von ${all.length} Dokumenten`,`${l.length} of ${all.length} documents`)):'')+docRmLine();
   $('docpick').hidden=!DOCL.length;$('docpick').textContent=DOCV.pick?t('Fertig','Done'):t('Auswählen','Select');
   docBulk();docDetail()}
 // "Auswählen": the bar with what can be done to the selected own documents (one request, wissen.py batch)
@@ -302,6 +345,12 @@ function docBulk(){const box=$('docbulk'),pk=DOCV.pick;box.hidden=!pk;if(!pk){bo
     `<button class="b danger" type="button" data-bulk="delete"${dis}>${esc(t('Löschen','Delete'))}</button><button class="b" type="button" data-bulk="done">${esc(t('Fertig','Done'))}</button>`}
 // the details of the selected document: its card, switches and buttons. #docdinfo is drawn again with
 // every refresh (not while someone types the tags); the text view below it stays
+// the places the search found in the selected document: page or place in a recording and a snippet; a click opens
+// the Leseansicht right there
+function docFundstellen(d){const o=docOrte(d.id),q=DOCV.find.trim();if(!o.length)return '';
+  return `<div class="ld-fund"><div class="ld-fundh">${esc(t(`Fundstellen für „${q}“ · ${o.length}`,`Places for "${q}" · ${o.length}`))}</div>`+
+    o.map(h=>{const wo=[h.at?(h.audio?t(h.at,h.at.replace(/^bei /,'at ')):t(h.at,h.at.replace(/^Seite /,'page '))):'',h.part||''].filter(Boolean).join(' · ');
+      return `<button type="button" class="ld-fundx" data-fundn="${esc(String(h.n??''))}" data-fundp="${esc(String(h.page||0))}"><span class="ld-fundt">${wo?`<b>${esc(wo)}</b>`:''}<span class="ldsnip">${docSnip(h.text,q,220)}</span></span>${ic('chev')}</button>`}).join('')+'</div>'}
 function docDetail(){const box=$('docdetail'),d=DOCV.pick?null:docFind(DOCV.sel);
   $('docbox').classList.toggle('ld-sel',!!d);box.hidden=!d;
   if(typeof awShow==='function')awShow(d);   // the sheet Auswertungen (auswertung.js)
@@ -317,7 +366,7 @@ function docDetail(){const box=$('docdetail'),d=DOCV.pick?null:docFind(DOCV.sel)
     ...(own&&lk?[[t('Adresse','Address'),lk.url],[t('Geholt','Fetched'),docDate(lk.geholt)+(lk.stand==='gleich'?' · '+t('unverändert','unchanged'):lk.fehler?' · '+lkdWort(lk.fehler):'')]]:[])].filter(x=>x&&x[1]);
   const pdf=/\.pdf$/i.test(d.name),pic=d.kind==='picture',aud=d.kind==='audio',href='/api/profile/wissen/'+encodeURIComponent(d.id)+'/file'+(pdf||pic||aud?'?view=1':'');
   info.innerHTML=`<button class="b ld-back" type="button" data-dact="back">‹ ${esc(t('Zurück zur Liste','Back to the list'))}</button>`+
-    `<h3>${esc(docTitle(d))}</h3><dl class="ld-facts">${meta.map(([k,v])=>`<dt>${esc(k)}</dt><dd${k===t('Frist','Deadline')&&docDue(d,today)?' class="due"':''}>${esc(v)}</dd>`).join('')}</dl>`+
+    `<h3>${esc(docTitle(d))}</h3>`+docFundstellen(d)+`<dl class="ld-facts">${meta.map(([k,v])=>`<dt>${esc(k)}</dt><dd${k===t('Frist','Deadline')&&docDue(d,today)?' class="due"':''}>${esc(v)}</dd>`).join('')}</dl>`+
     (pct===null?'':`<span class="qbar docbar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><i style="width:${pct}%"></i></span>`)+
     (d.note?`<p class="mut ld-note">${esc(d.note)}</p>`:'')+
     ((d.tags||[]).length?`<div class="dtags">${d.tags.map(x=>`<button type="button" class="dtag${x.toLowerCase()===DOCV.tag.toLowerCase()?' on':''}" data-doctag="${esc(x)}" title="${esc(t('Liste nach diesem Tag filtern','Filter the list by this tag'))}">${esc(x)}</button>`).join('')}</div>`:'')+
@@ -345,14 +394,17 @@ const docErr=x=>{$('docmsg').innerHTML=`<span class="err">${esc(x.message)}</spa
 $('docsw').onchange=async e=>{const k=e.target.dataset.docsw;if(!k)return;
   try{await api('/api/profile/settings',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({['doc_'+k]:e.target.checked})})}
   catch(x){docErr(x)}showDocs()};
-$('docfind').oninput=()=>{DOCV.find=$('docfind').value;DOCV.max=DOCPAGE;docRender()};
-$('docfind').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();docTry()}else if(e.key==='Escape'){$('docfind').value='';DOCV.find='';$('dochits').innerHTML='';docRender()}};
+$('docfind').oninput=()=>{DOCV.find=$('docfind').value;DOCV.max=DOCPAGE;docInhalt(false);docRender()};
+$('docfind').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();docInhalt(true)}else if(e.key==='Escape'){$('docfind').value='';DOCV.find='';DOCV.wo='';docInhalt(false);docRender()}};
 $('docsrc').onchange=()=>{DOCV.src=$('docsrc').value;DOCV.max=DOCPAGE;docKeep();docRender()};
 $('docsort').onchange=()=>{DOCV.sort=$('docsort').value;DOCV.max=DOCPAGE;docKeep();docRender()};
 $('docchips').onclick=e=>{const c=e.target.closest('[data-chip]');if(c){DOCV.chip=c.dataset.chip;DOCV.max=DOCPAGE;docRender()}};
 $('docchips').onchange=e=>{if(e.target.id==='doctagsel'){DOCV.tag=e.target.value;DOCV.max=DOCPAGE;docRender()}};
 $('docpick').onclick=()=>{DOCV.pick=DOCV.pick?null:new Set();docRender()};
 $('doclist').onclick=e=>{if(e.target.closest('[data-more]')){DOCV.max+=DOCPAGE;docRender();return}
+  const w=e.target.closest('[data-wo]');if(w){DOCV.wo=w.dataset.wo;docRender();return}
+  // on a phone a document found in its content opens in the Leseansicht at its first place (no page in between)
+  const hr=e.target.closest('.ld-row[data-hit]');if(hr&&matchMedia('(max-width:760px)').matches){const o=docOrte(hr.dataset.doc);docView(hr.dataset.doc,{n:o[0]?o[0].n:null,q:DOCV.find.trim()});return}
   const r=e.target.closest('.ld-row');if(!r)return;const id=r.dataset.doc;
   if(DOCV.pick){if(!DOCL.some(d=>d.id===id))return;DOCV.pick.has(id)?DOCV.pick.delete(id):DOCV.pick.add(id);docRender();return}
   docOpen(id)};
@@ -380,13 +432,14 @@ async function docTagsSave(){const id=DOCV.sel,list=$('doctagin').value.split(',
     $('docmsg').textContent=t('Tags gespeichert.','Tags saved.')}
   catch(x){docErr(x)}$('doctagin').blur();showDocs()}
 $('docdetail').onkeydown=e=>{if(e.target.id==='doctagin'&&e.key==='Enter'){e.preventDefault();docTagsSave()}};
-$('docdetail').onclick=async e=>{const a=e.target.closest('[data-dact]');
+$('docdetail').onclick=async e=>{const fs=e.target.closest('[data-fundn]');if(fs){docView(DOCV.sel,{n:fs.dataset.fundn===''?null:+fs.dataset.fundn,page:+fs.dataset.fundp||0,q:DOCV.find.trim()});return}
+  const a=e.target.closest('[data-dact]');
   const pl=e.target.closest('[data-dplay]');if(pl){docPlay(+pl.dataset.dplay||0);return}
   if(a&&a.dataset.dact==='stop'){if(!confirm(t('Abschrift beenden? Was schon abgeschrieben ist, bleibt; ohne Text geht die Aufnahme.','Stop the transcription? What is written stays; without any text the recording goes.')))return;
     try{const r=await (await api('/api/profile/wissen/'+encodeURIComponent(DOCV.sel)+'/abschrift/stop',{method:'POST'})).json();if(r.removed)DOCV.sel='';
       $('docmsg').textContent=r.removed?t('Abgebrochen, die Aufnahme ist weg.','Stopped, the recording is gone.'):t('Abgebrochen, die Abschrift bis hier bleibt.','Stopped, the transcript up to here stays.')}
     catch(x){docErr(x)}showDocs();return}
-  if(a){const k=a.dataset.dact;if(k==='back'){DOCV.sel='';docRender();$('doclist').scrollIntoView({block:'nearest'})}else if(k==='view')docView(DOCV.sel);else if(k==='teilen')shareOpen('doc',DOCV.sel);else if(k==='tags')docTagsSave();else if(k==='abrufen'&&typeof lkdAgain==='function'){a.disabled=true;lkdAgain(DOCV.sel)}return}
+  if(a){const k=a.dataset.dact;if(k==='back'){DOCV.sel='';docRender();$('doclist').scrollIntoView({block:'nearest'})}else if(k==='view'){const o=docOrte(DOCV.sel);docView(DOCV.sel,o.length?{n:o[0].n,q:DOCV.find.trim()}:{})}else if(k==='teilen')shareOpen('doc',DOCV.sel);else if(k==='tags')docTagsSave();else if(k==='abrufen'&&typeof lkdAgain==='function'){a.disabled=true;lkdAgain(DOCV.sel)}return}
   const c=e.target.closest('[data-doctag]');if(c){DOCV.tag=DOCV.tag.toLowerCase()===c.dataset.doctag.toLowerCase()?'':c.dataset.doctag;DOCV.max=DOCPAGE;docRender();return}
   const rm=e.target.closest('[data-docremind]');
   if(rm){rm.disabled=true;try{const r=await (await api('/api/profile/wissen/'+encodeURIComponent(rm.dataset.docremind)+'/remind',{method:'POST'})).json();
@@ -399,16 +452,6 @@ $('docdetail').onclick=async e=>{const a=e.target.closest('[data-dact]');
   const b=e.target.closest('[data-docdel]');if(!b)return;
   if(!confirm(b.dataset.nas?t(`„${b.dataset.name}“ nicht mehr finden? Die Datei bleibt am Ort; ändert sie sich, liest der Spark sie wieder.`,`Stop finding "${b.dataset.name}"? The file stays at the place; when it changes the Spark reads it again.`):t('Dokument „','Delete document "')+b.dataset.name+t('“ löschen?','"?')))return;
   try{await api('/api/profile/docs/'+encodeURIComponent(b.dataset.docdel),{method:'DELETE'});DOCV.sel=''}catch(x){docErr(x)}showDocs()};
-// Enter in the search field also looks inside the documents (the same search the assistant uses, without the language model)
-async function docTry(){const q=$('docfind').value.trim();if(!q){$('dochits').innerHTML='';return}
-  $('dochits').innerHTML=`<li class="mut">${t('Suche im Inhalt …','Searching the content …')}</li>`;
-  try{const r=await (await api('/api/profile/wissen/search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({q})})).json();
-    $('dochits').innerHTML=`<li class="dhhead"><b>${esc(t('Im Inhalt gefunden','Found in the content'))}</b><button class="b" type="button" data-hitclose="1" aria-label="${esc(t('Treffer schließen','Close hits'))}">${ic('x')}</button></li>`+
-      (r.hits.map(h=>`<li class="dhit" data-docview="${esc(h.id)}" data-n="${esc(String(h.n??''))}" role="button" tabindex="0"><span><b>${esc(h.name)}${h.at?' · '+esc(h.audio?t(h.at,h.at.replace(/^bei /,'at ')):t(h.at,h.at.replace(/^Seite /,'page '))):''}</b><br><small>${esc(h.text)}</small></span></li>`).join('')||`<li class="mut">${t('Nichts gefunden.','Nothing found.')}</li>`)}
-  catch(x){$('dochits').innerHTML=`<li class="err">${esc(x.message)}</li>`}}
-const docHit=h=>docView(h.dataset.docview,{n:h.dataset.n===''?null:+h.dataset.n,q:$('docfind').value.trim()});
-$('dochits').onclick=e=>{if(e.target.closest('[data-hitclose]')){$('dochits').innerHTML='';return}const h=e.target.closest('[data-docview]');if(h)docHit(h)};
-$('dochits').onkeydown=e=>{const h=e.target.closest('[data-docview]');if(h&&e.key==='Enter')docHit(h)};
 let DOCS_ON=true,SPK_ON=false,CAL_ON=true,HA_ON=false,MAIL_ON=false,AWAY_ON=false;
 // The "Ich" window: conversation settings for everyone, plus the profile's own pages once logged in.
 // On phones the window opens as a list of its pages (like the iPhone settings); a page then fills the

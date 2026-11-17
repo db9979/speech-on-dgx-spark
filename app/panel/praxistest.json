@@ -6581,6 +6581,13 @@
 "titel": "Dokumente lesen an der Fundstelle",
 "text": "A: Ich → Dokumente, ins Suchfeld ein Wort, das in einem langen Dokument steht, Enter, einen Treffer unter „Im Inhalt gefunden“ antippen. B: Das Dokument öffnet über die ganze Fläche (am Handy die ganze Seite) genau an der Stelle, das Wort ist orange, die anderen gelb, oben „1 von N“; ⌄ springt weiter, links (am Rechner) zeigt das Inhaltsverzeichnis einen Punkt bei den passenden Überschriften. C: Bei einem PDF „Original“: das PDF steht an der Seite der Stelle. D: Im Assistenten eine Frage zu einem Dokument, unter der Antwort „Aus deinen Dokumenten“ antippen: öffnet an der Stelle. E: „‹ Suche …“ oder Esc führt zurück.",
 "test": "test_leseansicht.Lesen.test_lese_hit_opens_at_the_place"
+},
+{
+"id": "P953",
+"v": 1510,
+"titel": "Eine Suche in Namen und Inhalt",
+"text": "A: Ich → Dokumente, ins Suchfeld langsam ein Wort tippen, das nur im Text eines Dokuments steht (nicht im Namen), ohne Enter. B: Nach kurzer Pause erscheint „Im Inhalt · 1 Dokument · N Stellen“ mit einer Zeile samt Ausschnitt, das Wort gelb. C: „Nur Namen“ und „Nur Inhalt“ schränken ein, „Alles“ zeigt beides. D: Die Zeile antippen: rechts stehen die Fundstellen mit Seite oder Abschnitt; eine antippen öffnet die Leseansicht genau dort. E: Am Handy öffnet die Zeile die Leseansicht direkt an der ersten Stelle. F: Esc im Suchfeld leert die Suche.",
+"test": "test_leseansicht.Lesen.test_lese_hit_opens_at_the_place"
 }
 ]
 }

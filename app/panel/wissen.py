@@ -988,17 +988,24 @@ async def batch(request: Request, prof=Depends(browser_profile)):
     return {"ok": True, "done": done, "failed": len(ids) - done}
 
 
+SUCHE_K = 30   # places the page asks for at most (one search over names and content)
+
+
 @router.post("/api/profile/wissen/search", dependencies=[Depends(assistant)])
 async def try_search(request: Request, prof=Depends(browser_profile)):
+    """Ich → Dokumente: the search while typing (one search over names and content, Dominik 2026-11-17) and the
+    iPhone app; its own rate key "docsuche" (a few requests per typed word), k up to SUCHE_K places."""
     _docs_on()
-    guard.limit(request, "doc", prof["id"], False)
+    guard.limit(request, "docsuche", prof["id"], False)
     body = await json_body(request, 4096, lenient=True)
     q = str(body.get("q") or "").strip()[:300]
     if not q:
         raise HTTPException(400, "q is required")
-    hits = await search(prof["id"], q)
+    k = body.get("k")
+    hits = await search(prof["id"], q, k=max(1, min(k, SUCHE_K)) if isinstance(k, int) and not isinstance(k, bool) else 5)
     # at: the place in words ("Seite 3", "bei 12:30" in a recording, documents.stelle), audio: plays there
-    return {"hits": [{"id": h["id"], "name": h["name"], "page": h["page"], "text": h["text"][:500], "n": h.get("n"),
+    return {"hits": [{"id": h["id"], "name": h["name"], "page": h["page"], "text": h["text"][:1200], "n": h.get("n"),
+                      "part": (h.get("part") or "").split(", ")[-1][:120],
                       "at": documents.stelle(h.get("page"), h.get("source")), "audio": h.get("source") == "audio"} for h in hits],
             "meaning": on(prof["id"], "semantic")}
 

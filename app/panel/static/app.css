@@ -1165,9 +1165,6 @@ pre.rpbody{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;max-height
 .ld-chip.on{background:color-mix(in srgb,var(--acc) 14%,transparent);border-color:transparent;color:var(--acc);font-weight:600}
 select.ld-chip{width:auto;max-width:180px;padding:3px 8px}
 #docbox .docmsg:empty{display:none}#docbox .docmsg{font-size:13px;margin:4px 0}
-#docbox .dochits{max-height:none;margin:4px 0 8px}#docbox .dochits:empty{display:none}
-#docbox .dochits .dhhead{align-items:center;justify-content:space-between}#docbox .dochits .dhhead .b{padding:2px 9px}
-#docbox .dochits .dhit{cursor:pointer}#docbox .dochits .dhit:hover{background:color-mix(in srgb,var(--line) 40%,transparent)}
 /* Klar 4 · Liste + Detail (Redesign Stufe 4, Tafel redesign/a-rechner-funktionen.png): every row has one height
    (--h-item) with a symbol (.ld-ico) or initials (.ld-ava) on grey, a title, one line below and on the right the state as
    a dot with a word (.ld-st), a time or a count; hairlines between the rows, the chosen row in the accent. The helpers
@@ -3879,3 +3876,16 @@ body.mgdet #phead,body.mgdet #mon>:not(#zmgdet){display:none!important}
   .lspaper{padding:var(--s4) var(--s4) 110px}
 }
 .lsfind input:focus,.lsfind input:focus-visible{outline:none;box-shadow:none}.lsfind:focus-within{box-shadow:0 0 0 2px var(--acc)}
+/* eine Suche über Namen und Inhalt (me.js docSuchListe, Dominik 2026-11-17): Treffer im Inhalt als Zeile mit Ausschnitt,
+   das Suchwort gelb; im Detail die Fundstellen, jede öffnet die Leseansicht an ihrer Stelle */
+#docbox .docwo{padding:var(--s1) 0 var(--s2)}
+#docbox .ld-row.dhrow{height:auto;min-height:var(--h-item);align-items:flex-start;padding-top:var(--s2);padding-bottom:var(--s2)}
+#docbox .ldsnip{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font:var(--t-sub);color:var(--fg);margin-top:2px;white-space:normal}
+#docbox .ldsnip mark,.ld-fund mark{background:color-mix(in srgb,var(--warn) 30%,transparent);color:inherit;border-radius:3px;padding:0 1px}
+#docbox .ld-row.on .ldsnip{color:inherit}
+.ld-fund{background:var(--bg);border-radius:var(--r-box);padding:var(--s1) var(--s3);margin:var(--s2) 0 var(--s3)}
+.ld-fundh{font:var(--t-cap);color:var(--mut);padding:var(--s2) 0 var(--s1)}
+.ld-fundx{display:flex;align-items:flex-start;gap:var(--s3);width:100%;text-align:left;border:0;border-top:1px solid var(--line);background:none;color:var(--fg);padding:var(--s2) 0;cursor:pointer;font:inherit}
+.ld-fundx:first-of-type{border-top:0}.ld-fundx:hover{background:var(--sel)}
+.ld-fundx .ld-fundt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.ld-fundx .ld-fundt b{font:var(--t-sub);font-weight:600;color:var(--mut)}.ld-fundx .ldsnip{-webkit-line-clamp:3}
+.ld-fundx .ic{flex:none;width:14px;height:14px;color:var(--faint);margin-top:3px}

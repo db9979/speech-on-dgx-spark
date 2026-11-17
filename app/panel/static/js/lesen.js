@@ -106,8 +106,8 @@ function leseRel(list){const r=document.createElement('div');r.className='dvrel 
 function leseMark(q,keep){const col=$('lscol'),old=LS.marks[LS.cur];
   for(const m of col.querySelectorAll('mark')){const p=m.parentNode;p.replaceChild(document.createTextNode(m.textContent),m);p.normalize()}
   LS.marks=[];LS.cur=-1;for(const b of $('lstoc').querySelectorAll('.lstocx'))b.classList.remove('treffer');
-  const words=String(q||'').toLowerCase().split(/[\s,.;:!?„“"'()]+/).filter(w=>w.length>=2).slice(0,8);
-  if(words.length){const re=new RegExp(words.map(w=>w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|'),'giu');
+  const re=docWortRe(q);   // the same words as the list's snippets (me.js)
+  if(re){
     const walk=document.createTreeWalker(col,NodeFilter.SHOW_TEXT,{acceptNode:n=>n.parentNode.closest('button,audio,.lspg')?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT});
     const nodes=[];while(walk.nextNode())nodes.push(walk.currentNode);
     for(let node of nodes){re.lastIndex=0;let m;

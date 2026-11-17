@@ -108,7 +108,8 @@ class Text(unittest.TestCase):
 @unittest.skipUnless(T.browser_ok(), "no Playwright/Chromium here")
 class Lesen(T.Browser):
     def test_lese_hit_opens_at_the_place(self):
-        """Ich → Dokumente, Suche „Kündigung“ + Enter, Treffer anklicken: die Leseansicht deckt Ich ab, öffnet an der
+        """Ich → Dokumente, Suche „Kündigung“ (eine Suche: Namen sofort, der Inhalt nach einer Pause, Zeile mit Ausschnitt),
+        Treffer anklicken (am Rechner die Fundstellen im Detail, am Handy gleich lesen): die Leseansicht deckt Ich ab, öffnet an der
         Stelle (die aktuelle Markierung steht im Stück des Treffers), zählt „1 von N“, ⌄ geht weiter, das
         Inhaltsverzeichnis zeigt § 9 mit Treffer; Text aus dem Dokument bleibt Text (kein <img> aus dem Dokument);
         Esc schließt und gibt den Platz zurück. Am Rechner und am Handy, mit strenger CSP, ohne seitliches Rollen."""
@@ -124,12 +125,18 @@ class Lesen(T.Browser):
                     br, pg, errors = await self.page(p, w, h, csp=True, who=("Lesetest", "4713"))
                     await pg.evaluate("openMe('docbox')")
                     await pg.wait_for_selector("#doclist .ld-row", timeout=20000)
-                    await pg.fill("#docfind", "Kündigung")
-                    await pg.press("#docfind", "Enter")
-                    await pg.wait_for_selector("#dochits .dhit", timeout=20000)
-                    n = await pg.get_attribute("#dochits .dhit >> nth=0", "data-n")
+                    await pg.fill("#docfind", "Kündigung")            # one search: names at once, the content after a pause
+                    await pg.wait_for_selector("#doclist .dhrow .ldsnip mark", timeout=20000)
+                    self.assertIn("Im Inhalt · 1 Dokument ·", await pg.inner_text("#doclist"))
+                    await pg.click("#doclist .dhrow >> nth=0")
+                    if name == "pc":                                    # the places beside the list, each opens there
+                        await pg.wait_for_selector("#docdetail .ld-fundx", timeout=20000)
+                        self.assertIn("Fundstellen für „Kündigung“", await pg.inner_text("#docdetail"))
+                        n = await pg.get_attribute("#docdetail .ld-fundx >> nth=0", "data-fundn")
+                        await pg.click("#docdetail .ld-fundx >> nth=0")
+                    else:                                               # on a phone the row opens the Leseansicht at once
+                        n = await pg.evaluate("String(docOrte(DOCV.sel||document.querySelector('#doclist .dhrow').dataset.doc)[0].n)")
                     self.assertTrue(n and n.isdigit(), name)
-                    await pg.click("#dochits .dhit >> nth=0")
                     await pg.wait_for_selector("#lesemodal #lscol mark.cur", timeout=20000)
                     self.assertTrue(await pg.is_visible("#lesemodal"), name)
                     self.assertIn("Kündigung", await pg.inner_text("#lsbackt"))
