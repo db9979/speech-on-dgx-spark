@@ -1770,6 +1770,10 @@ class Browser(unittest.TestCase):
                     js = await pg.evaluate("rpFound({page:'X',found:['10:00:00 js: Anna schrieb Geheim @ chat.js:12','10:00:01 js: Anna']})")
                     self.assertIn("JavaScript-Fehler in chat.js:12", js)
                     self.assertNotIn("Anna", js)                              # never the message of a JavaScript error
+                    # issue 18 in spark-meldungen: the browser's own ResizeObserver note is no fault of the page
+                    calm = await pg.evaluate("""(()=>{const n=KF.n,k=RP_ERR.length;for(const m of ['ResizeObserver loop completed with undelivered notifications.','ResizeObserver loop limit exceeded'])
+                        window.dispatchEvent(new ErrorEvent('error',{message:m}));return KF.n===n&&RP_ERR.length===k})()""")
+                    self.assertTrue(calm, f"{name}: ResizeObserver zählt als Fehler")
                     self.assertEqual(await pg.get_attribute("#rpbody [data-rpkind].on", "data-rpkind"), "fehler", name)
                     # the count is the page's own errors at this moment: ours is among them, and on a busy runner a
                     # request of the page itself may have failed too (main 2026-11-14: „3 Fehler“), so the line has to

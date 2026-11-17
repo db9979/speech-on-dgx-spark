@@ -800,7 +800,7 @@ SEITEN = {
         "heute": [],
     },
     "antwort": {
-        "stand": "426d97bb34",
+        "stand": "883a46e43b",
         "bezug": {
             "chat.MAX_SAVES": ["s11"], "chat.LOOP_SAME": ["s11"], "chat._answer": ["s4", "s5", "s11"], "chat_modell.model_turn": ["s4", "s11"], "chat_modell.herkunft_und_chip": ["s3"], "chat_modell.quellenangabe_zeile": ["s3"], "chat_ton.speech_out": ["s8"],
             "chat.split_sentences": ["s5"], "chat.said_key": ["s8"], "chat.no_code": ["s8"],
@@ -1005,7 +1005,8 @@ SEITEN = {
               ("Fiel ein Satz wegen einer Zahl weg, sagt das Panel „Genauere Angaben dazu habe ich nicht.“; fiel eine "
                "Tat weg, einen festen Satz aus taten.sentence. Kam ein Dienst nur mit einem älteren Stand, fand eine Suche nach Heutigem "
                "nichts von heute oder stammt ein Archiv-Artikel aus einem Kiwix-Buch, das älter als ein Jahr ist, und die Antwort sagt das nicht selbst, hängt das Panel „Nicht ganz aktuell: Wetter: Stand gestern "
-               "23:10 Uhr.“ an (frisch.nachsatz, Regel „Stand nennen“ der Antwort-Prüfung). Alle Sätze kommen vom Panel, nie vom Modell. Antwortet das "
+               "23:10 Uhr.“ an (frisch.nachsatz, Regel „Stand nennen“ der Antwort-Prüfung); Mails, Wetter und Pakete nur, "
+               "wenn die Antwort von ihnen spricht (frisch.DIENST_WORT), der Kalender immer. Alle Sätze kommen vom Panel, nie vom Modell. Antwortet das "
                "Sprachmodell nicht, weil es gerade wechselt, neu startet oder gemessen wird, sagt das Panel das mit der "
                "erwarteten Zeit (llmstart.satz, auch in der Wartungspause eines Wechsels). Bittet die Person darum, vor "
                "Sturm, Regen, Frost oder Hitze gewarnt zu werden (proactive.warn_wish, feste Wörter, nie verneint), "
@@ -1016,7 +1017,8 @@ SEITEN = {
                "older reading, a search for today found nothing of today or an archive article comes from a Kiwix book older "
                "than a year, and the answer does not say so itself, the panel "
                "adds „Not quite current: weather: as of yesterday 23:10.“ (frisch.nachsatz, rule „name the stand“ of the "
-               "answer check). All of them come from the panel, never from the model. When the language model does not answer because it is switching, restarting or "
+               "answer check); mail, weather and parcels only when the answer talks about them (frisch.DIENST_WORT), "
+               "the calendar always. All of them come from the panel, never from the model. When the language model does not answer because it is switching, restarting or "
                "being measured, the panel says so with the expected time (llmstart.satz, also during a switch's "
                "maintenance pause). When the person asks to be warned about storm, rain, frost or heat "
                "(proactive.warn_wish, fixed words, never negated), the panel says what really holds: the weather "

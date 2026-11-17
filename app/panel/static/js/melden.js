@@ -15,7 +15,10 @@ function rpMsg(x,err){const m=RP.root&&RP.root.querySelector('.rpmsg');if(m){m.t
 // browser's memory, the last RP_ERR_MAX; they go along only when the report is made from the Käfer and stay ticked off
 // in the preview like every line. Words and paths only, never a request's body or answer.
 const RP_ERR=[],RP_ERR_MAX=20;
-function rpNote(kind,what){const x=String(what||'').replace(/\s+/g,' ').replace(/[?#].*$/,'').slice(0,200);if(!x)return;
+// harmless notes of the browser itself, no fault of the page (issue 18 in spark-meldungen: „ResizeObserver loop
+// completed with undelivered notifications“ twenty times when a mail opened made the Käfer orange with „20“)
+const RP_HARMLOS=/^ResizeObserver loop (completed with undelivered notifications|limit exceeded)/;
+function rpNote(kind,what){const x=String(what||'').replace(/\s+/g,' ').replace(/[?#].*$/,'').slice(0,200);if(!x||kind==='js'&&RP_HARMLOS.test(x))return;
   RP_ERR.push(new Date().toTimeString().slice(0,8)+' '+kind+': '+x);if(RP_ERR.length>RP_ERR_MAX)RP_ERR.shift();KF.n++;kfShow();kfPlay('kf-shake')}
 // Käfer auffälliger (Dominik 2026-11-15 „3 und 4 und 1“): only the ladybug's own drawing moves (transform, a fixed
 // box), so nothing on the page shifts. 1 kf-wig: a short wiggle on every page change. 3 kf-err: orange with the

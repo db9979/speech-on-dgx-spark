@@ -10181,7 +10181,15 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Tagesaktuell (`frisch.py`, kein eigener Schalter)",
-"text": ". frisch: topic without a hit | week). Kennt das SearXNG keinen Zeitraum, sucht es ohne und die Daten entscheiden; findet sich nichts von heute, steht das mit dem Datum des neuesten Treffers im Ergebnis. Kam ein Dienst nur mit älterem Stand oder fand die Suche nichts von heute und sagt die Antwort das nicht, hängt das Panel „Nicht ganz aktuell: Wetter: Stand gestern 23:10 Uhr.“ an (Regel der Antwort-Prüfung, mit ihr ausschaltbar); die Mitteilung des Tagesbriefings ebenso. Eine im Spark geöffnete Mail gilt sofort als gelesen (Rechner und iPhone, nur wenn „Mails ordnen“ freigegeben ist; setzt „gelesen“ am Mailserver). Zustand → Live bei der Websuche: „tagesaktuell: heute n Suchen mit Zeitraum, m ohne Treffer von heute, k alte Treffer verworfen, j Stand-Hinweise“; Log (Bereich Chat): „frisch: search dropped“, „frisch: search without a current hit“, „frisch: hint said“, „frisch: weather …“, nur feste Wörter und Zahlen."
+"text": ". frisch: topic without a hit | week). Kennt das SearXNG keinen Zeitraum, sucht es ohne und die Daten entscheiden; findet sich nichts von heute, steht das mit dem Datum des neuesten Treffers im Ergebnis. Kam ein Dienst nur mit älterem Stand oder fand die Suche nichts von heute und sagt die Antwort das nicht, hängt das Panel „Nicht ganz aktuell: Wetter: Stand gestern 23:10 Uhr.“ an (Regel der Antwort-Prüfung, mit ihr ausschaltbar); die Mitteilung des Tagesbriefings ebenso. Seit V01.1.516 (Issues 16 und 17 in spark-meldungen) nennt der Satz Mails, Wetter und Pakete nur, wenn die Antwort davon spricht (feste Wörter je Dienst, frisch.DIENST_WORT; der Kalender zählt immer; sonst Log „frisch: hint left out | parcels | not in the answer“), und ein Treffer ohne Veröffentlichungsdatum, dessen Titel oder Anfang den Tag mit Jahr nennt („Nachrichten vom 17. November 2026“, „17.11.2026“, „2026-11-17“), zählt für diesen Tag (frisch.text_day, nie ein Tag ohne Jahr oder nach heute); er steht dann ohne Uhrzeit da („Datum: heute“). Eine im Spark geöffnete Mail gilt sofort als gelesen (Rechner und iPhone, nur wenn „Mails ordnen“ freigegeben ist; setzt „gelesen“ am Mailserver). Zustand → Live bei der "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Tagesaktuell (`frisch.py`, kein eigener Schalter)",
+"text": "Websuche: „tagesaktuell: heute n Suchen mit Zeitraum, m ohne Treffer von heute, k alte Treffer verworfen, j Stand-Hinweise“; Log (Bereich Chat): „frisch: search dropped“, „frisch: search without a current hit“, „frisch: hint said“, „frisch: weather …“, nur feste Wörter und Zahlen."
 },
 {
 "lang": "de",
@@ -10349,7 +10357,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Termine: änderbar oder nur lesen, mit ihrem Text",
-"text": "Termine: änderbar oder nur lesen, mit ihrem Text: Auf der Seite Kalender trägt ein Termin, den die Seite nicht ändern kann, ein 🔒 in Woche, Tag und Liste; seine Karte nennt mit festen Worten den Grund (calendars._why): Abo-Link (iCal), geteilter Kalender, wiederholter Termin (Serie im Kalender-Programm ändern) oder ein hier nicht änderbarer Kalender. Die Karte zeigt auch Text (DESCRIPTION, „Notiz“) und Link (URL) des Termins, nur als Text: höchstens 2000 Zeichen, ohne Steuerzeichen, Links nur mit http oder https, sie öffnen sich nie von selbst; lange Notizen zeigen 8 Zeilen und „Weiter lesen“. Ein privater Termin aus einem geteilten Kalender bleibt „belegt“, ohne Text und Link. Dasselbe in der iPhone-App (Schloss, Abschnitt „Notiz“, Grund in der Karte)."
+"text": "Termine: änderbar oder nur lesen, mit ihrem Text: Auf der Seite Kalender trägt ein Termin, den die Seite nicht ändern kann, ein 🔒 in Woche, Tag und Liste; seine Karte nennt mit festen Worten den Grund (calendars._why): Abo-Link (iCal), geteilter Kalender, wiederholter Termin (Serie im Kalender-Programm ändern) oder ein hier nicht änderbarer Kalender. Die Karte zeigt auch Text (DESCRIPTION, „Notiz“) und Link (URL) des Termins, nur als Text: höchstens 2000 Zeichen, ohne Steuerzeichen, Links nur mit http oder https, sie öffnen sich nie von selbst; lange Notizen zeigen 8 Zeilen und „Weiter lesen“. Die Karte ist nie höher als der Bildschirm ab ihrem Platz und scrollt innen, auch nach „Weiter lesen“ (ab V01.1.516, Issue 19 in spark-meldungen; am Handy scrollt das Blatt von unten). Ein privater Termin aus einem geteilten Kalender bleibt „belegt“, ohne Text und Link. Dasselbe in der iPhone-App (Schloss, Abschnitt „Notiz“, Grund in der Karte)."
 },
 {
 "lang": "de",
@@ -16837,7 +16845,15 @@
 "file": "Sicherheit und Betrieb",
 "head": "Probleme melden",
 "title": "Käfer-Symbol: Fehler oder Wunsch von jeder Seite",
-"text": "hwand, was schon getippt war. Jetzt stehen Text, Art, Bereich, Zeitraum und Haken danach wieder da, der Cursor bleibt im Feld (melden.js rpKeep, Test test_ui_browser.Browser.test_report_form_keeps_input, Handy und Rechner). Eine Zeile, roter Körper (ab V01.1.508, Dominik 2026-11-17): Am Rechner stehen Logo, „Spark“, Käfer und Mikrofon im Seitenmenü auf einer Höhe; GPU und Uhrzeit des letzten Stands stehen nicht mehr als zweite Zeile darunter, sondern im Titel von „Spark“ (mit der Maus darüber). Der Käfer hat überall einen roten Körper (Panel, Handy-Leiste, iPhone-App), die Linien bleiben grau, mit Fehlern orange. Das Mikrofon behält seine Farbe, weil Rot dort „nimmt auf“ heißt (icons.js bug .kfb, admin.js hdrSay, Test test_report_bug_on_every_page). Am Handy lassen Kopf und Gesprächsleiste von Chats rechts Platz für den Käfer, in der App-Ansicht steht er dort ganz rechts; der Wächter-Test schaltet Chats dafür selbst ein, statt sich auf einen früheren Test zu verlassen."
+"text": "hwand, was schon getippt war. Jetzt stehen Text, Art, Bereich, Zeitraum und Haken danach wieder da, der Cursor bleibt im Feld (melden.js rpKeep, Test test_ui_browser.Browser.test_report_form_keeps_input, Handy und Rechner). Eine Zeile, roter Körper (ab V01.1.508, Dominik 2026-11-17): Am Rechner stehen Logo, „Spark“, Käfer und Mikrofon im Seitenmenü auf einer Höhe; GPU und Uhrzeit des letzten Stands stehen nicht mehr als zweite Zeile darunter, sondern im Titel von „Spark“ (mit der Maus darüber). Der Käfer hat überall einen roten Körper (Panel, Handy-Leiste, iPhone-App), die Linien bleiben grau, mit Fehlern orange. Das Mikrofon behält seine Farbe, weil Rot dort „nimmt auf“ heißt (icons.js bug .kfb, admin.js hdrSay, Test test_report_bug_on_every_page). Harmlose Hinweise des Browsers selbst („ResizeObserver loop completed with undelivered notifications“, „ResizeObserver loop limit exceeded“) zählen nicht als Fehler der Seite (ab V01.1.516, Issue 18 in spark-meldungen: beim Öffnen einer Mail zeigte der Käfer „20“; melden.js RP_HARMLOS). Am Handy lassen Kopf und Gesprächsleiste von Chats rechts Platz für den Käfer, in der App-Ansicht steht er dort ganz rechts; der Wächter-Test schaltet C"
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Probleme melden",
+"title": "Käfer-Symbol: Fehler oder Wunsch von jeder Seite",
+"text": "hats dafür selbst ein, statt sich auf einen früheren Test zu verlassen."
 },
 {
 "lang": "de",
@@ -28157,7 +28173,15 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Up to date (`frisch.py`, no new switch)",
-"text": "hout a hit | week). When the SearXNG knows no period it searches without and the dates decide; when nothing of today is found the result says so with the date of the newest hit. When a service came only with an older reading or a search found nothing of today, and the answer does not say so, the panel adds \"Nicht ganz aktuell: Wetter: Stand gestern 23:10 Uhr.\" (not quite current; a rule of the answer check, off with it); the daily briefing's push too. A mail opened in the Spark counts as read at once (computer and iPhone, only when \"Order mail\" is released; it sets \"read\" on the mail server). Status → Live at Web search: \"tagesaktuell: today n searches with a period, m without a hit of today, k old hits dropped, j stand notes\"; log (area Chat): \"frisch: search dropped\", \"frisch: search without a current hit\", \"frisch: hint said\", \"frisch: weather …\", fixed words and numbers only."
+"text": "hout a hit | week). When the SearXNG knows no period it searches without and the dates decide; when nothing of today is found the result says so with the date of the newest hit. When a service came only with an older reading or a search found nothing of today, and the answer does not say so, the panel adds \"Nicht ganz aktuell: Wetter: Stand gestern 23:10 Uhr.\" (not quite current; a rule of the answer check, off with it); the daily briefing's push too. A mail opened in the Spark counts as read at once (computer and iPhone, only when \"Order mail\" is released; it sets \"read\" on the mail server). Since V01.1.516 (issues 16 and 17 in spark-meldungen) the sentence names mail, weather and parcels only when the answer talks about them (fixed words per service, frisch.DIENST_WORT; the calendar always counts; else the log \"frisch: hint left out | parcels | not in the answer\"), and a hit without a publishing date whose title or opening names the day with the year (\"Nachrichten vom 17. November 2026\", \"17.11.2026\", \"2026-11-17\") counts for that day (frisch.text_day, never a day without a year or after today); it then stands without a time (\"Datum: heute\"). Status → Live at Web search: \"tagesak"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Up to date (`frisch.py`, no new switch)",
+"text": "tuell: today n searches with a period, m without a hit of today, k old hits dropped, j stand notes\"; log (area Chat): \"frisch: search dropped\", \"frisch: search without a current hit\", \"frisch: hint said\", \"frisch: weather …\", fixed words and numbers only."
 },
 {
 "lang": "en",
@@ -28317,7 +28341,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Appointments: changeable or read only, with their text",
-"text": "Appointments: changeable or read only, with their text: on the Calendar page an appointment the page cannot change carries a 🔒 in week, day and list; its card names the reason in fixed words (calendars._why): subscription link (iCal), shared calendar, repeating appointment (change the series in the calendar app) or a calendar that cannot be changed here. The card also shows the appointment's text (DESCRIPTION, \"Note\") and link (URL), as text only: at most 2000 characters, no control characters, links only with http or https, never opening by themselves; long notes show 8 lines and \"Read on\". A private appointment from a shared calendar stays \"belegt\" (busy), without text or link. The same in the iPhone app (lock, section \"Note\", reason in the card)."
+"text": "Appointments: changeable or read only, with their text: on the Calendar page an appointment the page cannot change carries a 🔒 in week, day and list; its card names the reason in fixed words (calendars._why): subscription link (iCal), shared calendar, repeating appointment (change the series in the calendar app) or a calendar that cannot be changed here. The card also shows the appointment's text (DESCRIPTION, \"Note\") and link (URL), as text only: at most 2000 characters, no control characters, links only with http or https, never opening by themselves; long notes show 8 lines and \"Read on\". The card is never taller than the screen from where it stands and scrolls inside, after \"Read on\" too (since V01.1.516, issue 19 in spark-meldungen; on the phone the sheet from below scrolls). A private appointment from a shared calendar stays \"belegt\" (busy), without text or link. The same in the iPhone app (lock, section \"Note\", reason in the card)."
 },
 {
 "lang": "en",
@@ -34653,7 +34677,7 @@
 "file": "Security and operation",
 "head": "Reporting problems",
 "title": "Ladybug: a fault or a wish from every page",
-"text": "s, the cursor stays in the field (melden.js rpKeep, test test_ui_browser.Browser.test_report_form_keeps_input, phone and computer). One line, red body (since V01.1.508, Dominik 2026-11-17): on the computer logo, \"Spark\", ladybug and microphone stand at one height in the side menu; GPU and the time of the last state no longer stand as a second line under it but in the title of \"Spark\" (with the mouse over it). The ladybug has a red body everywhere (panel, phone bar, iPhone app), its lines stay grey, orange with errors. The microphone keeps its colour, since red means \"recording\" there (icons.js bug .kfb, admin.js hdrSay, test test_report_bug_on_every_page). On the phone the head and the conversation bar of Chats leave room for the ladybug on the right, in the app view it stands at the far right there; the guard test switches Chats on for this itself instead of relying on an earlier test."
+"text": "s, the cursor stays in the field (melden.js rpKeep, test test_ui_browser.Browser.test_report_form_keeps_input, phone and computer). One line, red body (since V01.1.508, Dominik 2026-11-17): on the computer logo, \"Spark\", ladybug and microphone stand at one height in the side menu; GPU and the time of the last state no longer stand as a second line under it but in the title of \"Spark\" (with the mouse over it). The ladybug has a red body everywhere (panel, phone bar, iPhone app), its lines stay grey, orange with errors. The microphone keeps its colour, since red means \"recording\" there (icons.js bug .kfb, admin.js hdrSay, test test_report_bug_on_every_page). Harmless notes of the browser itself (\"ResizeObserver loop completed with undelivered notifications\", \"ResizeObserver loop limit exceeded\") do not count as errors of the page (since V01.1.516, issue 18 in spark-meldungen: opening a mail made the ladybug show \"20\"; melden.js RP_HARMLOS). On the phone the head and the conversation bar of Chats leave room for the ladybug on the right, in the app view it stands at the far right there; the guard test switches Chats on for this itself instead of relying on an earlier test."
 },
 {
 "lang": "en",

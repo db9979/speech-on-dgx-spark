@@ -91,6 +91,39 @@ def hit_time(x):
     return t if t <= time.time() + 86400 else None    # a date in the future is no date
 
 
+# a hit without publishedDate whose title or opening says its day with the year („Nachrichten vom 17. November 2026“,
+# „17.11.2026“, „2026-11-17“; issue 17 in spark-meldungen: such hits counted as undated, so „nichts von heute“ was said
+# under an answer from today's news). Never a day without a year („Was geschah am 17. November?“ is any year).
+MONATS_NR = {"januar": 1, "jänner": 1, "februar": 2, "märz": 3, "maerz": 3, "april": 4, "mai": 5, "juni": 6, "juli": 7,
+             "august": 8, "september": 9, "oktober": 10, "november": 11, "dezember": 12, "january": 1, "february": 2,
+             "march": 3, "may": 5, "june": 6, "july": 7, "october": 10, "december": 12}
+TEXT_DAY = re.compile(r"(?i)\b(?:(\d{1,2})\.\s?(" + "|".join(MONATS_NR) + r")\s(\d{4})|(\d{1,2})\.(\d{1,2})\.(\d{4})"
+                      r"|(\d{4})-(\d{2})-(\d{2}))\b")
+
+
+def text_day(x, now=None, zone=None):
+    """The unix time of local midnight of the day a hit's title or its first 200 characters name with the year, or
+    None (never a day after today)."""
+    zone = _zone(zone)
+    m = TEXT_DAY.search(str((x or {}).get("title") or "") + " " + str((x or {}).get("content") or "")[:200])
+    if not m:
+        return None
+    g = m.groups()
+    try:
+        if g[0]:
+            d = datetime.date(int(g[2]), MONATS_NR[g[1].lower()], int(g[0]))
+        elif g[3]:
+            d = datetime.date(int(g[5]), int(g[4]), int(g[3]))
+        else:
+            d = datetime.date(int(g[6]), int(g[7]), int(g[8]))
+    except (ValueError, KeyError):
+        return None
+    today = datetime.datetime.fromtimestamp(time.time() if now is None else now, zone).date()
+    if d > today:
+        return None
+    return datetime.datetime(d.year, d.month, d.day, tzinfo=zone).timestamp()
+
+
 def _count(key, n=1):
     day = time.strftime("%Y-%m-%d")
     with _lock:
@@ -106,6 +139,9 @@ def sieve(results, period, now=None, zone=None, note=True):
     now = time.time() if now is None else now
     for x in results:
         x["_when"] = hit_time(x)
+        if not x["_when"]:
+            x["_when"] = text_day(x, now, zone)
+            x["_tag"] = bool(x["_when"])
     dated = [x["_when"] for x in results if x["_when"]]
     newest = max(dated) if dated else None
     if not period:
@@ -128,7 +164,10 @@ def sieve(results, period, now=None, zone=None, note=True):
 
 def hit_line(x, now=None, zone=None):
     """„Datum: heute 06:10“ or „Datum: unbekannt“ for the text the model gets."""
-    return f"Datum: {stand(x['_when'], now, zone)}" if x.get("_when") else "Datum: unbekannt"
+    if not x.get("_when"):
+        return "Datum: unbekannt"
+    at = stand(x["_when"], now, zone)
+    return "Datum: " + (re.sub(r",? 00:00$", "", at) if x.get("_tag") else at)   # a day from the text: no time
 
 
 def nothing_current(period, newest, now=None, zone=None):
@@ -182,6 +221,12 @@ def archive_old(date, now=None, zone=None):
 
 DIENST_NAME = {"mail": ("E-Mails", "e-mail"), "calendar": ("Kalender", "calendar"), "weather": ("Wetter", "weather"),
                "parcels": ("Pakete", "parcels")}
+# a reading the answer does not talk about needs no sentence (issue 16 in spark-meldungen: „Nicht ganz aktuell: Pakete:
+# Stand heute 06:53 Uhr“ under a briefing that said nothing of parcels); fixed words per service, the calendar always counts
+DIENST_WORT = {"mail": ("mail", "nachricht", "posteingang", "ungelesen", "message", "inbox", "unread"),
+               "weather": ("wetter", "grad", "regen", "sonn", "wind", "schnee", "temperatur", "°", "weather", "rain", "sunny", "cloud",
+                           "degree", "snow"),
+               "parcels": ("paket", "sendung", "lieferung", "zustell", "parcel", "package", "delivery")}
 
 
 def nachsatz(turn_state, said, en=False, now=None, zone=None):
@@ -192,6 +237,9 @@ def nachsatz(turn_state, said, en=False, now=None, zone=None):
     parts = []
     for d, when in sorted((cur.get("when") or {}).items()):
         if d not in DIENST_NAME or not when:
+            continue
+        if d in DIENST_WORT and not any(w in said.lower() for w in DIENST_WORT[d]):
+            print(f"frisch: hint left out | {d} | not in the answer", flush=True)
             continue
         at = stand(when, now, zone)
         if at.split(" ")[-1] in said and ("gestern" not in at or "gestern" in said.lower()):

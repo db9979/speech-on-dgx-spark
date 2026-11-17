@@ -2055,7 +2055,9 @@ main:has(>#cal.on){max-width:none}   /* the calendar takes the whole width (Domi
 .kal .empty{color:var(--mut);text-align:center;padding:28px 12px}.kal .empty .b{margin-top:10px}
 /* the appointment tapped: a card floating beside it; on a phone a sheet from below */
 .kal .kaldet{position:absolute;z-index:6;text-align:left;width:360px;max-width:calc(100% - 8px);box-sizing:border-box;background:var(--card);border:1px solid var(--line);border-radius:16px;
-  padding:14px 16px;box-shadow:0 18px 50px rgba(10,12,20,.22);animation:pop .16s ease}
+  padding:14px 16px;box-shadow:0 18px 50px rgba(10,12,20,.22);animation:pop .16s ease;
+  /* a long note never runs out of the screen: the inspector scrolls inside (issue 19 in spark-meldungen) */
+  max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contain}
 .kal .kaldet[hidden],.kal .kalshade[hidden]{display:none}
 .kal .kaldet h3{margin:4px 30px 8px 0;overflow-wrap:anywhere}
 .kal .kaldet .kalx{position:absolute;top:8px;right:8px;border:0;background:none;font:inherit;font-size:16px;color:var(--mut);cursor:pointer;width:32px;height:32px;border-radius:99px}

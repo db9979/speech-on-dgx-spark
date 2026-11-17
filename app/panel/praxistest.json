@@ -6611,6 +6611,30 @@
 "titel": "Fremde Modell-Dienste (Ollama, LM Studio)",
 "text": "Nur wenn ein Mac oder PC mit Ollama oder LM Studio im Heimnetz läuft (Ollama: OLLAMA_HOST=0.0.0.0, LM Studio: „Serve on Local Network“). A: Update. B: Funktionen → Zugang → „Fremde Modell-Dienste“ an. C: Zustand → Modelle, Karte „Fremde Modell-Dienste“ → „Hinzufügen“: Name, Adresse wie http://192.168.178.20:11434/v1. D: „Modelle holen“, ein Modell wählen, „Prüfen“: es steht „geprüft“ mit Antwortzeit und tok/s. E: „Für alle“ auf diesen Dienst, „Übernehmen“, eine Frage im Chat: sie beantwortet der Mac. F: „Für alle“ zurück auf „eigenes Sprachmodell“, „Ersatz“ auf den Dienst: der Chat antwortet wieder von tars. G: Unter Zustand → Logs stehen nur Zeilen „modelle: fremd f1 …“, nie die Adresse oder der Schlüssel.",
 "test": "test_fremdmodell.Endpunkte.test_add_check_use_delete"
+},
+{
+"id": "P957",
+"v": 1516,
+"titel": "Kein irreführendes „Nicht ganz aktuell“",
+"text": "Morgens „Gib mir mein Briefing für heute“: spricht die Antwort nicht von Paketen, steht darunter kein „Pakete: Stand …“. „Was gibt es Neues in der deutschen Politik?“: berichtet die Antwort Nachrichten von heute, steht darunter nicht „Aktuelles von heute habe ich im Netz nicht gefunden“.",
+"thread": "Fehler und Wünsche als Issue melden",
+"test": "test_tagesaktuell.Hint.test_a_reading_the_answer_does_not_talk_about_gets_no_sentence"
+},
+{
+"id": "P958",
+"v": 1516,
+"titel": "Käfer bleibt grau beim Öffnen einer Mail",
+"text": "Funktionen → Zugang → Probleme melden ist an. In E-Mail mehrere Mails mit Bildern öffnen: der Käfer wird nicht orange mit einer Zahl, solange die Seite keinen echten Fehler hat.",
+"thread": "Fehler und Wünsche als Issue melden",
+"test": "test_ui_browser.Browser.test_report_bug_on_every_page"
+},
+{
+"id": "P959",
+"v": 1516,
+"titel": "Lange Termin-Notiz scrollt",
+"text": "Im Kalender am Rechner einen Termin mit langer Notiz antippen, „Weiter lesen“: die Karte bleibt im Bildschirm und lässt sich bis zum Ende der Notiz scrollen. Am Handy ebenso im Blatt von unten.",
+"thread": "Fehler und Wünsche als Issue melden",
+"test": "test_kalender_seite.Page.test_views_fit_and_the_settings_sit_here"
 }
 ]
 }

@@ -269,9 +269,40 @@ class Hint(unittest.TestCase):
         self.assertEqual(frisch.nachsatz(st, "Stand gestern 23:10 Uhr: sonnig.", now=NOON, zone=ZONE), "")
         # the time alone is not enough for a reading of yesterday: it would sound like this morning's
         self.assertTrue(frisch.nachsatz(st, "Stand 23:10 Uhr: sonnig.", now=NOON, zone=ZONE))
-        self.assertTrue(frisch.nachsatz(st, "x", en=True, now=NOON, zone=ZONE).startswith("Not quite current: weather: as of"))
+        self.assertTrue(frisch.nachsatz(st, "Sunny today.", en=True, now=NOON, zone=ZONE).startswith("Not quite current: weather: as of"))
         self.assertEqual(frisch.nachsatz({"when": {}}, "x"), "")
         self.assertEqual(frisch.nachsatz(None, "x"), "")
+
+    def test_a_reading_the_answer_does_not_talk_about_gets_no_sentence(self):
+        """Issue 16 in spark-meldungen: „Nicht ganz aktuell: Pakete: Stand heute 06:53 Uhr“ under a briefing that said
+        nothing of parcels. A reading of mail, weather or parcels counts only when the answer talks about it (fixed
+        words); the calendar always counts."""
+        st = {"when": {"parcels": at(21, 6, 53), "weather": at(20, 23, 10), "calendar": at(20, 23, 0)}}
+        said = "Heute hast du um neun Uhr den Hundefriseur. Es regnet bei 12 Grad."
+        note = frisch.nachsatz(st, said, now=NOON, zone=ZONE)
+        self.assertNotIn("Pakete", note)
+        self.assertIn("Wetter: Stand gestern 23:10 Uhr", note)
+        self.assertIn("Kalender: Stand gestern 23:00 Uhr", note)
+        self.assertIn("Pakete: Stand heute 06:53 Uhr", frisch.nachsatz(st, said + " Ein Paket kommt.", now=NOON, zone=ZONE))
+        self.assertEqual(frisch.nachsatz({"when": {"parcels": at(21, 6, 53)}}, said, now=NOON, zone=ZONE), "")
+
+    def test_a_hit_that_names_today_with_the_year_is_from_today(self):
+        """Issue 17 in spark-meldungen: „Fortlaufende Nachrichten vom 17. November 2026“ without publishedDate counted
+        as undated, so the answer from today's news got „Aktuelles von heute habe ich nicht gefunden“. The day in the
+        title (with the year) counts, without a time; a day without a year or after today never does."""
+        now = datetime.datetime(2026, 11, 17, 7, 13, tzinfo=ZONE).timestamp()
+        hits = [{"title": "Fortlaufende Nachrichten vom 17. November 2026 - Deutschlandfunk", "url": "https://a.example/1", "content": "x"},
+                {"title": "Die Nachrichten vom 17.11.2026, 05:30 Uhr", "url": "https://a.example/2", "content": "y"},
+                {"title": "Kalenderblatt - Was geschah am 17. November?", "url": "https://a.example/3", "content": "z"},
+                {"title": "Vorschau", "url": "https://a.example/4", "content": "Am 18. November 2026 kommt"}]
+        kept, newest, inside = frisch.sieve([dict(x) for x in hits], "day", now=now, zone=ZONE, note=False)
+        self.assertTrue(inside)
+        self.assertEqual([bool(x["_when"]) for x in kept], [True, True, False, False])
+        self.assertEqual(frisch.hit_line(kept[0], now=now, zone=ZONE), "Datum: heute")
+        self.assertEqual(frisch.text_day({"title": "Bericht 2026-11-16"}, now=now, zone=ZONE),
+                         datetime.datetime(2026, 11, 16, tzinfo=ZONE).timestamp())
+        old = [{"title": "Nachrichten vom 3. Oktober 2026", "url": "https://a.example/5", "content": "x"}]
+        self.assertFalse(frisch.sieve(old, "day", now=now, zone=ZONE, note=False)[2])
 
     def test_wired_into_the_answer_check_and_the_briefing_push(self):
         src = inspect.getsource(chat_modell)
@@ -284,14 +315,14 @@ class Hint(unittest.TestCase):
 
         async def fake(uid, tz="", markdown=False):
             vorrat.note("weather", "alt", when)
-            return "Guten Morgen."
+            return "Guten Morgen. Heute 12 Grad."
         real = chat.morning_briefing
         chat.morning_briefing = fake
         try:
             text = asyncio.run(chat.briefing_checked("x", "Europe/Berlin"))
         finally:
             chat.morning_briefing = real
-        self.assertTrue(text.startswith("Guten Morgen.\n\nNicht ganz aktuell: Wetter: Stand "), text)
+        self.assertTrue(text.startswith("Guten Morgen. Heute 12 Grad.\n\nNicht ganz aktuell: Wetter: Stand "), text)
         self.assertIn(frisch.stand(when, zone=ZONE), text)
 
         async def fresh(uid, tz="", markdown=False):

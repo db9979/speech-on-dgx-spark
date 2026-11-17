@@ -76,6 +76,7 @@ FENSTER = {
     ".dkvpic": "the companion's screen picture",
     ".wkpatch": "a code change (Werkstatt)",
     ".kal .kaldet.sheet": "an appointment as a sheet (phone)",
+    ".kal .kaldet": "an appointment beside the calendar, never taller than the screen: a long note scrolls inside (issue 19)",
     ".kal .kalside.sheet": "the calendars as a sheet (phone)",
     ".calpeople": "the people list in the window „Kalender teilen“",
     "body.appview.inchat #chatlog": "the conversation in the app view",

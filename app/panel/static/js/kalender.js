@@ -201,22 +201,26 @@ function kalDetail(w){const box=w.querySelector('.kaldet'),x=KAL.sel;if(!box)ret
     (x.note?`<div class="kalnote${x.note.length>400||x.note.split('\n').length>8?' cut':''}">${esc(x.note)}</div>${x.note.length>400||x.note.split('\n').length>8?`<button type="button" class="b kalmore" data-act="more">${esc(t('Weiter lesen','Read on'))}</button>`:''}`:'')+
     `<div class="kalro">${ic('lock')} ${esc(x.title==='belegt'&&(d.shared||[]).includes(x.cal)?t('Privater Termin aus einem geteilten Kalender.','Private appointment from a shared calendar.'):t(...(KAL_WHY[x.why]||KAL_WHY.lesen)))}</div>`;
   box.querySelector('[data-close]').onclick=()=>kalClose();
-  const more=box.querySelector('[data-act=more]');if(more)more.onclick=()=>{box.querySelector('.kalnote').classList.remove('cut');more.remove()};
+  // „Weiter lesen“: the whole note, and the inspector placed again for its new height (issue 19 in spark-meldungen)
+  const more=box.querySelector('[data-act=more]');if(more)more.onclick=()=>{box.querySelector('.kalnote').classList.remove('cut');more.remove();kalPlace(w,box)};
   kalPlace(w,box)}
 // beside what was tapped, inside the view (it scrolls along); on a phone the sheet from below with a shade
 function kalPlace(w,box){box.hidden=false;const shade=w.querySelector('.kalshade'),x=KAL.sel||(KAL.form&&KAL.form.mode==='edit'&&KAL.form.x);
-  shade.hidden=!NARROW();shade.onclick=()=>kalClose();box.classList.toggle('sheet',NARROW());box.style.left=box.style.top='';
+  shade.hidden=!NARROW();shade.onclick=()=>kalClose();box.classList.toggle('sheet',NARROW());box.style.left=box.style.top=box.style.maxHeight='';
   if(NARROW())return;
   const a=(x&&w.querySelector(`.kalmain [data-i="${KAL.data.events.indexOf(x)}"]`))||w.querySelector('.kalmain .kghost')||(KAL.at&&w.querySelector(KAL.at));
+  // never taller than the screen below the view's top: a long note scrolls inside the inspector (issue 19)
+  const wr0=w.getBoundingClientRect();box.style.maxHeight=Math.max(240,innerHeight-Math.max(wr0.top,12)-12)+'px';
   const wr=w.getBoundingClientRect(),bw=box.offsetWidth,bh=box.offsetHeight;
-  if(!a){box.style.left=Math.max(0,wr.width-bw)+'px';box.style.top='60px';return}
+  const cap=y=>{box.style.maxHeight=Math.max(240,innerHeight-Math.max(wr.top+y,12)-12)+'px'};   // from where it stands
+  if(!a){box.style.left=Math.max(0,wr.width-bw)+'px';box.style.top='60px';cap(60);return}
   const r=a.getBoundingClientRect();let left=r.right-wr.left+10;
   if(left+bw>wr.width)left=r.left-wr.left-bw-10;
   if(left<0)left=Math.max(0,Math.min(wr.width-bw,r.left-wr.left));
   let top=r.top-wr.top;const vis=-wr.top+innerHeight-bh-12;   // keep it on the screen where possible
   if(top>vis)top=Math.max(vis,0);
   if(left===Math.max(0,Math.min(wr.width-bw,r.left-wr.left)))top=r.bottom-wr.top+8;
-  box.style.left=left+'px';box.style.top=Math.max(0,top)+'px';
+  box.style.left=left+'px';box.style.top=Math.max(0,top)+'px';cap(Math.max(0,top));
   w.style.minHeight=Math.max(0,top)+bh+16+'px'}   // a tall inspector low in the view: the page grows, nothing is cut
 // closing saves what changed (Apple); a new appointment without a title goes away again
 async function kalClose(){if(KAL.form){const ok=await kalFormSave();if(!ok)return}

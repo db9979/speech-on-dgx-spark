@@ -163,6 +163,19 @@ class Page(unittest.TestCase):
                         # (an own one in the inspector: the place is in its field)
                         await b.until(pg, "!document.querySelector('#kalview .kaldet').hidden&&(document.querySelector('#kalview .kaldet').textContent+"
                                           "[...document.querySelectorAll('#kalview .kaldet input')].map(i=>i.value).join(' ')).includes('Offenburg')")
+                        # issue 19 in spark-meldungen: a long note of an appointment scrolls, after „Weiter lesen“ too,
+                        # and its end can be reached on the screen
+                        await pg.evaluate("""(()=>{const x=KAL.data.events[0];Object.assign(x,{edit:false,why:'lesen',
+                            note:Array.from({length:120},(_,i)=>'Zeile '+i).join('\\n')+'\\nENDE'});KAL.form=null;KAL.sel=x;kalDraw()})()""")
+                        await b.until(pg, "!!document.querySelector('#kalview .kaldet .kalmore')")
+                        await pg.click("#kalview .kaldet .kalmore")
+                        box = "#kalview .kaldet"
+                        await pg.evaluate(f"(()=>{{const b=document.querySelector('{box}');b.scrollTop=b.scrollHeight}})()")
+                        await pg.wait_for_timeout(100)
+                        end = await pg.evaluate(f"""(()=>{{const n=document.querySelector('{box} .kalnote'),g=document.createRange();
+                            g.setStart(n.firstChild,n.textContent.length-4);g.setEnd(n.firstChild,n.textContent.length);const r=g.getBoundingClientRect();
+                            const e=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return r.bottom<=innerHeight&&r.top>=0&&!!e&&n.contains(e)}})()""")
+                        self.assertTrue(end, f"{width} px: Ende der langen Notiz nicht erreichbar")
                         self.assertEqual(errors, [])
                     finally:
                         await br.close()
