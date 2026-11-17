@@ -133,8 +133,13 @@ function mdWahl(d,w){const a=d.arten.find(x=>x.art===MD_OFFEN);if(!a||!w.an||w.l
   // the checked recommendation for this computer first (modelle.json „empfohlen“), own models only the second way
   const emp=a.modelle.find(m=>m.empfohlen);
   const empf=emp?`<div class="mut vb-note">${ic('star')} ${esc(t('Geprüfte Empfehlung für ','Checked recommendation for ')+(d.geraet||t('diesen Rechner','this computer'))+': '+emp.name+(emp.aktiv?t(' (läuft schon)',' (already running)'):''))}</div>`:'';
-  return `<div class="card mdwahl"><h3>${esc(a.name)}: ${esc(t('Modell wählen','choose a model'))}</h3>${empf}<div class="mdkarten">${[...a.modelle].sort((x,y)=>(y.empfohlen?1:0)-(x.empfohlen?1:0)).map(m=>mdKarte(m,a,w)).join('')}</div>`+
+  return `<div class="card mdwahl"><h3>${esc(a.name)}: ${esc(t('Modell wählen','choose a model'))}</h3>${empf}${mdRegale(a,w)}`+
     `<div class="mut vb-note">${esc(t('„Ausprobieren“ lädt das Modell falls nötig und misst es (das Sprachmodell pausiert so lange); danach fragt die Seite mit den Zahlen, ob gewechselt wird. Das alte Modell bleibt '+w.tage+' Tage zum Zurückholen.','"Try" downloads the model if needed and measures it (the language model pauses meanwhile); afterwards the page asks with the numbers whether to switch. The old model stays '+w.tage+' days to bring back.'))}</div>${such}</div>`}
+// two shelves (Dominik 2026-11-16 „es sollten geprüfte angezeigt werden sowie auch alles mögliche“): the checked catalog
+// first (its recommendation in front), then the own models, which only the fixed rules checked
+function mdRegale(a,w){const ge=a.modelle.filter(m=>!m.eigen).sort((x,y)=>(y.empfohlen?1:0)-(x.empfohlen?1:0)),ei=a.modelle.filter(m=>m.eigen);
+  return (ei.length?`<h4>${esc(t('Geprüft','Checked'))}</h4>`:'')+`<div class="mdkarten">${ge.map(m=>mdKarte(m,a,w)).join('')}</div>`+
+    (ei.length?`<h4>${esc(t('Eigene, ungeprüft','Own, unchecked'))}</h4><div class="mut vb-note">${esc(t('Selbst hinzugefügt und nur mit den festen Regeln geprüft (Dateiarten, kein Code, bekannte Bauart, Speicher); wählbar erst nach einer Messung auf diesem Rechner.','Added by you and checked only by the fixed rules (file kinds, no code, a known architecture, memory); selectable only after a measurement on this computer.'))}</div><div class="mdkarten">${ei.map(m=>mdKarte(m,a,w)).join('')}</div>`:'')}
 // after „Ausprobieren“: the question with the numbers
 function mdProbe(w){const p=w.probe;if(!p||w.laeuft)return '';
   if(!p.fertig)return `<div class="card"><b>${esc(t('„'+p.name+'“ wird ausprobiert.','Trying "'+p.name+'".'))}</b> <span class="mut">${esc(t('Erst laden und messen, dann fragt die Seite hier.','First download and measure, then the page asks here.'))}</span></div>`;

@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older versions (V01.0.000 to V01.0.999 and the lines before version numbers): [CHANGELOG-V01.0.md](CHANGELOG-V01.0.md).
 
+- **V01.1.501** · 2026-11-16 · Zwei Regale Geprüft und Eigene: Zustand → Modelle zeigt je Art zuerst die geprüften Katalogmodelle, darunter getrennt „Eigene, ungeprüft“, ebenso die Spark-Konsole (P945)
 - **V01.1.500** · 2026-11-17 · Probleme melden: Eingaben bleiben stehen, wenn Ich seine Kästen neu lädt (Handy und Rechner); vorher verschwand der getippte Text (P944)
 - **V01.1.499** · 2026-11-17 · iPhone-App: das „⋯“ oben rechts im Assistenten tut wieder etwas. Mit dem Käfer standen dort sieben Symbole, das iPhone klappte die überzähligen in ein eigenes „⋯“, das Käfer und Chats nicht auslösen konnte; Heute und Einstellungen stehen jetzt in einem eigenen Menü „⋯“ mit Namen, rechts höchstens Chats, Käfer und ⋯ (Wächter test_ios_leiste) (P943)
 - **V01.1.498** · 2026-11-16 · Empfehlung in der Modellsuche: passende Treffer zuerst (NVFP4, dann FP8 auf GB10 und DGX Station), die anderen mit Grund (z. B. andere Aufgabe wie Embedding oder Sprachausgabe), ein Stern nach fester Regel mit Format und Platz, dazu je Anwendung die geprüfte Empfehlung aus dem Katalog für diesen Rechner, im Panel und in der Spark-Konsole (P942)

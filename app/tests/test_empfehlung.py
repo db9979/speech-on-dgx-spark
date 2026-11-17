@@ -139,6 +139,21 @@ class Seite(unittest.TestCase):
             self.assertIn("warum", src)
         self.assertIn("(d.treffer||[]).map(treffer)", k)
 
+    def test_two_shelves_checked_first_own_below(self):
+        """Dominik 2026-11-16 „es sollten geprüfte angezeigt werden sowie auch alles mögliche“, 2026-11-17 „ja lege damit
+        los“: the checked catalog and the own models stand apart, in the panel and in the Konsole."""
+        with open(os.path.join(JS, "modelle.js"), encoding="utf-8") as f:
+            m = f.read()
+        with open(os.path.join(JS, "konsole.js"), encoding="utf-8") as f:
+            k = f.read()
+        regale = m[m.index("function mdRegale"):m.index("// after „Ausprobieren“")]
+        self.assertIn("a.modelle.filter(m=>!m.eigen)", regale)
+        self.assertIn("a.modelle.filter(m=>m.eigen)", regale)
+        self.assertLess(regale.index("'Geprüft'"), regale.index("'Eigene, ungeprüft'"))
+        self.assertIn("${mdRegale(a,w)}", m)
+        self.assertIn("a.modelle.filter(m=>!m.eigen).map(m=>zeile(a,m))", k)
+        self.assertIn("'Eigene, ungeprüft'", k)
+
 
 if __name__ == "__main__":
     unittest.main()

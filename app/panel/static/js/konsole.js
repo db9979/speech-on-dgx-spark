@@ -136,13 +136,16 @@ function modDraw(msg){const el=$('tab-modelle'),d=MOD,b=d.budget||{},teile=b.tei
   const start=w.start?`<div class="card" style="margin-top:14px"><h2>${esc(t('Läuft gerade','Running now'))}</h2><div><b>${esc(w.start.kopf||'')}</b></div>
       ${(w.start.zeilen||[]).map(z=>`<div class="row"><span class="pill ${z.zustand==='ok'?'ok':z.zustand==='jetzt'?'warn':'grey'}">${esc(z.zustand==='ok'?'✓':z.zustand==='jetzt'?'…':'·')}</span> ${esc(z.name)} <span class="k">${esc(z.zeit||'')}</span></div>`).join('')}
       <div class="k">${esc(w.start.rest||'')}</div></div>`:busy?`<div class="row"><span class="pill warn">${esc(w.misst?t('Messung läuft','Measuring'):t('Wechsel läuft','Switching'))}</span></div>`:'';
-  const arten=(d.arten||[]).map(a=>{const rows=a.modelle.map(m=>`<tr><td><b>${esc(m.name)}</b>${m.empfohlen?` <span class="pill ok">${esc(t('Empfohlen','Recommended'))}</span>`:''}${m.eigen?` <span class="pill grey">${esc(t('eigen','own'))}</span>`:''}<div class="k mono">${esc(m.engine)}</div></td>
+  // two shelves: the checked catalog first, the own models (only the fixed rules checked them) below their own heading
+  const zeile=(a,m)=>`<tr><td><b>${esc(m.name)}</b>${m.empfohlen?` <span class="pill ok">${esc(t('Empfohlen','Recommended'))}</span>`:''}${m.eigen?` <span class="pill grey">${esc(t('eigen','own'))}</span>`:''}<div class="k mono">${esc(m.engine)}</div></td>
       <td>${m.aktiv?`<span class="pill ok">${esc(t('läuft','running'))}</span>`:`<span class="pill grey">${esc(t('nicht geladen','not loaded'))}</span>`}</td>
       <td class="mono">${esc(gib(m.aktiv&&m.gib!=null?m.gib:m.need_gib))}</td>
       <td class="mono">${m.messung&&m.messung.tok_s!=null?esc(m.messung.tok_s)+' tok/s':'–'}</td>
       <td>${!m.aktiv&&m.waehlbar?`<button class="btn" type="button" data-m="wechseln" data-art="${esc(a.art)}" data-id="${esc(m.id)}"${busy?' disabled':''}>${esc(t('Laden','Load'))}</button> `:''}
         ${m.messbar?`<button class="btn sec" type="button" data-m="messen" data-id="${esc(m.id)}"${busy?' disabled':''}>${esc(t('Messen','Measure'))}</button> `:''}
-        ${m.eigen&&!m.aktiv?`<button class="btn bad" type="button" data-m="weg" data-id="${esc(m.id)}"${busy?' disabled':''}>${esc(t('Löschen','Delete'))}</button>`:''}</td></tr>`).join('');
+        ${m.eigen&&!m.aktiv?`<button class="btn bad" type="button" data-m="weg" data-id="${esc(m.id)}"${busy?' disabled':''}>${esc(t('Löschen','Delete'))}</button>`:''}</td></tr>`;
+  const arten=(d.arten||[]).map(a=>{const ei=a.modelle.filter(m=>m.eigen);
+    const rows=a.modelle.filter(m=>!m.eigen).map(m=>zeile(a,m)).join('')+(ei.length?`<tr><th colspan="5">${esc(t('Eigene, ungeprüft','Own, unchecked'))}</th></tr>`+ei.map(m=>zeile(a,m)).join(''):'');
     const zur=(w.alte||{})[a.art];
     return rows?`<div class="card" style="margin-top:14px"><h2>${esc(a.name)}</h2>${zur?`<div class="row"><button class="btn sec" type="button" data-m="zurueck" data-art="${esc(a.art)}"${busy?' disabled':''}>${esc(t('Vorheriges zurückholen','Bring back the previous one'))}</button></div>`:''}
       <table><tr><th>${esc(t('Modell','Model'))}</th><th>${esc(t('Zustand','State'))}</th><th>${esc(t('Speicher','Memory'))}</th><th>${esc(t('Tempo','Speed'))}</th><th></th></tr>${rows}</table></div>`:''}).join('');

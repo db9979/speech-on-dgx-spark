@@ -6522,6 +6522,14 @@
 "text": "Am Handy im Browser und am Rechner: Ich → Probleme melden öffnen, „Verbesserung“ wählen und einen Satz tippen. Dann einmal auf eine andere Seite und zurück nach Ich → Probleme melden (oder kurz warten, bis alles geladen ist). Text, Art und Haken stehen noch da, das Formular verschwindet nicht. Ebenso im Fenster über den Käfer.",
 "thread": "Fehler und Wünsche als Issue melden",
 "test": "test_ui_browser.Browser.test_report_form_keeps_input"
+},
+{
+"id": "P945",
+"v": 1501,
+"titel": "Zwei Regale Geprüft und Eigene",
+"text": "Zustand → Modelle → Sprachmodell mit mindestens einem eigenen Modell: oben „Geprüft“ mit den Katalogmodellen (Empfehlung vorne), darunter „Eigene, ungeprüft“ mit den eigenen und dem Hinweis, dass sie erst nach einer Messung wählbar sind. In der Spark-Konsole → Modelle stehen die eigenen in der Tabelle unter der Zeile „Eigene, ungeprüft“.",
+"thread": "Modellkatalog für Spark und DGX Station bauen",
+"test": "test_empfehlung.Seite.test_two_shelves_checked_first_own_below"
 }
 ]
 }
