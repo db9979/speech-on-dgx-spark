@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older versions (V01.0.000 to V01.0.999 and the lines before version numbers): [CHANGELOG-V01.0.md](CHANGELOG-V01.0.md).
 
+- **V01.1.508** · 2026-11-17 · ROT-FIX Dauer-Wackler test_report_bug_covers_nothing: am Handy lag der Käfer auf „＋ Neuer Chat“, wenn ein früherer Test Chats eingeschaltet hatte; Chats lässt ihm jetzt Platz, der Test schaltet Chats selbst ein. Dazu Käfer mit rotem Körper, Seitenmenü-Kopf in einer Zeile: Logo, Spark, Käfer und Mikrofon auf einer Höhe, GPU und Uhrzeit im Titel von Spark (P951)
 - **V01.1.507** · 2026-11-17 · ROT-FIX: „Tippen geht vor“ prüft das abgeschlossene Gespräch jetzt mit Nachrichten darin; das leere Startbild (V01.1.489) ist absichtlich ohne contain, und welcher Test vorher lief, entschied, ob eins da war
 - **V01.1.506** · 2026-11-17 · ROT-FIX: Laufzeiten der vier neuen Testmodule (eigene kleine Modelle, Neu verfügbar, Modellsätze, Probetag) in tests/dauer.json
 - **V01.1.505** · 2026-11-17 · Sprachmodell in Docker als Hauptmodell: ein hier erfolgreich gemessenes Modell mit Docker-Rezept (Qwen3.8 Flash Next) lässt sich unter Zustand → Modelle wechseln; root startet den Container in der festen Einheit speech-spark-llm-docker (dasselbe geschlossene docker run wie beim Messen), speech-spark-llm betreibt nur das Tor, Zurückholen wie sonst (P950)

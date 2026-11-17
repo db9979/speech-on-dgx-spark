@@ -6566,6 +6566,14 @@
 "titel": "Sprachmodell in Docker als Hauptmodell",
 "text": "Nur wenn du Qwen3.8 Flash Next ausprobieren willst. A: Update (tars zuerst). B: Auf tars sudo speech-spark modelle messen flash (lädt das Abbild und das Modell, etwa 20 bis 40 Minuten); unter Zustand → Modelle steht beim Eintrag tok/s. C: Dort „Wechseln“ beim Eintrag: der Wechsel läuft wie sonst, unter Zustand → Logs beim Dienst „Sprachmodell in Docker“ steht „modelle: docker-llm start“, danach antwortet der Chat. D: „Zurückholen“ bringt das Modell davor zurück; der Container ist danach weg (sudo docker ps zeigt ihn nicht mehr).",
 "test": "test_modelle_docker.Hauptmodell.test_only_a_measured_one_and_only_while_on"
+},
+{
+"id": "P951",
+"v": 1508,
+"titel": "Käfer rot, Kopf in einer Zeile",
+"text": "Am Rechner: oben im Seitenmenü stehen Logo, „Spark“, Käfer und Mikrofon auf einer Höhe, darunter keine zweite Zeile mehr; mit der Maus über „Spark“ erscheinen GPU und Uhrzeit. Der Käfer hat einen roten Körper, auch am Handy oben rechts und in der iPhone-App (nach dem nächsten TestFlight). Das Mikrofon bleibt grau. Am Handy unter Chats steht der Käfer rechts neben „＋ Neuer Chat“, nicht darauf.",
+"thread": "Fehler und Wünsche als Issue melden",
+"test": "test_ui_browser.Browser.test_report_bug_on_every_page"
 }
 ]
 }

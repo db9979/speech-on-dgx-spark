@@ -50,7 +50,8 @@ struct KaeferBild: View {
     @State private var move = 0.0
 
     var body: some View {
-        Image(systemName: "ladybug")
+        Image(systemName: "ladybug.fill")   // red body (Dominik 2026-11-17), like the panel
+            .symbolRenderingMode(.multicolor)
             .rotationEffect(.degrees(turn))
             .offset(x: move)
             .task {

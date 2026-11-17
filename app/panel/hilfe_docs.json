@@ -16797,7 +16797,7 @@
 "file": "Sicherheit und Betrieb",
 "head": "Probleme melden",
 "title": "Käfer-Symbol: Fehler oder Wunsch von jeder Seite",
-"text": "hwand, was schon getippt war. Jetzt stehen Text, Art, Bereich, Zeitraum und Haken danach wieder da, der Cursor bleibt im Feld (melden.js rpKeep, Test test_ui_browser.Browser.test_report_form_keeps_input, Handy und Rechner)."
+"text": "hwand, was schon getippt war. Jetzt stehen Text, Art, Bereich, Zeitraum und Haken danach wieder da, der Cursor bleibt im Feld (melden.js rpKeep, Test test_ui_browser.Browser.test_report_form_keeps_input, Handy und Rechner). Eine Zeile, roter Körper (ab V01.1.508, Dominik 2026-11-17): Am Rechner stehen Logo, „Spark“, Käfer und Mikrofon im Seitenmenü auf einer Höhe; GPU und Uhrzeit des letzten Stands stehen nicht mehr als zweite Zeile darunter, sondern im Titel von „Spark“ (mit der Maus darüber). Der Käfer hat überall einen roten Körper (Panel, Handy-Leiste, iPhone-App), die Linien bleiben grau, mit Fehlern orange. Das Mikrofon behält seine Farbe, weil Rot dort „nimmt auf“ heißt (icons.js bug .kfb, admin.js hdrSay, Test test_report_bug_on_every_page). Am Handy lassen Kopf und Gesprächsleiste von Chats rechts Platz für den Käfer, in der App-Ansicht steht er dort ganz rechts; der Wächter-Test schaltet Chats dafür selbst ein, statt sich auf einen früheren Test zu verlassen."
 },
 {
 "lang": "de",
@@ -34589,7 +34589,7 @@
 "file": "Security and operation",
 "head": "Reporting problems",
 "title": "Ladybug: a fault or a wish from every page",
-"text": "s, the cursor stays in the field (melden.js rpKeep, test test_ui_browser.Browser.test_report_form_keeps_input, phone and computer)."
+"text": "s, the cursor stays in the field (melden.js rpKeep, test test_ui_browser.Browser.test_report_form_keeps_input, phone and computer). One line, red body (since V01.1.508, Dominik 2026-11-17): on the computer logo, \"Spark\", ladybug and microphone stand at one height in the side menu; GPU and the time of the last state no longer stand as a second line under it but in the title of \"Spark\" (with the mouse over it). The ladybug has a red body everywhere (panel, phone bar, iPhone app), its lines stay grey, orange with errors. The microphone keeps its colour, since red means \"recording\" there (icons.js bug .kfb, admin.js hdrSay, test test_report_bug_on_every_page). On the phone the head and the conversation bar of Chats leave room for the ladybug on the right, in the app view it stands at the far right there; the guard test switches Chats on for this itself instead of relying on an earlier test."
 },
 {
 "lang": "en",

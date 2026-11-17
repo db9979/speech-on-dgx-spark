@@ -560,8 +560,9 @@ body.guest .navme{display:none}
   body.adm{padding-left:var(--side-w)}
   body.adm header{position:fixed;left:0;top:0;bottom:0;width:var(--side-w);flex-direction:column;align-items:stretch;gap:2px;padding:14px 10px 12px;
     border-bottom:0;border-right:1px solid var(--line);overflow-y:auto;background:var(--side);backdrop-filter:none;-webkit-backdrop-filter:none}
-  body.adm header h1{padding:2px 8px 0;white-space:normal;line-height:1.25;font:var(--t-head);min-height:30px}
-  body.adm #hdr{padding:0 8px 8px 46px;font-size:11.5px;margin:0;color:var(--faint)}
+  /* eine Zeile (Dominik 2026-11-17): Logo, Spark, Käfer und Mikrofon auf einer Höhe; GPU und Uhrzeit als Titel von Spark */
+  body.adm header h1{padding:0 8px;white-space:nowrap;font:var(--t-head);min-height:40px;margin-bottom:6px}
+  body.adm #hdr{display:none}
   body.adm nav{flex-direction:column;flex-wrap:nowrap;margin:6px 0 0;padding:0;background:none;border-radius:0;gap:1px}
   body.adm nav button{display:flex;align-items:center;gap:10px;text-align:left;min-height:var(--h-nav);padding:4px 10px;border-radius:var(--r-item);color:var(--fg);font-weight:400}
   body.adm nav button:hover{background:var(--sel)}
@@ -602,7 +603,7 @@ body.guest .navme{display:none}
   body.adm #profmodal{bottom:calc(59px + env(safe-area-inset-bottom))}
 }
 @media (min-width:761px){body.adm .cfgnav{top:24px}}
-@media (min-width:761px){body.adm header nav{order:5}body.adm .hfoot{order:6}body.adm #hdr{padding-left:48px}}
+@media (min-width:761px){body.adm header nav{order:5}body.adm .hfoot{order:6}}
 /* Web-App aufräumen 6a (Dominik 2026-11-16): between 761 and 1100 px (iPad upright, narrow windows) the side menu shows its
    symbols only (--side-w from tokens.css), so a page with its own menu column keeps room for its content; the name
    stands in the symbol's title (phone.js navTitles). Microphone and Käfer stand under the logo, the foot as a column. */
@@ -3798,8 +3799,15 @@ main{position:relative}#rpbug{position:fixed;top:14px;left:calc(var(--side-w) - 
 /* Käfer auffälliger (melden.js KF): only the drawing moves, the button keeps its box; the number sits on top of it */
 @media (max-width:760px){#rpbug{left:auto;right:calc(56px + env(safe-area-inset-right));top:calc(6px + env(safe-area-inset-top))}
   /* the phone's Ich is a full window above the page (#profmodal): the ladybug stands on it like the microphone */
-  body:has(#profmodal[style*="grid"]) #rpbug{z-index:62}}
+  body:has(#profmodal[style*="grid"]) #rpbug{z-index:62}
+  /* Chats am Handy (main rot 2026-11-17: Käfer auf „＋ Neuer Chat“): Kopf und Gesprächsleiste lassen rechts Platz für den
+     Käfer; in der App-Ansicht steht dort kein Mikrofon, dann rückt er nach rechts außen */
+  body.inchats :is(.cx-head,.cx-top){padding-right:calc(96px + env(safe-area-inset-right))}
+  body.appview.inchats #rpbug{right:calc(8px + env(safe-area-inset-right))}
+  body.appview.inchats :is(.cx-head,.cx-top){padding-right:calc(48px + env(safe-area-inset-right))}}
 #aptrail [data-ap=bug]{position:relative}#rpbug svg,#aptrail [data-ap=bug] svg{transform-origin:50% 60%}
+/* roter Körper (Dominik 2026-11-17), überall wo der Käfer steht (icons.js bug .kfb) */
+svg .kfb{fill:var(--bad)}
 #rpbug.kf-err,#aptrail [data-ap=bug].kf-err{color:var(--warnt)}
 #rpbug.kf-err::after,#aptrail [data-ap=bug].kf-err::after{content:attr(data-n);position:absolute;top:2px;right:0;min-width:16px;height:16px;padding:0 4px;box-sizing:border-box;border-radius:8px;background:var(--warn);color:var(--on-acc);font-weight:700;font-size:11.5px;line-height:16px;text-align:center;pointer-events:none}
 .kf-wig svg{animation:kfwig .6s ease-in-out}.kf-shake svg{animation:kfshake .5s ease-in-out}.kf-crawl svg{animation:kfcrawl 2.4s ease-in-out}

@@ -24,11 +24,14 @@ async function gpuTakt(){const el=$('gputakt');if(!el)return;let g;try{g=(await 
   const jetzt=g?t('Jetzt: Takt ','Now: clock ')+fmt(g.clock,' MHz')+' · '+fmt(g.power,' W')+' · '+fmt(g.temp,' °C'):t('Keine GPU erreichbar.','No GPU reachable.');
   const st=!g?'':!x?t('Noch nicht gesetzt (nach dem Speichern oder dem nächsten Start).','Not set yet (after saving or the next start).'):x.wort==='fehler'?t('Setzen ging nicht, siehe Zustand → Logs.','Setting it failed, see Status → Logs.'):x.wort==='aus'?t('Keine Grenze gesetzt.','No cap set.'):t('Gesetzt: höchstens ','Set: at most ')+x.wort+' MHz.';
   setHtml(el,`<div class="note">${esc(st+(x&&x.wort!==w&&x.wort!=='fehler'?' '+t('Die Wahl wirkt nach dem Speichern.','The choice takes effect after saving.'):'')+' '+jetzt)}</div>`)}
+// GPU und letzter Stand: unter dem Namen im Kopf, im Seitenmenü nur als Titel von „Spark“ (Dominik 2026-11-17: Logo,
+// Spark, Käfer und Mikrofon in einer Zeile)
+function hdrSay(x){$('hdr').textContent=x;const h=document.querySelector('header h1');if(h)h.title=x}
 async function refresh(){const seen=$('mon')&&$('mon').classList.contains('on')&&!document.hidden;
   if(updBusy()||!seen&&Date.now()-REFRESH_AT<30e3)return;REFRESH_AT=Date.now();
-  let s;try{s=await (await api('/api/status')).json()}catch(e){$('hdr').textContent=t('Panel nicht erreichbar','Panel not reachable');return}
+  let s;try{s=await (await api('/api/status')).json()}catch(e){hdrSay(t('Panel nicht erreichbar','Panel not reachable'));return}
   const g=s.gpu||{},sy=s.system,H=s.history;
-  $('hdr').textContent=(g.name||t('keine GPU','no GPU'))+' · '+new Date(s.time*1000).toLocaleTimeString();
+  hdrSay((g.name||t('keine GPU','no GPU'))+' · '+new Date(s.time*1000).toLocaleTimeString());
   $('m-gpu').textContent=fmt(g.util,' %');$('m-mem').textContent=fmt(sy.mem_avail_gib,' GiB',1)+' / '+(sy.mem_total_gib??'–');
   $('m-temp').textContent=fmt(g.temp,' °C')+' · '+fmt(g.power,' W')+(gpuGrenze(g)?' · '+gpuGrenze(g):'');$('m-cpu').textContent=fmt(sy.cpu,' %');
   spark($('c-gpu'),H.map(x=>x.gpu),100);spark($('c-mem'),H.map(x=>x.avail),sy.mem_total_gib);spark($('c-temp'),H.map(x=>x.temp),100);spark($('c-cpu'),H.map(x=>x.cpu),100);

@@ -1729,6 +1729,17 @@ class Browser(unittest.TestCase):
                     else:
                         self.assertLess(box["x"] + box["width"], fab["x"], f"{name}: Käfer nicht links vom Mikrofon")
                         self.assertLess(abs((box["y"] + box["height"] / 2) - (fab["y"] + fab["height"] / 2)), 6, name)
+                        # one line (Dominik 2026-11-17): logo, Spark, Käfer and microphone at one height; GPU and time
+                        # only as the title of Spark, no second line under it
+                        h1 = await pg.locator("header h1 .logo").bounding_box()
+                        self.assertLess(abs((h1["y"] + h1["height"] / 2) - (fab["y"] + fab["height"] / 2)), 6, name)
+                        self.assertFalse(await pg.is_visible("#hdr"), f"{name}: zweite Zeile unter Spark")
+                        await self.until(pg, "!!document.querySelector('header h1').title")
+                    # a red body (Dominik 2026-11-17), the drawing's lines stay in the colour of the button
+                    red = await pg.evaluate(f"""(()=>{{const b=document.querySelector('{bug} .kfb'),p=document.createElement('i');
+                        p.style.color='var(--bad)';document.body.append(p);const want=getComputedStyle(p).color;p.remove();
+                        return !!b&&getComputedStyle(b).fill===want}})()""")
+                    self.assertTrue(red, f"{name}: Käfer ohne roten Körper")
                     await pg.evaluate("api('/api/report?id=zz').catch(()=>{})")   # a failed request of this page
                     # Käfer auffälliger (Dominik 2026-11-15 „3 und 4 und 1“): orange with the number of the page's
                     # errors; wiggle on a page change, now and then a crawl; only the drawing moves, the box stays
@@ -1820,7 +1831,9 @@ class Browser(unittest.TestCase):
         async def go():
             async with async_playwright() as p:
                 for name, w, h in VIEWS:
-                    helpers.set_config(report=True)
+                    # the pages with buttons on top are on, never left to an earlier test (main red 2026-11-17: on
+                    # the phone the Käfer lay on „＋ Neuer Chat“ only when a test before had switched Chats on)
+                    helpers.set_config(report=True, chats=True)
                     br, pg, errors = await self.page(p, w, h, csp=True)
                     await self.loaded(pg)
                     await pg.evaluate("document.getElementById('wizmodal')&&(document.getElementById('wizmodal').style.display='none')")
@@ -1844,7 +1857,7 @@ class Browser(unittest.TestCase):
         try:
             self.run_async(go())
         finally:
-            helpers.set_config(report=False)
+            helpers.set_config(report=False, chats=False)
 
     def test_link_button_beside_add(self):
         """Links als Dokument (doklink.js, Dominik 2026-11-05: „sonst sehr versteckt“): „Link hinzufügen“ stands at the
