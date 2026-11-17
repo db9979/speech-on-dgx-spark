@@ -1290,27 +1290,59 @@ def stelle(page, source):
     return f"Seite {page}" if page else ""
 
 
-def text_of(uid, doc_id, most=200_000, start=0):
-    """{"name", "kind", "parts": [{"page", "text"}]} of a document for reading it again (pieces without
-    their overlap is not worth the effort: they are shown one after another), or None."""
+def text_of(uid, doc_id, most=200_000, start=0, um=None):
+    """{"name", "kind", "parts": [{"page", "text", "n", "part"}], "heads", "count"} of a document for reading it
+    again (Leseansicht, lesen.js): the pieces one after another without the bit each repeats of the one before
+    (OVERLAP, _ohne_ueberlappung), n the piece's number (where a search hit stands), part the headings it stands
+    under; heads: the table of contents [{"t", "n", "page"}] (each change of part, fixed rules of pieces), or None.
+    start: the next part ("Weiterlesen"); um: a piece's number, the part begins a few pieces before it (a hit far
+    into a long document opens there, "Davor lesen" goes back)."""
     if not re.fullmatch(r"[0-9a-f]{12}", doc_id):
         return None
     with _Db(uid) as con:
         d = con.execute("SELECT name, kind, state, file, source FROM docs WHERE id=?", (doc_id,)).fetchone()
         if not d:
             return None
-        rows = con.execute("SELECT page, text FROM chunks WHERE doc=? ORDER BY COALESCE(page, 0), n LIMIT -1 OFFSET ?",
+        index = con.execute("SELECT n, page, part, length(text) AS z FROM chunks WHERE doc=? ORDER BY COALESCE(page, 0), n",
+                            (doc_id,)).fetchall()
+        if um is not None and sum(r["z"] for r in index) > most:   # a document that fits whole opens whole
+            at = next((i for i, r in enumerate(index) if r["n"] == um), 0)
+            start = max(0, at - UM_DAVOR)
+        rows = con.execute("SELECT page, text, n, part FROM chunks WHERE doc=? ORDER BY COALESCE(page, 0), n LIMIT -1 OFFSET ?",
                            (doc_id, max(0, int(start)))).fetchall()
-    parts, size = [], 0
+    parts, size, before = [], 0, None
     for r in rows:
         if size > most:
             break
-        parts.append({"page": r["page"], "text": r["text"], **({"at": stelle(r["page"], "audio")} if d["kind"] == "audio" else {})})
-        size += len(r["text"])
+        text = _ohne_ueberlappung(before, r["text"]) if before is not None and before[0] == r["page"] else r["text"]
+        before = (r["page"], r["text"])
+        parts.append({"page": r["page"], "text": text, "n": r["n"], "part": r["part"] or "",
+                      **({"at": stelle(r["page"], "audio")} if d["kind"] == "audio" else {})})
+        size += len(text)
     more = len(parts) < len(rows)
+    heads, seen = [], set()
+    for r in index:
+        for h in (r["part"] or "").split(", "):
+            if h and h not in seen:
+                seen.add(h)
+                heads.append({"t": h, "n": r["n"], "page": r["page"]})
     # the view shows a part at a time ("Weiterlesen", V01.0.243); search always uses the whole text
     return {"name": d["name"], "kind": d["kind"], "state": d["state"], "file": bool(d["file"]), "parts": parts,
-            "cut": more, "next": max(0, int(start)) + len(parts) if more else None}
+            "cut": more, "next": max(0, int(start)) + len(parts) if more else None, "start": max(0, int(start)),
+            "count": len(index), "heads": heads[:HEADS_MAX]}
+
+
+UM_DAVOR, HEADS_MAX = 3, 400   # pieces shown before a hit far into a long document; entries of the table of contents
+
+
+def _ohne_ueberlappung(before, text):
+    """A piece without the bit it repeats of the piece before it (_cut lets them overlap by about OVERLAP
+    characters, so the search finds a sentence on the border): the longest start of text that ends before."""
+    prev = before[1]
+    for k in range(min(len(prev), len(text) - 1, 2 * OVERLAP), 19, -1):
+        if prev.endswith(text[:k]):
+            return text[k:].lstrip()
+    return text
 
 
 # ---------------------------------------------------------------- notebooks from elsewhere (remarkable.py)
@@ -1946,9 +1978,9 @@ def search(uid, query, k=5, qvec=None, shared_only=False, only_docs=None, fresh=
     best = sorted(ranks, key=lambda x: -ranks[x])[:k]
     with _Db(uid) as con:
         got = {r["id"]: r for r in con.execute(
-            "SELECT c.id, c.doc, c.page, c.text, c.part, c.head, d.name, d.file, d.source, d.place FROM chunks c JOIN docs d ON d.id=c.doc WHERE c.id IN (%s)"
+            "SELECT c.id, c.doc, c.n, c.page, c.text, c.part, c.head, d.name, d.file, d.source, d.place FROM chunks c JOIN docs d ON d.id=c.doc WHERE c.id IN (%s)"
             % ",".join("?" * len(best)), best).fetchall()}
-    return [dict({"id": got[i]["doc"], "name": got[i]["name"], "page": got[i]["page"], "text": got[i]["text"],
+    return [dict({"id": got[i]["doc"], "name": got[i]["name"], "page": got[i]["page"], "text": got[i]["text"], "n": got[i]["n"],
                   "part": got[i]["part"] or "", "head": got[i]["head"] or "",
                   "file": bool(got[i]["file"]) or got[i]["source"] == "nas", "source": got[i]["source"], "score": ranks[i]},
                  **({"place": got[i]["place"] or ""} if got[i]["source"] == "nas" else {}),

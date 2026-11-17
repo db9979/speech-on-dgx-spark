@@ -1400,7 +1400,7 @@ MAX_ATT = 8
 
 def _att(a):
     """What stood under an answer, kept with it so every device shows it again (verlauf-sync point 3): web sources
-    (title, http(s) address), the own documents it came from (name, id, page), a document made (title, kind)."""
+    (title, http(s) address), the own documents it came from (name, id, page, piece), a document made (title, kind)."""
     out = []
     for x in (a if isinstance(a, list) else [])[:MAX_ATT]:
         if not isinstance(x, dict):
@@ -1414,6 +1414,7 @@ def _att(a):
         elif k == "doc" and isinstance(x.get("l"), list):
             items = [{"n": str(i.get("n", ""))[:120], "id": str(i.get("id", ""))[:40] if re.fullmatch(r"[\w\-]{0,40}", str(i.get("id", ""))) else "",
                       "p": i.get("p") if isinstance(i.get("p"), int) and 0 < i.get("p") < 100000 else 0,
+                      **({"c": i["c"]} if isinstance(i.get("c"), int) and 0 <= i["c"] < 10**6 else {}),   # c: the piece (Leseansicht)
                       **({"w": 1} if i.get("w") is True or i.get("w") == 1 else {})}     # w: found over the Wissenskarte
                      for i in x["l"][:6] if isinstance(i, dict) and i.get("n")]
             if items:

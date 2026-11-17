@@ -114,7 +114,7 @@ function fundGo(w,it){
   else if(w.art==='bild'&&typeof openMe==='function')openMe('bildbox');
   else if(w.art==='musik'&&typeof openMe==='function')openMe('musikbox')}
 // „Öffnen“: the original of an entry on its own page (a document, a Wissensbuch page, a mail, the other sources)
-async function fundOriginal(it){const w=it.weg||{};if(w.art==='dokument'){if(typeof openMe==='function')await openMe('docbox');if(typeof docView==='function')docView(w.id)}
+async function fundOriginal(it){const w=it.weg||{};if(w.art==='dokument'){if(typeof docView==='function')docView(w.id,{q:FUND.q||''})}
   else if(w.art==='wissensbuch'&&typeof WB!=='undefined'){WB.sel=w.id;icTabSet('wbuch','show');goSec('wbuch')}
   else if(w.art==='mail'||w.art==='anhang')await fundMail(w);
   else fundGo(w,it)}
@@ -130,7 +130,7 @@ const fundOwn=()=>{const it=FUND.item;return{plus:(it.tags||[]).filter(x=>x.herk
 {document.body.addEventListener('click',async e=>{const b=e.target.closest('#fundview [data-fundback],#fundview [data-fundkeep],#fundview [data-fundrm],#fundview [data-fundadd],#fundview [data-fundgo],#fundview [data-funddok],#fundview [data-funddocopen]');if(!b)return;const D=b.dataset,it=FUND.item;
   if(D.fundback){FUND.item=null;FUND.dok=null;fundDraw();return}
   if(D.funddok)return fundDok(D.funddok,b);
-  if(D.funddocopen){if(typeof openMe==='function')await openMe('docbox');if(typeof docView==='function')docView(D.funddocopen);return}
+  if(D.funddocopen){if(typeof docView==='function')docView(D.funddocopen,{q:FUND.q||''});return}
   if(!it)return;const own=fundOwn();
   if(D.fundgo)return fundOriginal(it);
   if(D.fundkeep!==undefined){const x=it.tags[+D.fundkeep];if(!x)return;own.plus.push({typ:x.typ,wert:x.wert});return fundTags(own.plus,own.minus)}

@@ -850,16 +850,17 @@ async def download(doc_id: str, request: Request, view: int = 0, prof=Depends(re
 
 
 @router.get("/api/profile/wissen/{doc_id}/text", dependencies=[Depends(assistant)])
-def read_again(doc_id: str, request: Request, start: int = 0, prof=Depends(reader)):
-    """The stored text of a document, to look at it again (also without a kept original); ?start= the
-    next part ("Weiterlesen")."""
+def read_again(doc_id: str, request: Request, start: int = 0, um: int | None = None, prof=Depends(reader)):
+    """The stored text of a document, to look at it again (Leseansicht, also without a kept original); ?start= the
+    next part ("Weiterlesen"), ?um= a piece's number: the part around a search hit far into a long document."""
     _docs_on()
     guard.limit(request, "doc", prof["id"], False)
     start = max(0, min(start, 10**6))
-    got = documents.text_of(prof["id"], doc_id, start=start)
+    um = None if um is None else max(0, min(um, 10**6))
+    got = documents.text_of(prof["id"], doc_id, start=start, um=um)
     if not got:
         owner = find_shared(prof["id"], doc_id)
-        got = documents.text_of(owner, doc_id, start=start) if owner else None
+        got = documents.text_of(owner, doc_id, start=start, um=um) if owner else None
         if got:
             got["owner"] = _owner_name(owner)
     if not got:
@@ -997,7 +998,7 @@ async def try_search(request: Request, prof=Depends(browser_profile)):
         raise HTTPException(400, "q is required")
     hits = await search(prof["id"], q)
     # at: the place in words ("Seite 3", "bei 12:30" in a recording, documents.stelle), audio: plays there
-    return {"hits": [{"id": h["id"], "name": h["name"], "page": h["page"], "text": h["text"][:500],
+    return {"hits": [{"id": h["id"], "name": h["name"], "page": h["page"], "text": h["text"][:500], "n": h.get("n"),
                       "at": documents.stelle(h.get("page"), h.get("source")), "audio": h.get("source") == "audio"} for h in hits],
             "meaning": on(prof["id"], "semantic")}
 

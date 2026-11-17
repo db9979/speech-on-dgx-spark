@@ -305,7 +305,7 @@ function docBulk(){const box=$('docbulk'),pk=DOCV.pick;box.hidden=!pk;if(!pk){bo
 function docDetail(){const box=$('docdetail'),d=DOCV.pick?null:docFind(DOCV.sel);
   $('docbox').classList.toggle('ld-sel',!!d);box.hidden=!d;
   if(typeof awShow==='function')awShow(d);   // the sheet Auswertungen (auswertung.js)
-  if(!d){$('docdinfo').innerHTML='';$('docview').hidden=true;$('docview').textContent='';return}
+  if(!d){$('docdinfo').innerHTML='';return}
   const info=$('docdinfo'),a=document.activeElement;
   if(info.dataset.id===d.id&&info.contains(a)&&a.id==='doctagin')return;
   const au=$('docaudio');if(info.dataset.id===d.id&&au&&!au.paused)return;   // a recording playing keeps its player
@@ -327,7 +327,7 @@ function docDetail(){const box=$('docdetail'),d=DOCV.pick?null:docFind(DOCV.sel)
     `<div class="ld-acts">`+(d.file&&aud?`<button class="b p" type="button" data-dplay="0">${ic('play')} ${esc(t('Anhören','Listen'))}</button>`:
       d.file?`<a class="b p" href="${esc(href)}"${pdf?' target="_blank"':''} rel="noopener">${esc(pdf?t('PDF öffnen','Open PDF'):pic?t('Bild öffnen','Open picture'):t('Original herunterladen','Download original'))}</a>`:'')+
     (own&&d.state==='hoeren'?`<button class="b" type="button" data-dact="stop" title="${esc(t('Abschrift beenden; was schon abgeschrieben ist, bleibt','Stop the transcription; what is written stays'))}">${esc(t('Abbrechen','Stop'))}</button>`:'')+
-    `<button class="b" type="button" data-dact="view">${esc(t('Text lesen','Read text'))}</button>`+
+    `<button class="b" type="button" data-dact="view">${ic('book')} ${esc(t('Lesen','Read'))}</button>`+
     (own&&pdf&&d.file&&typeof FM_ON!=='undefined'&&FM_ON?`<button class="b" type="button" data-fmdoc="${esc(d.id)}" title="${esc(t('Felder des PDF-Formulars ausfüllen; gespeichert wird ein neues Dokument','Fill the fields of the PDF form; a new document is saved'))}">${ic('doc')} ${esc(t('Ausfüllen','Fill in'))}</button>`:'')+
     (own&&docTeil()&&d.state==='ready'&&d.use?`<button class="b" type="button" data-dact="teilen" title="${esc(t('Mit anderen Profilen teilen','Share with other profiles'))}">${esc(t('Teilen','Share'))}${d.shared||(DOCINFO&&DOCINFO.teil||[]).includes(d.id)?' · '+esc(t('geteilt','shared')):''}</button>`:'')+
     (own&&brief&&DOCINFO.on.due&&docDue(d,today)?`<button class="b" type="button" data-docremind="${esc(d.id)}" title="${esc(t('Erinnerung sechs Wochen vor der Frist (oder am Tag davor)','Reminder six weeks before the deadline (or the day before)'))}">${esc(t('Erinnern','Remind'))}</button>`:'')+
@@ -339,7 +339,7 @@ function docDetail(){const box=$('docdetail'),d=DOCV.pick?null:docFind(DOCV.sel)
 // a recording with its kept sound track: play from a second (the start of a piece, "bei 12:30")
 function docPlay(secs){const a=$('docaudio');if(!a)return;a.hidden=false;
   const go=()=>{try{a.currentTime=secs}catch{}a.play().catch(()=>{})};if(a.readyState>0)go();else{a.preload='auto';a.addEventListener('loadedmetadata',go,{once:true});a.load()}}
-function docOpen(id){DOCV.sel=id;const v=$('docview');if(v.dataset.id!==id){v.hidden=true;v.textContent=''}docRender();
+function docOpen(id){DOCV.sel=id;docRender();
   if($('docbox').classList.contains('ld-sel'))$('docdetail').scrollIntoView({block:'nearest'})}
 const docErr=x=>{$('docmsg').innerHTML=`<span class="err">${esc(x.message)}</span>`};
 $('docsw').onchange=async e=>{const k=e.target.dataset.docsw;if(!k)return;
@@ -368,30 +368,10 @@ $('docbulk').onclick=async e=>{const b=e.target.closest('[data-bulk]');if(!b||b.
     $('docmsg').textContent=t(`Erledigt für ${r.done} von ${ids.length}`,`Done for ${r.done} of ${ids.length}`)+(r.failed?t(` (${r.failed} gingen nicht)`,` (${r.failed} did not work)`):'');
     if(k==='delete'){pk.clear();if(ids.includes(DOCV.sel))DOCV.sel=''}}
   catch(x){docErr(x)}showDocs()};
-// a document read again: the kept original (pictures in the browser) and its stored text, built with
-// textContent only; it opens in the details, so chat sources ("Aus deinen Dokumenten") land there too
-async function docView(id){if(!docFind(id))await showDocs();if(DOCV.pick)DOCV.pick=null;docOpen(id);
-  const box=$('docview');box.hidden=false;box.dataset.id=id;box.textContent=t('Lade …','Loading …');
-  try{const d=await (await api('/api/profile/wissen/'+encodeURIComponent(id)+'/text')).json();box.textContent='';
-    const head=document.createElement('div');head.className='dvhead';const nm=document.createElement('b');nm.textContent=t('Text','Text')+(d.owner?' · '+t('von ','from ')+d.owner:'');head.appendChild(nm);
-    const x=document.createElement('button');x.type='button';x.className='b';x.appendChild(icNode('x'));x.setAttribute('aria-label',t('Text schließen','Close text'));x.onclick=()=>{box.hidden=true;box.textContent=''};
-    head.appendChild(x);box.appendChild(head);
-    if(d.file&&d.kind==='picture'){const img=document.createElement('img');img.alt='';img.src='/api/profile/wissen/'+encodeURIComponent(id)+'/file?view=1';box.appendChild(img)}
-    let page;const show=parts=>{for(const p of parts){if(p.at&&p.page!==page){page=p.page;const h=document.createElement('div');h.className='dvpage';h.textContent=p.at;
-        if(d.file){const pl=document.createElement('button');pl.type='button';pl.className='b';pl.appendChild(icNode('play'));pl.setAttribute('aria-label',t('Hier anhören','Listen here'));pl.dataset.dplay=String(p.page);h.appendChild(pl)}box.appendChild(h)}
-      else if(!p.at&&p.page&&p.page!==page){page=p.page;const h=document.createElement('div');h.className='dvpage';h.textContent=t('Seite ','Page ')+p.page;box.appendChild(h)}
-      const tx=document.createElement('p');tx.className='dvtext';tx.textContent=p.text;box.appendChild(tx)}};show(d.parts);
-    if(d.related&&d.related.length){const r=document.createElement('div');r.className='dvrel';const h=document.createElement('small');h.className='mut';h.textContent=t('Dazu gehören: ','Belongs with: ');r.appendChild(h);
-      for(const x of d.related){const b=document.createElement('button');b.type='button';b.className='dtag';b.textContent=x.title||x.name;
-        b.title={Nummer:t('gleiche Nummer','same number'),Absender:t('gleicher Absender','same sender'),Tags:t('gleiche Schlagwörter','same keywords')}[x.why]||'';b.onclick=()=>docOpen(x.id);r.appendChild(b)}
-      box.appendChild(r)}
-    if(!d.parts.length){const m=document.createElement('p');m.className='mut';m.textContent=d.state==='reading'?t('Wird noch gelesen.','Still being read.'):t('Kein Text.','No text.');box.appendChild(m)}
-    // long documents come a part at a time; the assistant always searches the whole text
-    const more=next=>{if(next==null)return;const b=document.createElement('button');b.type='button';b.className='b';b.textContent=t('Weiterlesen','Read on');
-      b.onclick=async()=>{b.disabled=true;try{const n=await (await api('/api/profile/wissen/'+encodeURIComponent(id)+'/text?start='+next)).json();b.remove();show(n.parts);more(n.next)}
-        catch(x){b.disabled=false;b.textContent=x.message}};box.appendChild(b)};more(d.next);
-    box.scrollIntoView({block:'nearest'})}
-  catch(x){box.textContent=x.message}}
+// a document read again: in the Leseansicht (lesen.js) over the whole area, at the place opt {n, page, at, q} names;
+// every way in calls this (chat sources „Aus deinen Dokumenten“, Finden, Mappen, Wissensbuch, Auswertungen, Hörstück)
+function docView(id,opt){if(DOCL&&DOCL.some(d=>d.id===id)){if(DOCV.pick)DOCV.pick=null;DOCV.sel=id;if($('docbox').offsetParent!==null)docRender()}
+  return leseOpen(id,opt||{})}
 $('docdetail').onchange=async e=>{const sh=e.target.dataset.docshare,id=e.target.dataset.docuse;if(!sh&&!id)return;
   try{await api('/api/profile/wissen/'+encodeURIComponent(sh||id),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(sh?{shared:e.target.checked}:{use:e.target.checked})})}
   catch(x){docErr(x)}showDocs()};
@@ -424,10 +404,11 @@ async function docTry(){const q=$('docfind').value.trim();if(!q){$('dochits').in
   $('dochits').innerHTML=`<li class="mut">${t('Suche im Inhalt …','Searching the content …')}</li>`;
   try{const r=await (await api('/api/profile/wissen/search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({q})})).json();
     $('dochits').innerHTML=`<li class="dhhead"><b>${esc(t('Im Inhalt gefunden','Found in the content'))}</b><button class="b" type="button" data-hitclose="1" aria-label="${esc(t('Treffer schließen','Close hits'))}">${ic('x')}</button></li>`+
-      (r.hits.map(h=>`<li class="dhit" data-docview="${esc(h.id)}" role="button" tabindex="0"><span><b>${esc(h.name)}${h.at?' · '+esc(h.audio?t(h.at,h.at.replace(/^bei /,'at ')):t(h.at,h.at.replace(/^Seite /,'page '))):''}</b><br><small>${esc(h.text)}</small></span></li>`).join('')||`<li class="mut">${t('Nichts gefunden.','Nothing found.')}</li>`)}
+      (r.hits.map(h=>`<li class="dhit" data-docview="${esc(h.id)}" data-n="${esc(String(h.n??''))}" role="button" tabindex="0"><span><b>${esc(h.name)}${h.at?' · '+esc(h.audio?t(h.at,h.at.replace(/^bei /,'at ')):t(h.at,h.at.replace(/^Seite /,'page '))):''}</b><br><small>${esc(h.text)}</small></span></li>`).join('')||`<li class="mut">${t('Nichts gefunden.','Nothing found.')}</li>`)}
   catch(x){$('dochits').innerHTML=`<li class="err">${esc(x.message)}</li>`}}
-$('dochits').onclick=e=>{if(e.target.closest('[data-hitclose]')){$('dochits').innerHTML='';return}const h=e.target.closest('[data-docview]');if(h)docView(h.dataset.docview)};
-$('dochits').onkeydown=e=>{const h=e.target.closest('[data-docview]');if(h&&e.key==='Enter')docView(h.dataset.docview)};
+const docHit=h=>docView(h.dataset.docview,{n:h.dataset.n===''?null:+h.dataset.n,q:$('docfind').value.trim()});
+$('dochits').onclick=e=>{if(e.target.closest('[data-hitclose]')){$('dochits').innerHTML='';return}const h=e.target.closest('[data-docview]');if(h)docHit(h)};
+$('dochits').onkeydown=e=>{const h=e.target.closest('[data-docview]');if(h&&e.key==='Enter')docHit(h)};
 let DOCS_ON=true,SPK_ON=false,CAL_ON=true,HA_ON=false,MAIL_ON=false,AWAY_ON=false;
 // The "Ich" window: conversation settings for everyone, plus the profile's own pages once logged in.
 // On phones the window opens as a list of its pages (like the iPhone settings); a page then fills the

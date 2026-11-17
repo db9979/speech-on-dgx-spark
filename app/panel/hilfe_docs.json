@@ -2429,7 +2429,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Wissen",
 "title": "Wissen",
-"text": "Wissen ist alles, was der Spark selbst weiß, ohne ins Internet zu gehen: die hochgeladenen Dokumente jedes Profils (eine SQLite-Datei wissen.db pro Profil), das Gedächtnis, frühere Gespräche, das eigene Kiwix-Archiv und erstellte Dokumente. Die Seite zeigt den Weg, auf dem eine Frage passende Stellen in den Dokumenten findet. Finden (fund.py, eigene Datei fund.db pro Profil) legt darüber einen Index aus Titeln, Feldern und Schlagworten nach festen Regeln und nutzt für den Text dieselbe Suche; Mails und Anhänge (fundmail.py) liest es in ruhigen Minuten in Scheiben ein und hält sie nur versiegelt (AES-GCM) mit ihren Wörtern als HMAC-Marken; Termine und Kontakte (fundquellen.py) ebenso, Gespräche nur mit Datum und Kanal (ihre Wörter sucht recall.liste), Listen, Erinnerungen, Bilder und Lieder wie ihre Quelle. Zeiträume („letzte Woche“, „2023“) rechnet frisch.spanne nach festen Regeln, „vom OP“ sucht den letzten vergangenen Termin im eigenen Kalender (fund.bezug_aus): 14 Tage davor bis 60 danach steht weiter oben, nie eine harte Grenze. Mit „Schlagworte vom Modell“ schlägt das Sprachmodell in ruhigen Minuten Schlagworte vor; fund.pruefe behält nur Kategorien der festen Liste und Namen,"
+"text": "Wissen ist alles, was der Spark selbst weiß, ohne ins Internet zu gehen: die hochgeladenen Dokumente jedes Profils (eine SQLite-Datei wissen.db pro Profil), das Gedächtnis, frühere Gespräche, das eigene Kiwix-Archiv und erstellte Dokumente. Die Seite zeigt den Weg, auf dem eine Frage passende Stellen in den Dokumenten findet. Gelesen wird ein Dokument in der Leseansicht (lesen.js): documents.text_of gibt die Stücke ohne ihre Überlappung, mit Nummer, Überschriften und Inhaltsverzeichnis, und jeder Treffer nennt sein Stück, so öffnet sie genau an der Fundstelle. Finden (fund.py, eigene Datei fund.db pro Profil) legt darüber einen Index aus Titeln, Feldern und Schlagworten nach festen Regeln und nutzt für den Text dieselbe Suche; Mails und Anhänge (fundmail.py) liest es in ruhigen Minuten in Scheiben ein und hält sie nur versiegelt (AES-GCM) mit ihren Wörtern als HMAC-Marken; Termine und Kontakte (fundquellen.py) ebenso, Gespräche nur mit Datum und Kanal (ihre Wörter sucht recall.liste), Listen, Erinnerungen, Bilder und Lieder wie ihre Quelle. Zeiträume („letzte Woche“, „2023“) rechnet frisch.spanne nach festen Regeln, „vom OP“ sucht den letzten vergangenen Termin im eigenen Kalender "
 },
 {
 "lang": "de",
@@ -2437,7 +2437,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Wissen",
 "title": "Wissen",
-"text": " die wörtlich im Eintrag stehen, verknüpft Personen, Firmen und Orte mit den Punkten der Wissenskarte (nur lesend) und lässt weg, was die Person entfernt hat. Ein klarer Treffer kommt als fester Satz des Panels (fund.sofort_satz), nie mit Worten des Modells. Die Größe des Index (fund.groesse: fund.db und wissen.db samt -wal und -shm, nach Quellen geschätzt, nur Zahlen, 60 s gehalten) zeigen Finden → Einstellungen, der Admin beim Profil und Live. Mappen (mappen.py, Tabellen in wissen.db) bündeln eigene Dokumente, Wissensbuch-Seiten und Notizen; ein Gespräch, das die Person auf eine Mappe beschränkt, bekommt deren Einträge nach festen Stufen (mappen.plan: aus nie, kurz nur der Steckbrief, ganz der Text bis zum Budget, der Rest nur über die Suche) als Daten, und die Antwort ist danach gesperrt wie nach jedem Text von außen. Eine Mappe begrenzt auch die Suche: document_search und fund_suche nehmen sie nur aus den eigenen Worten der Nachricht oder aus der Bindung des Gesprächs (mappen.fuer_werkzeug) und suchen dann nur in ihren Einträgen auf „ganz“; die Seite Finden filtert mit allen Einträgen der Mappe (mappen.fuer_seite). Gefiltert wird über die Zuordnung mp_eintrag, nie über Schlagwo"
+"text": "(fund.bezug_aus): 14 Tage davor bis 60 danach steht weiter oben, nie eine harte Grenze. Mit „Schlagworte vom Modell“ schlägt das Sprachmodell in ruhigen Minuten Schlagworte vor; fund.pruefe behält nur Kategorien der festen Liste und Namen, die wörtlich im Eintrag stehen, verknüpft Personen, Firmen und Orte mit den Punkten der Wissenskarte (nur lesend) und lässt weg, was die Person entfernt hat. Ein klarer Treffer kommt als fester Satz des Panels (fund.sofort_satz), nie mit Worten des Modells. Die Größe des Index (fund.groesse: fund.db und wissen.db samt -wal und -shm, nach Quellen geschätzt, nur Zahlen, 60 s gehalten) zeigen Finden → Einstellungen, der Admin beim Profil und Live. Mappen (mappen.py, Tabellen in wissen.db) bündeln eigene Dokumente, Wissensbuch-Seiten und Notizen; ein Gespräch, das die Person auf eine Mappe beschränkt, bekommt deren Einträge nach festen Stufen (mappen.plan: aus nie, kurz nur der Steckbrief, ganz der Text bis zum Budget, der Rest nur über die Suche) als Daten, und die Antwort ist danach gesperrt wie nach jedem Text von außen. Eine Mappe begrenzt auch die Suche: document_search und fund_suche nehmen sie nur aus den eigenen Worten der Nachricht oder aus "
 },
 {
 "lang": "de",
@@ -2445,7 +2445,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Wissen",
 "title": "Wissen",
-"text": "rte; mit einer Mappe fallen Mails, Termine und Kontakte weg, eine fremde oder unbekannte Mappe findet nichts."
+"text": "der Bindung des Gesprächs (mappen.fuer_werkzeug) und suchen dann nur in ihren Einträgen auf „ganz“; die Seite Finden filtert mit allen Einträgen der Mappe (mappen.fuer_seite). Gefiltert wird über die Zuordnung mp_eintrag, nie über Schlagworte; mit einer Mappe fallen Mails, Termine und Kontakte weg, eine fremde oder unbekannte Mappe findet nichts."
 },
 {
 "lang": "de",
@@ -6445,7 +6445,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Dokumentliste für viele Dateien",
-"text": "Dokumentliste für viele Dateien: Ich → Dokumente zeigt jedes Dokument als kompakte Zeile (Symbol, Titel, Art · Absender · Quelle, Datum und Größe); Abzeichen nur, wenn etwas wichtig ist („Frist 20.12.“, „liest 3/12“, „nicht lesbar“, „für alle“, „Suche aus“). Die Liste scrollt mit der Seite, zeigt 50 Zeilen und dann „Weitere zeigen“ und ist beim Sortieren nach Datum in Heute, Letzte 7 Tage, Monate und Jahre gegliedert. Oben: ein Suchfeld filtert sofort nach Titel, Dateiname, Absender, Art, Nummer und Tags, Enter sucht auch im Inhalt (Treffer öffnen das Dokument); Quelle (Hochgeladen, iPhone-App, Begleiter, reMarkable, Aufträge, Von anderen), Sortierung (Neueste, Name, Frist, Größe; Quelle und Sortierung merkt sich der Browser) und Schnellfilter mit Anzahl (Frist offen, Wird gelesen, Nicht lesbar, Für alle, Suche aus) plus Tags als Auswahlliste. Ein Klick öffnet den Detailbereich, breit neben der Liste, schmal als eigene Seite mit „Zurück zur Liste“: Steckbrief, Zustand mit Balken, Tags direkt bearbeiten, Schalter „Der Assistent sucht darin“ und „Für alle“, Original öffnen, Text lesen (mit „Dazu gehören“), Erinnern, Neu einlesen, Löschen. Freigegebene Dokumente anderer stehen in ders"
+"text": "Dokumentliste für viele Dateien: Ich → Dokumente zeigt jedes Dokument als kompakte Zeile (Symbol, Titel, Art · Absender · Quelle, Datum und Größe); Abzeichen nur, wenn etwas wichtig ist („Frist 20.12.“, „liest 3/12“, „nicht lesbar“, „für alle“, „Suche aus“). Die Liste scrollt mit der Seite, zeigt 50 Zeilen und dann „Weitere zeigen“ und ist beim Sortieren nach Datum in Heute, Letzte 7 Tage, Monate und Jahre gegliedert. Oben: ein Suchfeld filtert sofort nach Titel, Dateiname, Absender, Art, Nummer und Tags, Enter sucht auch im Inhalt (Treffer öffnen die Leseansicht an der Stelle); Quelle (Hochgeladen, iPhone-App, Begleiter, reMarkable, Aufträge, Von anderen), Sortierung (Neueste, Name, Frist, Größe; Quelle und Sortierung merkt sich der Browser) und Schnellfilter mit Anzahl (Frist offen, Wird gelesen, Nicht lesbar, Für alle, Suche aus) plus Tags als Auswahlliste. Ein Klick öffnet den Detailbereich, breit neben der Liste, schmal als eigene Seite mit „Zurück zur Liste“: Steckbrief, Zustand mit Balken, Tags direkt bearbeiten, Schalter „Der Assistent sucht darin“ und „Für alle“, Original öffnen, Lesen (Leseansicht, mit „Dazu gehören“), Erinnern, Neu einlesen, Löschen. Freigegebene Dokumen"
 },
 {
 "lang": "de",
@@ -6453,7 +6453,23 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Dokumentliste für viele Dateien",
-"text": "elben Liste (Quelle „Von anderen“). „Auswählen“ setzt Häkchen und wirkt auf alle markierten eigenen Dokumente: Suche an/aus, Für alle an/aus, Tag geben, Neu einlesen (höchstens 20), Löschen (mit Rückfrage), über POST /api/profile/wissen/batch ({\"do\", \"ids\"}, nur Browser-Anmeldung des Profils, CSRF, ein Schritt des Rate-Limits „doc“ pro Anfrage, höchstens 200 IDs, Body 8 KB, nur Dokumente der eigenen Datenbank, „Für alle“ und Tags nur mit ihren Schaltern). Die sechs Schalter und der Hinweis zu Dateiarten stehen eingeklappt unter „Einstellungen für Dokumente“. Der Aufbau „Liste mit Detailbereich“ nutzt die CSS-Bausteine ld-… in app.css."
+"text": "te anderer stehen in derselben Liste (Quelle „Von anderen“). „Auswählen“ setzt Häkchen und wirkt auf alle markierten eigenen Dokumente: Suche an/aus, Für alle an/aus, Tag geben, Neu einlesen (höchstens 20), Löschen (mit Rückfrage), über POST /api/profile/wissen/batch ({\"do\", \"ids\"}, nur Browser-Anmeldung des Profils, CSRF, ein Schritt des Rate-Limits „doc“ pro Anfrage, höchstens 200 IDs, Body 8 KB, nur Dokumente der eigenen Datenbank, „Für alle“ und Tags nur mit ihren Schaltern). Die sechs Schalter und der Hinweis zu Dateiarten stehen eingeklappt unter „Einstellungen für Dokumente“. Der Aufbau „Liste mit Detailbereich“ nutzt die CSS-Bausteine ld-… in app.css."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Leseansicht (Dominik 2026-11-17)",
+"text": "Leseansicht (Dominik 2026-11-17): Ein Dokument liest sich nicht mehr im schmalen Band neben der Liste, sondern in einer eigenen Ansicht über die ganze Fläche rechts vom Menü (am Handy die ganze Seite, lesen.js). Oben eine Leiste: Zurück (nach einer Suche „‹ Suche „Wort““, dorthin, woher man kam; auch Esc), Titel mit der Seite der Stelle, „Text | Original“ (nur mit aufbewahrtem Original: ein PDF in der Ansicht des Browsers an der Seite der Stelle, ein Bild groß, sonst „Herunterladen“) und „Im Dokument suchen“ mit „1 von N“ und ⌃⌄ (Enter, Umschalt+Enter, Strg/⌘ F). Links das Inhaltsverzeichnis aus den Überschriften, die die Suche ohnehin nach festen Regeln findet (documents.pieces); ein Punkt zeigt, unter welcher Überschrift die Wörter stehen. In der Mitte eine ruhige Lesespalte (höchstens 680 px, 17 px, Absätze, Seiten als feine Linie, Überschriften fett). Sie öffnet an der Fundstelle: ein Treffer der Suche, eine Quelle unter einer Antwort („Aus deinen Dokumenten“), Finden, Mappen, Wissensbuch, Auswertungen und Hörstück öffnen alle dieselbe Ansicht (docView(id, {n, page, at, q})), am Stück des Treffers (n), sonst an der Seite oder der Stelle einer Aufnahme; die Wörter der Suche sind"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Leseansicht (Dominik 2026-11-17)",
+"text": " gelb, die aktuelle Stelle orange, ohne Suchwörter ist das Stück blau hinterlegt. Am Handy steht die Suche unten wie in Safari. Der Server gibt dafür die Stücke ohne ihre Überlappung (documents.text_of, _ohne_ueberlappung), mit Nummer und Überschriften, das Inhaltsverzeichnis (heads) und mit ?um=<Stück> den Teil um ein Stück weit hinten in einem sehr langen Dokument („Davor lesen“, „Weiterlesen“); die Suche nennt je Treffer ihr Stück (n). Kein Schalter (eine Ansicht der bestehenden Dokumente), kein neuer Endpunkt; der Text kommt nur als Textknoten auf die Seite, Markierungen setzt das DOM (nie HTML aus dem Dokument). Test: test_leseansicht."
 },
 {
 "lang": "de",
@@ -20573,7 +20589,7 @@
 "file": "Architecture and data flow",
 "head": "Knowledge",
 "title": "Knowledge",
-"text": "Knowledge is everything the Spark knows without going to the internet: the uploaded documents of each profile (one SQLite file wissen.db per profile), the memory, earlier conversations, the own Kiwix archive and created documents. This page shows the way a question finds fitting passages in the documents. Find (fund.py, its own file fund.db per profile) adds an index of titles, fields and tags by fixed rules on top and uses the same search for the text; mail and attachments (fundmail.py) it reads in slices in quiet minutes and keeps only sealed (AES-GCM) with their words as HMAC marks; appointments and contacts (fundquellen.py) likewise, conversations only with date and channel (recall.liste searches their words), lists, reminders, pictures and songs like their source. Periods („last week“, „2023“) come from frisch.spanne by fixed rules, „from the surgery“ looks for the last past appointment in the own calendar (fund.bezug_aus): 14 days before to 60 after rank higher, never a hard limit. With „Tags by the model“ the language model proposes tags in quiet minutes; fund.pruefe keeps only categories of the fixed list and names that stand in the entry word for word, links people, compan"
+"text": "Knowledge is everything the Spark knows without going to the internet: the uploaded documents of each profile (one SQLite file wissen.db per profile), the memory, earlier conversations, the own Kiwix archive and created documents. This page shows the way a question finds fitting passages in the documents. A document is read in the reading view (lesen.js): documents.text_of gives the pieces without their overlap, with number, headings and table of contents, and every hit names its piece, so it opens right at the place. Find (fund.py, its own file fund.db per profile) adds an index of titles, fields and tags by fixed rules on top and uses the same search for the text; mail and attachments (fundmail.py) it reads in slices in quiet minutes and keeps only sealed (AES-GCM) with their words as HMAC marks; appointments and contacts (fundquellen.py) likewise, conversations only with date and channel (recall.liste searches their words), lists, reminders, pictures and songs like their source. Periods („last week“, „2023“) come from frisch.spanne by fixed rules, „from the surgery“ looks for the last past appointment in the own calendar (fund.bezug_aus): 14 days before to 60 after rank higher, "
 },
 {
 "lang": "en",
@@ -20581,7 +20597,7 @@
 "file": "Architecture and data flow",
 "head": "Knowledge",
 "title": "Knowledge",
-"text": "ies and places to the points of the knowledge map (read only) and leaves out what the person removed. A clear hit comes as the panel's fixed sentence (fund.sofort_satz), never in the model's words. The size of the index (fund.groesse: fund.db and wissen.db with -wal and -shm, estimated by source, numbers only, kept 60 s) is shown by Find → Settings, the admin at the profile and Live. Collections (mappen.py, tables in wissen.db) bundle own documents, knowledge book pages and notes; a conversation the person limits to a collection gets its entries by fixed levels (mappen.plan: off never, short only the document card, whole the text up to the budget, the rest only through the search) as data, and the answer is locked after it like after any outside text. A collection also narrows the search: document_search and fund_suche take it only from the person's own words of the message or from the conversation's binding (mappen.fuer_werkzeug) and then search only its entries set to whole; the page Find filters with every entry of the collection (mappen.fuer_seite). The filter goes over the assignment mp_eintrag, never over tags; with a collection mail, appointments and contacts fall away, anot"
+"text": "never a hard limit. With „Tags by the model“ the language model proposes tags in quiet minutes; fund.pruefe keeps only categories of the fixed list and names that stand in the entry word for word, links people, companies and places to the points of the knowledge map (read only) and leaves out what the person removed. A clear hit comes as the panel's fixed sentence (fund.sofort_satz), never in the model's words. The size of the index (fund.groesse: fund.db and wissen.db with -wal and -shm, estimated by source, numbers only, kept 60 s) is shown by Find → Settings, the admin at the profile and Live. Collections (mappen.py, tables in wissen.db) bundle own documents, knowledge book pages and notes; a conversation the person limits to a collection gets its entries by fixed levels (mappen.plan: off never, short only the document card, whole the text up to the budget, the rest only through the search) as data, and the answer is locked after it like after any outside text. A collection also narrows the search: document_search and fund_suche take it only from the person's own words of the message or from the conversation's binding (mappen.fuer_werkzeug) and then search only its entries set t"
 },
 {
 "lang": "en",
@@ -20589,7 +20605,7 @@
 "file": "Architecture and data flow",
 "head": "Knowledge",
 "title": "Knowledge",
-"text": "her profile's or an unknown collection finds nothing."
+"text": "o whole; the page Find filters with every entry of the collection (mappen.fuer_seite). The filter goes over the assignment mp_eintrag, never over tags; with a collection mail, appointments and contacts fall away, another profile's or an unknown collection finds nothing."
 },
 {
 "lang": "en",
@@ -24461,7 +24477,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Document list for many files",
-"text": "Document list for many files: Me → Documents shows every document as one compact row (icon, title, kind · sender · source, date and size); badges only when something matters (\"due 20/12\", \"reading 3/12\", \"not readable\", \"for everyone\", \"search off\"). The list scrolls with the page, shows 50 rows and then \"Show more\", and is grouped into Today, Last 7 days, months and years when sorted by date. At the top a search field filters at once by title, file name, sender, kind, number and tags, Enter also searches the content (hits open the document); source (uploaded, iPhone app, companion, reMarkable, jobs, from others), sort order (newest, name, deadline, size; source and sort order stay in the browser) and quick filters with counts (deadline open, being read, not readable, for everyone, search off) plus tags as a list. A click opens the details, beside the list on wide pages, as their own page with \"Back to the list\" on narrow ones: card, state with bar, tags edited in place, switches \"The assistant searches it\" and \"For everyone\", open original, read text (with \"Belongs with\"), remind, read again, delete. Documents others share are in the same list (source \"From others\"). \"Select\" tick"
+"text": "Document list for many files: Me → Documents shows every document as one compact row (icon, title, kind · sender · source, date and size); badges only when something matters (\"due 20/12\", \"reading 3/12\", \"not readable\", \"for everyone\", \"search off\"). The list scrolls with the page, shows 50 rows and then \"Show more\", and is grouped into Today, Last 7 days, months and years when sorted by date. At the top a search field filters at once by title, file name, sender, kind, number and tags, Enter also searches the content (hits open the reading view at the place); source (uploaded, iPhone app, companion, reMarkable, jobs, from others), sort order (newest, name, deadline, size; source and sort order stay in the browser) and quick filters with counts (deadline open, being read, not readable, for everyone, search off) plus tags as a list. A click opens the details, beside the list on wide pages, as their own page with \"Back to the list\" on narrow ones: card, state with bar, tags edited in place, switches \"The assistant searches it\" and \"For everyone\", open original, read (reading view, with \"Belongs with\"), remind, read again, delete. Documents others share are in the same list (source \"Fr"
 },
 {
 "lang": "en",
@@ -24469,7 +24485,23 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Document list for many files",
-"text": "s documents and acts on all ticked own ones: search on/off, for everyone on/off, add a tag, read again (at most 20), delete (with a question first), via POST /api/profile/wissen/batch ({\"do\", \"ids\"}, the profile's browser login only, CSRF, one step of the \"doc\" rate limit per request, at most 200 ids, 8 KB body, only documents of the own database, \"for everyone\" and tags only with their switches). The six switches and the note on file kinds sit folded under \"Settings for documents\". The layout \"list with details\" uses the CSS building blocks ld-… in app.css."
+"text": "om others\"). \"Select\" ticks documents and acts on all ticked own ones: search on/off, for everyone on/off, add a tag, read again (at most 20), delete (with a question first), via POST /api/profile/wissen/batch ({\"do\", \"ids\"}, the profile's browser login only, CSRF, one step of the \"doc\" rate limit per request, at most 200 ids, 8 KB body, only documents of the own database, \"for everyone\" and tags only with their switches). The six switches and the note on file kinds sit folded under \"Settings for documents\". The layout \"list with details\" uses the CSS building blocks ld-… in app.css."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Reading view (Dominik 2026-11-17)",
+"text": "Reading view (Dominik 2026-11-17): A document is no longer read in the narrow band beside the list but in a view of its own over the whole area right of the menu (on a phone the whole page, lesen.js). At the top one bar: back (after a search \"‹ Search \"word\"\", to where one came from; also Esc), the title with the page of the place, \"Text | Original\" (only with a kept original: a PDF in the browser's own viewer at the page of the place, a picture large, else \"Download\") and \"Search in the document\" with \"1 of N\" and ⌃⌄ (Enter, Shift+Enter, Ctrl/⌘ F). On the left the table of contents from the headings the search finds anyway by fixed rules (documents.pieces); a dot shows under which heading the words stand. In the middle a calm reading column (at most 680 px, 17 px, paragraphs, pages as a thin line, headings bold). It opens at the place: a search hit, a source under an answer (\"From your documents\"), Finden, Mappen, Wissensbuch, Auswertungen and Hörstück all open the same view (docView(id, {n, page, at, q})), at the hit's piece (n), else at the page or the place in a recording; the words of the search are yellow, the current place orange, without search words the piece has a blue ba"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Reading view (Dominik 2026-11-17)",
+"text": "ckground. On a phone the search sits at the bottom as in Safari. For this the server gives the pieces without their overlap (documents.text_of, _ohne_ueberlappung), with number and headings, the table of contents (heads) and with ?um=<piece> the part around a piece far into a very long document (\"Read what comes before\", \"Read on\"); the search names each hit's piece (n). No switch (a view of the existing documents), no new endpoint; the text only reaches the page as text nodes, marks are set by the DOM (never HTML from the document). Test: test_leseansicht."
 },
 {
 "lang": "en",

@@ -247,7 +247,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Wissen: how a question finds passages
     "wissen": {
-        "stand": "eeb7b9a34f",
+        "stand": "ede403a172",
         "bezug": {
             "lokal.MAX_HITS": ["s5"], "wissen.search": ["s1", "s8", "s9"], "documents.search": ["s5", "s6"],
             "documents._terms": ["s5"], "documents.match_docs": ["s4"], "docembed.query": ["s3"],
@@ -317,7 +317,9 @@ SEITEN = {
         "kurz": ("Wissen ist alles, was der Spark selbst weiß, ohne ins Internet zu gehen: die hochgeladenen Dokumente "
                  "jedes Profils (eine SQLite-Datei wissen.db pro Profil), das Gedächtnis, frühere Gespräche, das eigene "
                  "Kiwix-Archiv und erstellte Dokumente. Die Seite zeigt den Weg, auf dem eine Frage passende Stellen "
-                 "in den Dokumenten findet. Finden (fund.py, eigene Datei fund.db pro Profil) legt darüber einen "
+                 "in den Dokumenten findet. Gelesen wird ein Dokument in der Leseansicht (lesen.js): documents.text_of "
+                 "gibt die Stücke ohne ihre Überlappung, mit Nummer, Überschriften und Inhaltsverzeichnis, und jeder "
+                 "Treffer nennt sein Stück, so öffnet sie genau an der Fundstelle. Finden (fund.py, eigene Datei fund.db pro Profil) legt darüber einen "
                  "Index aus Titeln, Feldern und Schlagworten nach festen Regeln und nutzt für den Text dieselbe Suche; "
                  "Mails und Anhänge (fundmail.py) liest es in ruhigen Minuten in Scheiben ein und hält sie nur "
                  "versiegelt (AES-GCM) mit ihren Wörtern als HMAC-Marken; Termine und Kontakte (fundquellen.py) "
@@ -343,7 +345,9 @@ SEITEN = {
                  "Knowledge is everything the Spark knows without going to the internet: the uploaded documents of "
                  "each profile (one SQLite file wissen.db per profile), the memory, earlier conversations, the own "
                  "Kiwix archive and created documents. This page shows the way a question finds fitting passages in "
-                 "the documents. Find (fund.py, its own file fund.db per profile) adds an index of titles, fields "
+                 "the documents. A document is read in the reading view (lesen.js): documents.text_of gives the "
+                 "pieces without their overlap, with number, headings and table of contents, and every hit names its "
+                 "piece, so it opens right at the place. Find (fund.py, its own file fund.db per profile) adds an index of titles, fields "
                  "and tags by fixed rules on top and uses the same search for the text; mail and attachments "
                  "(fundmail.py) it reads in slices in quiet minutes and keeps only sealed (AES-GCM) with their words "
                  "as HMAC marks; appointments and contacts (fundquellen.py) likewise, conversations only with date "

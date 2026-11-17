@@ -61,8 +61,7 @@ if($('docaw'))$('docaw').addEventListener('click',async e=>{const d=docFind(AW.d
     AW.msg=r.ok?t('Erinnerung angelegt für ','Reminder set for ')+new Date(x.due).toLocaleString(L==='en'?'en-GB':'de-DE',{dateStyle:'medium',timeStyle:'short'}):errSay(r.status,x.detail,'');
     awPaint(d);return}
   const go=e.target.closest('[data-awgo]');
-  if(go){await docView(d.id);const pg=go.dataset.awgo;if(!pg&&!go.dataset.awat)return;
-    const at=go.dataset.awat,h=[...document.querySelectorAll('#docview .dvpage')].find(x=>x.textContent===(at||t('Seite ','Page ')+pg));if(h)h.scrollIntoView({block:'start'})}});
+  if(go){docView(d.id,{page:+go.dataset.awgo||0,at:go.dataset.awat||''})}});
 
 // Admin (Funktionen → Eigene Dokumente → Auswertungen): the kinds by themselves fill the hidden list field (saved with
 // the other settings); the Vorlagen are saved on their own (PUT /api/admin/auswertung/vorlagen, checked there).

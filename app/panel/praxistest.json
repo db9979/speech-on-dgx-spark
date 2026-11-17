@@ -6574,6 +6574,13 @@
 "text": "Am Rechner: oben im Seitenmenü stehen Logo, „Spark“, Käfer und Mikrofon auf einer Höhe, darunter keine zweite Zeile mehr; mit der Maus über „Spark“ erscheinen GPU und Uhrzeit. Der Käfer hat einen roten Körper, auch am Handy oben rechts und in der iPhone-App (nach dem nächsten TestFlight). Das Mikrofon bleibt grau. Am Handy unter Chats steht der Käfer rechts neben „＋ Neuer Chat“, nicht darauf.",
 "thread": "Fehler und Wünsche als Issue melden",
 "test": "test_ui_browser.Browser.test_report_bug_on_every_page"
+},
+{
+"id": "P952",
+"v": 1509,
+"titel": "Dokumente lesen an der Fundstelle",
+"text": "A: Ich → Dokumente, ins Suchfeld ein Wort, das in einem langen Dokument steht, Enter, einen Treffer unter „Im Inhalt gefunden“ antippen. B: Das Dokument öffnet über die ganze Fläche (am Handy die ganze Seite) genau an der Stelle, das Wort ist orange, die anderen gelb, oben „1 von N“; ⌄ springt weiter, links (am Rechner) zeigt das Inhaltsverzeichnis einen Punkt bei den passenden Überschriften. C: Bei einem PDF „Original“: das PDF steht an der Seite der Stelle. D: Im Assistenten eine Frage zu einem Dokument, unter der Antwort „Aus deinen Dokumenten“ antippen: öffnet an der Stelle. E: „‹ Suche …“ oder Esc führt zurück.",
+"test": "test_leseansicht.Lesen.test_lese_hit_opens_at_the_place"
 }
 ]
 }

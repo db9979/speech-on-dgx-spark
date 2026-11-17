@@ -317,7 +317,7 @@ function wkaMapEvents(box){let drag=null;const pts=new Map();let pinch=null;
   box.addEventListener('dragleave',()=>box.classList.remove('drop'));
   box.addEventListener('drop',e=>{box.classList.remove('drop');const m=/^wk(doc|wait):([0-9a-f]{12})$/.exec(e.dataTransfer.getData('text/plain')||'');if(!m)return;e.preventDefault();
     if(m[1]==='wait'){wkaFirst(m[2],null);return}WKA.doc=m[2];WKA.um='';WKA.sel=null;wkaLoad()})}
-function wkaSrc(e){const b=icEl('a','',e.name+(e.page?t(' · S. ',' · p. ')+e.page:''));b.href='#';b.onclick=ev=>{ev.preventDefault();if(typeof docView==='function')docView(e.doc)};return b}
+function wkaSrc(e){const b=icEl('a','',e.name+(e.page?t(' · S. ',' · p. ')+e.page:''));b.href='#';b.onclick=ev=>{ev.preventDefault();if(typeof docView==='function')docView(e.doc,{page:e.page||0})};return b}
 function wkaEdgeRow(e,byId){const li=icEl('li','');const s=icEl('span','');const a=byId[e.a],b=byId[e.b];
   s.append(icEl('b','',a?a.title:'?'),document.createTextNode(' '),icEl('b',e.cause?'wkcause':'',wkaArt(e.art)),document.createTextNode(' '+(b?b.title:'?')+(e.detail?' · '+e.detail:'')),document.createElement('br'));
   const sm=icEl('small','mut');sm.appendChild(wkaSrc(e));s.appendChild(sm);const x=icEl('button','b',t('Stimmt nicht','Wrong'));x.type='button';x.onclick=()=>wkaWrong(e.id,x);li.append(s,x);return li}

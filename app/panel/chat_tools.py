@@ -302,6 +302,7 @@ async def _run(t, name, args, st):
         if hits or brefs:
             # "karte": the hit came (also) over the Wissenskarte (Karte hilft der Suche), the line under the answer says so
             refs = list({(h["id"], h["page"]): {"id": h["id"], "name": h["name"], "page": h["page"], "file": h["file"],
+                                                **({"n": h["n"]} if isinstance(h.get("n"), int) else {}),   # the piece: Leseansicht opens there
                                                 **({"karte": True} if h.get("karte") else {})}
                          for h in brefs + hits}.values())
             await t.out.put({"type": "docsources", "items": sorted({h["name"] for h in brefs + hits}), "refs": refs[:8]})

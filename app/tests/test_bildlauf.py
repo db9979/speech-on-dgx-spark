@@ -92,6 +92,9 @@ FENSTER = {
     ".dm-rlist": "Dungeon-Master tab Regeln on a wide screen: the catalogue list beside its detail (like .ld-list); narrow screens show it in full",
     ".dm-rtafel": "Dungeon-Master tab Regeln: the rows of one table (up to 300) in the detail beside the list; the detail stays in view",
     ".dm-tisch .dm-handeln": "Dungeon-Master table on a phone: the field to act stays above the bottom bar; only a long text in it scrolls (at most 45 % of the screen)",
+    ".lstoc": "Leseansicht: the contents of a document beside the text (up to 400 headings); the place stays in view",
+    ".lspaper": "Leseansicht: the text of a document over the whole area, the bar with search stays at the top",
+    ".lsorig": "Leseansicht, Original: the PDF, picture or recording in place of the text",
 }
 CSS = ("app.css", "appview.css", "live.css", "technik.css", "weiche.css")
 
