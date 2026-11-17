@@ -2166,6 +2166,45 @@ def empfohlen(art, kat, profil):
     return next((mid for mid, m in kat.items() if m["art"] == art and k in m.get("empfohlen", ())), "")
 
 
+# „Neu verfügbar“ (Dominik 2026-11-16 „1-6“ point 6, stage D2): once a day the newest public models of a few fixed
+# publishers, checked by the same quick rules as the search; only a hint on the page, nothing is downloaded or added.
+NEU_HERAUSGEBER = ("Qwen", "google", "nvidia", "mistralai", "deepseek-ai", "ibm-granite", "openai")
+NEU_ARTEN = ("llm", "sehen", "asr", "tts")
+NEU_TAGE = 30
+NEU_MAX = 12
+HF_NEU = ("https://huggingface.co/api/models?author={a}&filter=safetensors&sort=createdAt&direction=-1&limit=20"
+          "&expand[]=config&expand[]=tags&expand[]=safetensors&expand[]=downloads&expand[]=cardData&expand[]=gated"
+          "&expand[]=pipeline_tag&expand[]=createdAt")
+
+
+def neu_url(herausgeber):
+    if herausgeber not in NEU_HERAUSGEBER:
+        raise Fehler("suche")
+    return HF_NEU.format(a=herausgeber)
+
+
+def neu_auswahl(items, art, total_gib, kat, profil=None, now=None, familien=()):
+    """From one publisher's newest models: the hits of this kind the quick rules let through (such_treffer, nein
+    empty), created in the last NEU_TAGE days and not in the catalog: [{art, repo, tage, gb, need_gib, lizenz, ...}]."""
+    import datetime
+    now = time.time() if now is None else now
+    neu = {}
+    for x in items if isinstance(items, list) else []:
+        c = x.get("createdAt") if isinstance(x, dict) else None
+        try:
+            t = datetime.datetime.fromisoformat(str(c).replace("Z", "+00:00")).timestamp()
+        except ValueError:
+            continue
+        if 0 <= now - t <= NEU_TAGE * 86400 and isinstance(x.get("id"), str):
+            neu[x["id"]] = t
+    out = []
+    for h in such_treffer([x for x in items if isinstance(x, dict) and x.get("id") in neu], art, total_gib, kat, profil,
+                          familien=familien):
+        if not h["nein"]:
+            out.append(dict(h, art=art, tage=int((now - neu[h["repo"]]) // 86400)))
+    return out
+
+
 def such_url(q):
     """The search address for an admin's words (letters, digits, space and ._/- only); Fehler("suche") otherwise."""
     q = str(q or "").strip()

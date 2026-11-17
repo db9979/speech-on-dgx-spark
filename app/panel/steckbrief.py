@@ -986,6 +986,12 @@ STECKBRIEFE = {
         ohne_werkzeug=("ohne", "probetag.py: der feste Qualitätstest und eine feste Regel im Panel entscheiden, kein "
                                "Werkzeug"),
         nur_spark=True),
+    # modelleneu.py (stage D2): once a day the newest public models of fixed publishers as a hint
+    "modelleneu": Steckbrief(de="Neu verfügbar", en="Newly available", gruppe="sec",
+        schalter=("modelle_neu",), anleitung="modelleneu", parent="modellwechsel",
+        ohne_werkzeug=("ohne", "modelleneu.py: eine feste Liste von Herausgebern und die festen Regeln der Suche, nur "
+                               "ein Hinweis auf der Seite, kein Werkzeug"),
+        nur_spark=True),
     # werkstattseite.py + werkstatt.py (plan opencode-werkstatt): test run, code measurement, diagnosis and repairs in a
     # sandbox on the model computer (OpenCode, no data, no internet, no push); admins only, the patch goes to a person
     "werkstatt": Steckbrief(de="Werkstatt", en="Workshop", gruppe="sec", schalter=("werkstatt",),

@@ -1895,6 +1895,8 @@ Jede Funktion des Spark mit ihrem Schalter, worauf sie aufbaut, wo man sie einri
 
 - **Probetag nach dem Wechsel** (Funktionen → Zugang → „Probetag nach dem Wechsel“; baut auf „Modelle wechseln“): Nach jedem Wechsel des Sprachmodells, sobald es antwortet, läuft einmal der feste Qualitätstest (Zustand → Prüfen → Qualitätstest).
 
+- **Neu verfügbar** (Funktionen → Zugang → „Neu verfügbar“; baut auf „Modelle wechseln“): Einmal am Tag fragt der Spark die öffentliche Liste von Hugging Face nach den neuesten Modellen einiger fester Herausgeber (Qwen, Google, NVIDIA, Mistral, DeepSeek, IBM Granite, OpenAI) und prüft sie mit den Regeln der Suche: passende Au …
+
 - **Werkstatt** (Funktionen → Zugang → „Werkstatt“): Auf der Seite Zustand → Werkstatt lässt ein Admin den Modell-Rechner in einer abgeschotteten Kopie des Codes arbeiten.
 
 - **Jede Nacht testen** (Funktionen → Zugang → „Jede Nacht testen“; baut auf „Werkstatt“): Einmal pro Nacht startet die Werkstatt von selbst den Testlauf (alle Selbsttests wie auf GitHub, ohne Sprachmodell).

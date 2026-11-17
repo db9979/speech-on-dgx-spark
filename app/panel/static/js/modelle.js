@@ -150,6 +150,13 @@ function mdRegale(a,w){const ge=a.modelle.filter(m=>!m.eigen).sort((x,y)=>(y.emp
   return (ei.length?`<h4>${esc(t('Geprüft','Checked'))}</h4>`:'')+`<div class="mdkarten">${ge.map(m=>mdKarte(m,a,w)).join('')}</div>`+
     (ei.length?`<h4>${esc(t('Eigene, ungeprüft','Own, unchecked'))}</h4><div class="mut vb-note">${esc(t('Selbst hinzugefügt und nur mit den festen Regeln geprüft (Dateiarten, kein Code, bekannte Bauart, Speicher); wählbar erst nach einer Messung auf diesem Rechner; Hören und Sprechen bestehen beim Wechsel eine feste Probe, sonst geht es zurück.','Added by you and checked only by the fixed rules (file kinds, no code, a known architecture, memory); selectable only after a measurement on this computer; listening and speaking pass a fixed probe when switching, else it goes back.'))}</div><div class="mdkarten">${ei.map(m=>mdKarte(m,a,w)).join('')}</div>`:'')}
 // after „Ausprobieren“: the question with the numbers
+// Neu verfügbar (modelleneu.py, stage D2): the fitting new models of fixed publishers, a hint; „Hinzufügen“ checks fully
+function mdNeu(n,w){if(!n)return '';const l=n.treffer||[];
+  return `<div class="card"><h3>${esc(t('Neu verfügbar','Newly available'))}</h3>`+(l.length?`<div class="mdkarten">${l.map(h=>`<div class="mdkarte"><div class="mdkopf"><b>${esc(h.repo)}</b> <span class="mut">${esc(h.art_name)}</span></div>`+
+    `<div class="mut mdzahl">${esc([t('vor '+h.tage+' Tagen',h.tage+' days ago'),MD_FORMAT[h.format]||'',h.gb!=null?h.gb+' GB':'',h.need_gib!=null?'~'+mdGib(h.need_gib):'',h.lizenz].filter(Boolean).join(' · '))}</div>`+
+    (w.eigene?`<div class="mdtun"><button type="button" class="b sm" data-mdneu="${esc(h.repo)}" data-mdneuart="${esc(h.art)}">${esc(t('Hinzufügen','Add'))}</button></div>`:'')+`</div>`).join('')}</div>`
+    :`<div class="mut vb-note">${esc(t('In den letzten 30 Tagen nichts, was die Regeln zulassen.','Nothing in the last 30 days that passes the rules.'))}</div>`)+
+    `<div class="mut vb-note">${esc(t('Einmal am Tag von festen Herausgebern, mit den Regeln der Suche geprüft. Geladen wird nichts.','Once a day from fixed publishers, checked by the rules of the search. Nothing is downloaded.'))}</div></div>`}
 // Modellsätze (stage B2): the models running now kept under a name, brought back in one step (one switch after the other)
 function mdSaetze(d,w){if(!w.an)return '';const l=d.saetze||[],lauf=d.lauf;
   const zeile=s=>`<div class="mdkarte"><div class="mdkopf"><b>${esc(s.name)}</b></div><div class="mut mdzahl">${esc(s.modelle.map(x=>x[1]).join(' · '))}</div>`+
@@ -213,6 +220,7 @@ function mdKnoepfe(d){const main=$('mdmain');
     mdPost('/api/admin/modelle/messen',{id:b.dataset.mdp,probe:true},t('„'+(m?m.name:b.dataset.mdp)+'“ ausprobieren? Der Spark lädt es falls nötig und misst es; das Sprachmodell pausiert für etwa 10 bis 25 Minuten. Danach fragt die Seite, ob gewechselt wird.','Try "'+(m?m.name:b.dataset.mdp)+'"? The Spark downloads it if needed and measures it; the language model pauses for about 10 to 25 minutes. Afterwards the page asks whether to switch.'))});
   main.querySelectorAll('[data-mdh]').forEach(b=>b.onclick=()=>mdDazu(b.dataset.mdh));
   if($('mdfok'))$('mdfok').onclick=mdDatei;
+  main.querySelectorAll('[data-mdneu]').forEach(b=>b.onclick=()=>{MD_OFFEN=b.dataset.mdneuart;mdDazu(b.dataset.mdneu)});
   if($('mdsok'))$('mdsok').onclick=()=>{const n=$('mdsn').value.trim();if(n)mdPost('/api/admin/modelle/saetze',{name:n},t('Die jetzigen Modelle als „'+n+'“ behalten?','Keep the current models as "'+n+'"?'))};
   main.querySelectorAll('[data-mdsa]').forEach(b=>b.onclick=()=>mdPost('/api/admin/modelle/saetze/anwenden',{name:b.dataset.mdsa},t('„'+b.dataset.mdsa+'“ einstellen? Der Spark wechselt eine Art nach der anderen; das dauert je Wechsel einige Minuten.','Bring back "'+b.dataset.mdsa+'"? The Spark switches one kind after the other; each switch takes a few minutes.')));
   main.querySelectorAll('[data-mdsw]').forEach(b=>b.onclick=()=>mdPost('/api/admin/modelle/saetze?name='+encodeURIComponent(b.dataset.mdsw),null,t('„'+b.dataset.mdsw+'“ löschen? Die Modelle bleiben.','Delete "'+b.dataset.mdsw+'"? The models stay.'),'DELETE'));
@@ -256,7 +264,7 @@ async function loadModelle(daten){const main=$('mdmain'),msg=$('mdmsg');if(!main
   let d=daten;if(!d)try{d=await (await api('/api/admin/modelle'+(L==='en'?'?lang=en':''))).json()}catch(e){msg.textContent=e.message;return}
   const w=d.wechsel||{};
   MD_SEITE=d;if(MD_OFFEN&&!d.arten.some(a=>a.art===MD_OFFEN))MD_OFFEN='';
-  felderNeu(main,mdWechsel(w)+mdProbe(w)+mdProbetag(d.probetag)+mdBalken(d.budget)+mdSaetze(d,w)+`<div class="mdkacheln">${d.arten.filter(a=>a.modelle.length).map(a=>mdKachel(a,w)).join('')}</div>`+mdWahl(d,w)+
+  felderNeu(main,mdWechsel(w)+mdProbe(w)+mdProbetag(d.probetag)+mdBalken(d.budget)+mdNeu(d.neu,w)+mdSaetze(d,w)+`<div class="mdkacheln">${d.arten.filter(a=>a.modelle.length).map(a=>mdKachel(a,w)).join('')}</div>`+mdWahl(d,w)+
     `<details class="mdmehr" id="mdmehr"${MD_MEHR?' open':''}><summary>${esc(t('Mehr: Lange Gespräche, Messwerte, Messen, Zurückholen, letzte Starts, Bibliothek, Hugging-Face-Token','More: long conversations, measurements, measuring, bringing back, last starts, library, Hugging Face token'))}</summary>`+
     `<div class="vb-two">${mdPlatz(w)}${mdBudget(d.budget)}${d.arten.map(a=>mdArt(a,w,d)).join('')}${mdStarts(d)}${mdBib(d)}${mdHf(d)}</div>`+
     `<div class="mut vb-note">${d.geraet?esc(t('Gerät: ','Computer: ')+d.geraet)+' · ':''}${esc(d.messung_zeit?t('Letzte Messung: ','Last measurement: ')+new Date(d.messung_zeit*1000).toLocaleString(L==='en'?'en':'de'):t('Noch keine Messung. „Messen“ beim Modell (mit Funktionen → Modelle wechseln) oder auf dem Spark: sudo speech-spark modelle messen','No measurement yet. „Measure“ at the model (with Features → Routing models) or on the Spark: sudo speech-spark modelle messen'))}`+

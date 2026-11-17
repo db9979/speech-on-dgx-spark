@@ -4,6 +4,20 @@
 
 Geteilt installieren (Panel auf einem eigenen Rechner wie einem Raspberry Pi 5), umziehen und zurückholen: [Spark teilen](spark-teilen.md).
 
+## Nur Modelle (Spark allein): Schritt für Schritt
+
+Der Spark stellt nur seine Modelle mit ihren APIs bereit, ohne Assistent und ohne Panel-Rechner; bedient wird er über seine eigene Webseite, die Spark-Konsole.
+
+1. Installieren: `sudo ./install.sh --mode api --asr 1.7b --tts 0.6b --yes` (oder ohne Schalter: die Installation fragt nach Art und Modellen). Am Ende stehen Adressen, API-Schlüssel und `curl`-Beispiele auf dem Bildschirm und in `/etc/speech-spark/connection.txt`.
+2. Das eigene Sprachmodell dazu: `sudo ./install.sh --llm` (Katalog-Modell, gepinnt und geprüft, siehe unten bei `speech-spark modelle`).
+3. Die Konsole einschalten: `sudo speech-spark konsole an 192.168.178.0/24` (nur aus diesem Netz im Heimnetz). Sie zeigt das Passwort einmal.
+4. Im Browser `https://<ip-des-spark>:31010` öffnen, das Zertifikat einmal annehmen, anmelden.
+5. Überwachung: der Reiter *Überblick* (GPU, Speicher, Dienste, alle 3 Sekunden) und *Modell genau* (Anfragen ohne Inhalt, Warteschlangen, Chat-Modell innen, Verlauf über 20 Minuten, 24 Stunden und 7 Tage; im Panel dieselbe Seite unter *Zustand → Modell-Rechner genau*).
+6. Modelle: der Reiter *Modelle* wechselt, misst und lädt Katalog-Modelle; unter *Eigenes Modell* kommen eigene von Hugging Face dazu, für Sprachmodell, Bildverständnis, Spracherkennung, Sprachausgabe, Bilder und Musik, jedes nach festen Regeln und mit Probe beim Wechsel. Jeder Schritt fragt den Code.
+7. Andere Programme (Open WebUI, eigene Apps, Home Assistant) binden die APIs mit dem Schlüssel aus Schritt 1 ein; eigene Schlüssel mit Rechten und Grenzen gibt es unter *Clients* oder mit `sudo speech-spark clients`.
+
+Später doch mit Assistent: `sudo speech-spark panel enable` (auf diesem Rechner) oder ein Panel-Rechner koppelt sich über *Assistent* in der Konsole (siehe [Spark teilen](spark-teilen.md)).
+
 ## Nur die Modelle bereitstellen (ohne Webportal)
 
 Die erste Installation fragt im Terminal, was installiert werden soll:

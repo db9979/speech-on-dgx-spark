@@ -4,6 +4,20 @@
 
 Split install (the panel on a computer of its own such as a Raspberry Pi 5), moving and taking back: [Spark split](spark-split.md).
 
+## Only models (Spark alone): step by step
+
+The Spark offers only its models with their APIs, without the assistant and without a panel computer; it is run through its own web page, the Spark-Konsole.
+
+1. Install: `sudo ./install.sh --mode api --asr 1.7b --tts 0.6b --yes` (or without options: the installation asks for the kind and the models). At the end the addresses, API key and `curl` examples are on the screen and in `/etc/speech-spark/connection.txt`.
+2. The own language model with it: `sudo ./install.sh --llm` (a catalog model, pinned and checked, see `speech-spark modelle` below).
+3. Switch the console on: `sudo speech-spark konsole an 192.168.178.0/24` (only from this network at home). It shows the password once.
+4. Open `https://<ip-of-the-spark>:31010` in the browser, accept the certificate once, log in.
+5. Monitoring: the tab *Überblick* (GPU, memory, services, every 3 seconds) and *Modell genau* (requests without content, queues, the chat model inside, history over 20 minutes, 24 hours and 7 days; in the panel the same page under *Status → Model computer in detail*).
+6. Models: the tab *Modelle* switches, measures and fetches catalog models; under *Eigenes Modell* own ones from Hugging Face come in, for the language model, image understanding, speech recognition, speech output, pictures and music, each by fixed rules and with a probe when switching. Every step asks for the code.
+7. Other programs (Open WebUI, own apps, Home Assistant) use the APIs with the key from step 1; own keys with rights and limits are under *Clients* or with `sudo speech-spark clients`.
+
+Later with the assistant after all: `sudo speech-spark panel enable` (on this computer) or a panel computer pairs through *Assistent* in the console (see [Spark split](spark-split.md)).
+
 ## Only the models (without the web panel)
 
 The first install asks in the terminal what to install:

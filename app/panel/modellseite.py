@@ -42,6 +42,7 @@ import hftoken  # noqa: E402
 import konsole  # noqa: E402
 import llmstart  # noqa: E402
 import modelle  # noqa: E402
+import modelleneu  # noqa: E402
 import probetag  # noqa: E402
 import steuer  # noqa: E402
 from common import journal, load_config, read_json, write_json  # noqa: E402
@@ -275,7 +276,7 @@ def seite(cfg=None, total_gib=None, messung=None, lang="de", gestartet=False, we
     return {"arten": arten, "budget": dict(b, teile=teile), "messung_zeit": messung.get("zeit"),
             "wechsel": wechsel, "geraet": hardware.text(profil, "en" if i else "de"), "starts": _starts_zeigen(buch, kat, i),
             "hf_token": buch["hf_token"], "bibliothek": _bibliothek_zeigen(buch["bibliothek"], kat, i),
-            "probetag": probetag.zeigen(kat, "en" if i else "de"), **saetze_zeigen(kat, "en" if i else "de")}
+            "probetag": probetag.zeigen(kat, "en" if i else "de"), "neu": modelleneu.zeigen("en" if i else "de"), **saetze_zeigen(kat, "en" if i else "de")}
 
 
 def _bibliothek_zeigen(rows, kat, i):

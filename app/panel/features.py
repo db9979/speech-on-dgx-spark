@@ -382,6 +382,7 @@ FEATURES = (
     F(**steckbrief.feature("modellwechsel")),
     F(**steckbrief.feature("modelleeigen")),
     F(**steckbrief.feature("modelleprobetag")),
+    F(**steckbrief.feature("modelleneu")),
     F(**steckbrief.feature("werkstatt")),
     F(**steckbrief.feature("werkstattnacht")),
     F(**steckbrief.feature("entwickeln")),

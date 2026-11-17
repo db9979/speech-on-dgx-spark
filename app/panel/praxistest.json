@@ -6552,6 +6552,13 @@
 "titel": "Probetag und Modellsätze",
 "text": "Funktionen → unter „Modelle wechseln“ „Probetag nach dem Wechsel“ an. Unter Zustand → Modelle das Sprachmodell wechseln: oben steht „Probetag … wartet“, nach dem Start „der Qualitätstest läuft“, danach „bleibt“ oder „war schlechter, zurück zum Modell davor“ mit beiden Zahlen. Darunter bei „Modellsätze“ einen Namen eingeben und „Jetzigen Stand behalten“; ein Modell wechseln, dann beim Satz „Einstellen“: der Spark wechselt die Arten nacheinander zurück, die Karte zeigt, wie viele Wechsel noch offen sind.",
 "test": "test_modellsaetze.Saetze.test_one_switch_after_the_other"
+},
+{
+"id": "P949",
+"v": 1504,
+"titel": "Neu verfügbar und Anleitung Spark allein",
+"text": "Funktionen → unter „Modelle wechseln“ „Neu verfügbar“ an. Nach höchstens einer Minute steht unter Zustand → Modelle die Karte „Neu verfügbar“ mit neuen Modellen von Qwen, Google, NVIDIA und anderen (oder „nichts, was die Regeln zulassen“); mit Eigene Modelle an hat jede ein „Hinzufügen“, das die volle Prüfung macht. Dazu im README unter „Weiterlesen“ „Nur Modelle (Spark allein)“ öffnen: die Anleitung führt Schritt für Schritt von der Installation bis zur Überwachung in der Spark-Konsole.",
+"test": "test_modelleneu.Regeln.test_the_daily_look_keeps_hints_only"
 }
 ]
 }
