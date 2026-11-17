@@ -66,7 +66,11 @@ KEEP_S = 14 * 86400
 MAX_TEXT, MAX_LINES, MAX_BYTES, MAX_APPLOG = 2000, 200, 32 * 1024, 32 * 1024
 MAX_BODY = 48 * 1024
 MAX_OPEN_UID, MAX_OPEN_ALL = 20, 200
-DAY_DRAFTS_UID, DAY_SENT_UID, DAY_SENT_ALL, GAP_S = 10, 3, 10, 60
+DAY_DRAFTS_UID, DAY_SENT_UID, DAY_SENT_ALL, GAP_S = 10, 3, 40, 60
+# Admin ohne enge Grenze (Dominik 2026-11-17: „verweigert, da heute schon zu viele gestellt“ nach 3 Meldungen): wer
+# keine Tageslimits hat (coadmin.unbegrenzt: Admin-Rolle, „Ohne Tageslimit“, Anmeldung mit dem Panel-Passwort) darf
+# 40 Entwürfe und 30 Meldungen am Tag; die Minute zwischen zwei Meldungen und die Grenze für alle bleiben
+DAY_DRAFTS_FREE, DAY_SENT_FREE = 40, 30
 MINUTES = (10, 30, 60)
 # Käfer-Symbol (Dominik 2026-11-13, 3a): a report is a fault or a wish for something better; label „verbesserung“
 KINDS = {"fehler": ("Fehler", "Fault"), "verbesserung": ("Verbesserung", "Improvement")}
@@ -506,8 +510,9 @@ def create(uid, name, channel, text, area="sonstiges", minutes=30, logs=False, r
         mine = [d for d in _all(now) if d.get("uid") == uid]
         if len([d for d in mine if d.get("status") == "entwurf"]) >= MAX_OPEN_UID or len(_all(now)) >= MAX_OPEN_ALL:
             raise HTTPException(429, "Zu viele offene Entwürfe. Bitte erst alte senden oder löschen.")
-        if len([d for d in mine if _day(d.get("t", 0)) == _day(now)]) >= DAY_DRAFTS_UID:
-            raise HTTPException(429, f"Heute höchstens {DAY_DRAFTS_UID} Entwürfe.")
+        lim = DAY_DRAFTS_FREE if staff or _free(uid) else DAY_DRAFTS_UID
+        if len([d for d in mine if _day(d.get("t", 0)) == _day(now)]) >= lim:
+            raise HTTPException(429, f"Heute höchstens {lim} Entwürfe.")
     k = known()
     a = Anon(k)
     parts = {"text": a.text(text)}
@@ -1173,7 +1178,7 @@ async def direct(d, uid, channel):
         print("meldung: direkt gesperrt durch die Leck-Prüfung:", ", ".join(p["leaks"]), flush=True)
         return "Die Prüfung hat noch etwas Persönliches gefunden, deshalb liegt er als Entwurf unter Ich → Probleme melden."
     try:
-        num = await _send_now(d, p, uid, channel, len(numbered(d)))
+        num = await _send_now(d, p, uid, channel, len(numbered(d)), _free(uid))
     except HTTPException as e:
         print("meldung: direkt nicht gesendet", e.status_code, flush=True)
         return "Senden ging gerade nicht (" + str(e.detail).rstrip(".") + "), er liegt als Entwurf unter Ich → Probleme melden."
@@ -1238,14 +1243,27 @@ async def by_description(uid, text, channel="sprache"):
     return "Danke, steht im Bericht. Ansehen und senden kannst du ihn unter Ich → Probleme melden."
 
 
-async def _send_now(d, p, uid, channel, lines):
+def _free(uid, request=None):
+    """Whether this profile has no daily limits (coadmin.unbegrenzt), then DAY_*_FREE count for it."""
+    try:
+        return coadmin.unbegrenzt(uid, request)
+    except Exception:   # noqa: BLE001  (no roles readable: the profile's limits)
+        return False
+
+
+async def _send_now(d, p, uid, channel, lines, free=False):
     """Sends the previewed text p to GitHub within the limits (by the button or „Direkt an GitHub senden“).
+    free: the sender has no daily limits (_free or the admin's login), DAY_SENT_FREE instead of DAY_SENT_UID.
     Returns the issue number; raises HTTPException (the draft stays)."""
     now = time.time()
     with _lock:
         mine, total, last = _sent_count(_all(now), d.get("uid"), now)
-        if mine >= DAY_SENT_UID or total >= DAY_SENT_ALL:
-            raise HTTPException(429, "Für heute sind genug Meldungen gesendet. Der Entwurf bleibt.")
+        lim = DAY_SENT_FREE if free else DAY_SENT_UID
+        if mine >= lim or total >= DAY_SENT_ALL:
+            n, most = (mine, lim) if mine >= lim else (total, DAY_SENT_ALL)
+            print(f"meldung: senden | tageslimit | {n} von {most}", flush=True)
+            raise HTTPException(429, f"Heute sind schon {n} Meldungen gesendet, mehr als {most} am Tag gehen nicht. "
+                                     "Der Entwurf bleibt, morgen geht es weiter.")
         if now - last < GAP_S:
             raise HTTPException(429, "Bitte eine Minute warten.")
         d["status"] = "sendet"
@@ -1410,7 +1428,8 @@ async def post_send(request: Request):
     if b.get("browser") is True:
         return {"url": browser_link(p["title"], p["body"])}
     skip = default_skip(d) if skip is None else skip
-    await _send_now(d, p, who["uid"], who["channel"], len(numbered(d)) - len(set(skip)))
+    await _send_now(d, p, who["uid"], who["channel"], len(numbered(d)) - len(set(skip)),
+                    who["staff"] or _free(who["uid"], request))
     return view(d, who["uid"])
 
 

@@ -16733,7 +16733,15 @@
 "file": "Sicherheit und Betrieb",
 "head": "Probleme melden",
 "title": "Vorschau und Senden",
-"text": "Vorschau und Senden: Der Spark zeigt Titel und Text genau so, wie sie rausgehen; Zeilen lassen sich abwählen. Gesendet wird nur, was zur Vorschau passt (Signatur über den Text); eine Leck-Prüfung sperrt das Senden, solange noch ein bekannter Name, eine Mail-Adresse, eine Adresse oder ein Geheimnis darin steht. Drei Wege: „An GitHub senden“ (Issue über api.github.com), „Im Browser öffnen“ (GitHub mit ausgefülltem Text, geht ohne Token) und „Nur lokal behalten“. Grenzen: pro Profil 20 offene Entwürfe und 10 neue am Tag, 3 gesendete pro Profil und 10 pro Tag, eine Minute Abstand. Wer fremde Entwürfe sieht: jedes Profil nur die eigenen; alle Entwürfe (mit Namen, ansehen, senden, löschen) nur der Admin und die Admin-Rolle, seit V01.0.544 nicht mehr die Rolle Verwalter (Prüfung pruefung/kontext-trennung-2026-10-14.md)."
+"text": "Vorschau und Senden: Der Spark zeigt Titel und Text genau so, wie sie rausgehen; Zeilen lassen sich abwählen. Gesendet wird nur, was zur Vorschau passt (Signatur über den Text); eine Leck-Prüfung sperrt das Senden, solange noch ein bekannter Name, eine Mail-Adresse, eine Adresse oder ein Geheimnis darin steht. Drei Wege: „An GitHub senden“ (Issue über api.github.com), „Im Browser öffnen“ (GitHub mit ausgefülltem Text, geht ohne Token) und „Nur lokal behalten“. Grenzen: pro Profil 20 offene Entwürfe und 10 neue am Tag, 3 gesendete pro Profil und 40 pro Tag für alle zusammen, eine Minute Abstand. Ein Profil ohne Tageslimit (Admin-Rolle, „Ohne Tageslimit“ bei Personen und Geräte, beim Profil unter Rechte, Anmeldung mit dem Panel-Passwort) darf 40 Entwürfe und 30 Meldungen am Tag (ab V01.1.511, Dominik 2026-11-17: nach drei Meldungen war Schluss). Ist die Grenze erreicht, sagt das Panel, wie viele heute schon gesendet sind, und der Entwurf bleibt (Log meldung: senden | tageslimit | 3 von 3). Wer fremde Entwürfe sieht: jedes Profil nur die eigenen; alle Entwürfe (mit Namen, ansehen, senden, löschen) nur der Admin und die Admin-Rolle, seit V01.0.544 nicht mehr die Rolle Verwalter (Prüfun"
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Probleme melden",
+"title": "Vorschau und Senden",
+"text": "g pruefung/kontext-trennung-2026-10-14.md)."
 },
 {
 "lang": "de",
@@ -34541,7 +34549,7 @@
 "file": "Security and operation",
 "head": "Reporting problems",
 "title": "Preview and sending",
-"text": "Preview and sending: the Spark shows title and text exactly as they go out; lines can be unticked. Only what matches the preview is sent (a signature over the text); a leak check blocks sending while a known name, a mail address, an address or a secret is still in it. Three ways: \"Send to GitHub\" (issue via api.github.com), \"Open in the browser\" (GitHub with the text filled in, works without a token) and \"Keep locally only\". Limits: per profile 20 open drafts and 10 new a day, 3 sent per profile and 10 per day, one minute apart. Who sees other drafts: every profile only its own; all drafts (with names, view, send, delete) only the admin and the admin role, since V01.0.544 no longer the Verwalter (manager) role (review pruefung/kontext-trennung-2026-10-14.md)."
+"text": "Preview and sending: the Spark shows title and text exactly as they go out; lines can be unticked. Only what matches the preview is sent (a signature over the text); a leak check blocks sending while a known name, a mail address, an address or a secret is still in it. Three ways: \"Send to GitHub\" (issue via api.github.com), \"Open in the browser\" (GitHub with the text filled in, works without a token) and \"Keep locally only\". Limits: per profile 20 open drafts and 10 new a day, 3 sent per profile and 40 a day for all together, one minute apart. A profile without daily limits (admin role, \"No daily limit\" in People and devices, at the profile under Rights, the login with the panel password) may make 40 drafts and send 30 reports a day (since V01.1.511, Dominik 2026-11-17: after three reports it stopped). When the limit is reached the panel says how many went out today, and the draft stays (log meldung: senden | tageslimit | 3 von 3). Who sees other drafts: every profile only its own; all drafts (with names, view, send, delete) only the admin and the admin role, since V01.0.544 no longer the Verwalter (manager) role (review pruefung/kontext-trennung-2026-10-14.md)."
 },
 {
 "lang": "en",

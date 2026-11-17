@@ -334,6 +334,37 @@ class Sending(Base):
         now = time.time()
         self.assertEqual(meldung._sent_count(meldung._all(now), d1["uid"] if "uid" in d1 else None, now)[1] >= 2, True)
 
+    def test_the_admin_is_not_stopped_after_three(self):
+        """Dominik 2026-11-17 („verweigert, da heute schon zu viele gestellt“ nach drei Meldungen): a profile sends
+        DAY_SENT_UID a day and hears how many went out; a profile without daily limits (coadmin.unbegrenzt, here
+        „Ohne Tageslimit“) sends up to DAY_SENT_FREE, the minute between two stays for everybody."""
+        import coadmin
+        meldung.token_save(TOKEN)
+        c, uid = profile("RpFrida")
+
+        def send():
+            d, p = self.draft(c)
+            r = c.post("/api/report/send", json={"id": d["id"], "sig": p["sig"]})
+            for x in meldung._all():                  # the minute between two, moved back instead of waited
+                if x.get("issue"):
+                    x["issue"]["t"] -= 120
+                    meldung._write(x)
+            return r
+
+        for _ in range(meldung.DAY_SENT_UID):
+            self.assertEqual(send().status_code, 200)
+        r = send()
+        self.assertEqual(r.status_code, 429)
+        self.assertIn(f"schon {meldung.DAY_SENT_UID} Meldungen", r.json()["detail"])
+        self.assertIn("Der Entwurf bleibt", r.json()["detail"])
+        coadmin.set_frei(uid, True)
+        try:
+            self.assertEqual(send().status_code, 200)
+            self.assertGreater(meldung.DAY_SENT_FREE, meldung.DAY_SENT_UID)
+            self.assertLessEqual(meldung.DAY_SENT_FREE, meldung.DAY_SENT_ALL)
+        finally:
+            coadmin.set_frei(uid, False)
+
     def test_answers_from_github_are_text_only(self):
         meldung.token_save(TOKEN)
         c, _ = profile("RpUdo")
