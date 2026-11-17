@@ -6506,6 +6506,14 @@
 "text": "Zustand → Modelle → Sprachmodell (mit Eigene Modelle an): oben steht „⭐ Geprüfte Empfehlung für DGX Spark …“, die Karte des empfohlenen Modells hat den Stern und steht vorne. Bei Hugging Face „qwen“ suchen: passende Treffer stehen oben, ein NVFP4-Modell vor FP8 und BF16, genau einer hat „⭐ Empfohlen: NVFP4 … · ~N GiB von M frei“; Qwen3-Embedding steht unten mit „andere Aufgabe (feature-extraction)“, Qwen3-TTS ebenso. In der Spark-Konsole → Modelle dasselbe, dazu der Kasten „Geprüfte Empfehlung“ je Anwendung mit „Laden“.",
 "thread": "Modellkatalog für Spark und DGX Station bauen",
 "test": "test_empfehlung.Regel.test_fitting_first_by_format_then_downloads_and_one_star"
+},
+{
+"id": "P943",
+"v": 1499,
+"titel": "Drei Punkte oben rechts in der iPhone-App",
+"text": "iPhone-App nach dem nächsten TestFlight-Build, Assistent: oben rechts stehen höchstens Chats, Käfer und „⋯“. Ein Tipp auf „⋯“ öffnet ein Menü mit „Heute“ und „Einstellungen“; beide öffnen ihr Blatt. Der Käfer öffnet „Fehler oder Wunsch melden“.",
+"thread": "Drei-Punkte-Menü in iOS-App reparieren",
+"test": "test_ios_leiste.AssistentLeiste.test_each_side_at_most_three"
 }
 ]
 }

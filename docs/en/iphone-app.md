@@ -44,7 +44,7 @@ The link is valid for 10 minutes and once. The address must be https with a real
 - Questions can also be typed. Top left starts a new conversation; after 10 minutes of quiet it starts anew by itself.
 - "Hey Siri, Frag Spark" (or "Hey Siri, Spark fragen"): Siri asks for the question and reads the answer aloud.
 
-In the app under **Settings (gear)**:
+In the app under **Settings** (in the "⋯" menu at the top right since V01.1.499; before, the gear):
 
 | Switch | What it does |
 |---|---|
@@ -64,7 +64,7 @@ Routes and calls: "Navigiere zur Arbeit" or "Ruf Anna an". The app asks every ti
 
 - **Quick start:** "Talk to Spark" opens the app and it listens at once. On the Action button: iPhone Settings → Action Button → Shortcut → "Talk to Spark". In Control Center (iOS 18 and later) via "Add a Control", on the lock screen as a widget. With Siri: "Hey Siri, Start Spark".
 - **History:** The clock icon at the top left shows your earlier conversations, the same list as the panel's log. Tapping one continues it. Deleting stays in the panel. While the conversation is empty, the three newest stand below the face as "Recent" (since V01.1.489, like the panel's start view); in a conversation the face becomes small.
-- **Today** (since V01.0.286): the sun at the top right shows what is due today, like *Me → Overview* in the panel: next appointments of today and tomorrow, open reminders, unread messages, documents, remembered facts. Only cards of functions your profile may use; pull down to refresh.
+- **Today** (since V01.0.286): "Today" in the "⋯" menu at the top right shows what is due today, like *Me → Overview* in the panel: next appointments of today and tomorrow, open reminders, unread messages, documents, remembered facts. Only cards of functions your profile may use; pull down to refresh.
 - **Ask about a photo or document:** The paper clip next to the input: take a photo, choose a photo, or a document (PDF, text, image). The iPhone reads the text itself, scanned pages too. Only the text goes to the Spark. The attachment stays for the conversation until you remove it with ✕. **Let the Spark look at photos:** with "Let the model look at photos from the app" on under Me → iPhone app (plus the admin switch for pictures), a photo goes to the Spark as a picture, scaled to 1280 px, so it also recognises things, plants or an error display. Follow-up questions about the same photo work for 10 minutes. With it off, the iPhone reads only the text as before. PDFs and documents always stay text.
 - **Save to "My things":** With own documents released for your profile, the attachment shows a button for it. The Spark then finds the document later, like an upload in the panel. Since V01.0.723 there is no profile switch for it any more.
 - **Offline:** When the Spark cannot be reached, the app says so at the top. Typed questions wait (at most 10, for one day) and go out once the Spark is back. Speaking does not work then, because the Spark recognises the speech.

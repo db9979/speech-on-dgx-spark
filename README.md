@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.499** iPhone app: the "⋯" at the top right of the assistant opens Today and Settings again
 - **V01.1.498** Model search with a recommendation: fitting models first, a star by a fixed rule, a checked recommendation per use
 - **V01.1.497** Model page of the Spark-Konsole: typed input stays when the page refreshes
 - **V01.1.496** "Fetch only" and "Download only": fetch models in advance and put any Hugging Face model on the disk
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.492** Model library on the disk and a Hugging Face token for faster and approved downloads
 - **V01.1.491** Model computer in detail: history without doubled lines, tok/s without jags
 - **V01.1.490** Emergency brake: when memory runs short, the language model ends the oldest answer before DGX OS ends programs (off, Settings → Spark → Operation)
-- **V01.1.489** A calmer assistant page: one card on a computer, empty with the big face, suggestions and "Recent", then the face small in the header, switches in "⋯", the microphone in the text field
 
 
 

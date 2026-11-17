@@ -44,7 +44,7 @@ Der Link gilt 10 Minuten und nur einmal. Die Adresse muss https mit echtem Zerti
 - Unten kann man die Frage auch schreiben. Oben links beginnt ein neues Gespräch; nach 10 Minuten Pause beginnt es von selbst neu.
 - „Hey Siri, Frag Spark“ (oder „Hey Siri, Spark fragen“): Siri fragt nach der Frage und liest die Antwort vor.
 
-In der App unter **Einstellungen (Zahnrad)**:
+In der App unter **Einstellungen** (oben rechts im Menü „⋯“, seit V01.1.499; vorher das Zahnrad):
 
 | Schalter | Was er tut |
 |---|---|
@@ -64,7 +64,7 @@ Route und Anrufe: „Navigiere zur Arbeit“ oder „Ruf Anna an“. Die App fra
 
 - **Schnellstart:** „Spark zuhören“ öffnet die App und sie hört sofort zu. Auf dem Action-Button: iPhone-Einstellungen → Action-Button → Kurzbefehl → „Spark zuhören“. Im Kontrollzentrum (ab iOS 18) über „Steuerelement hinzufügen“, auf dem Sperrbildschirm als Widget. Per Siri: „Hey Siri, Spark zuhören“.
 - **Verlauf:** Das Uhr-Symbol oben links zeigt deine früheren Gespräche, dieselbe Liste wie das Protokoll im Panel. Antippen setzt das Gespräch fort. Gespräche aus der App landen auch dort. Löschen geht nur im Panel. Ist das Gespräch leer, stehen die drei neuesten unter dem Gesicht als „Zuletzt“ (seit V01.1.489, wie das Startbild im Panel); im Gespräch wird das Gesicht klein.
-- **Heute** (seit V01.0.286): Die Sonne oben rechts zeigt, was heute dran ist, wie *Ich → Überblick* im Panel: nächste Termine von heute und morgen, offene Erinnerungen, ungelesene Nachrichten, Dokumente, gemerkte Fakten. Nur Karten der Funktionen, die dein Profil nutzen darf; zum Aktualisieren nach unten ziehen.
+- **Heute** (seit V01.0.286): „Heute“ im Menü „⋯“ oben rechts zeigt, was heute dran ist, wie *Ich → Überblick* im Panel: nächste Termine von heute und morgen, offene Erinnerungen, ungelesene Nachrichten, Dokumente, gemerkte Fakten. Nur Karten der Funktionen, die dein Profil nutzen darf; zum Aktualisieren nach unten ziehen.
 - **Foto oder Dokument fragen:** Die Büroklammer neben dem Eingabefeld: Foto aufnehmen, Foto auswählen oder Dokument (PDF, Text, Bild). Das iPhone liest den Text selbst, auch von gescannten Seiten. An den Spark geht nur der Text. Der Anhang gilt für das Gespräch, bis du ihn mit ✕ entfernst. **Fotos ansehen lassen:** Ist unter Ich → iPhone-App „Fotos aus der App ansehen lassen“ an (dazu der Admin-Schalter für Bilder), geht bei Fotos das Bild selbst an den Spark, verkleinert auf 1280 px. Er erkennt dann auch Dinge, Pflanzen oder eine Fehleranzeige. Rückfragen zum selben Foto gehen 10 Minuten lang. Ist das aus, liest das iPhone wie bisher nur den Text. PDFs und Dokumente bleiben immer beim Text.
 - **Bei „Meine Sachen“ speichern:** Ist Eigene Dokumente für dein Profil freigegeben, zeigt der Anhang einen Knopf dafür. Dann findet der Spark das Dokument auch später, wie ein Upload im Panel. Einen eigenen Profilschalter dafür gibt es seit V01.0.723 nicht mehr.
 - **Ohne Netz:** Ist der Spark nicht erreichbar, zeigt die App das oben an. Geschriebene Fragen warten (höchstens 10, einen Tag lang) und gehen raus, sobald der Spark wieder da ist. Sprechen geht dann nicht, weil der Spark die Sprache erkennt.

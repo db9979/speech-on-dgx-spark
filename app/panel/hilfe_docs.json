@@ -15557,6 +15557,14 @@
 "file": "iPhone-App „Spark“",
 "head": "Benutzen",
 "title": "Benutzen",
+"text": "In der App unter Einstellungen (oben rechts im Menü „⋯“, seit V01.1.499; vorher das Zahnrad):"
+},
+{
+"lang": "de",
+"src": "iphone-app",
+"file": "iPhone-App „Spark“",
+"head": "Benutzen",
+"title": "Benutzen",
 "text": "Route und Anrufe: „Navigiere zur Arbeit“ oder „Ruf Anna an“. Die App fragt jedes Mal „Route nach … öffnen?“ oder „Anna anrufen (Nummer)?“. Erst „Ja“ (getippt oder gesagt) öffnet Karten oder ruft an. Kontakte sucht nur das iPhone; die Nummer geht nicht an den Spark. Gibt es mehrere passende Kontakte, fragt die App nach dem ganzen Namen."
 },
 {
@@ -15573,7 +15581,7 @@
 "file": "iPhone-App „Spark“",
 "head": "Schnellstart, Verlauf, Fotos, ohne Netz",
 "title": "Schnellstart, Verlauf, Fotos, ohne Netz",
-"text": "- Schnellstart: „Spark zuhören“ öffnet die App und sie hört sofort zu. Auf dem Action-Button: iPhone-Einstellungen → Action-Button → Kurzbefehl → „Spark zuhören“. Im Kontrollzentrum (ab iOS 18) über „Steuerelement hinzufügen“, auf dem Sperrbildschirm als Widget. Per Siri: „Hey Siri, Spark zuhören“. - Verlauf: Das Uhr-Symbol oben links zeigt deine früheren Gespräche, dieselbe Liste wie das Protokoll im Panel. Antippen setzt das Gespräch fort. Gespräche aus der App landen auch dort. Löschen geht nur im Panel. Ist das Gespräch leer, stehen die drei neuesten unter dem Gesicht als „Zuletzt“ (seit V01.1.489, wie das Startbild im Panel); im Gespräch wird das Gesicht klein. - Heute (seit V01.0.286): Die Sonne oben rechts zeigt, was heute dran ist, wie *Ich → Überblick* im Panel: nächste Termine von heute und morgen, offene Erinnerungen, ungelesene Nachrichten, Dokumente, gemerkte Fakten. Nur Karten der Funktionen, die dein Profil nutzen darf; zum Aktualisieren nach unten ziehen. - Foto oder Dokument fragen: Die Büroklammer neben dem Eingabefeld: Foto aufnehmen, Foto auswählen oder Dokument (PDF, Text, Bild). Das iPhone liest den Text selbst, auch von gescannten Seiten. An den Spark geht nu"
+"text": "- Schnellstart: „Spark zuhören“ öffnet die App und sie hört sofort zu. Auf dem Action-Button: iPhone-Einstellungen → Action-Button → Kurzbefehl → „Spark zuhören“. Im Kontrollzentrum (ab iOS 18) über „Steuerelement hinzufügen“, auf dem Sperrbildschirm als Widget. Per Siri: „Hey Siri, Spark zuhören“. - Verlauf: Das Uhr-Symbol oben links zeigt deine früheren Gespräche, dieselbe Liste wie das Protokoll im Panel. Antippen setzt das Gespräch fort. Gespräche aus der App landen auch dort. Löschen geht nur im Panel. Ist das Gespräch leer, stehen die drei neuesten unter dem Gesicht als „Zuletzt“ (seit V01.1.489, wie das Startbild im Panel); im Gespräch wird das Gesicht klein. - Heute (seit V01.0.286): „Heute“ im Menü „⋯“ oben rechts zeigt, was heute dran ist, wie *Ich → Überblick* im Panel: nächste Termine von heute und morgen, offene Erinnerungen, ungelesene Nachrichten, Dokumente, gemerkte Fakten. Nur Karten der Funktionen, die dein Profil nutzen darf; zum Aktualisieren nach unten ziehen. - Foto oder Dokument fragen: Die Büroklammer neben dem Eingabefeld: Foto aufnehmen, Foto auswählen oder Dokument (PDF, Text, Bild). Das iPhone liest den Text selbst, auch von gescannten Seiten. An den Spa"
 },
 {
 "lang": "de",
@@ -15581,7 +15589,7 @@
 "file": "iPhone-App „Spark“",
 "head": "Schnellstart, Verlauf, Fotos, ohne Netz",
 "title": "Schnellstart, Verlauf, Fotos, ohne Netz",
-"text": "r der Text. Der Anhang gilt für das Gespräch, bis du ihn mit ✕ entfernst. Fotos ansehen lassen: Ist unter Ich → iPhone-App „Fotos aus der App ansehen lassen“ an (dazu der Admin-Schalter für Bilder), geht bei Fotos das Bild selbst an den Spark, verkleinert auf 1280 px. Er erkennt dann auch Dinge, Pflanzen oder eine Fehleranzeige. Rückfragen zum selben Foto gehen 10 Minuten lang. Ist das aus, liest das iPhone wie bisher nur den Text. PDFs und Dokumente bleiben immer beim Text. - Bei „Meine Sachen“ speichern: Ist Eigene Dokumente für dein Profil freigegeben, zeigt der Anhang einen Knopf dafür. Dann findet der Spark das Dokument auch später, wie ein Upload im Panel. Einen eigenen Profilschalter dafür gibt es seit V01.0.723 nicht mehr. - Ohne Netz: Ist der Spark nicht erreichbar, zeigt die App das oben an. Geschriebene Fragen warten (höchstens 10, einen Tag lang) und gehen raus, sobald der Spark wieder da ist. Sprechen geht dann nicht, weil der Spark die Sprache erkennt. - Ruhig, nichts springt (seit V01.0.570): Der Hinweis „Spark nicht erreichbar“ kommt erst nach 3 Sekunden ohne Spark, ein kurzer Netzwechsel oder der Neustart beim Update lässt ihn nicht blinken. Kommen Nachrichten von "
+"text": "rk geht nur der Text. Der Anhang gilt für das Gespräch, bis du ihn mit ✕ entfernst. Fotos ansehen lassen: Ist unter Ich → iPhone-App „Fotos aus der App ansehen lassen“ an (dazu der Admin-Schalter für Bilder), geht bei Fotos das Bild selbst an den Spark, verkleinert auf 1280 px. Er erkennt dann auch Dinge, Pflanzen oder eine Fehleranzeige. Rückfragen zum selben Foto gehen 10 Minuten lang. Ist das aus, liest das iPhone wie bisher nur den Text. PDFs und Dokumente bleiben immer beim Text. - Bei „Meine Sachen“ speichern: Ist Eigene Dokumente für dein Profil freigegeben, zeigt der Anhang einen Knopf dafür. Dann findet der Spark das Dokument auch später, wie ein Upload im Panel. Einen eigenen Profilschalter dafür gibt es seit V01.0.723 nicht mehr. - Ohne Netz: Ist der Spark nicht erreichbar, zeigt die App das oben an. Geschriebene Fragen warten (höchstens 10, einen Tag lang) und gehen raus, sobald der Spark wieder da ist. Sprechen geht dann nicht, weil der Spark die Sprache erkennt. - Ruhig, nichts springt (seit V01.0.570): Der Hinweis „Spark nicht erreichbar“ kommt erst nach 3 Sekunden ohne Spark, ein kurzer Netzwechsel oder der Neustart beim Update lässt ihn nicht blinken. Kommen Nachri"
 },
 {
 "lang": "de",
@@ -15589,7 +15597,7 @@
 "file": "iPhone-App „Spark“",
 "head": "Schnellstart, Verlauf, Fotos, ohne Netz",
 "title": "Schnellstart, Verlauf, Fotos, ohne Netz",
-"text": "einem anderen Gerät dazu, hängt die App nur die neuen an; der Verlauf baut sich nicht neu auf. Eine offene Seite unter Einstellungen bleibt offen, auch wenn der Admin sie gerade sperrt (mit Hinweis oben; Zurück schließt sie). Monitoring und Prüfen zeigen einen Fehler erst beim zweiten Fehlversuch und unten in der Liste, Zeilen in Logs und Hinweisen behalten ihren Platz. Beim Ladekabel bleibt der Verlauf hinter der Ständer-Ansicht stehen. - Letzter Stand sofort da (seit V01.0.748, Funktion „Apps merken sich den letzten Stand“): Verlauf, Chats, Mein Profil, Einstellungen und „Im Panel öffnen“ zeigen beim Öffnen sofort den Stand vom letzten Mal, oben mit „Stand 16:05 · wird aktualisiert …“, bis der Spark geantwortet hat (dann verschwindet der Hinweis, oder er sagt „Spark gerade nicht erreichbar“). Gemerkt werden die 20 neuesten Gespräche mit je 50 Nachrichten, die Chat-Liste und die letzte Seite von bis zu 20 Chats, die eigenen Einstellungen und Funktionen und die Zahlen auf den Kacheln von „Meine Sachen“ (nur wie viele, kein Name); private Chats und Chats mit „Nachrichten verschwinden“ nie. Ohne gemerkten Stand zeigt die Seite graue Platzhalter, nach einer Sekunde „Verbinde mit dem S"
+"text": "chten von einem anderen Gerät dazu, hängt die App nur die neuen an; der Verlauf baut sich nicht neu auf. Eine offene Seite unter Einstellungen bleibt offen, auch wenn der Admin sie gerade sperrt (mit Hinweis oben; Zurück schließt sie). Monitoring und Prüfen zeigen einen Fehler erst beim zweiten Fehlversuch und unten in der Liste, Zeilen in Logs und Hinweisen behalten ihren Platz. Beim Ladekabel bleibt der Verlauf hinter der Ständer-Ansicht stehen. - Letzter Stand sofort da (seit V01.0.748, Funktion „Apps merken sich den letzten Stand“): Verlauf, Chats, Mein Profil, Einstellungen und „Im Panel öffnen“ zeigen beim Öffnen sofort den Stand vom letzten Mal, oben mit „Stand 16:05 · wird aktualisiert …“, bis der Spark geantwortet hat (dann verschwindet der Hinweis, oder er sagt „Spark gerade nicht erreichbar“). Gemerkt werden die 20 neuesten Gespräche mit je 50 Nachrichten, die Chat-Liste und die letzte Seite von bis zu 20 Chats, die eigenen Einstellungen und Funktionen und die Zahlen auf den Kacheln von „Meine Sachen“ (nur wie viele, kein Name); private Chats und Chats mit „Nachrichten verschwinden“ nie. Ohne gemerkten Stand zeigt die Seite graue Platzhalter, nach einer Sekunde „Verbinde"
 },
 {
 "lang": "de",
@@ -15597,7 +15605,15 @@
 "file": "iPhone-App „Spark“",
 "head": "Schnellstart, Verlauf, Fotos, ohne Netz",
 "title": "Schnellstart, Verlauf, Fotos, ohne Netz",
-"text": "park …“, nach 8 Sekunden „Das dauert länger als sonst …“ und bei einem Fehler „Noch einmal“. Kommt die App nach vorne, holt sie Verlauf, Chats und Einstellungen einmal im Hintergrund (höchstens alle 5 Minuten). Braucht eine Seite länger als 2 Sekunden, steht unter Zustand → Logs (Bereich Apps) eine Zeile app: langsam <Seite> <ms> ms iphone. - Akku schonen (seit V01.0.668): Im Hintergrund stoppt die App ihre Audio-Engine, sobald nichts mehr zuhört, spricht oder telefoniert; eine laufende Antwort spricht sie noch zu Ende. So kann iOS die App schlafen legen. Ausnahme: das Weckwort hört zu (am Ladekabel oder die Zeit unter „Am Akku“). Im Auto lässt die App den Ton seit V01.0.871 nach jedem Gespräch auch im Vordergrund los, damit Radio und Musik nicht leiser bleiben. - Englisch: Steht das iPhone auf Englisch, ist die App englisch, auch das Weckwort und Siri („Ask Spark“, „Start Spark“). - Lange Fragen (seit V01.0.829): Das Eingabefeld wächst bis fünf Zeilen mit, darüber scrollt es. Die Zeilentaste macht eine neue Zeile, der Pfeil schickt ab. Ab vier Zeilen öffnet ⤢ oben rechts im Feld die Großansicht über den ganzen Bildschirm: *Fertig* übernimmt den Text ins Feld, *Senden* schickt ab."
+"text": " mit dem Spark …“, nach 8 Sekunden „Das dauert länger als sonst …“ und bei einem Fehler „Noch einmal“. Kommt die App nach vorne, holt sie Verlauf, Chats und Einstellungen einmal im Hintergrund (höchstens alle 5 Minuten). Braucht eine Seite länger als 2 Sekunden, steht unter Zustand → Logs (Bereich Apps) eine Zeile app: langsam <Seite> <ms> ms iphone. - Akku schonen (seit V01.0.668): Im Hintergrund stoppt die App ihre Audio-Engine, sobald nichts mehr zuhört, spricht oder telefoniert; eine laufende Antwort spricht sie noch zu Ende. So kann iOS die App schlafen legen. Ausnahme: das Weckwort hört zu (am Ladekabel oder die Zeit unter „Am Akku“). Im Auto lässt die App den Ton seit V01.0.871 nach jedem Gespräch auch im Vordergrund los, damit Radio und Musik nicht leiser bleiben. - Englisch: Steht das iPhone auf Englisch, ist die App englisch, auch das Weckwort und Siri („Ask Spark“, „Start Spark“). - Lange Fragen (seit V01.0.829): Das Eingabefeld wächst bis fünf Zeilen mit, darüber scrollt es. Die Zeilentaste macht eine neue Zeile, der Pfeil schickt ab. Ab vier Zeilen öffnet ⤢ oben rechts im Feld die Großansicht über den ganzen Bildschirm: *Fertig* übernimmt den Text ins Feld, *Senden* sc"
+},
+{
+"lang": "de",
+"src": "iphone-app",
+"file": "iPhone-App „Spark“",
+"head": "Schnellstart, Verlauf, Fotos, ohne Netz",
+"title": "Schnellstart, Verlauf, Fotos, ohne Netz",
+"text": "hickt ab."
 },
 {
 "lang": "de",
@@ -33317,6 +33333,14 @@
 "file": "iPhone app \"Spark\"",
 "head": "Using it",
 "title": "Using it",
+"text": "In the app under Settings (in the \"⋯\" menu at the top right since V01.1.499; before, the gear):"
+},
+{
+"lang": "en",
+"src": "iphone-app",
+"file": "iPhone app \"Spark\"",
+"head": "Using it",
+"title": "Using it",
 "text": "Routes and calls: \"Navigiere zur Arbeit\" or \"Ruf Anna an\". The app asks every time (\"Open route to …?\", \"Call Anna (number)?\"). Only \"Ja\" (tapped or said) opens Maps or calls. Contacts are searched only on the iPhone; the number does not go to the Spark."
 },
 {
@@ -33333,7 +33357,7 @@
 "file": "iPhone app \"Spark\"",
 "head": "Quick start, history, photos, offline",
 "title": "Quick start, history, photos, offline",
-"text": "- Quick start: \"Talk to Spark\" opens the app and it listens at once. On the Action button: iPhone Settings → Action Button → Shortcut → \"Talk to Spark\". In Control Center (iOS 18 and later) via \"Add a Control\", on the lock screen as a widget. With Siri: \"Hey Siri, Start Spark\". - History: The clock icon at the top left shows your earlier conversations, the same list as the panel's log. Tapping one continues it. Deleting stays in the panel. While the conversation is empty, the three newest stand below the face as \"Recent\" (since V01.1.489, like the panel's start view); in a conversation the face becomes small. - Today (since V01.0.286): the sun at the top right shows what is due today, like *Me → Overview* in the panel: next appointments of today and tomorrow, open reminders, unread messages, documents, remembered facts. Only cards of functions your profile may use; pull down to refresh. - Ask about a photo or document: The paper clip next to the input: take a photo, choose a photo, or a document (PDF, text, image). The iPhone reads the text itself, scanned pages too. Only the text goes to the Spark. The attachment stays for the conversation until you remove it with ✕. Let the Spark"
+"text": "- Quick start: \"Talk to Spark\" opens the app and it listens at once. On the Action button: iPhone Settings → Action Button → Shortcut → \"Talk to Spark\". In Control Center (iOS 18 and later) via \"Add a Control\", on the lock screen as a widget. With Siri: \"Hey Siri, Start Spark\". - History: The clock icon at the top left shows your earlier conversations, the same list as the panel's log. Tapping one continues it. Deleting stays in the panel. While the conversation is empty, the three newest stand below the face as \"Recent\" (since V01.1.489, like the panel's start view); in a conversation the face becomes small. - Today (since V01.0.286): \"Today\" in the \"⋯\" menu at the top right shows what is due today, like *Me → Overview* in the panel: next appointments of today and tomorrow, open reminders, unread messages, documents, remembered facts. Only cards of functions your profile may use; pull down to refresh. - Ask about a photo or document: The paper clip next to the input: take a photo, choose a photo, or a document (PDF, text, image). The iPhone reads the text itself, scanned pages too. Only the text goes to the Spark. The attachment stays for the conversation until you remove it with "
 },
 {
 "lang": "en",
@@ -33341,7 +33365,7 @@
 "file": "iPhone app \"Spark\"",
 "head": "Quick start, history, photos, offline",
 "title": "Quick start, history, photos, offline",
-"text": " look at photos: with \"Let the model look at photos from the app\" on under Me → iPhone app (plus the admin switch for pictures), a photo goes to the Spark as a picture, scaled to 1280 px, so it also recognises things, plants or an error display. Follow-up questions about the same photo work for 10 minutes. With it off, the iPhone reads only the text as before. PDFs and documents always stay text. - Save to \"My things\": With own documents released for your profile, the attachment shows a button for it. The Spark then finds the document later, like an upload in the panel. Since V01.0.723 there is no profile switch for it any more. - Offline: When the Spark cannot be reached, the app says so at the top. Typed questions wait (at most 10, for one day) and go out once the Spark is back. Speaking does not work then, because the Spark recognises the speech. - Calm, nothing jumps (since V01.0.570): the note \"Spark not reachable\" comes only after 3 seconds without the Spark, so a short network change or the restart during an update does not make it blink. When messages arrive from another device, the app only appends the new ones; the history is not drawn anew. An open page under Settings st"
+"text": "✕. Let the Spark look at photos: with \"Let the model look at photos from the app\" on under Me → iPhone app (plus the admin switch for pictures), a photo goes to the Spark as a picture, scaled to 1280 px, so it also recognises things, plants or an error display. Follow-up questions about the same photo work for 10 minutes. With it off, the iPhone reads only the text as before. PDFs and documents always stay text. - Save to \"My things\": With own documents released for your profile, the attachment shows a button for it. The Spark then finds the document later, like an upload in the panel. Since V01.0.723 there is no profile switch for it any more. - Offline: When the Spark cannot be reached, the app says so at the top. Typed questions wait (at most 10, for one day) and go out once the Spark is back. Speaking does not work then, because the Spark recognises the speech. - Calm, nothing jumps (since V01.0.570): the note \"Spark not reachable\" comes only after 3 seconds without the Spark, so a short network change or the restart during an update does not make it blink. When messages arrive from another device, the app only appends the new ones; the history is not drawn anew. An open page u"
 },
 {
 "lang": "en",
@@ -33349,7 +33373,7 @@
 "file": "iPhone app \"Spark\"",
 "head": "Quick start, history, photos, offline",
 "title": "Quick start, history, photos, offline",
-"text": "ays open even when the admin blocks it right then (with a note on top; Back closes it). Monitoring and Checks show an error only on the second failed try and at the end of the list, rows in Logs and hints keep their place. With the charger, the history stays in place behind the stand view. - Last state at once (since V01.0.748, function \"Apps keep the last state\"): history, chats, My profile, settings and \"Open in the panel\" show the state of last time as soon as they open, with \"As of 16:05 · refreshing …\" on top until the Spark has answered (then the note goes, or it says \"Spark not reachable right now\"). Kept are the 20 newest conversations with 50 messages each, the chat list and the last page of up to 20 chats, the own settings and functions and the numbers on the tiles of \"My things\" (only how many, no name); private chats and chats with \"messages vanish\" never. Without a kept state the page shows grey placeholders, after a second \"Connecting to the Spark …\", after 8 seconds \"This takes longer than usual …\" and on an error \"Try again\". When the app comes to the front it fetches history, chats and settings once in the background (at most every 5 minutes). When a page needs mor"
+"text": "nder Settings stays open even when the admin blocks it right then (with a note on top; Back closes it). Monitoring and Checks show an error only on the second failed try and at the end of the list, rows in Logs and hints keep their place. With the charger, the history stays in place behind the stand view. - Last state at once (since V01.0.748, function \"Apps keep the last state\"): history, chats, My profile, settings and \"Open in the panel\" show the state of last time as soon as they open, with \"As of 16:05 · refreshing …\" on top until the Spark has answered (then the note goes, or it says \"Spark not reachable right now\"). Kept are the 20 newest conversations with 50 messages each, the chat list and the last page of up to 20 chats, the own settings and functions and the numbers on the tiles of \"My things\" (only how many, no name); private chats and chats with \"messages vanish\" never. Without a kept state the page shows grey placeholders, after a second \"Connecting to the Spark …\", after 8 seconds \"This takes longer than usual …\" and on an error \"Try again\". When the app comes to the front it fetches history, chats and settings once in the background (at most every 5 minutes). When "
 },
 {
 "lang": "en",
@@ -33357,7 +33381,7 @@
 "file": "iPhone app \"Spark\"",
 "head": "Quick start, history, photos, offline",
 "title": "Quick start, history, photos, offline",
-"text": "e than 2 seconds, Status → Logs (area Apps) shows a line app: langsam <page> <ms> ms iphone. - Save the battery (since V01.0.668): in the background the app stops its audio engine as soon as nothing listens, speaks or calls any more; an answer still playing is finished first. iOS can then put the app to sleep. Exception: the wake word listens (on the charger, or for the time under \"On battery\"). In the car the app lets go of the sound after every conversation since V01.0.871, also in front, so radio and music do not stay quieter. - English: On an iPhone set to English the app is in English, including the wake word and Siri (\"Ask Spark\", \"Start Spark\"). - Long questions (since V01.0.829): the input field grows up to five lines, beyond that it scrolls. The return key makes a new line, the arrow sends. From four lines ⤢ at the top right of the field opens the large view over the whole screen: *Done* puts the text back into the field, *Send* sends it."
+"text": "a page needs more than 2 seconds, Status → Logs (area Apps) shows a line app: langsam <page> <ms> ms iphone. - Save the battery (since V01.0.668): in the background the app stops its audio engine as soon as nothing listens, speaks or calls any more; an answer still playing is finished first. iOS can then put the app to sleep. Exception: the wake word listens (on the charger, or for the time under \"On battery\"). In the car the app lets go of the sound after every conversation since V01.0.871, also in front, so radio and music do not stay quieter. - English: On an iPhone set to English the app is in English, including the wake word and Siri (\"Ask Spark\", \"Start Spark\"). - Long questions (since V01.0.829): the input field grows up to five lines, beyond that it scrolls. The return key makes a new line, the arrow sends. From four lines ⤢ at the top right of the field opens the large view over the whole screen: *Done* puts the text back into the field, *Send* sends it."
 },
 {
 "lang": "en",

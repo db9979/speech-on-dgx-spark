@@ -247,16 +247,21 @@ struct ChatView: View {
                         .accessibilityLabel(chats.unread > 0 ? Text("Chats, \(chats.unread) ungelesen") : Text("Chats"))
                     }
                 }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button { today = true } label: { Image(systemName: "sun.max") }
-                        .accessibilityLabel("Heute")
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button { settings = true } label: { Image(systemName: "gearshape") }
-                        .accessibilityLabel("Einstellungen")
-                }
             }
             .kaefer("Assistent")
+            // Heute and Einstellungen in an own „⋯“ menu (Dominik 2026-11-17 „die drei Punkte oben rechts haben keine
+            // Funktion“): with the ladybug the bar had seven symbols, the iPhone folded the last ones into its own „⋯“,
+            // and that menu cannot show or start buttons with drawn labels. Right side now at most three: Chats, the
+            // ladybug and this menu with written labels, so nothing is folded away.
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Menu {
+                        Button { today = true } label: { Label("Heute", systemImage: "sun.max") }
+                        Button { settings = true } label: { Label("Einstellungen", systemImage: "gearshape") }
+                    } label: { Image(systemName: "ellipsis.circle") }
+                    .accessibilityLabel("Mehr")
+                }
+            }
             .sheet(isPresented: $today) { TodayView() }
             .sheet(isPresented: $settings, onDismiss: { talk.settingsChanged() }) { SettingsView() }
             .sheet(isPresented: $history) { HistoryView() }
