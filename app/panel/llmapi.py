@@ -385,7 +385,7 @@ def _target():
     """(chat config, address, headers) of the Spark's own LLM-Tor, or None while the chat uses another server."""
     import llm
     import stufe
-    ccfg = load_config("chat")
+    ccfg = llm.eigen(load_config("chat"))
     if not llm.own_tor(ccfg):
         return None
     return ccfg, llm.url(ccfg), {**llm.headers(ccfg), **stufe.headers("hinten")}

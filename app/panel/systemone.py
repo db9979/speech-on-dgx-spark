@@ -103,7 +103,7 @@ def endpoint(ccfg):
 
 
 def _headers(ccfg):
-    return {"Content-Type": "application/json", **llm.headers(ccfg)}
+    return {"Content-Type": "application/json", **llm.headers(llm.eigen(ccfg))}
 
 
 def choice(instructions, options):

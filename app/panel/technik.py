@@ -317,6 +317,8 @@ MODULE = {
     "werkstattseite": ("betrieb", "Zustand → Werkstatt: Aufträge anfragen, rote Tests noch mal, Ergebnisse mit nächsten Schritten, feste Nachtregel"),
     "entwickelnseite": ("betrieb", "Entwickeln auf dem Pi im Panel: Seite mit lokalen Änderungen, Einspielen, Zweigen an GitHub, Terminal im Browser"),
     "modelleneu": ("betrieb", "Neu verfügbar: einmal am Tag neue Modelle fester Herausgeber, nach den Regeln der Suche geprüft"),
+    "fremdmodell": ("betrieb", "Fremde Modell-Dienste: Adresse im Heimnetz, Prüfung, Für alle oder Ersatz; liest llm.py"),
+    "fremdseite": ("betrieb", "Zustand → Modelle, Karte Fremde Modell-Dienste: eintragen, prüfen, nutzen, löschen"),
     "probetag": ("betrieb", "Probetag nach dem Wechsel: Qualitätstest des neuen Sprachmodells, klar schlechter heißt zurück"),
     "modellseite": ("betrieb", "Zustand → Modelle: Katalog, Speicher-Budget, Messen, Wechseln und Zurückholen, eigene Modelle hinzufügen und löschen"),
     "technik": ("betrieb", "Diese Seite: Zustand → Technik und die Architektur-Doku"),

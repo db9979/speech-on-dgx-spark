@@ -513,6 +513,8 @@ Live overview, logs, watchers, backup, update, help and the admin pages.
 | `app/entwickeln.py` | Entwickeln auf dem Pi, Paket 1: OpenCode with the own language model on the panel computer, and Weg B: local changes installed without GitHub. |
 | `app/panel/entwickelnseite.py` | Entwickeln auf dem Pi: the panel's side of app/entwickeln.py, for admins only, default off (admin switch chat.entwickeln). |
 | `app/panel/faelle.py` | Fälle: every problem becomes a case the moment it happens. |
+| `app/panel/fremdmodell.py` | Fremde Modell-Dienste: a language model that another program in the home network serves through the OpenAI interface (Ollama or LM Studio on a Mac), used in … |
+| `app/panel/fremdseite.py` | Status → Models, card „Fremde Modell-Dienste“: an admin adds a language model another program in the home network serves through the OpenAI interface (Ollama … |
 | `app/panel/ghtoken.py` | A read-only GitHub token for the Spark's own questions to api.github.com (Settings → Update). |
 | `app/gputakt.py` | GPU-Taktgrenze: a ceiling on the model computer's GPU clock for less power and heat at about the same speed. |
 | `app/panel/health.py` | Stability: a watchdog for hung speech services, a warning before memory runs out, and a live check of the real services (LLM answers, TTS speaks, ASR underst … |
@@ -838,6 +840,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/fernordner.json` | Remote access: the folders (name, symbol, order) and which system lies in which folder; delete under Remote access → Systems (click a folder → Delete), the systems stay | – | no |
 | `state/fernzugang-verlauf.json` | Remote access: history of the sessions of the last days (time, system, admin, kind, duration, home or internet), never an address or content; delete under Remote access → Systems → History | – | no |
 | `state/fernzugang.json` | Remote access: paired remote servers (name, system, host key, times, the reported fingerprints of the keys for sshTermy), per server an own SSH key of the panel, the anchor's device key only as SHA-256 | SSH key sealed, device key only as a hash | no |
+| `state/fremd-modelle.json` | Foreign model services: name, address in the home network, key, checked model, use | mode 0600, the key never on a page or in a log | no |
 | `state/gehaeuse-wunsch.json` | The panel's wish for the case (set up, remove, restart), seconds | – | no |
 | `state/geraete-updates.json` | Device updates | – | yes |
 | `state/geraetebild.json` | The admin's own photos of both computers for their cards under Status → Summary → Computers (small, as JPEG without the file's extra data); delete there at the picture with "Foto entfernen" | – | yes |
@@ -2978,14 +2981,14 @@ flowchart TD
   s12 -.->|redirect| s2
 ```
 
-1. <a id="kn-waechter-s1"></a>**A tool wants out**: Everything that goes to an address from settings or from outside text gets its access through netguard.client with a level (today 36 modules). Fixed own services like the language model go directly; which ones and why is listed in netguard.DIRECT_OK, a self-test keeps that list complete.
+1. <a id="kn-waechter-s1"></a>**A tool wants out**: Everything that goes to an address from settings or from outside text gets its access through netguard.client with a level (today 37 modules). Fixed own services like the language model go directly; which ones and why is listed in netguard.DIRECT_OK, a self-test keeps that list complete.
 2. <a id="kn-waechter-s2"></a>**Resolve the name once**: resolve() looks the name up exactly once. If it has several addresses, each one must be allowed, else it stops.
 3. <a id="kn-waechter-s3"></a>**Own service?**: The ports of the own services are closed on this machine: on loopback and on every own address in the LAN or VPN (own_addresses reads them again every minute). When the models run on another computer (models.host), its addresses count the same (model_addresses).
 4. <a id="kn-waechter-s4"></a>**Internet and kill switch on?**: If the address is public and the kill switch is at stage 1 or higher, nothing goes to the internet, whatever level the tool has. The home network stays reachable as the level allows.
 5. <a id="kn-waechter-s5"></a>**Public address?**: A public address is allowed at every level.
 6. <a id="kn-waechter-s6"></a>**Level „internet only“?**: What comes from search results or answers may never go to the home network (ghtoken, mailansicht, meldung, modellseite, remarkable, schwachstellen, systemupdates, verbund).
 7. <a id="kn-waechter-s7"></a>**Never allowed?**: Link-local addresses (169.254.x, where cloud metadata answers), multicast, unspecified and reserved addresses are allowed at no level.
-8. <a id="kn-waechter-s8"></a>**Home network allowed?**: Home Assistant and other services in the home network (doclingdienst, esp32, hamelden, homeassistant, kiwix, offsite) always may. Calendars, contacts, mail and MCP (calendars, contacts, fundmail, mail, mcp, meinmcp, tasks) only when Settings → Security → Allow home network addresses is on.
+8. <a id="kn-waechter-s8"></a>**Home network allowed?**: Home Assistant and other services in the home network (doclingdienst, esp32, fremdseite, hamelden, homeassistant, kiwix, offsite) always may. Calendars, contacts, mail and MCP (calendars, contacts, fundmail, mail, mcp, meinmcp, tasks) only when Settings → Security → Allow home network addresses is on.
 9. <a id="kn-waechter-s9"></a>**Connect to exactly this address**: The connection goes to the checked address, not to the name again. A second look-up could answer differently (DNS rebinding). The certificate is still checked for the name.
 10. <a id="kn-waechter-s10"></a>**Password only to its own site**: Login data only goes to the site it was entered for (same host or same parent domain, like the CalDAV servers of icloud.com), never over http when the address was https.
 11. <a id="kn-waechter-s11"></a>**Answer at most 20 MB**: Answers are cut at 20 MB, also after unpacking gzip, so a huge or packed answer cannot fill the memory.
@@ -3001,7 +3004,7 @@ Applies at: [step 6](#kn-waechter-s6), [step 8](#kn-waechter-s8)
 |---|---|---|---|
 | internet only | ghtoken, mailansicht, meldung, modellseite, remarkable, schwachstellen, systemupdates, verbund | ✓ | ✕ |
 | user | calendars, contacts, fundmail, mail, mcp, meinmcp, tasks | ✓ | only with switch |
-| home | doclingdienst, esp32, hamelden, homeassistant, kiwix, offsite | ✓ | ✓ |
+| home | doclingdienst, esp32, fremdseite, hamelden, homeassistant, kiwix, offsite | ✓ | ✓ |
 | by target | anrufe, dienstwacht, halive, nas, nasquelle, netproxy, offline, speicher, telefon, zertpin | as the target is set | – |
 | always | all | ✕ with kill switch | ✕ own services, 169.254, multicast |
 
@@ -3189,7 +3192,7 @@ Self-tests: `test_modellgenau`, `test_tracelog`, `test_live`, `test_logfilter`, 
 
 ### Language model
 
-The language model writes the answers: the own one behind the LLM-Tor. The panel talks to it at the configured address through the OpenAI interface, streamed, and makes sure speech always comes before background work. Address, key and model name live only in llm.py; every background job asks through llm.complete. With Features → Helper model the small helper model writes the jobs in llm.HELFER_JOBS first, else the big one at once.
+The language model writes the answers: the own one behind the LLM-Tor. The panel talks to it at the configured address through the OpenAI interface, streamed, and makes sure speech always comes before background work. Address, key and model name live only in llm.py; every background job asks through llm.complete. With Features → Helper model the small helper model writes the jobs in llm.HELFER_JOBS first, else the big one at once. With Features → Foreign model services llm.fremd asks a checked model in the home network instead (for everyone or as a fallback while the model computer is gone); the own checks stay with the own one (llm.eigen).
 
 **Why:** The GPU is shared between the model and speech output. While a person waits, no learning or tidying in the background may slow the answer. And a hanging or missing model should give a clear sentence, not minutes of silence.
 
@@ -3974,7 +3977,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Seal**: vault.seal turns the value into „enc1:“ and a Fernet token (encrypted and protected against change). A value already sealed stays as it is.
 5. <a id="kn-state-s5"></a>**Write atomically**: common.write_json writes into a fresh temporary file next to it, never through a link, gives it the rights of the old file (a new one is readable for the service only) and then swaps it in one step. A crash in the middle leaves the old file whole.
 6. <a id="kn-state-s6"></a>**Read**: A sealed value is opened with the key. If the key does not fit (backup from another Spark), an empty value comes back and the account has to be entered again. Older unsealed values are read and sealed the next time they are saved.
-7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 52), otherwise the line gives its reason (dateien.STATE_LOCAL, 128). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
+7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 52), otherwise the line gives its reason (dateien.STATE_LOCAL, 129). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
 8. <a id="kn-state-s8"></a>**Move backup?**: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup.
 9. <a id="kn-state-s9"></a>**Fine when restoring?**: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays.
 10. <a id="kn-state-s10"></a>**Put in place with a way back**: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back.
@@ -3985,7 +3988,7 @@ flowchart TD
 #### Numbers (from the code)
 
 - **52** files in every backup ([step 7](#kn-state-s7))
-- **128** files and folders that stay out with a reason ([step 7](#kn-state-s7))
+- **129** files and folders that stay out with a reason ([step 7](#kn-state-s7))
 - **8 MB** largest file when restoring ([step 9](#kn-state-s9))
 - **12** characters the move password has at least ([step 8](#kn-state-s8))
 

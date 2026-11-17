@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "llm": {
-        "stand": "681f70ad8a",
+        "stand": "ae09f6e12b",
         "bezug": {
             "chat.chat": ["s1"], "chat._answer": ["s2", "s4", "s6"], "llm.model": ["s3"], "llm.known_model": ["s3"], "llm.url": ["s1"], "llm.complete": ["s1"],
             "chat.sampling": ["s4"], "chat.first_within": ["s8"], "chat.ContextFull": ["s7"],
@@ -17,12 +17,16 @@ SEITEN = {
                  "Panel spricht es an der eingestellten Adresse über die OpenAI-Schnittstelle an, gestreamt, und sorgt "
                  "dafür, dass Sprache immer vor Hintergrundarbeit kommt. Adresse, Schlüssel und Modellname stehen nur in llm.py; "
                  "jede Hintergrundaufgabe fragt über llm.complete. Mit Funktionen → Hilfsmodell "
-                 "schreibt die Aufträge aus llm.HELFER_JOBS erst das kleine Hilfsmodell, sonst sofort das große.",
+                 "schreibt die Aufträge aus llm.HELFER_JOBS erst das kleine Hilfsmodell, sonst sofort das große. Mit Funktionen → "
+                 "Fremde Modell-Dienste fragt llm.fremd stattdessen ein geprüftes Modell im Heimnetz (für alle oder als "
+                 "Ersatz, solange der Modell-Rechner weg ist); die eigenen Prüfungen bleiben beim eigenen (llm.eigen).",
                  "The language model writes the answers: the own one behind the LLM-Tor. The panel "
                  "talks to it at the configured address through the OpenAI interface, streamed, and makes sure speech "
                  "always comes before background work. Address, key and model name live only in llm.py; every "
                  "background job asks through llm.complete. With Features → Helper model the small "
-                 "helper model writes the jobs in llm.HELFER_JOBS first, else the big one at once."),
+                 "helper model writes the jobs in llm.HELFER_JOBS first, else the big one at once. With Features → Foreign "
+                 "model services llm.fremd asks a checked model in the home network instead (for everyone or as a "
+                 "fallback while the model computer is gone); the own checks stay with the own one (llm.eigen)."),
         "warum": ("Die GPU teilt sich das Modell mit der Sprachausgabe. Wartet eine Person, darf kein Lernen oder "
                   "Aufräumen im Hintergrund die Antwort bremsen. Und ein hängendes oder fehlendes Modell soll einen "
                   "klaren Satz ergeben, keine Minuten Stille.",

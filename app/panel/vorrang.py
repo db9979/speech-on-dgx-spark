@@ -397,7 +397,7 @@ async def measure(sleep=asyncio.sleep):
     from common import load_config
     from core import api_headers
     cfg = load_config()
-    ccfg = cfg.get("chat", {})
+    ccfg = llm.eigen(cfg.get("chat", {}))
     h = api_headers()
     res = {"t": int(time.time()), "alone": None, "load": None, "vorrang": None, "error": ""}
     async with httpx.AsyncClient(timeout=httpx.Timeout(120, connect=5)) as c:

@@ -241,6 +241,39 @@ function mdStarts(d){const st=d.starts||[];if(!st.length)return '';
     `</tbody></table>`).join('')+`<div class="mut vb-note">${esc(t('„Platz“: so viele Tokens passen in den Gesprächsspeicher, alle Gespräche zusammen.','“Room”: this many tokens fit into the context store, all conversations together.'))}</div></div>`}
 // the admin's Hugging Face token (stage B1c): faster downloads and models whose terms the admin accepted; kept only
 // on the computer the models run on, the page sees only whether one is set
+// Fremde Modell-Dienste (fremdseite.py, plan E6): own endpoint, own card; never a key, the panel decides by fixed rules
+let MD_FREMD_LISTE={};
+async function mdFremdApi(url,method,body){const msg=$('mdmsg');msg.textContent='';
+  try{const r=await api(url+(L==='en'?'?lang=en':''),body?{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:{method});return await r.json()}catch(e){msg.textContent=e.message;return null}}
+function mdFremdKarte(x,d){const s=x.status||{},l=MD_FREMD_LISTE[x.id];
+  const st=s.t?(s.ok?`<span class="pill ok">${esc(t('erreichbar','reachable'))}</span>`+(s.ms!=null?` <span class="mut">${s.ms} ms${s.tok_s?' · '+s.tok_s+' tok/s':''}</span>`:''):`<span class="pill warn">${esc(t('Problem','problem'))}</span>`):'';
+  const nutzung=[d.wahl===x.id?t('für alle','for everyone'):'',d.ersatz===x.id?t('Ersatz','fallback'):''].filter(Boolean).join(' · ');
+  return `<div class="card"><b>${esc(x.name)}</b> <span class="pill">${esc(t('fremd, ungeprüft','foreign, unchecked'))}</span> ${st}`+
+    `<div class="mut">${esc(x.url)} · ${esc(x.https?t('https','https'):t('ohne https: der Text geht unverschlüsselt durchs Heimnetz','without https: the text crosses the home network unencrypted'))}${x.schluessel?' · '+esc(t('mit Schlüssel','with key')):''}</div>`+
+    `<div class="row">${x.geprueft?`<span class="pill ok">${esc(t('geprüft: ','checked: ')+x.modell)}</span>`+(nutzung?` <span class="pill">${esc(nutzung)}</span>`:''):esc(t('Noch kein geprüftes Modell.','No checked model yet.'))}</div>`+
+    (d.an?`<div class="row">`+(l?`<select id="mdfm_${esc(x.id)}" aria-label="${esc(t('Modell','Model'))}">${l.map(m=>`<option${m===x.modell?' selected':''}>${esc(m)}</option>`).join('')}</select> <button type="button" class="b sm" data-mdfp="${esc(x.id)}">${esc(t('Prüfen','Check'))}</button>`:
+      `<button type="button" class="b sm" data-mdfl="${esc(x.id)}">${esc(t('Modelle holen','Get models'))}</button>`)+
+      ` <button type="button" class="b sm danger" data-mdfx="${esc(x.id)}">${esc(t('Löschen','Delete'))}</button></div>`:'')+`</div>`}
+function mdFremdWahl(d){const ok=d.dienste.filter(x=>x.geprueft);if(!d.an||!ok.length)return '';
+  const sel=(id,v,leer)=>`<select id="${id}">${[['',leer]].concat(ok.map(x=>[x.id,x.name+' · '+x.modell])).map(([k,n])=>`<option value="${esc(k)}"${k===v?' selected':''}>${esc(n)}</option>`).join('')}</select>`;
+  return `<div class="row"><label>${esc(t('Für alle','For everyone'))} ${sel('mdfwahl',d.wahl,t('eigenes Sprachmodell','own language model'))}</label> <label>${esc(t('Ersatz, wenn der Modell-Rechner weg ist','Fallback while the model computer is gone'))} ${sel('mdfersatz',d.ersatz,t('keiner','none'))}</label> <button type="button" class="b sm" id="mdfwok">${esc(t('Übernehmen','Apply'))}</button></div>`+
+    `<div class="mut vb-note">${esc(t('Qualitätstest, Probetag, System One und das Hilfsmodell bleiben beim eigenen Modell.','The quality test, the trial, System One and the helper model stay with the own model.'))}</div>`}
+async function mdFremd(daten){const box=$('mdfremd');if(!box)return;let d=daten;
+  if(!d)try{d=await (await api('/api/admin/modelle/fremd')).json()}catch(_){box.innerHTML='';return}
+  if(!d.an&&!d.dienste.length){box.innerHTML='';return}
+  felderNeu(box,`<div class="card"><h3>${esc(t('Fremde Modell-Dienste','Foreign model services'))}</h3>`+
+    (d.an?'':`<div class="mut vb-note">${esc(t('Aus: Funktionen → Fremde Modell-Dienste einschalten. Bis dahin fragt das Panel das eigene Modell.','Off: switch on Features → Foreign model services. Until then the panel asks its own model.'))}</div>`)+
+    d.dienste.map(x=>mdFremdKarte(x,d)).join('')+mdFremdWahl(d)+
+    (d.an&&d.dienste.length<d.max?`<details><summary>${esc(t('Hinzufügen (Ollama, LM Studio)','Add (Ollama, LM Studio)'))}</summary><div class="row"><input id="mdfn" maxlength="30" placeholder="${esc(t('Name, z. B. Mac Studio','Name, e.g. Mac Studio'))}" aria-label="Name" autocomplete="off"> `+
+      `<input id="mdfu" placeholder="http://192.168.178.20:11434/v1" aria-label="${esc(t('Adresse','Address'))}" autocomplete="off"> <input type="password" id="mdfk" placeholder="${esc(t('Schlüssel (optional)','Key (optional)'))}" aria-label="${esc(t('Schlüssel','Key'))}" autocomplete="off"> <button type="button" class="b sm" id="mdfok">${esc(t('Hinzufügen','Add'))}</button></div>`+
+      `<div class="mut vb-note">${esc(t('Eine feste IP im Heimnetz mit Port: Ollama 11434, LM Studio 1234. Der Schlüssel steht nie auf einer Seite und nie im Log.','A fixed IP in the home network with a port: Ollama 11434, LM Studio 1234. The key never shows on a page or in a log.'))}</div></details>`:'')+`</div>`);
+  const neu=x=>{if(x)mdFremd(x)};
+  if($('mdfok'))$('mdfok').onclick=async()=>neu(await mdFremdApi('/api/admin/modelle/fremd','PUT',{id:'',name:$('mdfn').value.trim(),url:$('mdfu').value.trim(),key:$('mdfk').value}));
+  if($('mdfwok'))$('mdfwok').onclick=async()=>neu(await mdFremdApi('/api/admin/modelle/fremd/wahl','POST',{wahl:$('mdfwahl').value,ersatz:$('mdfersatz').value}));
+  box.querySelectorAll('[data-mdfl]').forEach(b=>b.onclick=async()=>{const r=await mdFremdApi('/api/admin/modelle/fremd/modelle','POST',{id:b.dataset.mdfl});if(r){MD_FREMD_LISTE[b.dataset.mdfl]=r.modelle;mdFremd(d)}});
+  box.querySelectorAll('[data-mdfp]').forEach(b=>b.onclick=async()=>{const id=b.dataset.mdfp;b.disabled=true;b.textContent=t('prüft …','checking …');
+    const r=await mdFremdApi('/api/admin/modelle/fremd/pruefen','POST',{id,modell:$('mdfm_'+id).value});delete MD_FREMD_LISTE[id];mdFremd(r||null)});
+  box.querySelectorAll('[data-mdfx]').forEach(b=>b.onclick=async()=>{if(confirm(t('Diesen Dienst und seinen Schlüssel löschen?','Delete this service and its key?')))neu(await mdFremdApi('/api/admin/modelle/fremd/'+encodeURIComponent(b.dataset.mdfx),'DELETE'))})}
 function mdHf(d){const h=d.hf_token;if(!h)return '';
   return `<div><h3>${esc(t('Hugging-Face-Token','Hugging Face token'))}</h3>`+(h.gesetzt?
     `<div class="row"><span class="pill ${h.abgelehnt?'warn':'ok'}">${esc(h.abgelehnt?t('abgelehnt: neuen eintragen','refused: enter a new one'):t('gesetzt','set'))}</span>`+
@@ -264,10 +297,10 @@ async function loadModelle(daten){const main=$('mdmain'),msg=$('mdmsg');if(!main
   let d=daten;if(!d)try{d=await (await api('/api/admin/modelle'+(L==='en'?'?lang=en':''))).json()}catch(e){msg.textContent=e.message;return}
   const w=d.wechsel||{};
   MD_SEITE=d;if(MD_OFFEN&&!d.arten.some(a=>a.art===MD_OFFEN))MD_OFFEN='';
-  felderNeu(main,mdWechsel(w)+mdProbe(w)+mdProbetag(d.probetag)+mdBalken(d.budget)+mdNeu(d.neu,w)+mdSaetze(d,w)+`<div class="mdkacheln">${d.arten.filter(a=>a.modelle.length).map(a=>mdKachel(a,w)).join('')}</div>`+mdWahl(d,w)+
+  felderNeu(main,mdWechsel(w)+mdProbe(w)+mdProbetag(d.probetag)+mdBalken(d.budget)+mdNeu(d.neu,w)+mdSaetze(d,w)+'<div id="mdfremd"></div>'+`<div class="mdkacheln">${d.arten.filter(a=>a.modelle.length).map(a=>mdKachel(a,w)).join('')}</div>`+mdWahl(d,w)+
     `<details class="mdmehr" id="mdmehr"${MD_MEHR?' open':''}><summary>${esc(t('Mehr: Lange Gespräche, Messwerte, Messen, Zurückholen, letzte Starts, Bibliothek, Hugging-Face-Token','More: long conversations, measurements, measuring, bringing back, last starts, library, Hugging Face token'))}</summary>`+
     `<div class="vb-two">${mdPlatz(w)}${mdBudget(d.budget)}${d.arten.map(a=>mdArt(a,w,d)).join('')}${mdStarts(d)}${mdBib(d)}${mdHf(d)}</div>`+
     `<div class="mut vb-note">${d.geraet?esc(t('Gerät: ','Computer: ')+d.geraet)+' · ':''}${esc(d.messung_zeit?t('Letzte Messung: ','Last measurement: ')+new Date(d.messung_zeit*1000).toLocaleString(L==='en'?'en':'de'):t('Noch keine Messung. „Messen“ beim Modell (mit Funktionen → Modelle wechseln) oder auf dem Spark: sudo speech-spark modelle messen','No measurement yet. „Measure“ at the model (with Features → Routing models) or on the Spark: sudo speech-spark modelle messen'))}`+
     ` · ${esc(t('„~“ heißt geschätzt.','“~” means estimated.'))}</div></details>`);
-  mdKnoepfe(d);if(typeof labelTables==='function')labelTables();
+  mdKnoepfe(d);mdFremd();if(typeof labelTables==='function')labelTables();
   clearTimeout(window.mdTick);const st=w.start&&!w.start.ende;if(w.laeuft||w.misst||st)window.mdTick=setTimeout(()=>{if($('mdmain')&&$('mdmain').offsetParent)loadModelle()},w.misst||st?8000:15000)}

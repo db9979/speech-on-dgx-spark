@@ -411,7 +411,7 @@ async def run(reason="manual", sampling="eigen"):
         return last()
     async with _lock:
         cfg = load_config()
-        ccfg = cfg.get("chat", {})   # with the shipped defaults (common.load_config)
+        ccfg = llm.eigen(cfg.get("chat", {}))   # with the shipped defaults; the own model, never a foreign one
         if sampling == "qwen":   # only for this run, never written to the settings
             ccfg = dict(ccfg, **QWEN_SAMPLING)
         else:
@@ -576,7 +576,7 @@ async def helfer_run(reason="manual"):
         return helfer_last()
     async with _lock:
         cfg = load_config()
-        ccfg = cfg.get("chat", {})
+        ccfg = llm.eigen(cfg.get("chat", {}))
         todo = helfer_cases()
         t0 = time.time()
         _progress.update(done=0, total=len(todo), started=int(t0))

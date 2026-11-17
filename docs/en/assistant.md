@@ -1897,6 +1897,8 @@ Every function of the Spark with its switch, what it builds on, where you set it
 
 - **Trial after a switch** (Features → Access → "Trial after a switch"; builds on "Switch models"): After every switch of the language model, as soon as it answers, the fixed quality test runs once (Status → Checks → Quality test).
 
+- **Foreign model services** (Features → Access → "Foreign model services"): Another computer in the home network, for example a Mac with Ollama or LM Studio, offers a language model through the OpenAI interface.
+
 - **Newly available** (Features → Access → "Newly available"; builds on "Switch models"): Once a day the Spark asks Hugging Face's public list for the newest models of a few fixed publishers (Qwen, Google, NVIDIA, Mistral, DeepSeek, IBM Granite, OpenAI) and checks them by the rules of the search: a fitting task, safetensors, …
 
 - **Workshop** (Features → Access → "Workshop"): On the page Status → Workshop an admin lets the model computer work in a sealed-off copy of the code.

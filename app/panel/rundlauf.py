@@ -200,7 +200,7 @@ async def run_once(now=None):
             ms["asr"] = int((time.time() - t0) * 1000)
         if not step:
             t0 = time.time()
-            ccfg = cfg.get("chat", {})
+            ccfg = llm.eigen(cfg.get("chat", {}))
             try:
                 headers = llm.headers(ccfg)
                 model = await llm.model(c, ccfg, headers)

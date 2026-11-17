@@ -39,10 +39,12 @@ import anmeldehinweis
 import dungeon_live
 import guard
 import features
+import fremdmodell
 import modellgenau
 import quellenangabe
 import schwachstellen_stand
 import steckbrief
+import steuer
 from common import DayCounter, STATE, load_config, write_json
 from core import auth
 
@@ -1755,6 +1757,7 @@ def snapshot(view="admin", now=None):
         szr = {"on": False}
     if szr.get("on"):
         used.add("schirm")
+    frm = fremdmodell.fuer_live(features.admin_on("fremdmodelle"))   # Fremde Modell-Dienste: numbers only
     try:
         import werkstattseite
         wks = werkstattseite.for_live(now)
@@ -1853,6 +1856,8 @@ def snapshot(view="admin", now=None):
     targets = [{"id": k, "name": v[0], "sub": _devup_sub(devup) if k == "geraete" and devup else v[1], "zone": v[2]}
                for k, v in TARGETS.items() if (v[3] and k not in off) or k in used]
     for x in targets:      # Probleme melden: open drafts and sent today, in numbers (no titles, no text)
+        if x["id"] == "qwen" and frm.get("on"):   # Fremde Modell-Dienste: services, checked, reachable (no name, no address)
+            x["sub"] += " · fremd: " + fremdmodell.live_sub(frm, steuer.weg())
         if x["id"] == "qwen" and vb.get("on"):   # Verbrauchszähler: tokens of the last minute and today (numbers only)
             x["sub"] = f"{x['sub']} · {vb.get('rate', 0)} Tokens/min · heute {vb.get('today', 0)}"
             if vb.get("full"):   # Kontingent: how many profiles are at a used-up limit

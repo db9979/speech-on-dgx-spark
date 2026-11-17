@@ -6604,6 +6604,13 @@
 "text": "Nach dem Update eine Stunde warten, dann Zustand → Logs, Filter „Fehler“: „homeassistant: live lost … code 1006“ kommt höchstens noch selten, nicht mehr alle paar Minuten; die Zeilen „mail: rules run | 0 taken, 0 errors“ und „fuerdich: gelesen … fehler=0“ stehen dort nicht mehr. Unter Logs → Anfragen steht „SparkHilfe holen“ nicht mehr stündlich als Fehler. Kommt 1006 weiter oft: im Home-Assistant-Protokoll nach „unable to keep up with pending messages“ suchen und mir die Zeile schicken.",
 "thread": "Fehler aus dem Fehlerlog beheben",
 "test": "test_halive.Session.test_copy_follows_and_the_tools_use_it"
+},
+{
+"id": "P956",
+"v": 1514,
+"titel": "Fremde Modell-Dienste (Ollama, LM Studio)",
+"text": "Nur wenn ein Mac oder PC mit Ollama oder LM Studio im Heimnetz läuft (Ollama: OLLAMA_HOST=0.0.0.0, LM Studio: „Serve on Local Network“). A: Update. B: Funktionen → Zugang → „Fremde Modell-Dienste“ an. C: Zustand → Modelle, Karte „Fremde Modell-Dienste“ → „Hinzufügen“: Name, Adresse wie http://192.168.178.20:11434/v1. D: „Modelle holen“, ein Modell wählen, „Prüfen“: es steht „geprüft“ mit Antwortzeit und tok/s. E: „Für alle“ auf diesen Dienst, „Übernehmen“, eine Frage im Chat: sie beantwortet der Mac. F: „Für alle“ zurück auf „eigenes Sprachmodell“, „Ersatz“ auf den Dienst: der Chat antwortet wieder von tars. G: Unter Zustand → Logs stehen nur Zeilen „modelle: fremd f1 …“, nie die Adresse oder der Schlüssel.",
+"test": "test_fremdmodell.Endpunkte.test_add_check_use_delete"
 }
 ]
 }

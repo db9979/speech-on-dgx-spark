@@ -11,6 +11,10 @@ import time
 
 import httpx
 
+import features
+import fremdmodell
+import netguard
+import steuer
 from common import load_config, model_host, model_local, no_think
 
 _models = {}   # address -> (asked, the name to ask with, the model that really runs) when chat.llm_model is not set
@@ -22,9 +26,31 @@ HELFER = "helfer"   # the LLM-Tor's model name for the small helper model (syste
 HELFER_JOBS = ("Gedächtnis-Themen", "Uhr-Antworten", "Uhr-Nachfragen")
 
 
+def fremd(ccfg):
+    """The foreign model service the panel asks now instead of the own language model (fremdmodell.ziel: „Für alle“,
+    or „Ersatz“ while the model computer is gone), None for the own one. ccfg "eigen": the own model's checks
+    (quality test, Probetag, Dienst prüfen) always ask the own one. netguard is asked again at every use."""
+    if ccfg.get("eigen"):
+        return None
+    x = fremdmodell.ziel(features.admin_on("fremdmodelle", ccfg), steuer.weg())
+    if x is None:
+        return None
+    try:
+        ip, port = fremdmodell.ziel_ip(x)
+        return x if netguard.allowed(ip, port, netguard.HOME) is None else None
+    except ValueError:
+        return None
+
+
+def eigen(ccfg):
+    """ccfg for a check of the own language model: never the foreign service."""
+    return dict(ccfg, eigen=True)
+
+
 def url(ccfg):
-    """The chat/completions address of the configured model."""
-    return str(ccfg["llm_url"]).rstrip("/") + "/chat/completions"
+    """The chat/completions address of the model the panel asks now."""
+    x = fremd(ccfg)
+    return (x["url"] if x else str(ccfg["llm_url"]).rstrip("/")) + "/chat/completions"
 
 
 def own_tor(ccfg, cfg=None):
@@ -54,14 +80,18 @@ def key(ccfg, cfg=None):
 
 
 def headers(ccfg):
-    k = key(ccfg)
+    x = fremd(ccfg)
+    k = (x.get("key") or "") if x else key(ccfg)
     return {"Authorization": f"Bearer {k}"} if k else {}
 
 
 async def model(c, ccfg, hdrs=None):
     """The model's name to ask with: the configured one, else the first the server lists (the own LLM-Tor: its fixed
     name "sprachmodell", whatever runs behind it). Asked again after MODELS_TTL seconds, so known_model() follows a
-    switch; a failed new ask keeps the old answer."""
+    switch; a failed new ask keeps the old answer. A foreign service: the model its check passed with."""
+    x = fremd(ccfg)
+    if x:
+        return x["modell"]
     if ccfg.get("llm_model"):
         return ccfg["llm_model"]
     base = str(ccfg["llm_url"]).rstrip("/")
@@ -83,8 +113,9 @@ async def model(c, ccfg, hdrs=None):
 
 
 def helfer_kurz(ccfg, job):
-    """True when the helper model writes this job first: chat.helfer and a job of HELFER_JOBS."""
-    return job in HELFER_JOBS and bool(ccfg.get("helfer"))
+    """True when the helper model writes this job first: chat.helfer and a job of HELFER_JOBS, never while a foreign
+    service answers (it has no helper model)."""
+    return job in HELFER_JOBS and bool(ccfg.get("helfer")) and fremd(ccfg) is None
 
 
 def known_model():

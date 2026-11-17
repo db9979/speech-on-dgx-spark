@@ -980,6 +980,14 @@ STECKBRIEFE = {
         ohne_werkzeug=("ohne", "Zustand → Modelle, nur Admins; das Panel liest nur Metadaten von Hugging Face, kein "
                                "Werkzeug"),
         nur_spark=True),
+    # fremdmodell.py + fremdseite.py (plan E6, Dominik „c“): a language model another program in the home network
+    # serves (Ollama, LM Studio), checked by the panel, „Für alle“ or „Ersatz“ while the model computer is gone
+    "fremdmodelle": Steckbrief(de="Fremde Modell-Dienste", en="Foreign model services", gruppe="sec",
+        schalter=("modelle_fremd",), anleitung="fremdmodelle",
+        begleiter="spark",
+        ohne_werkzeug=("ohne", "Zustand → Modelle, nur Admins; das Modell antwortet nur mit Text, Werkzeuge führt "
+                               "weiter das Panel nach seinen Regeln aus"),
+        nur_spark=True),
     # probetag.py (stage B2): after a switch of the language model the fixed quality test decides; worse → back
     "modelleprobetag": Steckbrief(de="Probetag nach dem Wechsel", en="Trial after a switch", gruppe="sec",
         schalter=("modelle_probetag",), anleitung="modelleprobetag", parent="modellwechsel",

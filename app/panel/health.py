@@ -246,7 +246,7 @@ async def livecheck(reason="manual"):
         async with httpx.AsyncClient(timeout=httpx.Timeout(180, connect=5)) as c:
             # LLM
             t0 = time.time()
-            ccfg = cfg.get("chat", {})
+            ccfg = llm.eigen(cfg.get("chat", {}))
             try:
                 headers = llm.headers(ccfg)
                 model = await llm.model(c, ccfg, headers)
