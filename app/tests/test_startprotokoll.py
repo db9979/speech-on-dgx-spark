@@ -155,6 +155,7 @@ class Seite(unittest.TestCase):
     def test_listed_behind_the_switch_and_admin_only(self):
         self.assertIn(("POST", "/api/admin/modelle/neustart"), stufen.LIST)
         eigenes_llm(self)
+        helpers.set_config(modelle_wechseln=False)   # the state this test is about, whatever ran before it
         with redirect_stdout(io.StringIO()) as out:
             self.assertEqual(ADMIN.post("/api/admin/modelle/neustart", json={}).status_code, 409)
         self.assertIn("modelle: neustart abgelehnt aus", out.getvalue())

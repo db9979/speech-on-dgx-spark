@@ -115,6 +115,9 @@ class Regeln(unittest.TestCase):
 class Seite(unittest.TestCase):
     def setUp(self):
         self.addCleanup(lambda: os.path.exists(modelle.EIGENE) and os.remove(modelle.EIGENE))
+        # the switches go back off: left on, a later module in the same process (test_startprotokoll) saw
+        # „Modelle wechseln“ on (Dauer-Wackler .510-.512)
+        self.addCleanup(helpers.set_config, modelle_wechseln=False, modelle_eigene=False)
 
     def test_behind_the_switch_and_checked(self):
         r = ADMIN.put("/api/admin/modelle/eigen/eigen-mini-lm-8b/rezept", json={"kontext": 65536})
