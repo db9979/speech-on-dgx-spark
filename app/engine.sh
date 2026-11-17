@@ -4,7 +4,8 @@
 #   speech-spark-tts-design.service  -> engine.sh design  (vllm-omni, VoiceDesign model, on demand with voicedesign_leerlauf_min)
 #   speech-spark-tts-klon.service    -> engine.sh klon    (vllm-omni, Base model: the own designed voices, stimmdesign)
 #   speech-spark-asr-engine.service  -> engine.sh asr     (plain vLLM, Qwen3-ASR)
-#   speech-spark-llm.service         -> engine.sh llm     (plain vLLM, the own language model, modelle.py start-args)
+#   speech-spark-llm.service         -> engine.sh llm     (plain vLLM, the own language model, modelle.py start-args;
+#                                       a model in Docker: the door dockertor.py, the engine in speech-spark-llm-docker)
 #   speech-spark-sehen.service       -> engine.sh sehen   (plain vLLM, image understanding, started on demand)
 #   speech-spark-helfer.service      -> engine.sh helfer  (plain vLLM, the small helper model, started on demand)
 # Listens on 127.0.0.1 only; speech-spark-tts / speech-spark-asr / speech-spark-llmtor on the public ports sit in front.
@@ -30,6 +31,17 @@ if [ "$ROLE" = llm ] || [ "$ROLE" = sehen ] || [ "$ROLE" = helfer ]; then
   # only the order, the preflight and the memory guard below. The panel's Python reads the catalog.
   PREFIX="${SPEECH_SPARK_PREFIX:-$(dirname "$VENV")}"
   PY="$PREFIX/venv-panel/bin/python"; APP_DIR="$(dirname "$(readlink -f "$0")")"
+  # Docker stage 2: a language model in Docker runs in root's unit speech-spark-llm-docker (part of this one); here only
+  # the door dockertor.py puts its socket on llm.engine_port, so the LLM-Tor and the order below see it like any engine
+  if [ "$ROLE" = llm ]; then
+    SOCK=$("$PY" "$APP_DIR/modelle.py" docker-llm | tail -n1) || fail "the catalog refuses this model (see: speech-spark logs $ROLE)"
+    if [ "$SOCK" != - ]; then
+      PORT=$(jq -r '.llm.engine_port // 31016' "$CONFIG")
+      [[ "$PORT" =~ ^[0-9]{4,5}$ ]] || fail "invalid port '$PORT'"
+      state loading "the language model runs in Docker (speech-spark-llm-docker)"
+      exec "$PY" "$APP_DIR/dockertor.py" "$PORT" "$SOCK"
+    fi
+  fi
   mapfile -t LLM_ARGS < <("$PY" "$APP_DIR/modelle.py" start-args "$ROLE")
   [ "${#LLM_ARGS[@]}" -gt 8 ] || fail "the catalog refuses this model (see: speech-spark logs $ROLE)"
   VENV="$PREFIX/venv-$("$PY" "$APP_DIR/modelle.py" venv "$ROLE" | tail -n1)"
@@ -85,10 +97,10 @@ if [ "${#LLM_ARGS[@]}" -eq 0 ]; then
   state loading "checking the files of $MODEL"
   [ "$("$PY" "$APP_DIR/modelle.py" vorbereiten "$MID" --revision "$REV" | tail -n1)" = "$REV" ] \
     || fail "the files of '$MODEL' do not match its pinned commit (see: speech-spark logs $ROLE)"
-  export HF_HUB_OFFLINE=1
   # the shares are set for a DGX Spark's memory; on another pool (a DGX Station's GPU) the same GiB (modelle.sprach_anteil)
   for m in "$MEM0" "$MEM1"; do [[ "$m" =~ ^0?\.[0-9]+$ ]] || fail "engine memory shares must be fractions like 0.05, got '$m'"; done
   MEM0=$("$PY" "$APP_DIR/modelle.py" anteil "$MEM0" | tail -n1); MEM1=$("$PY" "$APP_DIR/modelle.py" anteil "$MEM1" | tail -n1)
+  export HF_HUB_OFFLINE=1
 fi
 [[ "$PORT" =~ ^[0-9]{4,5}$ ]] || fail "invalid port '$PORT'"
 [[ "$SEQS" =~ ^[0-9]{1,3}$ ]] || fail "invalid engine_max_seqs '$SEQS'"

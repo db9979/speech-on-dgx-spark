@@ -215,7 +215,7 @@ class Panel(unittest.TestCase):
         p = p[:p.index("\n}\n")]
         self.assertLess(p.index('llmschritt schritt platz 4 "$jetzt"'), p.index("systemctl start speech-spark-llm"))
         self.assertIn("llmschritt ende ok", p)
-        self.assertIn("ok, wort = rundlauf(load_config(), log, stufe=llmstart.stufe)",
+        self.assertIn("ok, wort = rundlauf(cfg, log, frist=frist, stufe=llmstart.stufe)",
                       read("modelle.py"))
 
 

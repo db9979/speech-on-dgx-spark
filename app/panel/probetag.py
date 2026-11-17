@@ -16,20 +16,15 @@ import asyncio
 import os
 import time
 
-import features
 import modelle
-import quality
-from common import STATE, load_config, read_json, write_json
+from common import STATE, read_json, write_json
 
 STAND = os.path.join(STATE, "modelle-probetag.json")
 SCHLECHTER = 1            # this many questions fewer right are still chance (a run repeats each failed one once)
 WARTEN_S = 1800           # the new model must answer within this long after the switch, else „fehler“
 ERGEBNISSE = ("wartet", "laeuft", "behalten", "ohne_vergleich", "zurueck", "fehler", "aus")
-_task = None
-
-
-def an(cfg=None):
-    return features.admin_on("modelleprobetag", cfg)
+# Only the rules and the state live here; the model page (modellseite.probetag_schritt) gives the switch, the quality
+# test, the wait for the model and the way back, so this module stays below the big import knot (test_schichten).
 
 
 def stand():
@@ -50,54 +45,50 @@ def urteil(neu, alt):
     return "zurueck" if neu["passed"] < alt["passed"] - SCHLECHTER else "behalten"
 
 
-def letzter_lauf(mid, history=None):
+def letzter_lauf(mid, history):
     """The newest quality run of the catalog model mid (quality-history „katalog“), None without one."""
-    for h in reversed(quality.history() if history is None else history):
+    for h in reversed(history):
         if h.get("katalog") == mid and h.get("total"):
             return h
     return None
 
 
-def schritt(cfg=None, now=None):
-    """Once a minute (panel.every_minute): notices a new language model and, when it is due, starts the test in its
-    own task. Returns the word of what it did: "", "neu", "start"."""
-    global _task
-    cfg = load_config() if cfg is None else cfg
-    now = time.time() if now is None else now
+def schritt(cfg, now, an, laeuft):
+    """Once a minute (modellseite.probetag_schritt): notices a new language model; an = the switch, laeuft = a test is
+    running already. Returns the word of what is due: "", "neu", "start" (the caller then starts lauf)."""
     mid = cfg.get("llm", {}).get("modell", "") if cfg.get("llm", {}).get("enabled") else ""
     d = stand()
     if not mid:
         return ""
     if d.get("gesehen") != mid:            # a switch (or the first look): the model before is the one seen until now
         alt = d.get("gesehen", "")
-        d = {"gesehen": mid, "alt": alt, "seit": int(now), "ergebnis": "wartet" if alt and an(cfg) else ""}
+        d = {"gesehen": mid, "alt": alt, "seit": int(now), "ergebnis": "wartet" if alt and an else ""}
         _merken(d)
         if d["ergebnis"]:
             print("modelle: probetag wartet", flush=True)
         return "neu"
-    if d.get("ergebnis") != "wartet" or not an(cfg) or (_task and not _task.done()) or quality.running():
+    if d.get("ergebnis") != "wartet" or not an or laeuft:
         return ""
     if now - d.get("seit", now) > WARTEN_S:
         d.update(ergebnis="fehler", ende=int(now))
         _merken(d)
         print("modelle: probetag fehler zeit", flush=True)
         return ""
-    _task = asyncio.get_running_loop().create_task(_lauf(mid, d["alt"]))
     return "start"
 
 
-async def _lauf(mid, alt):
-    """The test of the new model, the verdict, and the way back when it is worse."""
-    import health
+async def lauf(mid, alt, an, bereit, pruefen, history, zurueck):
+    """The test of the new model, the verdict, and the way back when it is worse. an(): the switch now; bereit():
+    waits until the model answers; pruefen(): the quality test; history(): its runs; zurueck(): „Zurückholen“."""
     d = dict(stand(), ergebnis="laeuft")
     _merken(d)
     print("modelle: probetag start", flush=True)
     try:
-        await health.ready(load_config(), minutes=5)
-        neu = await quality.run("probetag")
+        await bereit()
+        neu = await pruefen()
     except Exception:
         neu = None
-    vorher = letzter_lauf(alt)
+    vorher = letzter_lauf(alt, history())
     wort = urteil(neu, vorher) if an() else "aus"      # switched off meanwhile: the test decides nothing
     d = dict(stand(), ergebnis=wort, ende=int(time.time()),
              neu=[neu["passed"], neu["total"]] if neu and neu.get("total") else None,
@@ -107,7 +98,7 @@ async def _lauf(mid, alt):
         return
     if wort == "zurueck":
         try:
-            await asyncio.to_thread(_zurueck)
+            await asyncio.to_thread(zurueck)
         except Exception:
             d["ergebnis"] = "fehler"
             print("modelle: probetag zurueck fehler", flush=True)
@@ -115,12 +106,7 @@ async def _lauf(mid, alt):
     print(f"modelle: probetag {d['ergebnis']} {d['neu'][0] if d['neu'] else 0} {d['vorher'][0] if d['vorher'] else 0}", flush=True)
 
 
-def _zurueck():
-    import modellseite
-    modellseite.wunsch_ohne_seite("llm", "zurueck")
-
-
-def zeigen(kat=None, lang="de"):
+def zeigen(an, kat=None, lang="de"):
     """For Zustand → Modelle: the last trial with the names, None without one."""
     d = stand()
     if not d.get("ergebnis"):
@@ -132,4 +118,4 @@ def zeigen(kat=None, lang="de"):
         return ((kat.get(x) or {}).get("name") or {}).get(i, x) if x else ""
     return {"ergebnis": d["ergebnis"] if d["ergebnis"] in ERGEBNISSE else "fehler", "name": name(d.get("gesehen")),
             "alt_name": name(d.get("alt")), "neu": d.get("neu"), "vorher": d.get("vorher"), "seit": d.get("seit"),
-            "ende": d.get("ende"), "an": an()}
+            "ende": d.get("ende"), "an": an}

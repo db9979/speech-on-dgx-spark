@@ -17,7 +17,6 @@ helpers.start()
 import panel  # noqa: E402,F401
 import modellseite  # noqa: E402
 import probetag  # noqa: E402
-import quality  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
@@ -51,7 +50,6 @@ class Ablauf(unittest.TestCase):
     def setUp(self):
         self.p = mock.patch.object(probetag, "STAND", os.path.join(tempfile.mkdtemp(), "probetag.json"))
         self.p.start()
-        probetag._task = None
 
     def tearDown(self):
         self.p.stop()
@@ -61,34 +59,44 @@ class Ablauf(unittest.TestCase):
         return {"llm": {"enabled": True, "modell": mid}, "chat": {"modelle_probetag": an, "modelle_wechseln": True}}
 
     def test_a_switch_is_noticed_only_with_the_switch_on(self):
-        with mock.patch.object(probetag, "an", side_effect=lambda c=None: (c or {}).get("chat", {}).get("modelle_probetag", False)), \
-                contextlib.redirect_stdout(io.StringIO()) as out:
-            self.assertEqual(probetag.schritt(self.cfg("alt-modell"), now=100), "neu")
+        def an(c):
+            return modellseite._probetag_an(c)
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            self.assertEqual(probetag.schritt(self.cfg("alt-modell"), 100, an(self.cfg("alt-modell")), False), "neu")
             self.assertEqual(probetag.stand()["ergebnis"], "")                 # the first look: nothing to compare
-            self.assertEqual(probetag.schritt(self.cfg("neu-modell", an=False), now=200), "neu")
+            c = self.cfg("neu-modell", an=False)
+            self.assertEqual(probetag.schritt(c, 200, an(c), False), "neu")
             self.assertEqual(probetag.stand()["ergebnis"], "")                 # switched off: no trial
-            self.assertEqual(probetag.schritt(self.cfg("drittes"), now=300), "neu")
+            c = self.cfg("drittes")
+            self.assertEqual(probetag.schritt(c, 300, an(c), False), "neu")
             self.assertEqual((probetag.stand()["ergebnis"], probetag.stand()["alt"]), ("wartet", "neu-modell"))
+            self.assertEqual(probetag.schritt(c, 301, an(c), True), "")       # a test runs already
+            self.assertEqual(probetag.schritt(c, 302, an(c), False), "start")
+            self.assertEqual(probetag.schritt(c, 300 + probetag.WARTEN_S + 1, an(c), False), "")   # never answered
+            self.assertEqual(probetag.stand()["ergebnis"], "fehler")
         self.assertIn("modelle: probetag wartet", out.getvalue())
 
     def run_trial(self, neu, vorher, an=True):
         probetag._merken({"gesehen": "neu-modell", "alt": "alt-modell", "seit": 1, "ergebnis": "wartet"})
         back = mock.Mock()
 
-        async def fake_run(reason):
-            self.assertEqual(reason, "probetag")
+        async def fake_run():
             return neu
 
-        async def ready(cfg, minutes=20):
+        async def ready():
             return True
-        import health
-        with mock.patch.object(quality, "run", fake_run), mock.patch.object(quality, "history", return_value=vorher), \
-                mock.patch.object(health, "ready", ready), mock.patch.object(probetag, "an", return_value=an), \
-                mock.patch.object(modellseite, "wunsch_ohne_seite", back), contextlib.redirect_stdout(io.StringIO()) as out:
-            asyncio.run(probetag._lauf("neu-modell", "alt-modell"))
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            asyncio.run(probetag.lauf("neu-modell", "alt-modell", lambda: an, ready, fake_run, lambda: vorher,
+                                      lambda: back("llm", "zurueck")))
         return probetag.stand(), back, out.getvalue()
 
     def test_worse_goes_back_like_bring_back(self):
+        with open(os.path.join(HERE, "..", "panel", "modellseite.py"), encoding="utf-8") as f:
+            src = f.read()          # the page gives the fixed test and the way back: the same as „Zurückholen“
+        teil = src[src.index("def probetag_schritt("):src.index("async def _neu_holen(")]
+        for x in ('lambda: quality.run("probetag")', "quality.history", 'lambda: wunsch_ohne_seite("llm", "zurueck")',
+                  "lambda: health.ready(load_config(), minutes=5)", "quality.running()"):
+            self.assertIn(x, teil)
         d, back, log = self.run_trial(lauf(10, katalog="neu-modell"), [lauf(13)])
         back.assert_called_once_with("llm", "zurueck")
         self.assertEqual((d["ergebnis"], d["neu"], d["vorher"]), ("zurueck", [10, 14], [13, 14]))
@@ -110,7 +118,7 @@ class Ablauf(unittest.TestCase):
     def test_the_page_shows_the_result(self):
         probetag._merken({"gesehen": "neu-modell", "alt": "alt-modell", "seit": 1, "ergebnis": "zurueck",
                           "neu": [10, 14], "vorher": [13, 14]})
-        z = probetag.zeigen(kat={})
+        z = probetag.zeigen(True, kat={})
         self.assertEqual((z["ergebnis"], z["neu"], z["vorher"], z["name"]), ("zurueck", [10, 14], [13, 14], "neu-modell"))
         with open(os.path.join(HERE, "..", "panel", "static", "js", "modelle.js"), encoding="utf-8") as f:
             js = f.read()

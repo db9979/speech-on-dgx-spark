@@ -35,6 +35,7 @@ DIENST_NAMEN = {"asr": ("Spracherkennung", "Speech recognition"), "asr-engine": 
                 "tts": ("Sprachausgabe", "Speech output"), "tts-engine": ("Sprachausgabe (Engine)", "Speech output (engine)"),
                 "tts-design": ("Stimmen gestalten", "Voice design"),
                 "tts-klon": ("Eigene Stimmen", "Own voices"), "llm": ("Sprachmodell", "Language model"),
+                "llm-docker": ("Sprachmodell in Docker", "Language model in Docker"),
                 "llmtor": ("LLM-Tor", "LLM-Tor"), "sehen": ("Bildverständnis", "Image understanding"),
                 "helfer": ("Hilfsmodell", "Helper model"), "bild": ("Bilder malen", "Painting pictures"), "musik": ("Musik machen", "Making music"),
                 "werkstatt": ("Werkstatt", "Werkstatt"),

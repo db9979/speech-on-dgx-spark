@@ -52,13 +52,12 @@ class Regeln(unittest.TestCase):
         p = mock.patch.object(modelleneu, "NEU", os.path.join(tempfile.mkdtemp(), "neu.json"))
         p.start()
         self.addCleanup(p.stop)
-        with mock.patch.object(modelleneu, "an", return_value=False):
-            self.assertFalse(modelleneu.faellig(now=NOW))
-        with mock.patch.object(modelleneu, "an", return_value=True):
-            self.assertTrue(modelleneu.faellig(now=NOW))
-            modelleneu.write_json(modelleneu.NEU, {"zeit": NOW - 3600})
-            self.assertFalse(modelleneu.faellig(now=NOW))
-            self.assertTrue(modelleneu.faellig(now=NOW - 3600 + modelleneu.ALLE_S))
+        self.assertFalse(modelleneu.faellig(False, now=NOW))
+        self.assertFalse(modellseite._neu_an({"chat": {"modelle_wechseln": True}}))     # off by default
+        self.assertTrue(modelleneu.faellig(True, now=NOW))
+        modelleneu.write_json(modelleneu.NEU, {"zeit": NOW - 3600})
+        self.assertFalse(modelleneu.faellig(True, now=NOW))
+        self.assertTrue(modelleneu.faellig(True, now=NOW - 3600 + modelleneu.ALLE_S))
 
     def test_the_daily_look_keeps_hints_only(self):
         p = mock.patch.object(modelleneu, "NEU", os.path.join(tempfile.mkdtemp(), "neu.json"))
@@ -72,10 +71,10 @@ class Regeln(unittest.TestCase):
 
         async def fam(art, kat=None):
             return ()
-        with mock.patch.object(modellseite, "_familien", fam), mock.patch.object(modelleneu, "an", return_value=True), \
-                contextlib.redirect_stdout(io.StringIO()) as out:
-            got = asyncio.run(modelleneu.lauf(now=NOW, holen=holen))
-            z = modelleneu.zeigen()
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            got = asyncio.run(modelleneu.lauf(holen, modellseite._quelle, fam, now=NOW))
+            z = modelleneu.zeigen(True)
+        self.assertIsNone(modelleneu.zeigen(False))
         self.assertEqual(gefragt, list(modelle.NEU_HERAUSGEBER))
         self.assertEqual([x["repo"] for x in got], ["Qwen/neu-4b"])
         self.assertEqual((z["fehler"], z["treffer"][0]["art_name"]), (1, modelle.ARTEN["llm"][0]))

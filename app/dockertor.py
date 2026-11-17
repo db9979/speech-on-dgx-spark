@@ -3,7 +3,8 @@
 The container has no network at all (`--network none`, modelle.docker_args): its vLLM answers only on a Unix socket in
 its own folder (STATE/docker-modelle/<id>/sock/engine.sock). This door listens on 127.0.0.1:<port> and passes bytes
 to that socket and back, so the measurement and later the LLM-Tor talk to it like to every other engine. It never
-reads or changes a request. It runs as the panel's user in its own unit (speech-spark.sh mess_docker). Logs
+reads or changes a request. It runs as the panel's user in its own unit (speech-spark.sh mess_docker), or as
+speech-spark-llm (engine.sh llm) for the language model in Docker (stage 2, speech-spark-llm-docker). Logs
 ("dockertor:" lines) carry only the port, counts and fixed words.
 
     python3 dockertor.py <port> <socket>

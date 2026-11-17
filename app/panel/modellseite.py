@@ -33,17 +33,20 @@ import time
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import admin  # noqa: E402
 import core  # noqa: E402
 import features  # noqa: E402
 import netguard  # noqa: E402
 import guard  # noqa: E402
 import hardware  # noqa: E402
+import health  # noqa: E402
 import hftoken  # noqa: E402
 import konsole  # noqa: E402
 import llmstart  # noqa: E402
 import modelle  # noqa: E402
 import modelleneu  # noqa: E402
 import probetag  # noqa: E402
+import quality  # noqa: E402
 import steuer  # noqa: E402
 from common import journal, load_config, read_json, write_json  # noqa: E402
 from core import admin_code, admin_code_fresh, auth  # noqa: E402
@@ -66,7 +69,7 @@ GRUND = {"art": "Diese Art lässt sich nicht wechseln.", "unbekannt": "Das Model
          "budget": "Zu knapp: mit diesem Modell bleibt weniger als die Reserve frei.",
          "keins": "Es gibt kein voriges Modell zum Zurückholen.", "frist": "Das vorige Modell ist älter als 7 Tage.",
          "wunsch": "ungültig", "ungeprueft": "Erst messen: sudo speech-spark modelle messen <id>",
-         "docker": "Modelle in Docker werden vorerst nur gemessen; Wechseln kommt im nächsten Schritt.",
+         "docker": "Dieses Modell läuft nur in Docker, und das nur als Sprachmodell nach einer Messung hier.",
          # stage E5: an own model
          "repo": "Name wie besitzer/modell.", "antwort": "Hugging Face kennt dieses Modell nicht.",
          "zugang": "Das Modell ist privat oder braucht eine Freigabe; nur offene Modelle gehen.",
@@ -108,6 +111,16 @@ def _eigen_an(cfg=None):
 def _an(cfg=None):
     """Funktionen → Modelle wechseln (cfg: the whole configuration, None reads it); always in the Spark-Konsole."""
     return konsole.aktiv() or features.admin_on("modellwechsel", None if cfg is None else cfg.get("chat", {}))
+
+
+def _probetag_an(cfg=None):
+    """Funktionen → Modelle wechseln → „Probetag nach dem Wechsel“ (cfg: the whole configuration, None reads it)."""
+    return features.admin_on("modelleprobetag", None if cfg is None else cfg.get("chat", {}))
+
+
+def _neu_an(cfg=None):
+    """Funktionen → Modelle wechseln → „Neu verfügbar“ (cfg: the whole configuration, None reads it)."""
+    return features.admin_on("modelleneu", None if cfg is None else cfg.get("chat", {}))
 
 
 def _im_gang(*units):
@@ -276,7 +289,8 @@ def seite(cfg=None, total_gib=None, messung=None, lang="de", gestartet=False, we
     return {"arten": arten, "budget": dict(b, teile=teile), "messung_zeit": messung.get("zeit"),
             "wechsel": wechsel, "geraet": hardware.text(profil, "en" if i else "de"), "starts": _starts_zeigen(buch, kat, i),
             "hf_token": buch["hf_token"], "bibliothek": _bibliothek_zeigen(buch["bibliothek"], kat, i),
-            "probetag": probetag.zeigen(kat, "en" if i else "de"), "neu": modelleneu.zeigen("en" if i else "de"), **saetze_zeigen(kat, "en" if i else "de")}
+            "probetag": probetag.zeigen(_probetag_an(), kat, "en" if i else "de"),
+            "neu": modelleneu.zeigen(_neu_an(), "en" if i else "de"), **saetze_zeigen(kat, "en" if i else "de")}
 
 
 def _bibliothek_zeigen(rows, kat, i):
@@ -606,7 +620,6 @@ def _klein_wechsel(request, mid):
     if not _an():
         print("modelle: wechsel abgelehnt aus", flush=True)
         raise HTTPException(409, "Modelle wechseln ist aus (Funktionen → Modelle wechseln).")
-    import admin
     cfg = load_config()
     try:
         m = modelle.klein_pruefen(mid, cfg)
@@ -1136,6 +1149,51 @@ async def satz_anwenden(request: Request):
     guard.log("modelle_wechsel", detail=f"Modellsatz einstellen: {len(offen)} Wechsel")
     await asyncio.to_thread(satz_schritt)
     return await asyncio.to_thread(seite, lang="en" if request.query_params.get("lang") == "en" else "de")
+
+
+_probetag_task = None
+_neu_task = None
+
+
+def probetag_schritt(now=None):
+    """Once a minute (panel.every_minute): Probetag nach dem Wechsel (probetag.py) with this page's parts: the switch,
+    the fixed quality test, the wait for the model and „Zurückholen“ as the way back. Returns probetag.schritt's word."""
+    global _probetag_task
+    cfg = load_config()
+    laeuft = bool(_probetag_task and not _probetag_task.done()) or quality.running()
+    wort = probetag.schritt(cfg, time.time() if now is None else now, _probetag_an(cfg), laeuft)
+    if wort == "start":
+        d = probetag.stand()
+        _probetag_task = asyncio.get_running_loop().create_task(probetag.lauf(
+            d["gesehen"], d.get("alt", ""), _probetag_an, lambda: health.ready(load_config(), minutes=5),
+            lambda: quality.run("probetag"), quality.history, lambda: wunsch_ohne_seite("llm", "zurueck")))
+    return wort
+
+
+async def _neu_holen(herausgeber):
+    """Neu verfügbar: one publisher's public list through netguard (public internet, no token), None on an error."""
+    import httpx
+    try:
+        async with netguard.client(netguard.PUBLIC, max_bytes=modelle.SUCHE_ANTWORT_MAX, timeout=20,
+                                   follow_redirects=False) as c:
+            r = await c.get(modelle.neu_url(herausgeber))
+    except (httpx.HTTPError, OSError, ValueError):
+        return None
+    if r.status_code != 200:
+        return None
+    try:
+        return r.json()
+    except ValueError:
+        return None
+
+
+def neu_schritt(now=None):
+    """Once a minute (panel.every_minute): Neu verfügbar (modelleneu.py), the daily look in its own task when due."""
+    global _neu_task
+    if (_neu_task and not _neu_task.done()) or not modelleneu.faellig(_neu_an(), now):
+        return ""
+    _neu_task = asyncio.get_running_loop().create_task(modelleneu.lauf(_neu_holen, _quelle, _familien))
+    return "start"
 
 
 def satz_schritt():

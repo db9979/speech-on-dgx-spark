@@ -339,6 +339,23 @@ mem_settle() {
 # `docker run` (pinned image, no network, the panel's user, no capabilities, the model cache read-only); root starts
 # it in its own unit, the door dockertor.py (as the panel's user) puts its socket on 127.0.0.1:$MESS_PORT
 docker_weg() { local d; d=$(command -v docker) && "$d" rm -f "$MESS_ENGINE" >/dev/null 2>&1 || true; }
+# root checks the call modelle.py built (as the panel's user) once more: `run`, long enough, no network, the panel's
+# user, no capabilities, never privileged or a host namespace (the same rules as modelle.docker_args)
+docker_args_ok() {  # $@ = the arguments after `docker`, $SVC_UID:$SVC_GID expected
+  local a prev="" net=0 user=0 cap=0
+  [ "$#" -gt 20 ] && [ "$1" = run ] || return 1
+  for a in "$@"; do
+    case "$a" in *@sha256:*) break ;; esac     # the pinned image: what follows belongs to `vllm serve`
+    case "$a" in --privi*|--network=*|--net=*|--pid*|--ipc*|--uts*|--userns*|--cap-add*|--device*|--volumes-from*) return 1 ;; esac
+    case "$prev" in
+      --network) [ "$a" = none ] && net=1 || return 1 ;;
+      --user) [ "$a" = "$SVC_UID:$SVC_GID" ] && user=1 || return 1 ;;
+      --cap-drop) [ "$a" = ALL ] && cap=1 ;;
+    esac
+    prev=$a
+  done
+  [ "$net$user$cap" = 111 ]
+}
 
 mess_docker() {  # $1 = id, $2 = commit, $3 = --ohne-mtp or empty
   local svc rc=0 args=() extra=() base dk
@@ -354,7 +371,7 @@ mess_docker() {  # $1 = id, $2 = commit, $3 = --ohne-mtp or empty
     || { echo "modelle: messung $1 abgelehnt ordner"; return 2; }
   mapfile -t args < <(as_panel_user ../modelle.py docker-args "$1" --revision "$2" --name "$MESS_ENGINE" \
     --uid "$(id -u "$svc")" --gid "$(id -g "$svc")" "${extra[@]}")
-  [ "${#args[@]}" -gt 20 ] && [ "${args[0]}" = run ] || { echo "modelle: messung $1 abgelehnt"; return 2; }
+  SVC_UID=$(id -u "$svc") SVC_GID=$(id -g "$svc") docker_args_ok "${args[@]}" || { echo "modelle: messung $1 abgelehnt"; return 2; }
   docker_weg
   echo "modelle: messung $1 start docker${3:+ ohne mtp}"
   systemd-run --quiet --collect --unit="$MESS_TOR" -p LogNamespace=speech-spark -p User="$svc" -p Group="$svc" \
@@ -365,6 +382,33 @@ mess_docker() {  # $1 = id, $2 = commit, $3 = --ohne-mtp or empty
   docker_weg
   mem_settle
   return "$rc"
+}
+
+# Docker stage 2 (Dominik 2026-11-17 „Docker bauen“): the language model in Docker, inside the unit $DOCKER_LLM (root,
+# part of speech-spark-llm: it starts, stops and restarts with it). modelle.py builds the whole `docker run` like for a
+# measurement (pinned image, no network, the panel's user, no capabilities, the model cache read-only) and only for an
+# entry measured here; speech-spark-llm (engine.sh llm) runs the door dockertor.py on llm.engine_port meanwhile.
+# Another language model: this unit ends at once with nothing to do.
+DOCKER_LLM=speech-spark-llm-docker
+cmd_docker_llm_intern() {
+  local svc args=() dk mid
+  svc=$(panel_user)
+  mid=$(as_panel_user ../modelle.py docker-llm) || { echo "modelle: docker-llm abgelehnt"; exit 1; }
+  [ "$mid" = - ] && exit 0
+  dk=$(command -v docker) || { echo "modelle: docker-llm abgelehnt docker fehlt"; exit 1; }
+  if [ "$(cat /proc/sys/kernel/io_uring_disabled 2>/dev/null || echo 0)" != 0 ]; then
+    echo "modelle: docker-llm abgelehnt io_uring aus"; exit 1
+  fi
+  # never beside a measurement (the same lesson as engine.sh: the memory it gives back is counted twice)
+  for _ in $(seq 1 720); do im_gang "$MESS_ENGINE" || break; sleep 5; done
+  mid=$(dirname "$(dirname "$mid")")
+  runuser -u "$svc" -- mkdir -p -- "$mid/cache" "$mid/sock" && runuser -u "$svc" -- rm -f -- "$mid/sock/engine.sock" \
+    || { echo "modelle: docker-llm abgelehnt ordner"; exit 1; }
+  mapfile -t args < <(as_panel_user ../modelle.py docker-llm-args --uid "$(id -u "$svc")" --gid "$(id -g "$svc")")
+  SVC_UID=$(id -u "$svc") SVC_GID=$(id -g "$svc") docker_args_ok "${args[@]}" || { echo "modelle: docker-llm abgelehnt"; exit 1; }
+  "$dk" rm -f "$DOCKER_LLM" >/dev/null 2>&1 || true
+  echo "modelle: docker-llm start"
+  exec "$dk" "${args[@]}"
 }
 
 # one catalog model in its own engine unit, measured, stopped again; returns 3 when it did not work
@@ -495,7 +539,7 @@ dienst_neu() {  # $1 = asr, tts, bild or musik
 }
 
 wechsel() {  # $1 = art, $2 = id
-  local art=$1 mid=$2 alt out kind repo rev commit pause=0 ok=0
+  local art=$1 mid=$2 alt out kind repo rev commit image pause=0 ok=0
   [ "$art" = llm ] && llmschritt schritt wechsel 1 "$mid"
   out=$(as_panel_user ../modelle.py wechsel-pruefen "$art" "$mid") \
     || { grep '^modelle: ' <<<"$out" || true; echo "modelle: wechsel $art abgelehnt"; [ "$art" = llm ] && llmschritt ende zurueck abgelehnt; return 1; }
@@ -540,8 +584,16 @@ wechsel() {  # $1 = art, $2 = id
         || echo "modelle: wechsel $art zurueck fehler"
     fi
   else
-    [ -x "$PREFIX/venv-$(as_panel_user ../modelle.py venv "$mid")/bin/vllm" ] \
-      || { echo "modelle: wechsel $art abgelehnt venv fehlt (sudo ./install.sh --llm)"; return 1; }
+    image=$(as_panel_user ../modelle.py docker-bild "$mid") || image=""
+    if [ -n "$image" ]; then     # Docker stage 2: the pinned image the measurement fetched, and the unit for it
+      command -v docker >/dev/null && docker image inspect "$image" >/dev/null 2>&1 \
+        || { echo "modelle: wechsel $art abgelehnt docker fehlt"; return 1; }
+      systemctl cat "$DOCKER_LLM.service" >/dev/null 2>&1 \
+        || { echo "modelle: wechsel $art abgelehnt docker einheit fehlt (sudo speech-spark update)"; return 1; }
+    else
+      [ -x "$PREFIX/venv-$(as_panel_user ../modelle.py venv "$mid")/bin/vllm" ] \
+        || { echo "modelle: wechsel $art abgelehnt venv fehlt (sudo ./install.sh --llm)"; return 1; }
+    fi
     [ "$art" = llm ] && llmschritt schritt wechsel 2 "$mid"
     out=$(as_panel_user ../modelle.py vorbereiten "$mid" --revision "$rev") || true
     commit=$(tail -n1 <<<"$out")
@@ -731,6 +783,7 @@ cmd_modelle() {
       ;;
     messen-intern) shift; [ "${INVOCATION_ID:-}" ] || die "only inside its own unit"; cmd_messen_intern "$@" ;;
     messen-wunsch-intern) [ "${INVOCATION_ID:-}" ] || die "only inside its own unit"; cmd_messen_wunsch ;;
+    docker-llm-intern) [ "${INVOCATION_ID:-}" ] || die "only inside its own unit"; cmd_docker_llm_intern ;;
     wechseln) [ $# -ge 3 ] || die "speech-spark modelle wechseln llm|sehen|asr|tts|bild <id>"; run_wechsel "$2" "$3" ;;
     zurueckholen) [ $# -ge 2 ] || die "speech-spark modelle zurueckholen llm|sehen|asr|tts|bild"; run_wechsel "$2" zurueck ;;
     entfernen) [ $# -ge 2 ] || die "speech-spark modelle entfernen <id> [--yes]"; cmd_entfernen "$2" "${3:-}" ;;

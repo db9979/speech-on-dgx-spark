@@ -23,12 +23,14 @@ Command line (as the panel's service user, from speech-spark.sh): liste · feld 
 pruefen <id> [revision] · vllm-args <id> [--port N] [--revision R] [--ohne-mtp] · messen-lauf <id> [--port N]
 [--einheit unit] [--revision R] · ergebnis · venv <id>|llm|sehen|helfer · start-args llm|sehen|helfer (engine.sh) · signatur llm|sehen|helfer
 (install.sh) · neustart-pruefen · laden <id> (speech-spark-wechsel) · docker-bild <id> ·
-docker-args <id> --revision R --name N --uid U --gid G [--ohne-mtp] (mess_docker) · fest <repo> ·
+docker-args <id> --revision R --name N --uid U --gid G [--ohne-mtp] (mess_docker) · docker-llm (engine.sh) ·
+docker-llm-args --uid U --gid G (speech-spark-llm-docker) · fest <repo> ·
 erlaubt (install.sh dl, engine.sh: the pinned commit of a speech model and the file kinds to fetch).
 
-An entry with a Docker recipe (vllm "docker", DOCKER) runs as a container only while it is measured (Dominik
-2026-10-17: Docker only on tars, only for model engines): pinned image, no network, its socket put on 127.0.0.1 by
-dockertor.py; switching to it is the next stage.
+An entry with a Docker recipe (vllm "docker", DOCKER) runs as a container (Dominik 2026-10-17: Docker only on tars,
+only for model engines): pinned image, no network, its socket put on 127.0.0.1 by dockertor.py. Stage 1 measures it;
+stage 2 (2026-11-17) switches the language model to it once a measurement here found it working: root's unit
+speech-spark-llm-docker runs the container (docker_llm_args), speech-spark-llm runs the door instead of vLLM.
 
 Stage E2 starts the own language model: speech-spark-llm (engine.sh llm) and, on demand, speech-spark-sehen
 (engine.sh sehen) and speech-spark-helfer (engine.sh helfer, the small helper model) run `vllm serve` with
@@ -102,7 +104,8 @@ KOMPILIEREN = {"MAX_JOBS": "4", "NVCC_THREADS": "1", "TORCHINDUCTOR_COMPILE_THRE
 # the container has no network at all (the engine answers on a Unix socket in its own folder, dockertor.py puts that
 # on 127.0.0.1), the Hugging Face cache is read-only, the only writable folder is its own cache under STATE, no
 # capabilities, no new privileges, the panel's user inside. The flags and settings come from the model card, fixed
-# here; nothing of them comes from the panel or the model. Stage 1: measured only (wechsel_pruefen says "docker").
+# here; nothing of them comes from the panel or the model. Only a language model (pruefe_eintrag), switched to only
+# after a measurement here found it working (wechsel_pruefen „ungeprueft“, docker_llm).
 DOCKER = {"b12x": {
     "image": "eugr/spark-vllm-b12x@sha256:03a956544e9f9b4b7ba91690469fbe7848bdbef29a7d2e0f5788368467bb3595",
     "seit": "2026-11-05",        # the day this digest was pinned: the nightly "Pakete prüfen" names it after 90 days
@@ -691,8 +694,6 @@ def rolle(art, cfg, kat=None):
     port = c.get(port_feld, port_std)
     if m["engine"] != "vllm" or m["art"] != art or isinstance(port, bool) or not isinstance(port, int) or port == MESS_PORT and art != "llm":
         raise Fehler("art")
-    if docker_bild(m):        # stage 1: an engine in Docker is measured only, never started by speech-spark-llm
-        raise Fehler("docker")
     return (_platz(m, cfg) if art == "llm" else m), port
 
 
@@ -701,7 +702,10 @@ def signatur(art, cfg, messung=None, kat=None):
     arguments (port, pinned commit, a new option such as --enable-prompt-tokens-details). install.sh restarts the engine only when this changed, so a new music or image model in the catalog does
     not load the language model again (that load took many minutes, tars 2026-10-16)."""
     m, port = rolle(art, cfg, kat)
-    roh = json.dumps([m, vllm_args(m, port, fest_revision(m, messung)), LOGPROBS_MAX], sort_keys=True, ensure_ascii=False)
+    rev = fest_revision(m, messung)
+    bild = docker_bild(m)        # an engine in Docker: its pinned image and its socket instead of the port
+    args = vllm_args(m, port, rev, uds=DOCKER_SOCK) + [bild] if bild else vllm_args(m, port, rev)
+    roh = json.dumps([m, args, LOGPROBS_MAX], sort_keys=True, ensure_ascii=False)
     return hashlib.sha256(roh.encode()).hexdigest()[:16]
 
 
@@ -709,10 +713,48 @@ def start_args(art, cfg, messung=None, kat=None, hf_home=None):
     """The arguments after `vllm serve` for speech-spark-llm / speech-spark-sehen (engine.sh llm|sehen): the
     pinned commit, its files checked (kinds and links; the hashes were checked at the download), offline."""
     m, port = rolle(art, cfg, kat)
+    if docker_bild(m):           # never natively: speech-spark-llm-docker starts it (docker_llm_args)
+        raise Fehler("docker")
     rev = fest_revision(m, messung)
     pruefen(hf_ordner(m, hf_home), rev, hashes=False)
     zeiger(hf_ordner(m, hf_home), rev)
     return vllm_args(m, port, rev) + ["--max-logprobs", str(LOGPROBS_MAX)]
+
+
+DOCKER_LLM = "speech-spark-llm-docker"     # the unit and the container of the language model in Docker (install.sh)
+
+
+def docker_llm(cfg, kat=None, messung=None):
+    """Docker stage 2 (Dominik 2026-11-17 „Docker bauen“): the language model's entry when it runs in Docker, else
+    None. Only an entry that a measurement here found working („Ausprobieren“); raises Fehler("ungeprueft") else."""
+    if not cfg.get("llm", {}).get("enabled"):
+        return None
+    m, _ = rolle("llm", cfg, kat)
+    if not docker_bild(m):
+        return None
+    messung = read_json(MESSUNG, {}) if messung is None else messung
+    if not ((messung.get("modelle") or {}).get(m["id"]) or {}).get("ok"):
+        raise Fehler("ungeprueft")
+    return m
+
+
+def docker_sock(m, ordner=None):
+    """Where the language model in Docker answers on this computer (dockertor.py puts it on llm.engine_port)."""
+    return os.path.join(os.path.realpath(ordner or DOCKER_ORDNER), m["id"], "sock", "engine.sock")
+
+
+def docker_llm_args(cfg, uid, gid, kat=None, messung=None, hf_home=None, ordner=None):
+    """The arguments after `docker` for speech-spark-llm-docker: the same `run` as a measurement (docker_args: pinned
+    image, no network, no capabilities, the cache read-only), the pinned commit's files checked like start_args, the
+    choice of „Lange Gespräche“, the unit's own container name. [] when the language model does not run in Docker."""
+    m = docker_llm(cfg, kat, messung)
+    if m is None:
+        return []
+    rev = fest_revision(m, messung)
+    pruefen(hf_ordner(m, hf_home), rev, hashes=False)
+    zeiger(hf_ordner(m, hf_home), rev)
+    return docker_args(m, rev if not m["revision"] else "", DOCKER_LLM, uid, gid, hf_home=hf_home, ordner=ordner) \
+        + ["--max-logprobs", str(LOGPROBS_MAX)]
 
 
 def start_merken(art, cfg):
@@ -1544,9 +1586,10 @@ def wechsel_pruefen(art, mid, cfg, total_gib, kat=None, messung=None, profil=Non
         if m["engine"] != "vllm":
             raise Fehler("engine")
         fest_revision(m, messung)
-        if docker_bild(m):    # stage 1: measure first („Ausprobieren“); switching to it comes with stage 2
+        if docker_bild(m):    # measured first („Ausprobieren“); only the language model runs in Docker (stage 2)
             messung = read_json(MESSUNG, {}) if messung is None else messung
-            raise Fehler("docker" if ((messung.get("modelle") or {}).get(mid) or {}).get("ok") else "ungeprueft")
+            if not ((messung.get("modelle") or {}).get(mid) or {}).get("ok"):
+                raise Fehler("ungeprueft")
         if art == "llm" and not cfg.get("llm", {}).get("enabled"):
             raise Fehler("aus")
     elif not m.get("wahl") and not (m.get("eigen") and (art in SPRACH or art in DATEI_ART)):   # own: the probe decides
@@ -2738,6 +2781,14 @@ def cli(args, log=print):
                                  int(_opt(args, "--gid")), mtp="--ohne-mtp" not in args):
                 log(a)
             return 0
+        if cmd == "docker-llm":         # engine.sh llm: the socket of the language model in Docker, "-" for none
+            m = docker_llm(load_config())
+            log(docker_sock(m) if m else "-")
+            return 0
+        if cmd == "docker-llm-args":    # speech-spark.sh llm-docker-intern (root), nothing when not in Docker
+            for a in docker_llm_args(load_config(), int(_opt(args, "--uid")), int(_opt(args, "--gid"))):
+                log(a)
+            return 0
         if cmd == "vorbereiten":
             m = eintrag(args[1])
             rev = _opt(args, "--revision")
@@ -2829,7 +2880,12 @@ def cli(args, log=print):
             return 0 if ok else 3
         if cmd == "rundlauf":
             import llmstart
-            ok, wort = rundlauf(load_config(), log, stufe=llmstart.stufe)
+            cfg = load_config()
+            try:
+                frist = laden_frist(rolle("llm", cfg)[0])    # an engine in Docker has its recipe's time to load
+            except Fehler:
+                frist = GESUND_S
+            ok, wort = rundlauf(cfg, log, frist=frist, stufe=llmstart.stufe)
             if not ok:
                 llmstart.stufe("fehler", grund=wort)
             log(f"modelle: rundlauf {'ok' if ok else 'fehler ' + wort}")

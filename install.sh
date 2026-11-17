@@ -1221,6 +1221,29 @@ engine_unit sehen sehen
 engine_unit helfer helfer
 sed -i 's/^Restart=on-failure$/Restart=no/' /etc/systemd/system/speech-spark-sehen.service /etc/systemd/system/speech-spark-helfer.service
 
+# Docker stage 2 (Dominik 2026-11-17): a measured language model in Docker. Root runs the container (speech-spark.sh
+# builds it from modelle.py's fixed recipe: pinned image, no network, the service user inside); the unit is part of
+# speech-spark-llm, which then runs only the door on llm.engine_port. With another model it ends at once.
+cat >/etc/systemd/system/speech-spark-llm-docker.service <<EOF
+[Unit]
+Description=Speech on DGX Spark: the own language model in Docker
+PartOf=speech-spark-llm.service
+
+[Service]
+LogNamespace=speech-spark
+Environment=SPEECH_SPARK_PREFIX=$PREFIX SPEECH_SPARK_ETC=$ETC SPEECH_SPARK_VAR=$VAR
+ExecStart=/bin/bash $PREFIX/app/speech-spark.sh modelle docker-llm-intern
+ExecStopPost=-/bin/sh -c 'command -v docker >/dev/null && docker rm -f speech-spark-llm-docker >/dev/null 2>&1 || true'
+Restart=on-failure
+RestartSec=30
+TimeoutStartSec=infinity
+TimeoutStopSec=60
+OOMScoreAdjust=500
+
+[Install]
+WantedBy=speech-spark-llm.service
+EOF
+
 # The LLM-Tor (llm_tor.py) on llm.port: API key, field guard, System One, canary; the engines stay on 127.0.0.1.
 cat >/etc/systemd/system/speech-spark-llmtor.service <<EOF
 [Unit]
@@ -2156,10 +2179,11 @@ restart_engine() {  # $1 = unit suffix, $2 = settings signature
 # without it these units stay off. Its signature is modelle.signatur(): its own catalog
 # entry, port and commit, not the whole catalog, so a new music or image model does not reload the language model.
 if [ "$LLM_ON" = 1 ]; then
+  systemctl enable speech-spark-llm-docker.service >/dev/null 2>&1 || true    # starts and stops with speech-spark-llm
   restart_engine llm "$VLLM_LLM_VERSION $("$PREFIX/venv-panel/bin/python" "$PREFIX/app/modelle.py" signatur llm 2>/dev/null \
     || echo unbekannt)"
 else
-  systemctl disable --now speech-spark-llmtor.service speech-spark-llm.service 2>/dev/null || true
+  systemctl disable --now speech-spark-llmtor.service speech-spark-llm.service speech-spark-llm-docker.service 2>/dev/null || true
   systemctl stop speech-spark-sehen.service speech-spark-helfer.service 2>/dev/null || true
 fi
 

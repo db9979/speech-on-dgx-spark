@@ -6559,6 +6559,13 @@
 "titel": "Neu verfügbar und Anleitung Spark allein",
 "text": "Funktionen → unter „Modelle wechseln“ „Neu verfügbar“ an. Nach höchstens einer Minute steht unter Zustand → Modelle die Karte „Neu verfügbar“ mit neuen Modellen von Qwen, Google, NVIDIA und anderen (oder „nichts, was die Regeln zulassen“); mit Eigene Modelle an hat jede ein „Hinzufügen“, das die volle Prüfung macht. Dazu im README unter „Weiterlesen“ „Nur Modelle (Spark allein)“ öffnen: die Anleitung führt Schritt für Schritt von der Installation bis zur Überwachung in der Spark-Konsole.",
 "test": "test_modelleneu.Regeln.test_the_daily_look_keeps_hints_only"
+},
+{
+"id": "P950",
+"v": 1505,
+"titel": "Sprachmodell in Docker als Hauptmodell",
+"text": "Nur wenn du Qwen3.8 Flash Next ausprobieren willst. A: Update (tars zuerst). B: Auf tars sudo speech-spark modelle messen flash (lädt das Abbild und das Modell, etwa 20 bis 40 Minuten); unter Zustand → Modelle steht beim Eintrag tok/s. C: Dort „Wechseln“ beim Eintrag: der Wechsel läuft wie sonst, unter Zustand → Logs beim Dienst „Sprachmodell in Docker“ steht „modelle: docker-llm start“, danach antwortet der Chat. D: „Zurückholen“ bringt das Modell davor zurück; der Container ist danach weg (sudo docker ps zeigt ihn nicht mehr).",
+"test": "test_modelle_docker.Hauptmodell.test_only_a_measured_one_and_only_while_on"
 }
 ]
 }

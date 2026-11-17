@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.505** Sprachmodell in Docker als Hauptmodell nach erfolgreicher Messung
 - **V01.1.504** Neu verfügbar: neue Modelle fester Herausgeber als Hinweis, Anleitung Spark allein
 - **V01.1.503** Eigene kleine Modelle (ONNX), Probetag nach dem Wechsel und Modellsätze
 - **V01.1.502** Eigene Modelle auch für Hören, Sprechen, Bilder und Musik, mit fester Probe beim Wechsel
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.498** Modellsuche mit Empfehlung: passende Modelle zuerst, Stern nach fester Regel, geprüfte Empfehlung je Anwendung
 - **V01.1.497** Modellseite der Spark-Konsole: Eingaben bleiben beim Auffrischen stehen
 - **V01.1.496** „Nur laden“ und „Nur herunterladen“: Modelle vorab laden und jedes Hugging-Face-Modell auf die Platte holen
-- **V01.1.495** Hilfsmodell vergleichen: Plauderfragen an Hilfsmodell und Sprachmodell, erstes Wort, Ende und richtige Antworten nebeneinander (Zustand → Prüfen)
 
 
 

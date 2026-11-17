@@ -199,8 +199,6 @@ import weiche_unklar  # noqa: E402
 import praxistest  # noqa: E402
 import kalenderserver  # noqa: E402
 import zustellung  # noqa: E402
-import probetag  # noqa: E402
-import modelleneu  # noqa: E402
 import geteilt  # noqa: E402
 import mailansicht  # noqa: E402
 import mitschreiblink  # noqa: E402
@@ -503,11 +501,11 @@ async def stability():
                 except Exception as e:
                     print("proactive:", type(e).__name__, e, flush=True)
                 try:   # Probetag nach dem Wechsel (probetag.py): a new language model gets the fixed test
-                    probetag.schritt()
+                    modellseite.probetag_schritt()
                 except Exception as e:
                     print("modelle: probetag", type(e).__name__, flush=True)
                 try:   # Neu verfügbar (modelleneu.py): once a day the new models of fixed publishers
-                    modelleneu.schritt()
+                    modellseite.neu_schritt()
                 except Exception as e:
                     print("modelle: neu", type(e).__name__, flush=True)
                 try:   # Modellsätze: the next switch of a set being brought back (modellseite.satz_schritt)

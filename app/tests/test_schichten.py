@@ -23,7 +23,7 @@ import unittest
 PANEL = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "panel")
 GRUND = ("aktiv", "anmeldehinweis", "arbeiter", "ausleiten", "beobachten", "dateien", "docrender", "dungeon_ablage", "dungeon_balance",
          "dungeon_bestiarium", "dungeon_einordnung", "dungeon_legenden", "dungeon_tabellen", "dungeon_tempo", "dungeon_vorlesen",
-         "embed_worker", "folien", "gespraech", "gespraechsthema", "gleichzeitig", "kalenderspiegel", "kalserie", "kontaktkarte", "kopplung", "latency", "modellgenau", "pdftabellen",
+         "embed_worker", "folien", "gespraech", "gespraechsthema", "gleichzeitig", "kalenderspiegel", "kalserie", "kontaktkarte", "kopplung", "latency", "modelleneu", "modellgenau", "pdftabellen", "probetag",
          "quellenangabe", "rechenteile", "schwachstellen_stand", "schwer", "seitentext", "seitenvergleich", "signatur", "sse", "steckbrief", "steuer", "stoppwort", "stufen", "symbole", "taten",
          "technik_seiten", "technik_seiten_anfrage", "technik_seiten_daten", "technik_seiten_geraete",
          "technik_seiten_kern", "technik_seiten_modelle", "technik_seiten_netz", "technik_seiten_zugang", "telefon_ton",

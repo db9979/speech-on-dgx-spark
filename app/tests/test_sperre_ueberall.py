@@ -295,6 +295,8 @@ class OwnData(Base):
 # Every features.admin_on call left in the panel (file:function) and why it may stay: it is admin-only, Spark-wide
 # (no profile), a module's own Spark switch next to its per-profile check, or a display flag combined with the block.
 ADMIN_ON_OK = {
+    "modellseite.py:_probetag_an": "admin-only and Spark-wide: the quality test after a switch of the one language model; no profile acts through it (Funktionen → Modelle wechseln → Probetag)",
+    "modellseite.py:_neu_an": "admin-only and Spark-wide: the daily look for new models, shown only on Zustand → Modelle; no profile acts through it",
     "formular.py:for_live": "Zustand → Live: Spark-wide numbers of PDF-Formulare; every endpoint asks features.allowed formular (formular._on, attachment)",
     "sparkclients.py:admin_on": "admin-only and Spark-wide: opens the model computer's services for other programs; no profile acts through it (Funktionen → Spark-Clients, never guests, no tool)",
     "zustellung.py:for_live": "Spark-wide numbers for Zustand → Live; each note asks features.allowed notedevice (zustellung.pick)",

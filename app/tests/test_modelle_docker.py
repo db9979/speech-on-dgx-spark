@@ -1,13 +1,15 @@
 """Docker nur auf tars, nur für Modell-Engines (Dominik 2026-10-17 „1a 2a 3a“, Richtlinie Teil 1): an entry with a
 recipe (modelle.DOCKER) runs only as a container with a pinned image, no network, the panel's user, no capabilities and
-the model cache read-only; its engine answers only on a Unix socket that dockertor.py puts on 127.0.0.1. For now it is
-measured only: no native start, no switch. Nothing depends on the time of day."""
+the model cache read-only; its engine answers only on a Unix socket that dockertor.py puts on 127.0.0.1. Never a native start; a switch to it only
+after a measurement here found it working (stage 2, Dominik 2026-11-17): root's unit speech-spark-llm-docker runs the
+container, speech-spark-llm only the door. Nothing depends on the time of day."""
 import asyncio
 import os
 import re
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 from tests import helpers
 
@@ -140,22 +142,108 @@ class Rezept(unittest.TestCase):
         with self.assertRaises(modelle.Fehler):
             modelle.eigen_ok(eigen)                                  # an own entry never brings a recipe
 
-    def test_measured_only(self):
+    def test_measured_first_never_natively(self):
         m = modelle.eintrag(FN)
         with self.assertRaises(modelle.Fehler):
             modelle.vllm_args(m, revision=m["revision"])              # never natively on a port
         with self.assertRaises(modelle.Fehler):
             modelle.vllm_args(modelle.eintrag("qwen36-35b-a3b-nvfp4"), uds=modelle.DOCKER_SOCK)
+        c = {"llm": {"enabled": True, "modell": FN}}
+        self.assertEqual(modelle.rolle("llm", c)[0]["id"], FN)       # the door's port, like every engine
         with self.assertRaises(modelle.Fehler) as e:
-            modelle.rolle("llm", {"llm": {"modell": FN}})
+            modelle.start_args("llm", c)                              # engine.sh never starts it with vLLM
         self.assertEqual(str(e.exception), "docker")
-        for messung, wort in (({}, "ungeprueft"), ({"modelle": {FN: {"ok": True}}}, "docker")):
-            with self.assertRaises(modelle.Fehler) as e:
-                modelle.wechsel_pruefen("llm", FN, cfg(), 200, messung=messung)
-            self.assertEqual(str(e.exception), wort)
+        with self.assertRaises(modelle.Fehler) as e:
+            modelle.wechsel_pruefen("llm", FN, cfg(), 200, messung={})
+        self.assertEqual(str(e.exception), "ungeprueft")
+        self.assertEqual(modelle.wechsel_pruefen("llm", FN, cfg(), 200, messung={"modelle": {FN: {"ok": True}}})["id"], FN)
         self.assertEqual(modelle.messliste(["flash"]), [FN])
         self.assertEqual(modelle.laden_frist(m), modelle.DOCKER["b12x"]["laden_s"])
         self.assertEqual(modelle.laden_frist(modelle.eintrag("qwen36-35b-a3b-nvfp4")), modelle.GESUND_S)
+
+
+class Hauptmodell(unittest.TestCase):
+    """Stage 2: the language model in Docker."""
+    OK = {"modelle": {FN: {"ok": True}}}
+
+    def test_only_a_measured_one_and_only_while_on(self):
+        c = {"llm": {"enabled": True, "modell": FN}}
+        self.assertEqual(modelle.docker_llm(c, messung=self.OK)["id"], FN)
+        with self.assertRaises(modelle.Fehler) as e:
+            modelle.docker_llm(c, messung={"modelle": {FN: {"ok": False}}})
+        self.assertEqual(str(e.exception), "ungeprueft")
+        self.assertIsNone(modelle.docker_llm({"llm": {"enabled": False, "modell": FN}}, messung=self.OK))
+        self.assertIsNone(modelle.docker_llm({"llm": {"enabled": True, "modell": "qwen36-35b-a3b-nvfp4"}}, messung=self.OK))
+        self.assertEqual(modelle.docker_llm_args({"llm": {"enabled": True, "modell": "qwen36-35b-a3b-nvfp4"}}, 990, 990,
+                                                 messung=self.OK), [])
+        self.assertEqual(modelle.docker_sock(modelle.eintrag(FN), "/var/lib/speech-spark/state/docker-modelle"),
+                         "/var/lib/speech-spark/state/docker-modelle/" + FN + "/sock/engine.sock")
+
+    def test_the_same_closed_container_under_its_own_name(self):
+        c = {"llm": {"enabled": True, "modell": FN}}
+        with tempfile.TemporaryDirectory() as d, \
+                mock.patch.object(modelle, "pruefen"), mock.patch.object(modelle, "zeiger"):
+            a = modelle.docker_llm_args(c, 990, 990, messung=self.OK, hf_home=d, ordner=d + "/docker-modelle")
+        self.assertEqual(a[:4], ["run", "--rm", "--name", modelle.DOCKER_LLM])
+        for x in ("--network", "none", "--cap-drop", "ALL", "no-new-privileges", "--uds", modelle.DOCKER_SOCK, "--max-logprobs"):
+            self.assertIn(x, a)
+        self.assertIn(modelle.docker_bild(modelle.eintrag(FN)), a)
+        self.assertNotIn("--privileged", a)
+        self.assertFalse(any(x.startswith("--network=host") or x == "host" for x in a))
+
+    def test_root_checks_the_call_again(self):
+        """speech-spark.sh docker_args_ok: the real call passes, every loosened one is refused."""
+        import subprocess
+        with open(os.path.join(APP, "speech-spark.sh"), encoding="utf-8") as f:
+            sp = f.read()
+        fn = sp[sp.index("docker_args_ok() {"):]
+        fn = fn[:fn.index("\n}\n") + 3]
+        a = args()
+
+        def ok(x):
+            return subprocess.run(["bash", "-c", fn + 'SVC_UID=990 SVC_GID=990 docker_args_ok "$@"', "x", *x]).returncode == 0
+        self.assertTrue(ok(a))
+        i = a.index("--network")
+        for bad in (a[:i + 1] + ["host"] + a[i + 2:], a[:1] + ["--privileged"] + a[1:], a[:1] + ["--pid=host"] + a[1:],
+                    a[:1] + ["--cap-add", "SYS_ADMIN"] + a[1:], a[:1] + ["--device", "/dev/mem"] + a[1:],
+                    [x if x != "990:990" else "0:0" for x in a], [x for x in a if x != "none"], ["create"] + a[1:]):
+            self.assertFalse(ok(bad), bad[:6])
+
+    def test_signature_counts_the_image(self):
+        c = {"llm": {"enabled": True, "modell": FN}}
+        s = modelle.signatur("llm", c, messung=self.OK)
+        self.assertRegex(s, r"^[0-9a-f]{16}$")
+        with mock.patch.dict(modelle.DOCKER, {"b12x": dict(modelle.DOCKER["b12x"], image="x/y@sha256:" + "1" * 64)}):
+            self.assertNotEqual(modelle.signatur("llm", c, messung=self.OK), s)
+
+    def test_the_units_and_the_door(self):
+        with open(os.path.join(APP, "engine.sh"), encoding="utf-8") as f:
+            eng = f.read()
+        with open(os.path.join(APP, "speech-spark.sh"), encoding="utf-8") as f:
+            sp = f.read()
+        # engine.sh: the door before any vLLM start, only for the language model
+        self.assertLess(eng.index("modelle.py\" docker-llm"), eng.index("modelle.py\" start-args"))
+        self.assertIn('exec "$PY" "$APP_DIR/dockertor.py" "$PORT" "$SOCK"', eng)
+        self.assertIn('docker-llm-intern) [ "${INVOCATION_ID:-}" ] || die', sp)
+        body = sp[sp.index("cmd_docker_llm_intern() {"):]
+        body = body[:body.index("\n}\n")]
+        self.assertIn("io_uring_disabled", body)
+        self.assertIn('docker_args_ok "${args[@]}"', body)
+        self.assertIn('exec "$dk" "${args[@]}"', body)
+        self.assertIn('DOCKER_LLM=speech-spark-llm-docker', sp)
+        self.assertEqual(modelle.DOCKER_LLM, "speech-spark-llm-docker")
+        self.assertIn("modelle: wechsel $art abgelehnt docker fehlt", sp)
+
+    def test_roots_unit_is_part_of_the_language_model(self):
+        inst = helpers.repo_file("install.sh")
+        # root's unit: part of speech-spark-llm, the container removed after it stops, only inside its unit
+        unit = inst[inst.index("speech-spark-llm-docker.service <<EOF"):]
+        unit = unit[:unit.index("\nEOF")]
+        for x in ("PartOf=speech-spark-llm.service", "WantedBy=speech-spark-llm.service", "modelle docker-llm-intern",
+                  "docker rm -f speech-spark-llm-docker"):
+            self.assertIn(x, unit)
+        self.assertNotIn("User=", unit)
+        self.assertIn("systemctl enable speech-spark-llm-docker.service", inst)
 
 
 class Tor(unittest.TestCase):

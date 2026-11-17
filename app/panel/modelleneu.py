@@ -10,18 +10,13 @@ import asyncio
 import os
 import time
 
-import features
 import modelle
-import netguard
 from common import STATE, load_config, read_json, write_json
 
 NEU = os.path.join(STATE, "modelle-neu.json")
 ALLE_S = 86400
-_task = None
-
-
-def an(cfg=None):
-    return features.admin_on("modelleneu", cfg)
+# Only the rules and the state live here; the model page (modellseite.neu_schritt) gives the switch, the fetch through
+# netguard and its own sources, so this module stays below the big import knot (test_schichten).
 
 
 def stand():
@@ -29,44 +24,20 @@ def stand():
     return d if isinstance(d, dict) else {}
 
 
-def faellig(cfg=None, now=None):
+def faellig(an, now=None):
+    """an: the switch (modellseite._neu_an)."""
     now = time.time() if now is None else now
-    return an(cfg) and now - float(stand().get("zeit", 0) or 0) >= ALLE_S
+    return bool(an) and now - float(stand().get("zeit", 0) or 0) >= ALLE_S
 
 
-def schritt(cfg=None, now=None):
-    """Once a minute (panel.every_minute): starts the daily look in its own task when it is due."""
-    global _task
-    if not faellig(cfg, now) or (_task and not _task.done()):
-        return ""
-    _task = asyncio.get_running_loop().create_task(lauf())
-    return "start"
-
-
-async def _holen(herausgeber):
-    import httpx
-    try:
-        async with netguard.client(netguard.PUBLIC, max_bytes=modelle.SUCHE_ANTWORT_MAX, timeout=20,
-                                   follow_redirects=False) as c:
-            r = await c.get(modelle.neu_url(herausgeber))
-    except (httpx.HTTPError, OSError, ValueError):
-        return None
-    if r.status_code != 200:
-        return None
-    try:
-        return r.json()
-    except ValueError:
-        return None
-
-
-async def lauf(now=None, holen=None):
-    """The daily look; returns the kept hits."""
-    import modellseite
-    holen = holen or _holen
+async def lauf(holen, quelle, familien, now=None):
+    """The daily look; returns the kept hits. holen(publisher): the public list or None; quelle and familien: the
+    model page's (modellseite._quelle, _familien)."""
     cfg = load_config()
-    q = await asyncio.to_thread(modellseite._quelle, cfg)
+    q = await asyncio.to_thread(quelle, cfg)
     total_gib, kat, profil = q[0], q[3], q[8]
-    familien = {a: await modellseite._familien(a, kat) for a in modelle.NEU_ARTEN if a in modelle.SPRACH}
+    fam = familien
+    familien = {a: await fam(a, kat) for a in modelle.NEU_ARTEN if a in modelle.SPRACH}
     treffer, gesehen, fehler = [], set(), 0
     for h in modelle.NEU_HERAUSGEBER:
         items = await holen(h)
@@ -86,9 +57,9 @@ async def lauf(now=None, holen=None):
     return treffer
 
 
-def zeigen(lang="de"):
+def zeigen(an, lang="de"):
     """For Zustand → Modelle: the kept hits with the kind's name, None while switched off or before the first look."""
-    if not an():
+    if not an:
         return None
     d = stand()
     if not d.get("zeit"):
