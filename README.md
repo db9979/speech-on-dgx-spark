@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.515** Spark console: GGUF row only for pictures and music
 - **V01.1.514** Foreign model services (Ollama, LM Studio) for everyone or as a fallback
 - **V01.1.513** RED-FIX: test for restarting the language model independent of the order
 - **V01.1.512** Error log: Home Assistant live no longer drops all the time, SparkHilfe Mac and "0 errors" no longer count as errors
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.508** Ladybug with a red body, side menu head in one line; on the phone it no longer lies on New chat
 - **V01.1.507** RED-FIX: test "typing comes first" independent of the order
 - **V01.1.506** RED-FIX: durations of the new test modules added
-- **V01.1.505** Language model in Docker as the main model after a successful measurement
 
 
 

@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.515** Spark-Konsole: GGUF-Zeile nur bei Bildern und Musik
 - **V01.1.514** Fremde Modell-Dienste (Ollama, LM Studio) für alle oder als Ersatz
 - **V01.1.513** ROT-FIX: Test zum Neustart des Sprachmodells unabhängig von der Reihenfolge
 - **V01.1.512** Fehlerlog: Home Assistant live trennt nicht mehr ständig, SparkHilfe-Mac und „0 errors“ nicht mehr als Fehler
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.508** Käfer mit rotem Körper, Seitenmenü-Kopf in einer Zeile, am Handy nicht mehr auf „Neuer Chat“
 - **V01.1.507** ROT-FIX: Test „Tippen geht vor“ unabhängig von der Reihenfolge
 - **V01.1.506** ROT-FIX: Laufzeiten der neuen Testmodule nachgetragen
-- **V01.1.505** Sprachmodell in Docker als Hauptmodell nach erfolgreicher Messung
 
 
 

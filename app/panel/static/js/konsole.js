@@ -160,9 +160,9 @@ function modDraw(msg){const el=$('tab-modelle'),d=MOD,b=d.budget||{},teile=b.tei
       <input id="kmq" maxlength="80" placeholder="${esc(t('Suchen, z. B. qwen3 nvfp4','Search, e.g. qwen3 nvfp4'))}" aria-label="${esc(t('Suche','Search'))}"><button class="btn sec" type="button" data-m="suche">${esc(t('Suchen','Search'))}</button></div>
     <div id="kmtreffer" data-halten></div>
     <div class="row"><input id="kmrepo" style="flex:1" maxlength="200" placeholder="org/name" aria-label="${esc(t('Name auf Hugging Face','Name on Hugging Face'))}"><button class="btn sec" type="button" data-m="pruefen">${esc(t('Prüfen','Check'))}</button></div>
-    <div class="row"><input id="kmdatei" maxlength="200" placeholder="datei.gguf" aria-label="${esc(t('GGUF-Datei (nur Bilder und Musik)','GGUF file (pictures and music only)'))}">
-      <select id="kmbasis" aria-label="${esc(t('Grundvariante (nur Bilder und Musik)','Basis (pictures and music only)'))}">${Object.entries(w.basen||{}).map(([a,l])=>l.map(b=>`<option value="${esc(b[0])}">${esc(b[1])}</option>`).join('')).join('')}</select>
-      <span class="k">${esc(t('nur für Bilder und Musik: eine GGUF-Datei auf einer geprüften Grundvariante','pictures and music only: a GGUF file on a checked basis'))}</span></div>
+    <div class="row" id="kmdateirow" hidden><input id="kmdatei" maxlength="200" placeholder="datei.gguf" aria-label="${esc(t('GGUF-Datei','GGUF file'))}">
+      <select id="kmbasis" aria-label="${esc(t('Grundvariante','Basis'))}"></select>
+      <span class="k">${esc(t('eine GGUF-Datei auf einer geprüften Grundvariante','a GGUF file on a checked basis'))}</span></div>
     ${f?`<div class="row"><b>${esc(f.name&&f.name.de?(EN?f.name.en:f.name.de):f.repo)}</b> <span class="k mono">${esc(f.repo)} @ ${esc(String(f.revision).slice(0,10))}</span></div>
       <div class="k">${esc(t('Speicher','Memory'))} ${esc(gib(f.need_gib))} · ${esc(t('Platte','Disk'))} ${esc(f.platte_gb)} GB · ${esc(t('Lizenz','License'))} ${esc(f.lizenz)}${f.gewerblich?'':' · '+esc(t('nicht gewerblich','non-commercial'))}</div>
       <div class="row"><button class="btn" type="button" data-m="dazu">${esc(t('Hinzufügen','Add'))}</button></div>`:''}</div>`;
@@ -171,6 +171,11 @@ function modDraw(msg){const el=$('tab-modelle'),d=MOD,b=d.budget||{},teile=b.tei
     <div class="card" style="margin-top:14px"><h2>${esc(t('Speicher','Memory'))}</h2>
       <div class="big">${esc(gib(teile.reduce((a,x)=>a+(x.gib||0),0)))} / ${esc(gib(b.gesamt))}</div>
       <div class="row">${teile.map(x=>`<span class="pill">${esc(x.name)} · ${esc(gib(x.gib))}</span>`).join(' ')}</div></div>${empf}${arten}${eigen}`);
+  // the GGUF file and its basis only for pictures and music, with the bases of the kind chosen (Dominik 17.11.: the row
+  // stood under „Sprachmodell“ too, with the bases of both kinds mixed)
+  const datei=()=>{const art=$('kmart').value,l=(w.basen||{})[art]||[];$('kmdateirow').hidden=!['bild','musik'].includes(art)||!l.length;
+    $('kmbasis').innerHTML=l.map(b=>`<option value="${esc(b[0])}">${esc(b[1])}</option>`).join('')};
+  if($('kmart')){$('kmart').onchange=datei;datei()}
   // only while something runs (a finished start stays on the page but asks for nothing more)
   if(busy||(w.start&&!w.start.ende))MOD_T=setTimeout(()=>{if(TAB==='modelle')modelle()},5000)}
 async function modAct(a,b){const m=x=>{const el=$('kmmsg');if(el)el.textContent=x};const L='?lang='+(EN?'en':'de');
