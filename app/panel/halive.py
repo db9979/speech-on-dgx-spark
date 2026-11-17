@@ -16,6 +16,12 @@ look up devices in that copy instead of reading GET /api/states (often several h
   because only a session that ended on purpose reset the wait). A WebSocket ping every PING seconds (an answer within
   PING_WAIT) and TCP keepalive keep proxies and routers (a Synology reverse proxy, NAT) from dropping a quiet line;
   the journal names the close code as a number (1006: closed without a close frame) and how long it was up.
+- Coalescing (2026-11-17, log of V01.1.508: „live lost | code 1006“ every few minutes, always on the same 30-second
+  beat of Home Assistant's polling): Home Assistant closes a client without a close frame once more than 1024 messages
+  wait for it for a few seconds ("Client unable to keep up with pending messages"). Right after auth_ok the Spark
+  therefore asks for supported_features coalesce_messages: Home Assistant then sends all waiting messages as one JSON
+  list per frame, so a burst of state changes is one write instead of hundreds. Each item of such a list is handled
+  like a single message; an older Home Assistant answers the question with an error and keeps sending one by one.
 - What Home Assistant sends is data, as before: states are kept as they come (at most MAX_ENTITIES, MAX_MESSAGE bytes
   per message) and wrapped for the model by the tools like the HTTP answer.
 - Logs: fixed words and numbers, the profile only as profiles.log_name; Live (node Home Assistant): connections open,
@@ -44,6 +50,7 @@ STABLE = 300                # seconds up (after the copy was complete) that make
 SOON = 10                   # seconds before a good connection that was lost is tried again
 PING, PING_WAIT = 20, 30    # WebSocket keepalive: a ping every PING seconds, lost without a pong within PING_WAIT
 EVERY = 60                  # seconds between two looks of the supervisor (loop)
+FEATURES_ID, STATES_ID, SUBSCRIBE_ID = 1, 2, 3   # message ids of the three questions, in this order
 
 _open = {}                  # uid -> _Live
 _lock = threading.Lock()
@@ -142,11 +149,11 @@ def close_code(e):
 
 
 def apply(store, msg):
-    """One message of Home Assistant into the copy: the answer to get_states (id 1) fills it, a state_changed event
+    """One message of Home Assistant into the copy: the answer to get_states (STATES_ID) fills it, a state_changed event
     changes one entity. Returns "synced", "changed" or "". Anything else is left alone."""
     if not isinstance(msg, dict):
         return ""
-    if msg.get("type") == "result" and msg.get("id") == 1 and msg.get("success") and isinstance(msg.get("result"), list):
+    if msg.get("type") == "result" and msg.get("id") == STATES_ID and msg.get("success") and isinstance(msg.get("result"), list):
         store.clear()
         for s in msg["result"][:MAX_ENTITIES]:
             if isinstance(s, dict) and isinstance(s.get("entity_id"), str):
@@ -166,6 +173,11 @@ def apply(store, msg):
     else:
         return ""
     return "changed"
+
+
+def frame(data):
+    """The messages in one WebSocket frame: a coalesced frame is a JSON list of them, any other is one message."""
+    return data if isinstance(data, list) else [data]
 
 
 def keepalive(sock):
@@ -265,8 +277,9 @@ class _Live(threading.Thread):
                 print(f"homeassistant: live refused (token) | {name}", flush=True)
                 self._halt.wait(BACKOFF_MAX)
                 return
-            ws.send(json.dumps({"id": 1, "type": "get_states"}))
-            ws.send(json.dumps({"id": 2, "type": "subscribe_events", "event_type": "state_changed"}))
+            ws.send(json.dumps({"id": FEATURES_ID, "type": "supported_features", "features": {"coalesce_messages": 1}}))
+            ws.send(json.dumps({"id": STATES_ID, "type": "get_states"}))
+            ws.send(json.dumps({"id": SUBSCRIBE_ID, "type": "subscribe_events", "event_type": "state_changed"}))
             _count.bump("verbindungen")
             while not self._halt.is_set():
                 try:
@@ -278,12 +291,13 @@ class _Live(threading.Thread):
                     self._halt.set()
                     break
                 with self.lock:
-                    got = apply(self.states, json.loads(raw))
-                if got == "synced":
+                    got = [apply(self.states, m) for m in frame(json.loads(raw))]
+                if "synced" in got:
                     self.synced = True
                     self.since = self.since or self.clock()
                     print(f"homeassistant: live connected | {len(self.states)} entities | {name}", flush=True)
-                elif got == "changed":
-                    _count.bump("aenderungen")
+                n = got.count("changed")
+                if n:
+                    _count.bump("aenderungen", n)
         finally:
             self.synced = False

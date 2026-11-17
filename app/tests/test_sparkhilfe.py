@@ -174,11 +174,15 @@ class Fetch(_Cache):
         async def nothing(c=None, tag=None):
             import begleiter
             raise begleiter.NotYet("Im Repo gibt es SparkHilfe noch nicht.")
-        for fake, line in ((ok, "spontanhilfe: programm_holen | ok | 1"), (nothing, "spontanhilfe: programm_holen | noch nicht | 0"),
-                           (broken, "spontanhilfe: programm_holen | fehler | 0")):
-            with unittest.mock.patch.object(ss, "fetch", fake), journal() as j:
+        for fake, line, good in ((ok, "spontanhilfe: programm_holen | ok | 1", True),
+                                 (nothing, "spontanhilfe: programm_holen | noch nicht | 0", True),
+                                 (broken, "spontanhilfe: programm_holen | fehler | 0", False)):
+            jobs = []
+            with unittest.mock.patch.object(ss, "fetch", fake), journal() as j, \
+                    unittest.mock.patch("live.job", lambda *a, **k: jobs.append((k.get("ok"), k.get("code")))):
                 asyncio.run(ss.check())
             self.assertIn(line, j.getvalue())
+            self.assertEqual(jobs, [(True, "")] if good else [(False, "fehler")])   # only a real error counts as one
             self.assertNotIn("Prüfsumme", j.getvalue())
         self.assertTrue(ss._upd["error"])
         self.assertIn("programm_holen", sh.WORDS)

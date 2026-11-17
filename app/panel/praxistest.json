@@ -6574,6 +6574,14 @@
 "text": "Am Rechner: oben im Seitenmenü stehen Logo, „Spark“, Käfer und Mikrofon auf einer Höhe, darunter keine zweite Zeile mehr; mit der Maus über „Spark“ erscheinen GPU und Uhrzeit. Der Käfer hat einen roten Körper, auch am Handy oben rechts und in der iPhone-App (nach dem nächsten TestFlight). Das Mikrofon bleibt grau. Am Handy unter Chats steht der Käfer rechts neben „＋ Neuer Chat“, nicht darauf.",
 "thread": "Fehler und Wünsche als Issue melden",
 "test": "test_ui_browser.Browser.test_report_bug_on_every_page"
+},
+{
+"id": "P952",
+"v": 1509,
+"titel": "Home Assistant live bleibt verbunden",
+"text": "Nach dem Update eine Stunde warten, dann Zustand → Logs, Filter „Fehler“: „homeassistant: live lost … code 1006“ kommt höchstens noch selten, nicht mehr alle paar Minuten; die Zeilen „mail: rules run | 0 taken, 0 errors“ und „fuerdich: gelesen … fehler=0“ stehen dort nicht mehr. Unter Logs → Anfragen steht „SparkHilfe holen“ nicht mehr stündlich als Fehler. Kommt 1006 weiter oft: im Home-Assistant-Protokoll nach „unable to keep up with pending messages“ suchen und mir die Zeile schicken.",
+"thread": "Fehler aus dem Fehlerlog beheben",
+"test": "test_halive.Session.test_copy_follows_and_the_tools_use_it"
 }
 ]
 }

@@ -121,6 +121,11 @@ class OverviewTest(unittest.TestCase):
         self.assertEqual((row["t"], row["area"], row["level"]), ("10:00:00", "ha", "err"))
         self.assertEqual(logfilter.parse("2026-01-01T10:00:00+0000 tars p[1]: room: ignored (tv voice)")["level"], "warn")
         self.assertEqual(logfilter.parse("2026-01-01T10:00:00+0000 tars p[1]: weiche: homeassistant")["area"], "weiche")
+        # a count of none is no error (2026-11-17: these lines filled Filter: errors); one or more still is
+        for line, level in (("mail: rules run | 0 taken, 0 errors | db", ""), ("fuerdich: gelesen funde=3 fehler=0 sekunden=20.0", ""),
+                            ("mail: rules run | 1 taken, 2 errors | db", "err"), ("fuerdich: gelesen funde=3 fehler=10 sekunden=2", "err"),
+                            ("x: done fehler=0.5", "err"), ("x: 0 errors, then refused", "err"), ("x: 10 errors", "err")):
+            self.assertEqual(logfilter.parse("2026-01-01T10:00:00+0000 tars p[1]: " + line)["level"], level, line)
         # a speaker in a room that kept personal things from an unknown voice: Lautsprecher, yellow
         w = logfilter.parse("2026-01-01T10:00:00+0000 tars p[1]: esp32: personal data withheld at Wohnzimmer - "
                             "voice not recognized - guest rights for this question")
