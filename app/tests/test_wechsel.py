@@ -73,7 +73,7 @@ class Regeln(unittest.TestCase):
         c = cfg()
         ok = modelle.wechsel_pruefen("sehen", VL, c, 120, KAT, messung=MESSUNG)
         self.assertEqual(ok["id"], VL)
-        cases = [("musik", VL, c, "art"), ("llm", VL, c, "art"), ("llm", "gibts-nicht", c, "unbekannt"),
+        cases = [("klein", VL, c, "art"), ("llm", VL, c, "art"), ("llm", "gibts-nicht", c, "unbekannt"),
                  ("llm", "fremde-engine", c, "engine"), ("sehen", VL, c, "revision"),
                  ("llm", OHNE, cfg(llm={"enabled": False}), "aus"),
                  ("asr", "qwen3-forcedaligner-0.6b", c, "wahl"), ("asr", "qwen3-asr-1.7b", c, "schon")]
@@ -138,7 +138,7 @@ class Wunsch(unittest.TestCase):
         self.assertFalse(os.path.exists(p))
         with self.assertRaisesRegex(modelle.Fehler, "wunsch"):
             modelle.wunsch_nehmen(p)
-        for art, was in (("musik", VL), ("sehen", "x; rm -rf /"), ("sehen", "../x")):
+        for art, was in (("klein", VL), ("sehen", "x; rm -rf /"), ("sehen", "../x")):
             with self.assertRaisesRegex(modelle.Fehler, "wunsch"):
                 modelle.wunsch_schreiben(art, was, p)
         with open(p, "w") as f:
@@ -187,7 +187,7 @@ class Panel(unittest.TestCase):
             self.assertEqual(r.status_code, 200, r.text)
             self.assertEqual(run.call_args[0][0], ["sudo", "-n", "/usr/bin/systemctl", "start", "--no-block", "speech-spark-wechsel"])
         self.assertEqual(modelle.wunsch_nehmen(), ("asr", target))
-        self.assertEqual(ADMIN.post("/api/admin/modelle/zurueck", json={"art": "musik"}).status_code, 400)
+        self.assertEqual(ADMIN.post("/api/admin/modelle/zurueck", json={"art": "klein"}).status_code, 400)
 
     def test_live_shows_only_that_a_switch_runs(self):
         helpers.set_config(modelle_wechseln=True)

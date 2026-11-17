@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older versions (V01.0.000 to V01.0.999 and the lines before version numbers): [CHANGELOG-V01.0.md](CHANGELOG-V01.0.md).
 
+- **V01.1.502** · 2026-11-17 · Eigene Modelle für Hören, Sprechen, Bilder und Musik: Spracherkennung und Sprachausgabe nehmen eigene Modelle derselben Bauart wie die geprüften, Bilder und Musik eine eigene GGUF-Datei auf einer geprüften Grundvariante (Prüfsumme und Bauart im Dateikopf); jeder Wechsel endet mit einer festen Probe (Sprachausgabe → Erkennung, ein Bild, zehn Sekunden Musik), sonst automatisch zurück (P946)
 - **V01.1.501** · 2026-11-16 · Zwei Regale Geprüft und Eigene: Zustand → Modelle zeigt je Art zuerst die geprüften Katalogmodelle, darunter getrennt „Eigene, ungeprüft“, ebenso die Spark-Konsole (P945)
 - **V01.1.500** · 2026-11-17 · Probleme melden: Eingaben bleiben stehen, wenn Ich seine Kästen neu lädt (Handy und Rechner); vorher verschwand der getippte Text (P944)
 - **V01.1.499** · 2026-11-17 · iPhone-App: das „⋯“ oben rechts im Assistenten tut wieder etwas. Mit dem Käfer standen dort sieben Symbole, das iPhone klappte die überzähligen in ein eigenes „⋯“, das Käfer und Chats nicht auslösen konnte; Heute und Einstellungen stehen jetzt in einem eigenen Menü „⋯“ mit Namen, rechts höchstens Chats, Käfer und ⋯ (Wächter test_ios_leiste) (P943)

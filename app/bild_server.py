@@ -73,7 +73,7 @@ class Engine(OnDemand):
     def command(self):
         c = cfg()
         v = bildmodell.variant(c.get("variant"))
-        m = bildmodell.VARIANTS[v]
+        m = bildmodell.alle()[v]
         return [bildmodell.ENGINE, "--diffusion-model", bildmodell.path(m["model"]), "--vae", bildmodell.path(bildmodell.VAE),
                 "--llm", bildmodell.path(m["llm"]), "--listen-ip", "127.0.0.1", "--listen-port", str(int(c["engine_port"])),
                 "--cfg-scale", str(bildmodell.GUIDANCE), "--steps", str(bildmodell.STEPS), "--log-level", "error"]
@@ -91,7 +91,7 @@ class Engine(OnDemand):
             stats["refused_place"] += 1
             raise HTTPException(503, "belegt")
         try:
-            check_memory(bildmodell.VARIANTS[v]["need_gib"])
+            check_memory(bildmodell.alle()[v]["need_gib"])
         except MemoryError:
             self.release()
             stats["refused_memory"] += 1
@@ -303,8 +303,8 @@ async def health(request: Request):
     c = cfg()
     v = bildmodell.variant(c.get("variant"))
     status = "missing" if not bildmodell.installed(v) else "busy" if engine.busy else engine.state
-    out = {"service": "bild", "status": status, "variant": v, "name": bildmodell.VARIANTS[v]["name"],
-           "license": bildmodell.VARIANTS[v]["license"], "need_gib": bildmodell.VARIANTS[v]["need_gib"],
+    out = {"service": "bild", "status": status, "variant": v, "name": bildmodell.alle()[v]["name"],
+           "license": bildmodell.alle()[v]["license"], "need_gib": bildmodell.alle()[v]["need_gib"],
            "idle_min": int(c["idle_min"]), "uptime_s": round(time.time() - started),
            "idle_s": round(time.time() - engine.used) if engine.state == "ready" else None, **stats}
     if not api_key_ok(request.scope):

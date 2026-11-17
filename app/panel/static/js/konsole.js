@@ -118,11 +118,11 @@ async function clientAct(a,b){const m=x=>{const el=$('kcmsg');if(el)el.textConte
 const gib=x=>x==null?'–':(Math.round(x*10)/10)+' GiB';
 // Modelle (modellseite.py, the panel's own endpoints): switch, measure, own models from Hugging Face; every change with
 // a code. The page polls while a switch or a measurement runs.
-const EIGEN_ARTEN=['llm','sehen'];
+const EIGEN_ARTEN=['llm','sehen','asr','tts','bild','musik'];
 // the search's star and the checked recommendation (Dominik 2026-11-16 „1-3“): fixed rules of the panel, shown as they come
 const FORMAT={nvfp4:'NVFP4',fp8:'FP8',int:'INT4/8',bf16:'BF16'};
 const NEIN={schon:t('schon im Katalog','already in the catalog'),zugang:t('privat oder mit Freigabe','private or gated'),aufgabe:t('andere Aufgabe','another task'),
-  code:t('braucht eigenen Code','needs code of its own'),format:t('keine safetensors','no safetensors'),architektur:t('Bauart unbekannt','unknown architecture'),budget:t('zu groß','too big')};
+  code:t('braucht eigenen Code','needs code of its own'),format:t('keine safetensors','no safetensors'),architektur:t('Bauart unbekannt','unknown architecture'),familie:t('andere Bauart als die geprüften','not the family of the checked ones'),budget:t('zu groß','too big')};
 function treffer(x){const w=x.warum||{},zahl=[FORMAT[x.format]||'',x.need_gib!=null?'~'+gib(x.need_gib):'',x.lizenz||'',x.downloads+' Downloads'].filter(Boolean).join(' · ');
   return `<div class="row">${x.nein?`<span class="k"><b>${esc(x.repo)}</b> · ${esc((NEIN[x.nein]||t('geht nicht','not possible'))+(x.nein==='aufgabe'&&x.aufgabe?' ('+x.aufgabe+')':''))}</span>`:
     `<button class="btn ${x.empfohlen?'':'sec'}" type="button" data-m="nimm" data-repo="${esc(x.repo)}">${esc(x.repo)}</button>`}
@@ -160,6 +160,9 @@ function modDraw(msg){const el=$('tab-modelle'),d=MOD,b=d.budget||{},teile=b.tei
       <input id="kmq" maxlength="80" placeholder="${esc(t('Suchen, z. B. qwen3 nvfp4','Search, e.g. qwen3 nvfp4'))}" aria-label="${esc(t('Suche','Search'))}"><button class="btn sec" type="button" data-m="suche">${esc(t('Suchen','Search'))}</button></div>
     <div id="kmtreffer" data-halten></div>
     <div class="row"><input id="kmrepo" style="flex:1" maxlength="200" placeholder="org/name" aria-label="${esc(t('Name auf Hugging Face','Name on Hugging Face'))}"><button class="btn sec" type="button" data-m="pruefen">${esc(t('Prüfen','Check'))}</button></div>
+    <div class="row"><input id="kmdatei" maxlength="200" placeholder="datei.gguf" aria-label="${esc(t('GGUF-Datei (nur Bilder und Musik)','GGUF file (pictures and music only)'))}">
+      <select id="kmbasis" aria-label="${esc(t('Grundvariante (nur Bilder und Musik)','Basis (pictures and music only)'))}">${Object.entries(w.basen||{}).map(([a,l])=>l.map(b=>`<option value="${esc(b[0])}">${esc(b[1])}</option>`).join('')).join('')}</select>
+      <span class="k">${esc(t('nur für Bilder und Musik: eine GGUF-Datei auf einer geprüften Grundvariante','pictures and music only: a GGUF file on a checked basis'))}</span></div>
     ${f?`<div class="row"><b>${esc(f.name&&f.name.de?(EN?f.name.en:f.name.de):f.repo)}</b> <span class="k mono">${esc(f.repo)} @ ${esc(String(f.revision).slice(0,10))}</span></div>
       <div class="k">${esc(t('Speicher','Memory'))} ${esc(gib(f.need_gib))} · ${esc(t('Platte','Disk'))} ${esc(f.platte_gb)} GB · ${esc(t('Lizenz','License'))} ${esc(f.lizenz)}${f.gewerblich?'':' · '+esc(t('nicht gewerblich','non-commercial'))}</div>
       <div class="row"><button class="btn" type="button" data-m="dazu">${esc(t('Hinzufügen','Add'))}</button></div>`:''}</div>`;
@@ -179,8 +182,9 @@ async function modAct(a,b){const m=x=>{const el=$('kmmsg');if(el)el.textContent=
     if(a==='suche'){const d=await post('/api/admin/modelle/eigen/suche',{art:$('kmart').value,q:$('kmq').value});
       $('kmtreffer').innerHTML=(d.treffer||[]).map(treffer).join('')||`<p class="k">${esc(t('Nichts gefunden.','Nothing found.'))}</p>`;return}
     if(a==='nimm'){$('kmrepo').value=b.dataset.repo;return modAct('pruefen')}
-    if(a==='pruefen'){const art=$('kmart').value,d=await post('/api/admin/modelle/eigen/pruefen',{art,repo:$('kmrepo').value.trim()});MOD_FUND=Object.assign(d.vorschlag,{_art:art});return modDraw()}
-    if(a==='dazu'&&MOD_FUND){MOD=await post('/api/admin/modelle/eigen'+L,{art:MOD_FUND._art,repo:MOD_FUND.repo,revision:MOD_FUND.revision});MOD_FUND=null;return modDraw(t('Hinzugefügt. Mit „Laden“ wird es geholt und gestartet.','Added. “Load” downloads and starts it.'))}
+    if(a==='pruefen'){const art=$('kmart').value,datei=['bild','musik'].includes(art)?{datei:$('kmdatei').value.trim(),basis:$('kmbasis').value}:{};
+      const d=await post('/api/admin/modelle/eigen/pruefen',Object.assign({art,repo:$('kmrepo').value.trim()},datei));MOD_FUND=Object.assign(d.vorschlag,{_art:art,_datei:datei});return modDraw()}
+    if(a==='dazu'&&MOD_FUND){MOD=await post('/api/admin/modelle/eigen'+L,Object.assign({art:MOD_FUND._art,repo:MOD_FUND.repo,revision:MOD_FUND.revision},MOD_FUND._datei));MOD_FUND=null;return modDraw(t('Hinzugefügt. Mit „Laden“ wird es geholt und gestartet.','Added. “Load” downloads and starts it.'))}
   }catch(e){m(e.message)}}
 
 let KOPPEL_T=null;

@@ -356,6 +356,45 @@ def word_accuracy(heard, reference):
     return round(max(0.0, 1 - row[-1] / len(ref)), 3)
 
 
+# The fixed probe of an own speech model (Dominik 2026-11-16 „alle 1-6“, point 4): after a switch of „Hören“ or
+# „Sprechen“ the speech output says PROBE_SATZ and the recognition writes it down again; at least PROBE_MIN of the
+# words must come back, else the switch goes back. A fixed rule from numbers, the model decides nothing.
+PROBE_SATZ = "Heute probiert der Spark ein neues Modell mit diesem kurzen deutschen Satz aus."
+PROBE_MIN = 0.6
+PROBE_WARTEN_S = 900
+
+
+async def _sprachprobe(warten_s, log, bench=None):
+    b = bench or Bench(parallel=1, repeats=1, log=log)
+    try:
+        frist = time.monotonic() + warten_s
+        for svc in ("asr", "tts"):
+            while True:
+                st = await b.ready(svc)
+                if st == "ready":
+                    break
+                if st in ("disabled", "blocked", "error"):
+                    return False, svc + "-" + st, None
+                if time.monotonic() > frist:
+                    return False, svc + "-zeit", None
+                await asyncio.sleep(5)
+        try:
+            wav = (await b.tts_wav(PROBE_SATZ))["wav"]
+            _, heard = await b.asr_once(wav, "probe.wav")
+        except (RuntimeError, httpx.HTTPError, ValueError):
+            return False, "antwort", None
+        acc = word_accuracy(heard, PROBE_SATZ)
+        return (acc or 0) >= PROBE_MIN, "ok" if (acc or 0) >= PROBE_MIN else "genauigkeit", acc
+    finally:
+        if bench is None:
+            await b.client.aclose()
+
+
+def sprachprobe(warten_s=PROBE_WARTEN_S, log=print, bench=None):
+    """(ok, word, share of the words that came back) of the round trip speech output → recognition."""
+    return asyncio.run(_sprachprobe(warten_s, log, bench))
+
+
 def values(r):
     """The numbers that get a rating, by key (also kept in the history for the comparison)."""
     t, a, m, lm = r.get("tts") or {}, r.get("asr") or {}, r.get("memory_after") or {}, r.get("llm") or {}

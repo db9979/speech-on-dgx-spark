@@ -244,7 +244,9 @@ def _pruefe_vllm(m):
 def _aus_bildmodell(m):
     """A picture entry (engine sdcpp) or a music entry (acestepcpp) takes name, licence, memory, repository and disk
     size from bildmodell.VARIANTS or musikmodell.VARIANTS: the files with their checksums live there, and install.sh
-    hands those files alone to the service user."""
+    hands those files alone to the service user. An own entry (DATEI_ART) carries its own fields."""
+    if m.get("eigen"):
+        return m
     if m.get("engine") == "acestepcpp":
         import musikmodell
         v = musikmodell.VARIANTS.get(m.get("variante"))
@@ -1456,8 +1458,8 @@ IM_GANG = ("active", "activating", "deactivating", "reloading")
 STAND = re.compile(r"^modelle: [A-Za-z0-9 .,:%/()_+-]{1,160}$")   # a progress line: fixed words and numbers only
 STAND_MAX = 6
 ALT_TAGE = 7                     # the old model stays on disk this long and can be brought back
-TAUSCH = ("llm", "sehen", "asr", "tts", "bild")          # the kinds that switch (small CPU models come with features)
-INSTALL = {"asr": "--asr", "tts": "--tts", "bild": "--bild"}   # kinds install.sh sets up (wahl = its short key)
+TAUSCH = ("llm", "sehen", "asr", "tts", "bild", "musik")          # the kinds that switch (small CPU models come with features)
+INSTALL = {"asr": "--asr", "tts": "--tts", "bild": "--bild", "musik": "--musik"}   # kinds install.sh sets up (wahl = its short key)
 ENTFERNBAR = ("vllm", "qwen-asr", "qwen-tts")           # models that live in the Hugging Face cache
 
 
@@ -1486,6 +1488,9 @@ def jetzt_id(art, cfg, kat=None):
     elif art == "bild":
         img = cfg.get("image", {})
         m = zur_variante("bild", img.get("variant"), kat) if img.get("enabled") else None
+    elif art == "musik":
+        mus = cfg.get("music", {})
+        m = zur_variante("musik", mus.get("variant"), kat) if mus.get("enabled") else None
     else:
         raise Fehler("art")
     return m["id"] if m else ""
@@ -1503,8 +1508,8 @@ def mit_wechsel(cfg, art, m):
             a["model"] = m["repo"]
     elif art == "tts":
         c.setdefault("tts", {})["model"] = m["repo"]
-    elif art == "bild":
-        c.setdefault("image", {})["variant"] = m["wahl"]
+    elif art in DATEI_ART:      # a catalog variant by its choice, an own one by its own variant name
+        c.setdefault("image" if art == "bild" else "music", {})["variant"] = m.get("wahl") or m["variante"]
     return c
 
 
@@ -1528,7 +1533,7 @@ def wechsel_pruefen(art, mid, cfg, total_gib, kat=None, messung=None, profil=Non
             raise Fehler("docker" if ((messung.get("modelle") or {}).get(mid) or {}).get("ok") else "ungeprueft")
         if art == "llm" and not cfg.get("llm", {}).get("enabled"):
             raise Fehler("aus")
-    elif not m.get("wahl"):
+    elif not m.get("wahl") and not (m.get("eigen") and (art in SPRACH or art in DATEI_ART)):   # own: the probe decides
         raise Fehler("wahl")
     if m.get("eigen") and art == "sehen":      # stage E5: no round trip on demand, so an own one is measured first
         messung = read_json(MESSUNG, {}) if messung is None else messung
@@ -1539,6 +1544,17 @@ def wechsel_pruefen(art, mid, cfg, total_gib, kat=None, messung=None, profil=Non
     if budget(mit_wechsel(cfg, art, m), total_gib, kat, profil)["regel"] == "zu_knapp":
         raise Fehler("budget")
     return m
+
+
+def wechsel_weg(art, m):
+    """How root switches to m (one line for speech-spark.sh): „wahl <key>“ through install.sh, „sprache <repo> <commit>“
+    for an own speech model and „datei <repo> <commit>“ for an own picture or music file (download, check, configuration,
+    restart, probe), „vllm <repo> <commit>“ for an own engine."""
+    if art in SPRACH and m.get("eigen"):
+        return f"sprache {m['repo']} {m['revision']}"
+    if art in DATEI_ART and m.get("eigen"):
+        return f"datei {m['repo']} {m['revision']}"
+    return f"wahl {m['wahl']}" if art in INSTALL else f"vllm {m['repo']} {fest_revision(m)}"
 
 
 def wechsel_merken(art, alt, neu, now=None, path=WECHSEL):
@@ -1699,13 +1715,175 @@ PARSER_FAMILIE = {"Qwen3": {"reasoning_parser": "qwen3", "tool_call_parser": "he
 FREI = ("apache-2.0", "mit", "bsd-2-clause", "bsd-3-clause", "openrail", "cc-by-4.0", "llama3.1", "llama3.2", "llama3.3",
         "gemma", "qwen")                # licences that allow commercial use (others are shown as "nur privat")
 KV_GIB = {"llm": 12, "sehen": 4}      # room for the context beside the weights (32K tokens)
+# own speech models (Dominik 2026-11-16 „alle 1-6“, slot „Hören“ and „Sprechen“): the program that runs the kind, its
+# checked catalog models the family is taken from, and the room an own one needs beside its weights. An own one must
+# be the same family (FAMILIE_KEYS of its config.json equal to the reference's) as a checked model of that program,
+# so the program can load it without code of its own; it is used only after the fixed probe (sprachprobe.py).
+SPRACH = {"asr": ("qwen-asr", ("qwen3-asr-1.7b", "qwen3-asr-0.6b")),
+          "tts": ("qwen-tts", ("qwen3-tts-1.7b", "qwen3-tts-0.6b"))}
+SPRACH_EXTRA_GIB = 3
+FAMILIE_KEYS = ("architectures", "model_type", "tts_model_type")
+EXTRA_GIB = dict(KV_GIB, **{a: SPRACH_EXTRA_GIB for a in SPRACH})
+
+
+# own picture and music models (slot „Bilder“ and „Musik“): one GGUF file in place of the main model of a basis variant
+# (bildmodell.VARIANTS / musikmodell.VARIANTS), everything else of the basis; its header must name the same family
+# as the basis's file (bildmodell.gguf_arch), checked on the model computer before the switch, then the fixed probe
+DATEI_ART = {"bild": ("sdcpp", ("4b-q8", "9b-q8"), "model"), "musik": ("acestepcpp", ("2b", "xl"), "dit")}
+DATEI_PFAD = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._/-]{0,199}\.gguf$")
+SHA256 = re.compile(r"^[0-9a-f]{64}$")
+
+
+def basis_variante(art, basis):
+    import bildmodell
+    import musikmodell
+    return (bildmodell.VARIANTS if art == "bild" else musikmodell.VARIANTS).get(basis)
+
+
+def datei_ok(d):
+    """The own file of a picture or music entry: a .gguf path inside the repository, its SHA-256 and size."""
+    return (isinstance(d, dict) and set(d) == {"path", "sha256", "size"} and isinstance(d["path"], str)
+            and DATEI_PFAD.match(d["path"]) is not None and ".." not in d["path"] and isinstance(d["sha256"], str)
+            and SHA256.match(d["sha256"]) is not None and isinstance(d["size"], int) and not isinstance(d["size"], bool)
+            and 0 < d["size"] < 400 * 10**9)
+
+
+def datei_vorschlag(info, art, repo, datei, basis, total_gib, mit_token=False):
+    """An own picture or music entry from the Hugging Face metadata of one commit: the named .gguf file of it (size
+    and SHA-256 from its LFS pointer) in place of the basis variant's main model. Raises Fehler with a fixed word."""
+    if art not in DATEI_ART:
+        raise Fehler("art")
+    if not REPO.match(str(repo)) or ".." in repo:
+        raise Fehler("repo")
+    if basis not in DATEI_ART[art][1]:
+        raise Fehler("basis")
+    if not isinstance(info, dict) or not REV.match(str(info.get("sha", ""))):
+        raise Fehler("antwort")
+    _zugang(info, mit_token)
+    x = next((x for x in info.get("siblings") or [] if isinstance(x, dict) and x.get("rfilename") == datei), None)
+    lfs = x.get("lfs") if isinstance(x, dict) and isinstance(x.get("lfs"), dict) else {}
+    d = {"path": str(datei), "sha256": lfs.get("sha256"), "size": lfs.get("size")}
+    if not datei_ok(d) or not _name_frei(art, datei):
+        raise Fehler("format")
+    b = basis_variante(art, basis)
+    alt = b[DATEI_ART[art][2]].size
+    need = max(1, round(b["need_gib"] + (d["size"] - alt) / 2**30))
+    if need / total_gib > ANTEIL_MAX:
+        raise Fehler("budget")
+    card = info.get("cardData") if isinstance(info.get("cardData"), dict) else {}
+    lizenz = _wort(card.get("license") if isinstance(card.get("license"), str) else "", 32) or "unbekannt"
+    stamm = os.path.basename(datei)[:-5]
+    name = re.sub(r"[^A-Za-z0-9 ._-]+", "", stamm)[:48] or "Modell"
+    mid = ("eigen-" + _wort(stamm, 41)).rstrip("-.")
+    return eigen_ok({"id": mid, "art": art, "name": {"de": name, "en": name}, "engine": DATEI_ART[art][0],
+                     "variante": mid, "basis": basis, "datei": d, "repo": repo, "revision": info["sha"],
+                     "lizenz": lizenz, "gewerblich": lizenz in FREI, "platte_gb": max(1, round(d["size"] / 1e9)),
+                     "need_gib": need, "gemessen": False, "betrieb": "bei_bedarf", "eigen": True})
+
+
+def _name_frei(art, datei):
+    """An own file is kept under its own name in the kind's folder: never the name of a catalog file there."""
+    import bildmodell
+    import musikmodell
+    mod = bildmodell if art == "bild" else musikmodell
+    fest = {f.name for v in mod.VARIANTS for f in mod.files(v) if v in mod.VARIANTS}
+    return os.path.basename(datei) not in fest
+
+
+def datei_laden(mid, kat=None, log=print):
+    """Root's step before the switch to an own picture or music file (as the panel's user): fetch the variant's files
+    (bildmodell.fetch: size and SHA-256), then the own file's GGUF header must name the same family as its basis's
+    main file on the disk. Raises Fehler with a fixed word."""
+    import bildmodell
+    import musikmodell
+    m = eintrag(mid, kat)
+    if not m.get("eigen") or m["art"] not in DATEI_ART:
+        raise Fehler("art")
+    mod = bildmodell if m["art"] == "bild" else musikmodell
+    if not _name_frei(m["art"], m["datei"]["path"]):
+        raise Fehler("format")
+    key = DATEI_ART[m["art"]][2]
+    basis_datei = bildmodell.path(mod.VARIANTS[m["basis"]][key], mod.FOLDER)
+    if bildmodell.file_size(basis_datei) != mod.VARIANTS[m["basis"]][key].size:
+        raise Fehler("basis")
+    if not bildmodell.fetch(mod.files(mid), mod.FOLDER, token=hftoken.token() or None):
+        raise Fehler("nicht_geladen")
+    a, b = bildmodell.gguf_arch(bildmodell.path(mod.alle()[mid][key], mod.FOLDER)), bildmodell.gguf_arch(basis_datei)
+    if not a or a != b:
+        raise Fehler("familie")
+    log(f"modelle: datei {m['art']} ok")
+
+
+DATEI_PROBE_BILD = "Ein roter Apfel auf einem Holztisch, Tageslicht"
+DATEI_PROBE_MUSIK = "ruhige Klaviermusik, langsam"
+DATEI_PROBE_MIN_STD = 8.0          # a picture whose pixels hardly differ (one colour, noise-free grey) is no picture
+DATEI_PROBE_MIN_MP3 = 40_000       # ten seconds of MP3 are well above this; an empty or broken answer is not
+
+
+def datei_probe(art, cfg=None, post=None):
+    """The fixed probe after the switch to an own picture or music file: paint one fixed picture (its pixels must
+    differ, DATEI_PROBE_MIN_STD) or make ten seconds of fixed music (at least DATEI_PROBE_MIN_MP3 bytes). (ok, word)."""
+    import base64
+    import io
+    cfg = load_config() if cfg is None else cfg
+    post = post or _post
+    key = cfg.get("api", {}).get("key", "")
+    try:
+        if art == "bild":
+            r = post(int(cfg.get("image", {}).get("port", 31005)), "/v1/bild",
+                     {"prompt": DATEI_PROBE_BILD, "width": 512, "height": 512, "seed": 7}, 900, key)
+            from PIL import Image, ImageStat
+            with Image.open(io.BytesIO(base64.b64decode(r["png"]))) as im:
+                std = max(ImageStat.Stat(im.convert("RGB")).stddev)
+            return (std >= DATEI_PROBE_MIN_STD), ("ok" if std >= DATEI_PROBE_MIN_STD else "leer")
+        if art == "musik":
+            r = post(int(cfg.get("music", {}).get("port", 31004)), "/v1/musik",
+                     {"caption": DATEI_PROBE_MUSIK, "seconds": 10, "seed": 7}, 1800, key)
+            n = len(base64.b64decode(r["mp3"]))
+            return (n >= DATEI_PROBE_MIN_MP3), ("ok" if n >= DATEI_PROBE_MIN_MP3 else "leer")
+    except Exception:
+        return False, "antwort"
+    raise Fehler("art")
+
+
+def eigene_eintraege(art, path=None):
+    """The own entries of one kind that pass eigen_ok (bildmodell.eigene builds the own variants from them)."""
+    out = []
+    for m in eigene(path or EIGENE):
+        try:
+            eigen_ok(m)
+        except Fehler:
+            continue
+        if m["art"] == art:
+            out.append(m)
+    return out
+
+
+def familie(cfg):
+    """The family of a model from its config.json as Hugging Face gives it: (architectures, model_type, …) or None."""
+    if not isinstance(cfg, dict):
+        return None
+    f = tuple(json.dumps(cfg.get(k), sort_keys=True) if cfg.get(k) is not None else "" for k in FAMILIE_KEYS)
+    return f if any(f) else None
 EIGEN_KONTEXT = 32768
 
 
 def eigen_ok(m):
     """The extra rules for an own entry: an own id, an engine of this installation on a pinned commit, only measured
-    on request, never a picture or speech model (those need their own code and come as catalog entries)."""
+    on request; a speech model only for its kind's program (SPRACH), never a picture or music model yet."""
     pruefe_eintrag(m)
+    if m.get("art") in DATEI_ART:     # an own picture or music file in place of its basis's main model
+        e, basen, _ = DATEI_ART[m["art"]]
+        if not (m.get("eigen") is True and str(m["id"]).startswith("eigen-") and m["engine"] == e
+                and m.get("variante") == m["id"] and m.get("basis") in basen and datei_ok(m.get("datei"))
+                and REV.match(m["revision"]) and not {"vllm", "wahl", "rolle", "empfohlen"} & set(m)):
+            raise Fehler("eigen")
+        return m
+    if m.get("art") in SPRACH:        # an own speech model: its kind's program, a pinned commit, never a choice of install.sh
+        if not (m.get("eigen") is True and str(m["id"]).startswith("eigen-") and m["engine"] == SPRACH[m["art"]][0]
+                and REV.match(m["revision"]) and not {"vllm", "wahl", "rolle", "empfohlen", "variante"} & set(m)):
+            raise Fehler("eigen")
+        return m
     if not (m.get("eigen") is True and str(m["id"]).startswith("eigen-") and m["engine"] == "vllm"
             and m["art"] in VLLM_ARCH and REV.match(m["revision"]) and m.get("messen") == "auf_wunsch"
             and m.get("vllm", {}).get("venv", "llm") == "llm" and not {"quantization", "docker"} & set(m.get("vllm", {}))
@@ -1725,11 +1903,12 @@ def _zugang(info, mit_token):
         raise Fehler("zugang")
 
 
-def eigen_vorschlag(info, art, repo, total_gib, mit_token=False):
+def eigen_vorschlag(info, art, repo, total_gib, mit_token=False, familien=()):
     """An own catalog entry from the Hugging Face metadata of one commit (the panel reads it, the model never):
     weights only as safetensors, no code from the repository, an architecture the engine knows, it must fit within
-    ANTEIL_MAX. Returns the entry; raises Fehler with a fixed word."""
-    if art not in VLLM_ARCH:
+    ANTEIL_MAX. A speech model (SPRACH) instead must be of one of familien (those of its program's checked models).
+    Returns the entry; raises Fehler with a fixed word."""
+    if art not in VLLM_ARCH and art not in SPRACH:
         raise Fehler("art")
     if not REPO.match(str(repo)) or ".." in repo:
         raise Fehler("repo")
@@ -1744,7 +1923,10 @@ def eigen_vorschlag(info, art, repo, total_gib, mit_token=False):
     if any(w in json.dumps(cfg) for w in ('"auto_map"', "trust_remote_code")):     # also a tokenizer's own code
         raise Fehler("code")
     arch = (cfg.get("architectures") or [""])[0]
-    if arch not in VLLM_ARCH[art] and not (art == "llm" and arch in VLLM_ARCH["sehen"]):
+    if art in SPRACH:
+        if familie(cfg) is None or familie(cfg) not in familien:
+            raise Fehler("familie")
+    elif arch not in VLLM_ARCH[art] and not (art == "llm" and arch in VLLM_ARCH["sehen"]):
         raise Fehler("architektur")
 
     def size(x):
@@ -1755,14 +1937,19 @@ def eigen_vorschlag(info, art, repo, total_gib, mit_token=False):
     if None in sizes:
         raise Fehler("format")
     gib = sum(sizes) / 2**30
-    need = gib + KV_GIB[art]
+    need = gib + EXTRA_GIB[art]
     if need / total_gib > ANTEIL_MAX:
         raise Fehler("budget")
-    sehen = arch in VLLM_ARCH["sehen"]
-    fam = next((v for k, v in PARSER_FAMILIE.items() if arch.startswith(k)), {})
     card = info.get("cardData") if isinstance(info.get("cardData"), dict) else {}
     lizenz = _wort(card.get("license") if isinstance(card.get("license"), str) else "", 32) or "unbekannt"
     name = re.sub(r"[^A-Za-z0-9 ._-]+", "", repo.split("/", 1)[1])[:48] or "Modell"
+    if art in SPRACH:
+        return eigen_ok({"id": ("eigen-" + _wort(repo.split("/", 1)[1], 41)).rstrip("-."), "art": art,
+                         "name": {"de": name, "en": name}, "engine": SPRACH[art][0], "repo": repo, "revision": info["sha"],
+                         "lizenz": lizenz, "gewerblich": lizenz in FREI, "platte_gb": max(1, round(sum(sizes) / 1e9)),
+                         "need_gib": max(1, round(need)), "gemessen": False, "betrieb": "resident", "eigen": True})
+    sehen = arch in VLLM_ARCH["sehen"]
+    fam = next((v for k, v in PARSER_FAMILIE.items() if arch.startswith(k)), {})
     m = {"id": ("eigen-" + _wort(repo.split("/", 1)[1], 41)).rstrip("-."), "art": art, "name": {"de": name, "en": name},
          "engine": "vllm", "repo": repo, "revision": info["sha"], "lizenz": lizenz, "gewerblich": lizenz in FREI,
          "platte_gb": max(1, round(sum(sizes) / 1e9)), "need_gib": max(1, round(need)), "gemessen": False,
@@ -1793,7 +1980,8 @@ DTYPE_BYTES = {"F64": 8, "I64": 8, "F32": 4, "I32": 4, "U32": 4, "BF16": 2, "F16
 # fit the kind (an embedding or a voice is no language model); the hits that fit come first, by the format the
 # computer runs best (FORMAT_RANG), then by downloads; the first of them that also fits beside the running models
 # gets the star, with its reasons (format, memory).
-SUCHE_AUFGABEN = {"llm": ("text-generation", "image-text-to-text"), "sehen": ("image-text-to-text",)}
+SUCHE_AUFGABEN = {"llm": ("text-generation", "image-text-to-text"), "sehen": ("image-text-to-text",),
+                  "asr": ("automatic-speech-recognition",), "tts": ("text-to-speech", "text-to-audio")}
 FORMATE = ("nvfp4", "fp8", "int", "bf16")
 FORMAT_RANG = {True: {"nvfp4": 3, "fp8": 2, "int": 1, "bf16": 1},      # a GPU that runs NVFP4 (hardware.FP4)
                False: {"fp8": 3, "int": 2, "bf16": 2, "nvfp4": 0}}
@@ -1828,13 +2016,14 @@ def such_url(q):
     return HF_SUCHE.format(q=urllib.request.quote(q, safe=""))
 
 
-def such_treffer(items, art, total_gib, kat=None, profil=None, raum_gib=None, mit_token=False):
+def such_treffer(items, art, total_gib, kat=None, profil=None, raum_gib=None, mit_token=False, familien=()):
     """The hits for the page: [{repo, downloads, lizenz, gb, need_gib, format, nein, aufgabe, empfohlen}], „nein“ a fixed
     word when a rule already says no (schon, zugang, aufgabe, code, format, architektur, budget); names that do not match
     REPO are dropped. The fitting ones first (FORMAT_RANG for this computer, then downloads), the others after them;
     „empfohlen“ for the first fitting one whose need is known and at most raum_gib (the room beside the other
-    running models), with „warum“ {format, need_gib, raum_gib}. A model that needs an approval only with the token."""
-    if art not in VLLM_ARCH:
+    running models), with „warum“ {format, need_gib, raum_gib}. A model that needs an approval only with the token.
+    A speech model (SPRACH) must be of one of familien instead of a known architecture („familie“ otherwise)."""
+    if art not in VLLM_ARCH and art not in SPRACH:
         raise Fehler("art")
     if not isinstance(items, list):
         raise Fehler("antwort")
@@ -1857,7 +2046,7 @@ def such_treffer(items, art, total_gib, kat=None, profil=None, raum_gib=None, mi
         par = {k: v for k, v in par.items() if isinstance(k, str) and isinstance(v, int) and not isinstance(v, bool) and v >= 0}
         byte = sum(v * DTYPE_BYTES.get(k, 2) for k, v in par.items())
         gib = byte / 2**30 if byte else None
-        need = round(gib + KV_GIB[art]) if gib is not None else None
+        need = round(gib + EXTRA_GIB[art]) if gib is not None else None
         card = x.get("cardData") if isinstance(x.get("cardData"), dict) else {}
         lizenz = _wort(card.get("license") if isinstance(card.get("license"), str) else "", 32) or "unbekannt"
         aufgabe = _wort(x.get("pipeline_tag") if isinstance(x.get("pipeline_tag"), str) else "", 32)
@@ -1871,7 +2060,9 @@ def such_treffer(items, art, total_gib, kat=None, profil=None, raum_gib=None, mi
             nein = "code"
         elif "safetensors" not in tags and not par:
             nein = "format"
-        elif arch not in VLLM_ARCH[art] and not (art == "llm" and arch in VLLM_ARCH["sehen"]):
+        elif art in SPRACH and familie(cfg) not in familien:
+            nein = "familie"
+        elif art not in SPRACH and arch not in VLLM_ARCH[art] and not (art == "llm" and arch in VLLM_ARCH["sehen"]):
             nein = "architektur"
         elif need is not None and need / total_gib > ANTEIL_MAX:
             nein = "budget"
@@ -2026,16 +2217,20 @@ def katalog_zeile(m, messung):
     return json.dumps(z, ensure_ascii=False, indent=2)
 
 
-def eigene(path=EIGENE):
-    return [m for m in read_json(path, {}).get("modelle") or [] if isinstance(m, dict)]
+def eigene(path=None):
+    return [m for m in read_json(path or EIGENE, {}).get("modelle") or [] if isinstance(m, dict)]
 
 
-def eigen_speichern(m, path=EIGENE, kat=None):
-    """Adds an own entry (checked again); refuses a second one for the same id or repository, and more than EIGENE_MAX."""
+def eigen_speichern(m, path=None, kat=None):
+    """Adds an own entry (checked again); refuses a second one for the same id or repository file, and more than
+    EIGENE_MAX."""
+    path = path or EIGENE
     eigen_ok(m)
     kat = katalog() if kat is None else kat
     alle = eigene(path)
-    if m["id"] in kat or any(x.get("repo") == m["repo"] for x in alle) or any(x["repo"] == m["repo"] for x in kat.values()):
+    def schluessel(x):        # one repository may give several own files (GGUF quantizations), each once
+        return x.get("repo"), (x.get("datei") or {}).get("path")
+    if m["id"] in kat or any(schluessel(x) == schluessel(m) for x in alle) or any(schluessel(x) == schluessel(m) for x in kat.values()):
         raise Fehler("schon")
     if len(alle) >= EIGENE_MAX:
         raise Fehler("voll")
@@ -2411,6 +2606,20 @@ def cli(args, log=print):
                 r["mtp"] = "aus"
             merke(m["id"], r)
             return 0 if r["ok"] else 3
+        if cmd == "datei-laden":             # speech-spark.sh before the switch to an own picture or music file
+            datei_laden(args[1], log=log)
+            return 0
+        if cmd == "dateiprobe":              # … and after it
+            ok, wort = datei_probe(args[1])
+            log(f"modelle: probe {args[1]} {'ok' if ok else 'fehler ' + wort}")
+            return 0 if ok else 3
+        if cmd == "sprachprobe":             # speech-spark.sh after the switch of an own speech model
+            if args[1] not in SPRACH:
+                raise Fehler("art")
+            import bench
+            ok, wort, anteil = bench.sprachprobe(log=lambda *a, **k: None)
+            log(f"modelle: probe {args[1]} {'ok' if ok else 'fehler ' + wort}" + (f" {anteil:.2f}" if anteil is not None else ""))
+            return 0 if ok else 3
         if cmd == "rundlauf":
             import llmstart
             ok, wort = rundlauf(load_config(), log, stufe=llmstart.stufe)
@@ -2424,10 +2633,10 @@ def cli(args, log=print):
         if cmd == "wechsel-pruefen":
             # root checks again what the panel checked
             m = wechsel_pruefen(args[1], args[2], load_config(), gesamt_gib())
-            log(f"wahl {m['wahl']}" if args[1] in INSTALL else f"vllm {m['repo']} {fest_revision(m)}")
+            log(wechsel_weg(args[1], m))
             return 0
         if cmd == "wechsel-schalten":
-            if args[1] not in ROLLEN:
+            if args[1] not in ROLLEN and args[1] not in SPRACH and args[1] not in DATEI_ART:
                 raise Fehler("art")
             _schreib(mit_wechsel(_roh(), args[1], eintrag(args[2])))
             log(f"modelle: schalter {args[1]} {args[2]}")

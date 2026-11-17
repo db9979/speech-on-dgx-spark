@@ -57,7 +57,7 @@ class Regeln(unittest.TestCase):
     def test_fixed_rules_say_no_with_a_fixed_word(self):
         pickle_only = [{"rfilename": "pytorch_model.bin", "lfs": {"size": 2**30}}, {"rfilename": "config.json"}]
         cases = [
-            (info(), "asr", "beispiel/x", "art"), (info(), "bild", "beispiel/x", "art"),
+            (info(), "asr", "beispiel/x", "familie"), (info(), "musik", "beispiel/x", "art"), (info(), "bild", "beispiel/x", "art"),
             (info(), "llm", "kein-name", "repo"), (info(), "llm", "a/../b", "repo"), (info(), "llm", "a/b c", "repo"),
             (info(sha="main"), "llm", "beispiel/x", "antwort"), ("<html>", "llm", "beispiel/x", "antwort"),
             (info(gated="auto"), "llm", "beispiel/x", "zugang"), (info(private=True), "llm", "beispiel/x", "zugang"),

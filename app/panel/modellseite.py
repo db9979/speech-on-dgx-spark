@@ -70,7 +70,9 @@ GRUND = {"art": "Diese Art lässt sich nicht wechseln.", "unbekannt": "Das Model
          "zugang": "Das Modell ist privat oder braucht eine Freigabe; nur offene Modelle gehen.",
          "format": "Keine Gewichte als safetensors (Pickle-Dateien nimmt der Spark nie).",
          "code": "Das Modell braucht eigenen Code aus dem Repository; das läuft hier nie.",
-         "architektur": "Diese Bauart kennt die Engine nicht.", "eigen": "ungültig", "voll": "Schon 20 eigene Modelle.",
+         "architektur": "Diese Bauart kennt die Engine nicht.",
+         "familie": "Nicht dieselbe Bauart wie die geprüften Modelle dieses Programms.",
+         "basis": "Diese Grundvariante gibt es nicht, oder sie ist noch nicht installiert.", "eigen": "ungültig", "voll": "Schon 20 eigene Modelle.",
          "aktiv": "Das Modell läuft gerade.", "netz": "Hugging Face ist gerade nicht erreichbar.",
          # plan Raspberry-Pi split: the model computer's answers
          "laeuft": "Ein Modellwechsel läuft schon.", "misst": "Eine Messung läuft gerade.",
@@ -250,6 +252,8 @@ def seite(cfg=None, total_gib=None, messung=None, lang="de", gestartet=False, we
                "start": _start_zeigen(start, kat, i),
                "alte": modelle.alte(cfg, kat=kat, daten=wechsel) if an else {},
                "tage": modelle.ALT_TAGE, "eigene": _eigen_an(cfg),
+               # the basis variants an own picture or music file can stand on (modelle.DATEI_ART), with their names
+               "basen": {a: [[b, modelle.basis_variante(a, b)["name"]] for b in x[1]] for a, x in modelle.DATEI_ART.items()},
                # Rezept-Abgleich (stage B1b): the running language model started with other settings than its entry
                "abweichung": bool(an and buch["abweichung"] and not laeuft and cfg.get("llm", {}).get("enabled"))}
     # the bar's parts (Dominik 2026-10-18: one colored piece per model, the tiles below in the same color)
@@ -596,6 +600,31 @@ def admin_probe_weg(request: Request):
 
 
 # ---------------------------------------------------------------- stage E5: own models
+async def _vorschlag(body, art, repo, rev, total_gib, mit_token):
+    """The own entry the fixed rules make of one commit: a picture or music file (DATEI_ART: the named .gguf file on a
+    basis variant), a speech model (its program's family) or a language or picture-understanding model."""
+    if art in modelle.DATEI_ART:
+        return modelle.datei_vorschlag(await _hf_info(repo, rev), art, repo, str(body.get("datei", ""))[:200],
+                                       str(body.get("basis", ""))[:16], total_gib, mit_token)
+    return modelle.eigen_vorschlag(await _hf_info(repo, rev), art, repo, total_gib, mit_token, await _familien(art))
+
+
+async def _familien(art, kat=None):
+    """The families (modelle.familie) of the checked models of a speech kind's program, from their pinned commits'
+    metadata; () for the other kinds. An own speech model must be one of them (modelle.SPRACH)."""
+    if art not in modelle.SPRACH:
+        return ()
+    kat = await asyncio.to_thread(modelle.katalog) if kat is None else kat
+    out = []
+    for ref in modelle.SPRACH[art][1]:
+        m = kat.get(ref)
+        if m and m["revision"]:
+            f = modelle.familie((await _hf_info(m["repo"], m["revision"])).get("config"))
+            if f and f not in out:
+                out.append(f)
+    return tuple(out)
+
+
 async def _hf_info(repo, rev=""):
     """The metadata of one commit (or the newest) from Hugging Face: with the models on another computer that one asks
     with its token (Wärter hf_info, the token never leaves it), here through netguard (public internet only) with the
@@ -807,8 +836,10 @@ def _eigen_tor(request):
 
 
 def _zeige(m):
-    return {k: m[k] for k in ("id", "art", "name", "repo", "revision", "lizenz", "gewerblich", "platte_gb", "need_gib",
-                              "kann_sehen", "werkzeuge")}
+    """What „Prüfen“ shows; a speech model or an own file has no picture understanding and no tools."""
+    return dict({k: m[k] for k in ("id", "art", "name", "repo", "revision", "lizenz", "gewerblich", "platte_gb", "need_gib")},
+                kann_sehen=bool(m.get("kann_sehen")), werkzeuge=bool(m.get("werkzeuge")),
+                **({"datei": m["datei"]["path"], "basis": m["basis"]} if m.get("datei") else {}))
 
 
 def _raum(cfg, art, q):
@@ -846,7 +877,8 @@ async def eigen_suche(request: Request):
         cfg = load_config()
         q = await asyncio.to_thread(_quelle, cfg)
         tok = q[9]["hf_token"]
-        treffer = modelle.such_treffer(items, art, q[0], q[3], q[8], _raum(cfg, art, q), tok["gesetzt"] and not tok["abgelehnt"])
+        treffer = modelle.such_treffer(items, art, q[0], q[3], q[8], _raum(cfg, art, q), tok["gesetzt"] and not tok["abgelehnt"],
+                                       await _familien(art, q[3]))
     except modelle.Fehler as e:
         print(f"modelle: suche abgelehnt {e}", flush=True)
         raise HTTPException(503 if str(e) == "netz" else 400, GRUND.get(str(e), "ungültig"))
@@ -863,8 +895,7 @@ async def eigen_pruefen(request: Request):
     art, repo = str(body.get("art", ""))[:16], str(body.get("repo", "")).strip()[:200]
     total_gib = (await asyncio.to_thread(_quelle, load_config()))[0]
     try:
-        m = modelle.eigen_vorschlag(await _hf_info(repo), art, repo, total_gib,
-                                    (await asyncio.to_thread(_hf_token_info))["gesetzt"])
+        m = await _vorschlag(body, art, repo, "", total_gib, (await asyncio.to_thread(_hf_token_info))["gesetzt"])
     except modelle.Fehler as e:
         print(f"modelle: eigenes abgelehnt {e}", flush=True)
         raise HTTPException(503 if str(e) == "netz" else 400, GRUND.get(str(e), "ungültig"))
@@ -884,8 +915,7 @@ async def eigen_dazu(request: Request):
     try:
         if not modelle.REV.match(rev):
             raise modelle.Fehler("repo")
-        m = modelle.eigen_vorschlag(await _hf_info(repo, rev), art, repo, total_gib,
-                                    (await asyncio.to_thread(_hf_token_info, cfg))["gesetzt"])
+        m = await _vorschlag(body, art, repo, rev, total_gib, (await asyncio.to_thread(_hf_token_info, cfg))["gesetzt"])
         if m["revision"] != rev:
             raise modelle.Fehler("antwort")
         if steuer.remote(cfg):              # the model computer keeps the list and checks the entry again

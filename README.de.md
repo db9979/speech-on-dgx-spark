@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.502** Eigene Modelle auch für Hören, Sprechen, Bilder und Musik, mit fester Probe beim Wechsel
 - **V01.1.501** Modelle in zwei Regalen: Geprüft und Eigene, ungeprüft
 - **V01.1.500** Probleme melden: getippter Text bleibt stehen, wenn Ich neu lädt
 - **V01.1.499** iPhone-App: „⋯“ oben rechts im Assistenten öffnet wieder Heute und Einstellungen
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.495** Hilfsmodell vergleichen: Plauderfragen an Hilfsmodell und Sprachmodell, erstes Wort, Ende und richtige Antworten nebeneinander (Zustand → Prüfen)
 - **V01.1.494** Antworten zuverlässiger: Prüfung sieht das ganze Ergebnis, keine Zusage ohne Tat, „Warn mich bei Sturm“ schaltet die Wetterwarnung, Quellenzeile ohne Nullfunde, Gespräch behält den Faden, Tagesüberblick schneller
 - **V01.1.493** Spark-Konsole: neuer Reiter „Modell genau“ mit Anfragen, Warteschlangen, Chat-Modell, GPU und Verlauf, dazu eine Zeile zum Chat-Modell im Überblick
-- **V01.1.492** Modell-Bibliothek auf der Platte und Hugging-Face-Token für schnellere und freigegebene Downloads
 
 
 

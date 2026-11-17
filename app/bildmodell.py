@@ -69,15 +69,88 @@ STEPS = 4                  # the distilled klein models: 4 steps, guidance 1.0 (
 GUIDANCE = 1.0
 
 
+def eigene(art="bild", basis=None):
+    """The admin's own variants of a kind (Dominik 2026-11-16 „alle 1-6“, slot „Bilder“/„Musik“): an own GGUF file
+    in place of the basis variant's main model, everything else of the basis (text encoder, VAE). Read from the own
+    entries modelle.py keeps and checks (modelle.eigen_ok); a broken entry is left out."""
+    import modelle      # late: modelle imports this module
+    basis = VARIANTS if basis is None else basis
+    key = "model" if art == "bild" else "dit"
+    out = {}
+    for m in modelle.eigene_eintraege(art):
+        b, d = basis.get(m["basis"]), m["datei"]
+        if b:
+            out[m["variante"]] = dict(b, name=m["name"]["de"], license=m["lizenz"], commercial=m["gewerblich"],
+                                      need_gib=m["need_gib"], **{key: File(m["repo"], m["revision"], d["path"], d["sha256"], d["size"])})
+    return out
+
+
+def alle():
+    """The catalog's variants and the admin's own ones."""
+    return dict(VARIANTS, **eigene("bild"))
+
+
 def variant(v):
     """A known variant name (anything else from a hand-edited config falls back to the default)."""
-    return v if v in VARIANTS else DEFAULT
+    return v if v in VARIANTS or v in alle() else DEFAULT
 
 
 def files(v):
     """Every file the variant needs, the image check included."""
-    m = VARIANTS[variant(v)]
+    m = alle()[variant(v)]
     return [m["model"], m["llm"], VAE, CHECKER]
+
+
+# GGUF (the file format of llama.cpp, stable-diffusion.cpp and acestep.cpp): the header names the model's family in
+# "general.architecture". An own file must name the same as its basis's file (gguf_arch), read before it is ever used.
+GGUF_TYPEN = {0: 1, 1: 1, 2: 2, 3: 2, 4: 4, 5: 4, 6: 4, 7: 1, 10: 8, 11: 8, 12: 8}   # fixed sizes; 8 string, 9 array
+GGUF_MAX_KV = 4096
+GGUF_MAX_STR = 1 << 20
+
+
+def gguf_arch(p):
+    """The "general.architecture" of a GGUF file, "" when the file is not GGUF or does not say (limits on every count
+    and length: the file comes from the internet)."""
+    import struct
+    try:
+        with open(p, "rb") as f:
+            if f.read(4) != b"GGUF":
+                return ""
+            version, _tensors, kvs = struct.unpack("<IQQ", f.read(20))
+            if version < 2 or kvs > GGUF_MAX_KV:
+                return ""
+
+            def text():
+                n = struct.unpack("<Q", f.read(8))[0]
+                if n > GGUF_MAX_STR:
+                    raise ValueError("lang")
+                return f.read(n).decode("utf-8", "replace")
+
+            def skip(t):
+                if t in GGUF_TYPEN:
+                    f.seek(GGUF_TYPEN[t], 1)
+                elif t == 8:
+                    text()
+                elif t == 9:
+                    it, n = struct.unpack("<IQ", f.read(12))
+                    if n > 1 << 24 or it == 9:
+                        raise ValueError("lang")
+                    if it in GGUF_TYPEN:
+                        f.seek(GGUF_TYPEN[it] * n, 1)
+                    else:
+                        for _ in range(n):
+                            skip(it)
+                else:
+                    raise ValueError("typ")
+            for _ in range(kvs):
+                k = text()
+                t = struct.unpack("<I", f.read(4))[0]
+                if k == "general.architecture" and t == 8:
+                    return text()[:64]
+                skip(t)
+    except (OSError, ValueError, struct.error):
+        return ""
+    return ""
 
 
 def path(f, folder=None):
@@ -122,9 +195,10 @@ def download(v, folder):
     return fetch(files(v), folder)
 
 
-def fetch(wanted, folder):
+def fetch(wanted, folder, token=None):
     """Fetches the files that are missing into folder and checks each file's size and SHA-256; a file that does not
-    match is deleted. Returns True when everything is there. musikmodell.py fetches its files with it too."""
+    match is deleted. Returns True when everything is there. musikmodell.py fetches its files with it too; token: the
+    admin's Hugging Face token for an own file that needs an approval (modelle.datei_laden, never logged)."""
     from huggingface_hub import hf_hub_download
     os.makedirs(folder, exist_ok=True)
     ok = True
@@ -134,7 +208,8 @@ def fetch(wanted, folder):
             continue
         print(f"   {f.name} ({f.size / 1e9:.1f} GB) from {f.repo}", flush=True)
         try:
-            got = hf_hub_download(f.repo, f.path, revision=f.revision, local_dir=os.path.join(folder, ".dl"))
+            got = hf_hub_download(f.repo, f.path, revision=f.revision, local_dir=os.path.join(folder, ".dl"),
+                                  **({"token": token} if token else {}))
         except Exception as e:
             print(f"   {f.name}: download failed ({type(e).__name__})", flush=True)
             ok = False
@@ -149,6 +224,8 @@ def fetch(wanted, folder):
 
 if __name__ == "__main__":
     if len(sys.argv) == 4 and sys.argv[1] == "download" and sys.argv[2] in VARIANTS:
+        sys.exit(0 if download(sys.argv[2], sys.argv[3]) else 1)
+    if len(sys.argv) == 4 and sys.argv[1] == "download" and sys.argv[2] in alle():
         sys.exit(0 if download(sys.argv[2], sys.argv[3]) else 1)
     print("usage: bildmodell.py download VARIANT FOLDER", file=sys.stderr)
     sys.exit(2)

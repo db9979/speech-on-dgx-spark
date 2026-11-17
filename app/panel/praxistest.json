@@ -6530,6 +6530,14 @@
 "text": "Zustand → Modelle → Sprachmodell mit mindestens einem eigenen Modell: oben „Geprüft“ mit den Katalogmodellen (Empfehlung vorne), darunter „Eigene, ungeprüft“ mit den eigenen und dem Hinweis, dass sie erst nach einer Messung wählbar sind. In der Spark-Konsole → Modelle stehen die eigenen in der Tabelle unter der Zeile „Eigene, ungeprüft“.",
 "thread": "Modellkatalog für Spark und DGX Station bauen",
 "test": "test_empfehlung.Seite.test_two_shelves_checked_first_own_below"
+},
+{
+"id": "P946",
+"v": 1502,
+"titel": "Eigene Modelle für Hören, Sprechen, Bilder und Musik",
+"text": "Zustand → Modelle → Spracherkennung (Eigene Modelle an): „Bei Hugging Face suchen“ mit „Qwen3-ASR“: Feinabstimmungen von Qwen3-ASR stehen oben, Whisper steht unten mit „andere Bauart als die geprüften“. Eine passende hinzufügen und „Wechseln“: das Protokoll (Zustand → Logs, wechsel) zeigt „modelle: probe asr ok 0.9…“ und „umgeschaltet“; klappt die Probe nicht, steht „fehler, zurueck“ und das alte Modell läuft wieder. Dasselbe für Sprachausgabe mit einer Qwen3-TTS-Feinabstimmung. Unter Bilder malen → „Eigene GGUF-Datei“ eine andere Quantisierung von FLUX.2 klein 4B (Repository, Dateiname, Grundvariante 4B) eintragen, hinzufügen und wechseln: das Protokoll zeigt „modelle: datei bild ok“, dann „probe bild ok“; eine Datei einer anderen Bauart endet mit „abgelehnt familie“ und nichts wird umgestellt. Dasselbe unter Musik machen mit einer ACE-Step-DiT-Datei.",
+"thread": "Modellkatalog für Spark und DGX Station bauen",
+"test": "test_eigene_dateien.Varianten.test_before_the_switch_header_and_basis_decide"
 }
 ]
 }

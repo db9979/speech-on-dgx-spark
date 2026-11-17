@@ -60,7 +60,7 @@ class Suche(unittest.TestCase):
         self.assertEqual(modelle.such_treffer([hit("x/l", config={"architectures": ["Qwen3ForCausalLM"]})], "sehen", 121.0, kat)[0]["nein"],
                          "architektur")      # a language model is no image understanding
         self.assertEqual(len(modelle.such_treffer([hit(f"x/m{i}") for i in range(50)], "llm", 121.0, kat)), modelle.SUCHE_MAX)
-        for bad_art, items in (("asr", []), ("llm", {"error": "x"})):
+        for bad_art, items in (("musik", []), ("bild", []), ("llm", {"error": "x"})):
             with self.assertRaises(modelle.Fehler):
                 modelle.such_treffer(items, bad_art, 121.0, kat)
 
@@ -71,7 +71,7 @@ class Probe(unittest.TestCase):
         self.kat = modelle.katalog()
 
     def test_asks_once_the_measurement_is_there(self):
-        for mid, art in (("x; reboot", "llm"), (DSPARK, "musik")):
+        for mid, art in (("x; reboot", "llm"), (DSPARK, "klein")):
             with self.assertRaises(modelle.Fehler):
                 modelle.probe_merken(mid, art, self.p, now=T0)
         self.assertIsNone(modelle.probe_stand(self.kat, {}, [], False, self.p, now=T0))

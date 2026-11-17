@@ -482,11 +482,17 @@ cmd_messen_wunsch() {
 # again here (catalog only, pinned commit, budget). asr, tts and bild go through install.sh with its short key; llm and
 # sehen download, check, switch the configuration and restart; the language model passes a round trip or goes back.
 install_flag() {
-  case "$1" in asr) echo --asr ;; tts) echo --tts ;; bild) echo --bild ;; *) return 1 ;; esac
+  case "$1" in asr) echo --asr ;; tts) echo --tts ;; bild) echo --bild ;; musik) echo --musik ;; *) return 1 ;; esac
 }
 
 # Zustand → Modelle shows each step of the language model's switch or restart (app/llmstart.py, Dominik 2026-10-18)
 llmschritt() { as_panel_user ../llmstart.py "$@" >/dev/null 2>&1 || true; }
+
+# the service of a kind loads its model anew (its engine first, when it has one)
+dienst_neu() {  # $1 = asr, tts, bild or musik
+  systemctl try-restart "speech-spark-$1-engine.service" 2>/dev/null || true
+  systemctl restart "speech-spark-$1.service" || true
+}
 
 wechsel() {  # $1 = art, $2 = id
   local art=$1 mid=$2 alt out kind repo rev commit pause=0 ok=0
@@ -496,7 +502,36 @@ wechsel() {  # $1 = art, $2 = id
   read -r kind repo rev <<<"$(tail -n1 <<<"$out")"
   alt=$(as_panel_user ../modelle.py jetzt "$art")
   echo "modelle: wechsel $art startet"
-  if [ "$kind" = wahl ]; then
+  if [ "$kind" = sprache ] || [ "$kind" = datei ]; then
+    # an own speech model (slot „Hören“/„Sprechen“) or an own picture or music file (slot „Bilder“/„Musik“): download
+    # and check it, switch the configuration, restart its service, then the fixed probe (bench.sprachprobe,
+    # modelle.datei_probe); without it back to the one before
+    if [ "$kind" = sprache ]; then
+      out=$(as_panel_user ../modelle.py vorbereiten "$mid" --revision "$rev") || true
+      commit=$(tail -n1 <<<"$out")
+      [ "$commit" = "$rev" ] || { grep '^modelle: ' <<<"$out" || true; echo "modelle: wechsel $art abgelehnt nicht geladen"; return 1; }
+      probe=sprachprobe
+    else
+      out=$(as_panel_user ../modelle.py datei-laden "$mid") \
+        || { grep '^modelle: ' <<<"$out" || true; echo "modelle: wechsel $art abgelehnt nicht geladen"; return 1; }
+      probe=dateiprobe
+    fi
+    as_panel_user ../modelle.py wechsel-schalten "$art" "$mid" || { echo "modelle: wechsel $art abgelehnt einstellung"; return 1; }
+    dienst_neu "$art"
+    if as_panel_user ../modelle.py "$probe" "$art"; then
+      ok=1
+    elif [ "$alt" != - ]; then
+      echo "modelle: wechsel $art fehler, zurueck"
+      if [ -n "$(as_panel_user ../modelle.py feld "$alt" wahl)" ]; then
+        "$PREFIX/src/install.sh" "$(install_flag "$art")" "$(as_panel_user ../modelle.py feld "$alt" wahl)" --yes --no-smoke \
+          || echo "modelle: wechsel $art zurueck fehler"
+      else
+        as_panel_user ../modelle.py wechsel-schalten "$art" "$alt" && dienst_neu "$art" || echo "modelle: wechsel $art zurueck fehler"
+      fi
+    else
+      echo "modelle: wechsel $art fehler"
+    fi
+  elif [ "$kind" = wahl ]; then
     if "$PREFIX/src/install.sh" "$(install_flag "$art")" "$repo" --yes --no-smoke; then
       ok=1
     elif [ "$alt" != - ]; then

@@ -140,7 +140,7 @@ class Engine(OnDemand):
             stats["refused_place"] += 1
             raise HTTPException(503, "belegt")
         try:
-            check_memory(musikmodell.VARIANTS[v]["need_gib"])
+            check_memory(musikmodell.alle()[v]["need_gib"])
         except MemoryError:
             self.release()
             stats["refused_memory"] += 1
@@ -359,7 +359,7 @@ def pick(b):
     """The variant of one song: the caller's "variant" (the admin's pick, Musik testen) when it is known, else the
     one install.sh set (music.variant). Whether it is installed decides start (503 "missing")."""
     v = b.get("variant") if isinstance(b, dict) else None
-    if v is not None and v not in musikmodell.VARIANTS:
+    if v is not None and v not in musikmodell.alle():
         raise HTTPException(400, "variant")
     return musikmodell.variant(v or cfg().get("variant"))
 
@@ -390,7 +390,7 @@ def request_body(b, v=None):
     lm_seed = b.get("lm_seed")   # optional: the planner's seed, kept by the Dungeon-Master's store (plan V5a)
     if lm_seed is not None and (isinstance(lm_seed, bool) or not isinstance(lm_seed, int) or not 0 <= lm_seed < 2**31):
         raise HTTPException(400, "lm_seed")
-    v = musikmodell.VARIANTS[v or pick(b)]
+    v = musikmodell.alle()[v or pick(b)]
     return {"caption": caption, "lyrics": lyrics or INSTRUMENTAL, "vocal_language": lang if lyrics else "unknown",
             "duration": float(secs), "seed": seed, "lm_batch_size": 1, "synth_batch_size": 1,
             "inference_steps": musikmodell.STEPS, "task_type": "text2music", "output_format": "mp3",
@@ -604,7 +604,7 @@ def edit_body(b, v):
     n = b.get("suggestions", 1)
     if isinstance(n, bool) or not isinstance(n, int) or not 1 <= n <= MAX_SUGGEST:
         raise HTTPException(400, "suggestions")
-    m = musikmodell.VARIANTS[v]
+    m = musikmodell.alle()[v]
     req = {"caption": caption, "lyrics": lyrics or INSTRUMENTAL, "vocal_language": (lang or "unknown") if lyrics else "unknown",
            "seed": seed, "synth_batch_size": n, "lm_batch_size": 1, "inference_steps": musikmodell.STEPS,
            "task_type": TASKS[art], "output_format": "mp3", "mp3_bitrate": musikmodell.MP3_KBPS,
@@ -743,7 +743,7 @@ async def erkennen(request: Request):
         raise HTTPException(400, "JSON object")
     v = pick(b)
     mp3 = source(b)
-    m = musikmodell.VARIANTS[v]
+    m = musikmodell.alle()[v]
     req = {"synth_model": m["dit"].name, "lm_model": m["lm"].name, "seed": -1}
     try:
         d = heard(await engine.understand(req, mp3, v))
@@ -771,8 +771,8 @@ async def health(request: Request):
     status = "missing" if not musikmodell.installed(v) else "busy" if engine.busy else engine.state
     if not api_key_ok(request.scope):
         return {"service": "musik", "status": status}
-    return {"service": "musik", "status": status, "variant": v, "name": musikmodell.VARIANTS[v]["name"],
-            "license": musikmodell.LICENSE, "need_gib": musikmodell.VARIANTS[v]["need_gib"],
+    return {"service": "musik", "status": status, "variant": v, "name": musikmodell.alle()[v]["name"],
+            "license": musikmodell.LICENSE, "need_gib": musikmodell.alle()[v]["need_gib"],
             "missing": musikmodell.missing(v), "installed": musikmodell.available(), "sft": musikmodell.sft_installed(),
             "loaded": engine.variant if engine.state == "ready" else "", "idle_min": int(c["idle_min"]), "uptime_s": round(time.time() - started),
             "idle_s": round(time.time() - engine.used) if engine.state == "ready" else None, **stats}

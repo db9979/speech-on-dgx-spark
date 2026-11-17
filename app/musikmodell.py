@@ -72,13 +72,19 @@ def sft_installed(folder=None):
     return SFT is not None and file_size(path(SFT, folder or FOLDER)) == SFT.size
 
 
+def alle():
+    """The catalog's variants and the admin's own ones (an own DiT as GGUF beside the basis's planner, bildmodell.eigene)."""
+    from bildmodell import eigene
+    return dict(VARIANTS, **eigene("musik", VARIANTS))
+
+
 def variant(v):
     """A known variant name (anything else from a hand-edited config falls back to the default)."""
-    return v if v in VARIANTS else DEFAULT
+    return v if v in VARIANTS or v in alle() else DEFAULT
 
 
 def files(v):
-    m = VARIANTS[variant(v)]
+    m = alle()[variant(v)]
     return [m["dit"], m["lm"], TEXT, VAE]
 
 
@@ -102,7 +108,7 @@ def missing(v, folder=None):
 
 def available(folder=None):
     """The variants whose files are all there (Musik testen measures each, the admin picks one, M1)."""
-    return [v for v in VARIANTS if installed(v, folder)]
+    return [v for v in alle() if installed(v, folder)]
 
 
 def download(v, folder):
@@ -112,6 +118,8 @@ def download(v, folder):
 
 if __name__ == "__main__":
     if len(sys.argv) == 4 and sys.argv[1] == "download" and sys.argv[2] in VARIANTS:
+        sys.exit(0 if download(sys.argv[2], sys.argv[3]) else 1)
+    if len(sys.argv) == 4 and sys.argv[1] == "download" and sys.argv[2] in alle():
         sys.exit(0 if download(sys.argv[2], sys.argv[3]) else 1)
     print("usage: musikmodell.py download VARIANT FOLDER", file=sys.stderr)
     sys.exit(2)

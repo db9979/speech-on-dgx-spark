@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.502** Own models also for listening, speaking, pictures and music, with a fixed probe when switching
 - **V01.1.501** Models on two shelves: checked and own, unchecked
 - **V01.1.500** Reporting problems keeps what you typed when Me loads its boxes again
 - **V01.1.499** iPhone app: the "⋯" at the top right of the assistant opens Today and Settings again
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.495** Compare the helper model: plain questions to the helper model and to the language model, first word, end and right answers side by side (Status → Checks)
 - **V01.1.494** More reliable answers: the check sees the whole result, no promise without a deed, "warn me about storms" switches the weather warning, source line without empty looks, the conversation keeps its thread, a faster daily briefing
 - **V01.1.493** Spark-Konsole: new tab "Model in detail" with requests, queues, chat model, GPU and history, and a chat model line in its overview
-- **V01.1.492** Model library on the disk and a Hugging Face token for faster and approved downloads
 
 
 
