@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.507** RED-FIX: test "typing comes first" independent of the order
 - **V01.1.506** RED-FIX: durations of the new test modules added
 - **V01.1.505** Language model in Docker as the main model after a successful measurement
 - **V01.1.504** Newly available: new models of fixed publishers as a hint, guide for the Spark alone
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.500** Reporting problems keeps what you typed when Me loads its boxes again
 - **V01.1.499** iPhone app: the "⋯" at the top right of the assistant opens Today and Settings again
 - **V01.1.498** Model search with a recommendation: fitting models first, a star by a fixed rule, a checked recommendation per use
-- **V01.1.497** Model page of the Spark-Konsole: typed input stays when the page refreshes
 
 
 

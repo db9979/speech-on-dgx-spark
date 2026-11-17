@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older versions (V01.0.000 to V01.0.999 and the lines before version numbers): [CHANGELOG-V01.0.md](CHANGELOG-V01.0.md).
 
+- **V01.1.507** · 2026-11-17 · ROT-FIX: „Tippen geht vor“ prüft das abgeschlossene Gespräch jetzt mit Nachrichten darin; das leere Startbild (V01.1.489) ist absichtlich ohne contain, und welcher Test vorher lief, entschied, ob eins da war
 - **V01.1.506** · 2026-11-17 · ROT-FIX: Laufzeiten der vier neuen Testmodule (eigene kleine Modelle, Neu verfügbar, Modellsätze, Probetag) in tests/dauer.json
 - **V01.1.505** · 2026-11-17 · Sprachmodell in Docker als Hauptmodell: ein hier erfolgreich gemessenes Modell mit Docker-Rezept (Qwen3.8 Flash Next) lässt sich unter Zustand → Modelle wechseln; root startet den Container in der festen Einheit speech-spark-llm-docker (dasselbe geschlossene docker run wie beim Messen), speech-spark-llm betreibt nur das Tor, Zurückholen wie sonst (P950)
 - **V01.1.504** · 2026-11-17 · Neu verfügbar: einmal am Tag die neuen Modelle fester Herausgeber (Qwen, Google, NVIDIA, Mistral, DeepSeek, IBM Granite, OpenAI) von Hugging Face, nach den Regeln der Suche geprüft, als Hinweis unter Zustand → Modelle (Schalter, aus); dazu die Anleitung „Nur Modelle (Spark allein)“ Schritt für Schritt in beiden READMEs und der Installation (P949)

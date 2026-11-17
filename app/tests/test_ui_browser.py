@@ -3676,6 +3676,10 @@ class Browser(unittest.TestCase):
                 br, pg, errors = await self.page(p, 1280, 900)
                 await pg.evaluate("goSec('chat')")
                 await self.until(pg, "$('face').offsetParent!==null&&FD.n>0")
+                # a conversation with bubbles: the empty start picture (V01.1.489, body.dempty) is laid out on purpose
+                # without contain; which test ran before decided whether one was left here (red on GitHub at .506)
+                await pg.evaluate("chatLog('user','Hallo');chatLog('assistant','Hallo, wie kann ich helfen?');placeFace()")
+                await self.until(pg, "!document.body.classList.contains('dempty')&&!LZ.n")
                 await pg.focus("#chattext")
                 n0, t0 = await pg.evaluate("[FD.n,performance.now()]")
                 await pg.keyboard.type("Wie wird das Wetter morgen in Berlin", delay=50)
