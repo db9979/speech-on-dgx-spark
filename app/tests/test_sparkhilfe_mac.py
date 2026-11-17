@@ -114,8 +114,11 @@ class Fetch(_Cache):
                 import begleiter
                 raise begleiter.NotYet("Im Repo gibt es SparkHilfe noch nicht.")
             return "1.1.320"
-        with unittest.mock.patch.object(ss, "fetch", fake), journal() as j:
+        jobs = []
+        with unittest.mock.patch.object(ss, "fetch", fake), journal() as j, \
+                unittest.mock.patch("live.job", lambda *a, **k: jobs.append(k.get("ok"))):
             asyncio.run(ss.check())
+        self.assertEqual(jobs, [True])          # a release not built yet is no error in Logs → Anfragen (2026-11-17)
         self.assertEqual(seen, list(ss.QUELLEN))
         self.assertEqual(set(ss.QUELLEN), {"sparkhilfe-windows", TAG})
         self.assertIn("spontanhilfe: programm_holen | ok | 1", j.getvalue())

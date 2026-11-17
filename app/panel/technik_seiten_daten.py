@@ -522,7 +522,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ journald
     "journal": {
-        "stand": "586953749f",
+        "stand": "e5d1ed6378",
         "bezug": {
             "logfilter.logfilter": ["s6"], "logfilter.read_journal": ["s8"], "logfilter.redact": ["s9"],
             "logfilter.parse": ["s10"], "logfilter.summary": ["s11"], "logfilter.detail": ["s12"],
@@ -605,9 +605,11 @@ SEITEN = {
             S("s10", "schritt", ("Bereich und Stufe nach Regeln", "Area and level by rules"),
               ("kein Modell", "no model"),
               ("parse ordnet jede Zeile nach ihrem ersten Wort einem Bereich zu. Fehler und Warnungen erkennt es an "
-               "festen Wörtern; bei Web-Anfragen zählt nur der Statuscode, bei Update-Zeilen nie der Betreff.",
+               "festen Wörtern; bei Web-Anfragen zählt nur der Statuscode, bei Update-Zeilen nie der Betreff, und eine "
+                "Null wie „0 errors“ oder „fehler=0“ ist kein Fehler.",
                "parse sorts every line into an area by its first word. It spots errors and warnings by fixed words; "
-               "for web requests only the status code counts, for update lines never the subject.")),
+               "for web requests only the status code counts, for update lines never the subject, and a zero like "
+                "\"0 errors\" or \"fehler=0\" is no error.")),
             S("s11", "schritt", ("Zählen und Hinweis", "Count and hint"),
               ("{logfilter.BUCKETS} Abschnitte je Bereich", "{logfilter.BUCKETS} slices per area"),
               ("summary zählt je Bereich und Stufe, zeichnet einen kleinen Verlauf und hängt an den neuesten Fehler "

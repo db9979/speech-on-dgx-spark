@@ -1509,7 +1509,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "Felder, höchstens 8192 Tokens Antwort, der Modellname immer der eigene; dann geht die Anfrage mit der Stufe „hinten“ ans LLM-Tor. Grenzen je Schlüssel (pro Minute, 2 gleichzeitig, Tokens in 24 Stunden), Admin-Profile ohne Grenze. Kein Werkzeug des Spark, nichts aus dem Profil, nie ein Inhalt im Journal. 14. Open WebUI in einem Schritt: Mit „Open WebUI einbinden“ legt „Open WebUI verbinden“ (mit Code) für das Profil einen Schlüssel fürs Sprachmodell und, wenn das Profil den MCP-Server nutzen darf, einen MCP-Zugang mit nur den Lese-Werkzeugen und „Spark fragen“ an, beide nur im Heimnetz; „Trennen“ löscht beide. Gespeichert werden nur ihre Kennungen. Das Menü öffnet Open WebUI im Heimnetz über die innere Adresse, über den Proxy über die äußere; der Dienst-Wächter fragt nur /health der inneren Adresse, ohne Anmeldung. 15. Der ganze Assistent als Modell: Fragt ein Programm mit dem Modellnamen „spark-assistent“ (Schalter „Spark-Assistent per API“), geht die Anfrage nicht ans reine Modell: sie wird ein Zug des Assistenten als Profil des Schlüssels wie „Spark fragen“, nur mit den Lese-Werkzeugen, nichts gespeichert oder geschaltet. Die Systemanweisung des Programms bleibt weg; höchstens 4 "
+"text": "Felder, höchstens 8192 Tokens Antwort, der Modellname immer der eigene; dann geht die Anfrage mit der Stufe „hinten“ ans LLM-Tor. Grenzen je Schlüssel (pro Minute, 2 gleichzeitig, Tokens in 24 Stunden), Admin-Profile ohne Grenze. Kein Werkzeug des Spark, nichts aus dem Profil, nie ein Inhalt im Journal; lehnt das LLM-Tor ab, nennt die Zeile nur sein festes Wort (loading, memory, busy …). 14. Open WebUI in einem Schritt: Mit „Open WebUI einbinden“ legt „Open WebUI verbinden“ (mit Code) für das Profil einen Schlüssel fürs Sprachmodell und, wenn das Profil den MCP-Server nutzen darf, einen MCP-Zugang mit nur den Lese-Werkzeugen und „Spark fragen“ an, beide nur im Heimnetz; „Trennen“ löscht beide. Gespeichert werden nur ihre Kennungen. Das Menü öffnet Open WebUI im Heimnetz über die innere Adresse, über den Proxy über die äußere; der Dienst-Wächter fragt nur /health der inneren Adresse, ohne Anmeldung. 15. Der ganze Assistent als Modell: Fragt ein Programm mit dem Modellnamen „spark-assistent“ (Schalter „Spark-Assistent per API“), geht die Anfrage nicht ans reine Modell: sie wird ein Zug des Assistenten als Profil des Schlüssels wie „Spark fragen“, nur mit den Lese-Werkzeugen, nichts g"
 },
 {
 "lang": "de",
@@ -1517,7 +1517,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "frühere Nachrichten gehen gekürzt als markierter Hinweis mit. Schlüssel und Grenzen wie oben."
+"text": "espeichert oder geschaltet. Die Systemanweisung des Programms bleibt weg; höchstens 4 frühere Nachrichten gehen gekürzt als markierter Hinweis mit. Schlüssel und Grenzen wie oben."
 },
 {
 "lang": "de",
@@ -2989,7 +2989,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "nd einordnen: logfilter liest höchstens 20000 Zeilen; an journalctl gehen nur Zahlen aus festen Listen. Jede Zeile bekommt ihren Bereich aus dem ersten Wort, ihre Stufe aus festen Fehlerwörtern; Tokens, Schlüssel und Passwörter werden geschwärzt, bevor die Zeile das Panel verlässt. 12. Diagnose mit festem Hinweis: Die Diagnose zählt Zeilen pro Bereich und zeigt zum neuesten Fehler einen festen Hinweis aus einer Liste, nie einen vom Modell."
+"text": "nd einordnen: logfilter liest höchstens 20000 Zeilen; an journalctl gehen nur Zahlen aus festen Listen. Jede Zeile bekommt ihren Bereich aus dem ersten Wort, ihre Stufe aus festen Fehlerwörtern (eine Null davor oder dahinter wie „0 errors“ oder „fehler=0“ zählt nicht); Tokens, Schlüssel und Passwörter werden geschwärzt, bevor die Zeile das Panel verlässt. 12. Diagnose mit festem Hinweis: Die Diagnose zählt Zeilen pro Bereich und zeigt zum neuesten Fehler einen festen Hinweis aus einer Liste, nie einen vom Modell."
 },
 {
 "lang": "de",
@@ -4493,7 +4493,15 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "r ohne diesen Bereich, sonst stünden Wochen alte Fehler da wie neue. 6. Admin öffnet die Diagnose: Nur der Admin, höchstens 60 Abrufe pro Minute. 7. Filter aus der festen Liste?: Bereiche, Zeitfenster (bis 24 Stunden) und Zeilenzahl (bis 1000) kommen nur aus festen Listen. Nichts, was der Browser schickt, erreicht eine Shell. 8. Journal lesen: read_journal fragt journalctl mit dem Namespace, bei alten Installationen ohne ihn das System-Journal. Höchstens 20000 Zeilen und 2 MB Text. 9. Geheimnisse schwärzen: redact ersetzt Telegram-Tokens, Bearer-Schlüssel, key=, token=, password= und Anmeldungen in Adressen durch Sternchen, bevor eine Zeile das Panel verlässt. 10. Bereich und Stufe nach Regeln: parse ordnet jede Zeile nach ihrem ersten Wort einem Bereich zu. Fehler und Warnungen erkennt es an festen Wörtern; bei Web-Anfragen zählt nur der Statuscode, bei Update-Zeilen nie der Betreff. 11. Zählen und Hinweis: summary zählt je Bereich und Stufe, zeichnet einen kleinen Verlauf und hängt an den neuesten Fehler einen festen Hinweis mit Weg. 12. Zeilen ans Panel: Das Panel zeigt die neuesten passenden Zeilen. Sie liegen nur im Journal dieses Spark, nie in einer Sicherung."
+"text": "r ohne diesen Bereich, sonst stünden Wochen alte Fehler da wie neue. 6. Admin öffnet die Diagnose: Nur der Admin, höchstens 60 Abrufe pro Minute. 7. Filter aus der festen Liste?: Bereiche, Zeitfenster (bis 24 Stunden) und Zeilenzahl (bis 1000) kommen nur aus festen Listen. Nichts, was der Browser schickt, erreicht eine Shell. 8. Journal lesen: read_journal fragt journalctl mit dem Namespace, bei alten Installationen ohne ihn das System-Journal. Höchstens 20000 Zeilen und 2 MB Text. 9. Geheimnisse schwärzen: redact ersetzt Telegram-Tokens, Bearer-Schlüssel, key=, token=, password= und Anmeldungen in Adressen durch Sternchen, bevor eine Zeile das Panel verlässt. 10. Bereich und Stufe nach Regeln: parse ordnet jede Zeile nach ihrem ersten Wort einem Bereich zu. Fehler und Warnungen erkennt es an festen Wörtern; bei Web-Anfragen zählt nur der Statuscode, bei Update-Zeilen nie der Betreff, und eine Null wie „0 errors“ oder „fehler=0“ ist kein Fehler. 11. Zählen und Hinweis: summary zählt je Bereich und Stufe, zeichnet einen kleinen Verlauf und hängt an den neuesten Fehler einen festen Hinweis mit Weg. 12. Zeilen ans Panel: Das Panel zeigt die neuesten passenden Zeilen. Sie liegen nur im"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Ablauf",
+"title": "Ablauf",
+"text": " Journal dieses Spark, nie in einer Sicherung."
 },
 {
 "lang": "de",
@@ -10149,7 +10157,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Vorrat je Profil, Stufe B und C (`vorrat.py`, `halive.py`, kein Schalter)",
-"text": "ignal von „Mitteilung ans genutzte Gerät“) wärmt ebenfalls vor (höchstens alle 10 Minuten). Das Tagesbriefing wird 10 Minuten vor seiner Uhrzeit geschrieben und auf die Minute geschickt (vorab geschriebener Text gilt 20 Minuten); Kalender, Mail, Wetter und Pakete liegen dann schon im Speicher. Home Assistant live: Für aktive Profile mit freigegebenem Home Assistant hält der Spark eine WebSocket-Verbindung (höchstens 4 auf dem Spark), fragt einmal alle Zustände ab und hört dann auf Änderungen (state_changed); Fragen, Zustände, Verlauf und das Suchen beim Schalten nutzen diese Kopie. Die Verbindung liest nur, geht über den Wächter (Heimnetz-Regeln, geprüfte Adresse), nimmt TLS wie eingestellt, endet bei Mein Notaus und Sperre. Höchstens 5000 Geräte und 8 MB je Nachricht, nichts auf der Platte. Eine Verbindung, deren Kopie 5 Minuten stand, gilt als gut: bricht sie ab, verbindet der Spark nach 10 Sekunden neu, sonst verdoppelt sich die Wartezeit (60 bis 900 Sekunden). WebSocket-Ping alle 20 Sekunden (Antwort binnen 30) und TCP-Keepalive halten Proxys und Router offen. Zustand → Live: beim Kalender „Vorrat: heute n Runden, m Dienste aufgefrischt“, bei Home Assistant „live: n Verbindunge"
+"text": "ignal von „Mitteilung ans genutzte Gerät“) wärmt ebenfalls vor (höchstens alle 10 Minuten). Das Tagesbriefing wird 10 Minuten vor seiner Uhrzeit geschrieben und auf die Minute geschickt (vorab geschriebener Text gilt 20 Minuten); Kalender, Mail, Wetter und Pakete liegen dann schon im Speicher. Home Assistant live: Für aktive Profile mit freigegebenem Home Assistant hält der Spark eine WebSocket-Verbindung (höchstens 4 auf dem Spark), fragt einmal alle Zustände ab und hört dann auf Änderungen (state_changed); Fragen, Zustände, Verlauf und das Suchen beim Schalten nutzen diese Kopie. Die Verbindung liest nur, geht über den Wächter (Heimnetz-Regeln, geprüfte Adresse), nimmt TLS wie eingestellt, endet bei Mein Notaus und Sperre. Höchstens 5000 Geräte und 8 MB je Nachricht, nichts auf der Platte. Eine Verbindung, deren Kopie 5 Minuten stand, gilt als gut: bricht sie ab, verbindet der Spark nach 10 Sekunden neu, sonst verdoppelt sich die Wartezeit (60 bis 900 Sekunden). WebSocket-Ping alle 20 Sekunden (Antwort binnen 30) und TCP-Keepalive halten Proxys und Router offen. Gleich nach der Anmeldung bittet der Spark um gebündelte Nachrichten (supported_features coalesce_messages): Home Assis"
 },
 {
 "lang": "de",
@@ -10157,7 +10165,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Vorrat je Profil, Stufe B und C (`vorrat.py`, `halive.py`, kein Schalter)",
-"text": "n, heute m Änderungen“, bei Wetter und Pakete „versiegelt bei n Profilen“. Log: „vorrat: kept fresh“, „homeassistant: live connected | n entities“, homeassistant: live lost (ConnectionClosedError) | code 1006 | up 812 s | retry in 10 s (1006: ohne Abschied getrennt, meist ein Proxy; dann im Reverse Proxy der Synology die Benutzerdefinierte Kopfzeile „WebSocket“ anlegen), nur Zahlen und das Profil als Kürzel; Zustand → Logs zeigt dazu einen festen Hinweis."
+"text": "tant schickt dann alle wartenden Änderungen als eine Liste in einem Rahmen, statt bei vielen gleichzeitigen Änderungen (sein 30-Sekunden-Takt beim Abfragen) die Verbindung ohne Abschied zu trennen, sobald über 1024 Nachrichten warten; ein älteres Home Assistant schickt weiter einzeln. Zustand → Live: beim Kalender „Vorrat: heute n Runden, m Dienste aufgefrischt“, bei Home Assistant „live: n Verbindungen, heute m Änderungen“, bei Wetter und Pakete „versiegelt bei n Profilen“. Log: „vorrat: kept fresh“, „homeassistant: live connected | n entities“, homeassistant: live lost (ConnectionClosedError) | code 1006 | up 812 s | retry in 10 s (1006: ohne Abschied getrennt, meist ein Proxy; dann im Reverse Proxy der Synology die Benutzerdefinierte Kopfzeile „WebSocket“ anlegen), nur Zahlen und das Profil als Kürzel; Zustand → Logs zeigt dazu einen festen Hinweis."
 },
 {
 "lang": "de",
@@ -19701,7 +19709,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "ark, nothing of the profile, never a content in the journal. 14. Open WebUI in one step: With „Open WebUI einbinden“, „Open WebUI verbinden“ (with a code) makes for the profile a key for the language model and, if the profile may use the MCP server, an MCP access with only the reading tools and „Spark fragen“, both home network only; „Trennen“ deletes both. Only their ids are kept. The menu opens Open WebUI at home through the inner address, through the proxy through the outer one; the service watcher only asks /health of the inner address, without a login. 15. The whole assistant as a model: When a program asks with the model name „spark-assistent“ (switch „Spark-Assistent per API“), the request does not go to the plain model: it becomes one turn of the assistant as the key's profile like „Spark fragen“, only with the reading tools, nothing kept or switched. The program's system prompt stays out; at most 4 earlier messages go along cut as a marked hint. Key and limits as above."
+"text": "ark, nothing of the profile, never a content in the journal; when the LLM gate refuses, the line names only its fixed word (loading, memory, busy …). 14. Open WebUI in one step: With „Open WebUI einbinden“, „Open WebUI verbinden“ (with a code) makes for the profile a key for the language model and, if the profile may use the MCP server, an MCP access with only the reading tools and „Spark fragen“, both home network only; „Trennen“ deletes both. Only their ids are kept. The menu opens Open WebUI at home through the inner address, through the proxy through the outer one; the service watcher only asks /health of the inner address, without a login. 15. The whole assistant as a model: When a program asks with the model name „spark-assistent“ (switch „Spark-Assistent per API“), the request does not go to the plain model: it becomes one turn of the assistant as the key's profile like „Spark fragen“, only with the reading tools, nothing kept or switched. The program's system prompt stays out; at most 4 earlier messages go along cut as a marked hint. Key and limits as above."
 },
 {
 "lang": "en",
@@ -21141,7 +21149,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "ords; tokens, keys and passwords are blacked out before the line leaves the panel. 12. Diagnosis with a fixed hint: The diagnosis counts lines per area and shows a fixed hint from a list for the newest error, never one from the model."
+"text": "ords (a zero before or after them like \"0 errors\" or \"fehler=0\" does not count); tokens, keys and passwords are blacked out before the line leaves the panel. 12. Diagnosis with a fixed hint: The diagnosis counts lines per area and shows a fixed hint from a list for the newest error, never one from the model."
 },
 {
 "lang": "en",
@@ -22589,7 +22597,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "sis: Admin only, at most 60 calls per minute. 7. Filter from the fixed list?: Areas, time window (up to 24 hours) and number of lines (up to 1000) come only from fixed lists. Nothing the browser sends reaches a shell. 8. Read the journal: read_journal asks journalctl with the namespace, for old installs without it the system journal. At most 20000 lines and 2 MB of text. 9. Black out secrets: redact replaces Telegram tokens, Bearer keys, key=, token=, password= and logins in addresses with asterisks before a line leaves the panel. 10. Area and level by rules: parse sorts every line into an area by its first word. It spots errors and warnings by fixed words; for web requests only the status code counts, for update lines never the subject. 11. Count and hint: summary counts per area and level, draws a small history and adds a fixed hint with a way to the newest error. 12. Lines to the panel: The panel shows the newest matching lines. They lie only in this Spark's journal, never in a backup."
+"text": "sis: Admin only, at most 60 calls per minute. 7. Filter from the fixed list?: Areas, time window (up to 24 hours) and number of lines (up to 1000) come only from fixed lists. Nothing the browser sends reaches a shell. 8. Read the journal: read_journal asks journalctl with the namespace, for old installs without it the system journal. At most 20000 lines and 2 MB of text. 9. Black out secrets: redact replaces Telegram tokens, Bearer keys, key=, token=, password= and logins in addresses with asterisks before a line leaves the panel. 10. Area and level by rules: parse sorts every line into an area by its first word. It spots errors and warnings by fixed words; for web requests only the status code counts, for update lines never the subject, and a zero like \"0 errors\" or \"fehler=0\" is no error. 11. Count and hint: summary counts per area and level, draws a small history and adds a fixed hint with a way to the newest error. 12. Lines to the panel: The panel shows the newest matching lines. They lie only in this Spark's journal, never in a backup."
 },
 {
 "lang": "en",
@@ -28117,7 +28125,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Per-profile store, stages B and C (`vorrat.py`, `halive.py`, no switch)",
-"text": "10 minutes). The daily briefing is written 10 minutes before its time and sent on the minute (a text written ahead counts for 20 minutes); calendar, mail, weather and parcels are then already in memory. Home Assistant live: for active profiles with Home Assistant released the Spark keeps one WebSocket connection (at most 4 on the Spark), asks for all states once and then listens for changes (state_changed); questions, states, history and finding a device to switch use this copy. The connection only reads, goes through the guard (home network rules, checked address), uses TLS as set, ends with My kill switch and a block. At most 5000 devices and 8 MB per message, nothing on disk. A connection whose copy stood for 5 minutes counts as good: when it breaks the Spark reconnects after 10 seconds, otherwise the wait doubles (60 to 900 seconds). A WebSocket ping every 20 seconds (answer within 30) and TCP keepalive keep proxies and routers open. Status → Live: at Calendar \"Vorrat: today n rounds, m services refreshed\", at Home Assistant \"live: n connections, today m changes\", at Weather and Parcels \"versiegelt bei n Profilen\" (sealed for n profiles). Log: \"vorrat: kept fresh\", \"homeassista"
+"text": "10 minutes). The daily briefing is written 10 minutes before its time and sent on the minute (a text written ahead counts for 20 minutes); calendar, mail, weather and parcels are then already in memory. Home Assistant live: for active profiles with Home Assistant released the Spark keeps one WebSocket connection (at most 4 on the Spark), asks for all states once and then listens for changes (state_changed); questions, states, history and finding a device to switch use this copy. The connection only reads, goes through the guard (home network rules, checked address), uses TLS as set, ends with My kill switch and a block. At most 5000 devices and 8 MB per message, nothing on disk. A connection whose copy stood for 5 minutes counts as good: when it breaks the Spark reconnects after 10 seconds, otherwise the wait doubles (60 to 900 seconds). A WebSocket ping every 20 seconds (answer within 30) and TCP keepalive keep proxies and routers open. Right after signing in the Spark asks for bundled messages (supported_features coalesce_messages): Home Assistant then sends all waiting changes as one list in one frame, instead of dropping the connection without a goodbye once more than 1024 mess"
 },
 {
 "lang": "en",
@@ -28125,7 +28133,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Per-profile store, stages B and C (`vorrat.py`, `halive.py`, no switch)",
-"text": "nt: live connected | n entities\", homeassistant: live lost (ConnectionClosedError) | code 1006 | up 812 s | retry in 10 s (1006: cut without a goodbye, mostly a proxy; then add the custom header \"WebSocket\" in the Synology's reverse proxy), numbers and the profile as a short name only; Status → Logs shows a fixed hint for it."
+"text": "ages wait during many simultaneous changes (its 30-second polling beat); an older Home Assistant keeps sending them one by one. Status → Live: at Calendar \"Vorrat: today n rounds, m services refreshed\", at Home Assistant \"live: n connections, today m changes\", at Weather and Parcels \"versiegelt bei n Profilen\" (sealed for n profiles). Log: \"vorrat: kept fresh\", \"homeassistant: live connected | n entities\", homeassistant: live lost (ConnectionClosedError) | code 1006 | up 812 s | retry in 10 s (1006: cut without a goodbye, mostly a proxy; then add the custom header \"WebSocket\" in the Synology's reverse proxy), numbers and the profile as a short name only; Status → Logs shows a fixed hint for it."
 },
 {
 "lang": "en",

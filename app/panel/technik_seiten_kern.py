@@ -1484,7 +1484,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Betrieb: Logs und Live
     "betrieb": {
-        "stand": "f51fa35c25",
+        "stand": "c363929d33",
         "bezug": {
             "dienstwacht.FAIL_N": ["s5"], "dienstwacht.REPEAT": ["s5"], "backup.KEEP": ["s9"],
             "tracelog.safe": ["s3"], "tracelog.Rec": ["s3", "s6"], "tracelog.finish": ["s8", "s9"],
@@ -1584,10 +1584,12 @@ SEITEN = {
             S("s11", "schritt", ("Journal lesen und einordnen", "Read and sort the journal"),
               ("nur Zahlen gehen an journalctl", "only numbers reach journalctl"),
               ("logfilter liest höchstens {logfilter.READ_MAX} Zeilen; an journalctl gehen nur Zahlen aus festen "
-               "Listen. Jede Zeile bekommt ihren Bereich aus dem ersten Wort, ihre Stufe aus festen Fehlerwörtern; "
+               "Listen. Jede Zeile bekommt ihren Bereich aus dem ersten Wort, ihre Stufe aus festen Fehlerwörtern "
+               "(eine Null davor oder dahinter wie „0 errors“ oder „fehler=0“ zählt nicht); "
                "Tokens, Schlüssel und Passwörter werden geschwärzt, bevor die Zeile das Panel verlässt.",
                "logfilter reads at most {logfilter.READ_MAX} lines; only numbers from fixed lists reach journalctl. "
-               "Each line gets its area from its first word, its level from fixed error words; tokens, keys and "
+               "Each line gets its area from its first word, its level from fixed error words (a zero before or after "
+               "them like \"0 errors\" or \"fehler=0\" does not count); tokens, keys and "
                "passwords are blacked out before the line leaves the panel.")),
             S("s12", "ende", ("Diagnose mit festem Hinweis", "Diagnosis with a fixed hint"),
               ("Zähler pro Bereich, neuester Fehler", "counts per area, newest error"),

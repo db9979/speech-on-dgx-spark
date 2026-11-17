@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.512** Error log: Home Assistant live no longer drops all the time, SparkHilfe Mac and "0 errors" no longer count as errors
 - **V01.1.511** Reporting problems: the admin may send 30 reports a day instead of 3
 - **V01.1.510** Documents: one search over names and content at once, hits per document with a snippet, places open the reading view right there
 - **V01.1.509** Reading documents in a view of its own over the whole area: opens at the place, search words marked, "1 of N", contents, text or original
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.505** Language model in Docker as the main model after a successful measurement
 - **V01.1.504** Newly available: new models of fixed publishers as a hint, guide for the Spark alone
 - **V01.1.503** Own small models (ONNX), a trial after a switch and model sets
-- **V01.1.502** Own models also for listening, speaking, pictures and music, with a fixed probe when switching
 
 
 

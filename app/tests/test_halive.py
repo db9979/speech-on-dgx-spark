@@ -8,6 +8,7 @@
 - A lost connection: the wait doubles only while connections break soon; one that stayed up STABLE seconds is tried
   again after SOON and the doubling starts anew (2026-11-04: it stayed at BACKOFF_MAX for good). The journal names
   the close code as a number and the seconds it was up; the line has a ping and TCP keepalive.
+- Coalescing (2026-11-17): the Spark asks for coalesce_messages first; a frame with a JSON list is handled item by item.
 
 A small WebSocket server on 127.0.0.1 plays Home Assistant; no wall clock decides a result.
 """
@@ -35,7 +36,7 @@ WINDOW = {"entity_id": "binary_sensor.fenster", "state": "off", "attributes": {"
 class Apply(unittest.TestCase):
     def test_states_then_changes(self):
         store = {}
-        self.assertEqual(halive.apply(store, {"type": "result", "id": 1, "success": True, "result": [LAMP, WINDOW, "x"]}), "synced")
+        self.assertEqual(halive.apply(store, {"type": "result", "id": halive.STATES_ID, "success": True, "result": [LAMP, WINDOW, "x"]}), "synced")
         self.assertEqual(sorted(store), ["binary_sensor.fenster", "light.flur"])
         ev = {"type": "event", "event": {"data": {"entity_id": "binary_sensor.fenster", "new_state": dict(WINDOW, state="on")}}}
         self.assertEqual(halive.apply(store, ev), "changed")
@@ -46,7 +47,8 @@ class Apply(unittest.TestCase):
 
     def test_anything_else_is_left_alone(self):
         store = {"light.flur": LAMP}
-        for msg in ("text", {"type": "result", "id": 2, "success": True, "result": []}, {"type": "event"},
+        for msg in ("text", {"type": "result", "id": halive.SUBSCRIBE_ID, "success": True, "result": []},
+                    {"type": "result", "id": halive.FEATURES_ID, "success": True, "result": []}, {"type": "event"},
                     {"type": "event", "event": {"data": {"entity_id": 5}}}, {"type": "auth_ok"}):
             self.assertEqual(halive.apply(store, msg), "")
         self.assertEqual(store, {"light.flur": LAMP})
@@ -56,13 +58,20 @@ class Apply(unittest.TestCase):
         halive.MAX_ENTITIES = 2
         try:
             store = {}
-            halive.apply(store, {"type": "result", "id": 1, "success": True,
+            halive.apply(store, {"type": "result", "id": halive.STATES_ID, "success": True,
                                  "result": [{"entity_id": f"sensor.s{i}"} for i in range(5)]})
             self.assertEqual(len(store), 2)
             halive.apply(store, {"type": "event", "event": {"data": {"entity_id": "sensor.neu", "new_state": {"entity_id": "sensor.neu"}}}})
             self.assertEqual(len(store), 2)
         finally:
             halive.MAX_ENTITIES = old
+
+
+    def test_a_coalesced_frame_is_a_list_of_messages(self):
+        one = {"type": "event"}
+        self.assertEqual(halive.frame(one), [one])
+        self.assertEqual(halive.frame([one, one]), [one, one])
+        self.assertEqual(halive.frame("x"), ["x"])
 
 
 class Backoff(unittest.TestCase):
@@ -171,7 +180,7 @@ class Session(unittest.TestCase):
 
     def setUp(self):
         from websockets.sync.server import serve
-        self.got = []
+        self.got, self.features = [], None
 
         def handler(ws):
             ws.send(json.dumps({"type": "auth_required"}))
@@ -180,11 +189,15 @@ class Session(unittest.TestCase):
                 ws.send(json.dumps({"type": "auth_invalid"}))
                 return
             ws.send(json.dumps({"type": "auth_ok"}))
-            for _ in range(2):
-                self.got.append(json.loads(ws.recv()).get("type"))
-            ws.send(json.dumps({"type": "result", "id": 1, "success": True, "result": [LAMP, WINDOW]}))
-            ws.send(json.dumps({"type": "event", "event": {"data": {"entity_id": "binary_sensor.fenster",
-                                                                     "new_state": dict(WINDOW, state="on")}}}))
+            for _ in range(3):
+                msg = json.loads(ws.recv())
+                self.got.append(msg.get("type"))
+                self.features = msg.get("features", self.features)
+            ws.send(json.dumps({"type": "result", "id": halive.FEATURES_ID, "success": True, "result": None}))
+            ws.send(json.dumps({"type": "result", "id": halive.STATES_ID, "success": True, "result": [LAMP, WINDOW]}))
+            change = {"type": "event", "event": {"data": {"entity_id": "binary_sensor.fenster",
+                                                          "new_state": dict(WINDOW, state="on")}}}
+            ws.send(json.dumps([{"type": "result", "id": halive.SUBSCRIBE_ID, "success": True, "result": None}, change]))
             try:
                 ws.recv()
             except Exception:
@@ -216,7 +229,9 @@ class Session(unittest.TestCase):
         w.start()
         self.assertTrue(self.wait_for(lambda: (halive.states(self.item) or [{}])[-1].get("state") == "on"
                                       or any(s.get("state") == "on" for s in halive.states(self.item) or [])))
-        self.assertEqual(self.got, ["get_states", "subscribe_events"])   # it only reads and listens
+        # it only reads and listens; first it asks for coalesced frames (the change above came in one)
+        self.assertEqual(self.got, ["supported_features", "get_states", "subscribe_events"])
+        self.assertEqual(self.features, {"coalesce_messages": 1})
         self.assertIsNone(halive.states(dict(self.item, token="other")))  # another token never sees this copy
 
         class NoHttp:

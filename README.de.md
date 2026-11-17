@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.512** Fehlerlog: Home Assistant live trennt nicht mehr ständig, SparkHilfe-Mac und „0 errors“ nicht mehr als Fehler
 - **V01.1.511** Probleme melden: der Admin darf 30 Meldungen am Tag senden statt 3
 - **V01.1.510** Dokumente: eine Suche in Namen und Inhalt zugleich, Treffer je Dokument mit Ausschnitt, Fundstellen öffnen die Leseansicht genau dort
 - **V01.1.509** Dokumente lesen in einer eigenen Ansicht über die ganze Fläche: öffnet an der Fundstelle, Suchwörter markiert, „1 von N“, Inhaltsverzeichnis, Text oder Original
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.505** Sprachmodell in Docker als Hauptmodell nach erfolgreicher Messung
 - **V01.1.504** Neu verfügbar: neue Modelle fester Herausgeber als Hinweis, Anleitung Spark allein
 - **V01.1.503** Eigene kleine Modelle (ONNX), Probetag nach dem Wechsel und Modellsätze
-- **V01.1.502** Eigene Modelle auch für Hören, Sprechen, Bilder und Musik, mit fester Probe beim Wechsel
 
 
 

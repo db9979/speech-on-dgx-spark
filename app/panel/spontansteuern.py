@@ -355,9 +355,11 @@ async def fetch(c=None, tag="sparkhilfe-windows"):
 
 async def check():
     """One look on GitHub for every release of QUELLEN, a line in the journal for each and one „Von selbst“ job on the
-    Live page."""
+    Live page. A release that does not exist yet (NotYet, e.g. the Mac one while its signing is missing) is nothing
+    wrong: it is asked again within the hour like an error, but the job counts as ok (2026-11-17: Logs → Anfragen
+    showed „SparkHilfe holen | GitHub nicht ok | error“ every hour only because sparkhilfe-mac was not built yet)."""
     import begleiter
-    t0, err = time.time(), ""
+    t0, err, broken = time.time(), "", False
     for tag in QUELLEN:
         word = "ok"
         try:
@@ -365,12 +367,12 @@ async def check():
         except begleiter.NotYet as e:            # nothing wrong, just nothing to take yet
             err, word = err or str(e)[:200], "noch nicht"
         except Exception as e:
-            err, word = err or str(e)[:200] or type(e).__name__, "fehler"
+            err, word, broken = err or str(e)[:200] or type(e).__name__, "fehler", True
         sh.log("programm_holen", word, 1 if word == "ok" else 0)
     _upd["checked"], _upd["error"] = time.time(), err
     try:
         import live
-        live.job("SparkHilfe holen", "GitHub", t0, ok=not err)
+        live.job("SparkHilfe holen", "GitHub", t0, ok=not broken, code="fehler" if broken else "")
     except Exception:
         pass
     return err

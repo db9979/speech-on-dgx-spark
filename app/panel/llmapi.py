@@ -391,7 +391,22 @@ def _target():
     return ccfg, llm.url(ccfg), {**llm.headers(ccfg), **stufe.headers("hinten")}
 
 
-def _done(k, prof, usage, ms, status):
+# the LLM-Tor's fixed reason words for a 503 (llm_tor.py "detail"); the journal names one so a refused question says
+# why (2026-11-17: „llmapi: fehler modell | … | HTTP 503“ alone did not tell a start from a full memory)
+TOR_WORDS = ("memory", "busy", "engine", "loading", "start", "model")
+
+
+def tor_word(content):
+    """The LLM-Tor's reason word in an answer body, "" when it names none of TOR_WORDS (the body is data)."""
+    try:
+        d = json.loads(content[:2000]) if isinstance(content, (bytes, str)) else None
+    except ValueError:
+        return ""
+    w = d.get("detail") if isinstance(d, dict) else None
+    return w if isinstance(w, str) and w in TOR_WORDS else ""
+
+
+def _done(k, prof, usage, ms, status, content=b""):
     import verbrauch
     u = usage if isinstance(usage, dict) else {}
     tin, tout = int(u.get("prompt_tokens") or 0), int(u.get("completion_tokens") or 0)
@@ -402,7 +417,8 @@ def _done(k, prof, usage, ms, status):
         stats["tokens"] += tin + tout
         _note("antwort", k["id"], prof, f"{tin} in {tout} aus {ms} ms")
     else:
-        _note("fehler modell", k["id"], prof, f"HTTP {int(status)}")
+        w = tor_word(content)
+        _note("fehler modell", k["id"], prof, f"HTTP {int(status)}" + (f" {w}" if w else ""))
 
 
 _client = None
@@ -479,7 +495,7 @@ async def completions(request: Request):
             usage = r.json().get("usage")
         except (ValueError, AttributeError):
             usage = None
-        _done(k, prof, usage, int((time.monotonic() - t0) * 1000), r.status_code)
+        _done(k, prof, usage, int((time.monotonic() - t0) * 1000), r.status_code, r.content)
         return Response(r.content, status_code=r.status_code, media_type="application/json",
                         headers={"Cache-Control": "no-store"})
     try:
@@ -491,7 +507,7 @@ async def completions(request: Request):
         content = await r.aread()
         await r.aclose()
         _leave(k["id"])
-        _done(k, prof, None, 0, r.status_code)
+        _done(k, prof, None, 0, r.status_code, content)
         return Response(content, status_code=r.status_code, media_type="application/json")
 
     async def pieces():

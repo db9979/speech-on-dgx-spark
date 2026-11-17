@@ -1084,7 +1084,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ MCP-Programme
     "mcpc": {
-        "stand": "75fbc99e17",
+        "stand": "92ff015d98",
         "bezug": {
             "mcpserver.MAX_CONNS": ["s3"], "mcpserver.mcp_post": ["s1"], "mcpserver.origin_ok": ["s2"],
             "mcpserver.check_conn": ["s3"], "mcpserver.is_local": ["s4"], "mcpserver.find": ["s3"],
@@ -1224,14 +1224,14 @@ SEITEN = {
                "höchstens {llmapi.MAX_TOKENS} Tokens Antwort, der Modellname immer der eigene; dann geht die Anfrage mit "
                "der Stufe „hinten“ ans LLM-Tor. Grenzen je Schlüssel (pro Minute, {llmapi.AT_ONCE} gleichzeitig, Tokens "
                "in 24 Stunden), Admin-Profile ohne Grenze. Kein Werkzeug des Spark, nichts aus dem Profil, nie ein Inhalt "
-               "im Journal.",
+               "im Journal; lehnt das LLM-Tor ab, nennt die Zeile nur sein festes Wort (loading, memory, busy …).",
                "A program that only wants the language model sends POST to /v1 (OpenAI chat) with a key of its profile (at "
                "most {llmapi.MAX_KEYS} per profile, only hashes kept). The same home network rule as above, from outside "
                "only with its own switch, the second step and a fresh code. Text only, known fields only, at most "
                "{llmapi.MAX_TOKENS} tokens of answer, the model name always the own one; then the request goes to the "
                "LLM gate with the stage „hinten“. Limits per key (per minute, {llmapi.AT_ONCE} at once, tokens in 24 "
                "hours), admin profiles without a limit. No tool of the Spark, nothing of the profile, never a content in "
-               "the journal.")),
+               "the journal; when the LLM gate refuses, the line names only its fixed word (loading, memory, busy …).")),
             S("s14", "schritt", ("Open WebUI in einem Schritt", "Open WebUI in one step"),
               ("Schlüssel und Lese-Zugang, nur Heimnetz", "key and reading access, home network only"),
               ("Mit „Open WebUI einbinden“ legt „Open WebUI verbinden“ (mit Code) für das Profil einen Schlüssel fürs "

@@ -6596,6 +6596,14 @@
 "text": "Als Admin (oder mit „Ohne Tageslimit“) heute eine vierte Meldung über Ich → Probleme melden oder den Käfer an GitHub senden: sie geht raus, nicht mehr „zu viele“. Mit einem Profil ohne diese Rechte ist nach 3 Meldungen Schluss, die Meldung sagt dann „Heute sind schon 3 Meldungen gesendet …“ und der Entwurf bleibt.",
 "thread": "Fehler und Wünsche als Issue melden",
 "test": "test_meldung.Sending.test_the_admin_is_not_stopped_after_three"
+},
+{
+"id": "P955",
+"v": 1512,
+"titel": "Home Assistant live bleibt verbunden",
+"text": "Nach dem Update eine Stunde warten, dann Zustand → Logs, Filter „Fehler“: „homeassistant: live lost … code 1006“ kommt höchstens noch selten, nicht mehr alle paar Minuten; die Zeilen „mail: rules run | 0 taken, 0 errors“ und „fuerdich: gelesen … fehler=0“ stehen dort nicht mehr. Unter Logs → Anfragen steht „SparkHilfe holen“ nicht mehr stündlich als Fehler. Kommt 1006 weiter oft: im Home-Assistant-Protokoll nach „unable to keep up with pending messages“ suchen und mir die Zeile schicken.",
+"thread": "Fehler aus dem Fehlerlog beheben",
+"test": "test_halive.Session.test_copy_follows_and_the_tools_use_it"
 }
 ]
 }

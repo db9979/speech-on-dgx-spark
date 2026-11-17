@@ -46,6 +46,9 @@ _AREAS = [(k, re.compile(rx)) for k, rx in AREAS]
 FILTERS = dict(AREAS, update=None, errors=None)
 # levels by fixed words, never by a model
 ERR = re.compile(r"(?i)(error|exception|traceback|failed|broke|refused|timeout|timed out|fehler|not reachable)")
+# a count of none is no error (2026-11-17: „mail: rules run | 0 taken, 0 errors“ and „fuerdich: … fehler=0“ filled
+# Filter: errors): "0 errors", "0 fehler", "errors=0", "fehler: 0" are taken out before ERR looks
+NONE = re.compile(r"(?i)\b(?:0 (?:errors?|fehler|failed)|(?:errors?|fehler|failed)\s*[=:]\s*0)(?![\d.,])")
 WARN = re.compile(r"(?i)\b(warn\w*|stalled|behind|ignored|asked again|retry|slow|refused|withheld)\b")
 # a uvicorn access-log line: INFO:     1.2.3.4:5 - "GET /x?y HTTP/1.1" 200 OK
 # update.sh: "Available: 46fb0e8 …", "Update finished: 46fb0e8 …", "  46fb0e8 subject"
@@ -174,7 +177,8 @@ def parse(line):
         code = int(acc.group(1))
         level = "err" if code >= 500 else ""
     else:
-        level = "err" if ERR.search(msg) else "warn" if WARN.search(msg) else ""
+        bare = NONE.sub("", msg)
+        level = "err" if ERR.search(bare) else "warn" if WARN.search(bare) else ""
     return {"ts": ts, "t": ts[11:19], "area": area, "level": level, "msg": msg, "raw": raw}
 
 
