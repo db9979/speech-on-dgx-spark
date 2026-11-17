@@ -199,6 +199,7 @@ import weiche_unklar  # noqa: E402
 import praxistest  # noqa: E402
 import kalenderserver  # noqa: E402
 import zustellung  # noqa: E402
+import probetag  # noqa: E402
 import geteilt  # noqa: E402
 import mailansicht  # noqa: E402
 import mitschreiblink  # noqa: E402
@@ -500,6 +501,14 @@ async def stability():
                     await proactive.due_once()
                 except Exception as e:
                     print("proactive:", type(e).__name__, e, flush=True)
+                try:   # Probetag nach dem Wechsel (probetag.py): a new language model gets the fixed test
+                    probetag.schritt()
+                except Exception as e:
+                    print("modelle: probetag", type(e).__name__, flush=True)
+                try:   # Modellsätze: the next switch of a set being brought back (modellseite.satz_schritt)
+                    await asyncio.to_thread(modellseite.satz_schritt)
+                except Exception as e:
+                    print("modelle: satz", type(e).__name__, flush=True)
                 try:   # Meldung ans genutzte Gerät: a note nobody saw comes once to the phone app (zustellung.py)
                     await zustellung.follow()
                 except Exception as e:

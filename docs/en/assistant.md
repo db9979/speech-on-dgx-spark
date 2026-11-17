@@ -1893,6 +1893,8 @@ Every function of the Spark with its switch, what it builds on, where you set it
 
 - **Own models** (Features → Access → "Own models"; builds on "Switch models"): Under Status → Models an admin adds a model from Hugging Face, for the language model or image understanding.
 
+- **Trial after a switch** (Features → Access → "Trial after a switch"; builds on "Switch models"): After every switch of the language model, as soon as it answers, the fixed quality test runs once (Status → Checks → Quality test).
+
 - **Workshop** (Features → Access → "Workshop"): On the page Status → Workshop an admin lets the model computer work in a sealed-off copy of the code.
 
 - **Test every night** (Features → Access → "Test every night"; builds on "Workshop"): Once a night the workshop starts the test run by itself (all self-tests as on GitHub, without a language model).

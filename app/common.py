@@ -961,9 +961,10 @@ def model_choice(cfg):
     return {sec: {k: (cfg.get(sec) or {}).get(k) for k in keys} for sec, keys in MODEL_CHOICE.items()}
 
 
-def model_choice_take(cfg, got, defaults):
+def model_choice_take(cfg, got, defaults, eigen=None):
     """The changes of the model choice the model computer reports, checked: only MODEL_CHOICE keys of the same kind
-    as the shipped default, the speech models only Qwen's (MODEL_ID), names short. {section: {key: value}} of what
+    as the shipped default, the speech models only Qwen's (MODEL_ID) or one of eigen (the model computer's own speech
+    models, {asr: [repo], tts: [repo]}, as model only), names short. {section: {key: value}} of what
     differs from cfg; ValueError("wahl") on anything else."""
     if not isinstance(got, dict) or set(got) - set(MODEL_CHOICE):
         raise ValueError("wahl")
@@ -976,7 +977,8 @@ def model_choice_take(cfg, got, defaults):
             if isinstance(d, bool) != isinstance(v, bool) or not isinstance(v, type(d)) \
                     or (isinstance(v, str) and not re.fullmatch(r"([A-Za-z0-9][\w.\-]{0,47}(/[A-Za-z0-9][\w.\-]{0,95})?)?", v)):
                 raise ValueError("wahl")
-            if k.endswith("model") and sec in ("asr", "tts") and not MODEL_ID.fullmatch(v):
+            if k.endswith("model") and sec in ("asr", "tts") and not (MODEL_ID.fullmatch(v) or (
+                    k == "model" and isinstance(eigen, dict) and isinstance(eigen.get(sec), list) and v in eigen[sec])):
                 raise ValueError("wahl")
             if (cfg.get(sec) or {}).get(k) != v:
                 out.setdefault(sec, {})[k] = v

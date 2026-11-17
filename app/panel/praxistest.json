@@ -6538,6 +6538,20 @@
 "text": "Zustand → Modelle → Spracherkennung (Eigene Modelle an): „Bei Hugging Face suchen“ mit „Qwen3-ASR“: Feinabstimmungen von Qwen3-ASR stehen oben, Whisper steht unten mit „andere Bauart als die geprüften“. Eine passende hinzufügen und „Wechseln“: das Protokoll (Zustand → Logs, wechsel) zeigt „modelle: probe asr ok 0.9…“ und „umgeschaltet“; klappt die Probe nicht, steht „fehler, zurueck“ und das alte Modell läuft wieder. Dasselbe für Sprachausgabe mit einer Qwen3-TTS-Feinabstimmung. Unter Bilder malen → „Eigene GGUF-Datei“ eine andere Quantisierung von FLUX.2 klein 4B (Repository, Dateiname, Grundvariante 4B) eintragen, hinzufügen und wechseln: das Protokoll zeigt „modelle: datei bild ok“, dann „probe bild ok“; eine Datei einer anderen Bauart endet mit „abgelehnt familie“ und nichts wird umgestellt. Dasselbe unter Musik machen mit einer ACE-Step-DiT-Datei.",
 "thread": "Modellkatalog für Spark und DGX Station bauen",
 "test": "test_eigene_dateien.Varianten.test_before_the_switch_header_and_basis_decide"
+},
+{
+"id": "P947",
+"v": 1503,
+"titel": "Eigene kleine Modelle zum Nachsortieren",
+"text": "Zustand → Modelle, bei „Kleine Modelle (CPU)“ (Eigene Modelle an): unter „Eigenes Nachsortier-Modell (ONNX)“ einen öffentlichen Cross-Encoder derselben Bauart wie die geprüften eintragen (z. B. ein ONNX-Export von bge-reranker-v2-m3, Datei onnx/model_quantized.onnx) und „Prüfen und hinzufügen“. Er steht danach unter „Eigene, ungeprüft“. „Wechseln“ setzt ihn bei Funktionen → Eigene Dokumente → Treffer nachsortieren. Eine Dokumentsuche starten: Zustand → Logs zeigt „wissen: nachsortieren probe ok“ und danach „modell bereit“. Ein Repository ohne tokenizer.json oder mit .onnx_data daneben wird mit Grund abgelehnt.",
+"test": "test_eigene_klein.Probe.test_a_failed_probe_goes_back_to_the_small_checked_one"
+},
+{
+"id": "P948",
+"v": 1503,
+"titel": "Probetag und Modellsätze",
+"text": "Funktionen → unter „Modelle wechseln“ „Probetag nach dem Wechsel“ an. Unter Zustand → Modelle das Sprachmodell wechseln: oben steht „Probetag … wartet“, nach dem Start „der Qualitätstest läuft“, danach „bleibt“ oder „war schlechter, zurück zum Modell davor“ mit beiden Zahlen. Darunter bei „Modellsätze“ einen Namen eingeben und „Jetzigen Stand behalten“; ein Modell wechseln, dann beim Satz „Einstellen“: der Spark wechselt die Arten nacheinander zurück, die Karte zeigt, wie viele Wechsel noch offen sind.",
+"test": "test_modellsaetze.Saetze.test_one_switch_after_the_other"
 }
 ]
 }

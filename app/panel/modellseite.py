@@ -42,8 +42,9 @@ import hftoken  # noqa: E402
 import konsole  # noqa: E402
 import llmstart  # noqa: E402
 import modelle  # noqa: E402
+import probetag  # noqa: E402
 import steuer  # noqa: E402
-from common import journal, load_config, read_json  # noqa: E402
+from common import journal, load_config, read_json, write_json  # noqa: E402
 from core import admin_code, admin_code_fresh, auth  # noqa: E402
 
 LIVE_EVERY = 30          # seconds the Live view reuses the budget (systemctl and /proc are not read on every look)
@@ -151,7 +152,9 @@ def _quelle(cfg):
         if d is None:
             raise HTTPException(503, GRUND["rechner"])
         stand = modelle.stand("\n".join(x for x in d.get("stand", []) if isinstance(x, str))) if d.get("misst") else []
-        return (d["gesamt_gib"], d["messung"], d["laeuft"], modelle.katalog(eigene=d["eigene"]), d["wechsel"],
+        # the own re-ranking models are this computer's (they run here, nachsortieren.py), the others the model computer's
+        eigene = [x for x in d["eigene"] if isinstance(x, dict) and x.get("art") != "klein"] + modelle.eigene_eintraege("klein")
+        return (d["gesamt_gib"], d["messung"], d["laeuft"], modelle.katalog(eigene=eigene), d["wechsel"],
                 d.get("misst", False), stand, d.get("start"), hardware.gueltig(d.get("profil")) or hardware.profil(),
                 {"starts": llmstart.buch_pruefen(d.get("starts")), "abweichung": d.get("abweichung") is True,
                  "hf_token": _hf_token_pruefen(d.get("hf_token")), "bibliothek": _bibliothek_pruefen(d.get("bibliothek"))})
@@ -200,6 +203,14 @@ def _waehlbar(art, mid, cfg, total_gib, kat, messung, profil=None):
         return str(e)
 
 
+def _klein_nein(mid, cfg, kat):
+    try:
+        modelle.klein_pruefen(mid, cfg, kat)
+        return ""
+    except modelle.Fehler as e:
+        return str(e)
+
+
 def seite(cfg=None, total_gib=None, messung=None, lang="de", gestartet=False, wechselt=False):
     """What the page shows: {arten: [{art, name, modelle: [...]}], budget, messung_zeit}."""
     cfg = load_config() if cfg is None else cfg
@@ -220,7 +231,8 @@ def seite(cfg=None, total_gib=None, messung=None, lang="de", gestartet=False, we
             if m["art"] != art:
                 continue
             r = gemessen.get(mid) or {}
-            nein = _waehlbar(art, mid, cfg, total_gib, kat, messung, profil) if an and art in modelle.TAUSCH else "art"
+            nein = (_waehlbar(art, mid, cfg, total_gib, kat, messung, profil) if an and art in modelle.TAUSCH
+                    else _klein_nein(mid, cfg, kat) if an and art == "klein" else "art")
             rows.append({"id": mid, "name": m["name"]["en" if i else "de"], "engine": m["engine"], "need_gib": m["need_gib"],
                          "waehlbar": not nein, "nein": "" if nein in ("art", "schon", "wahl") else nein,
                          "eigen": bool(m.get("eigen")), "messbar": an and m["engine"] == "vllm", "empfohlen": mid == emp,
@@ -253,7 +265,8 @@ def seite(cfg=None, total_gib=None, messung=None, lang="de", gestartet=False, we
                "alte": modelle.alte(cfg, kat=kat, daten=wechsel) if an else {},
                "tage": modelle.ALT_TAGE, "eigene": _eigen_an(cfg),
                # the basis variants an own picture or music file can stand on (modelle.DATEI_ART), with their names
-               "basen": {a: [[b, modelle.basis_variante(a, b)["name"]] for b in x[1]] for a, x in modelle.DATEI_ART.items()},
+               "basen": dict({a: [[b, modelle.basis_variante(a, b)["name"]] for b in x[1]] for a, x in modelle.DATEI_ART.items()},
+                             klein=[]),     # an own re-ranking model: one .onnx file, no basis
                # Rezept-Abgleich (stage B1b): the running language model started with other settings than its entry
                "abweichung": bool(an and buch["abweichung"] and not laeuft and cfg.get("llm", {}).get("enabled"))}
     # the bar's parts (Dominik 2026-10-18: one colored piece per model, the tiles below in the same color)
@@ -261,7 +274,8 @@ def seite(cfg=None, total_gib=None, messung=None, lang="de", gestartet=False, we
               "betrieb": x["betrieb"]} for x in b["teile"]]
     return {"arten": arten, "budget": dict(b, teile=teile), "messung_zeit": messung.get("zeit"),
             "wechsel": wechsel, "geraet": hardware.text(profil, "en" if i else "de"), "starts": _starts_zeigen(buch, kat, i),
-            "hf_token": buch["hf_token"], "bibliothek": _bibliothek_zeigen(buch["bibliothek"], kat, i)}
+            "hf_token": buch["hf_token"], "bibliothek": _bibliothek_zeigen(buch["bibliothek"], kat, i),
+            "probetag": probetag.zeigen(kat, "en" if i else "de"), **saetze_zeigen(kat, "en" if i else "de")}
 
 
 def _bibliothek_zeigen(rows, kat, i):
@@ -456,7 +470,12 @@ def _messen(request, body):
     return seite(cfg, lang="en" if request.query_params.get("lang") == "en" else "de", gestartet=True)
 
 
-def _wunsch(request, art, was, mid=""):
+def wunsch_ohne_seite(art, was):
+    """The same wish without a page to answer (Probetag: back to the model before)."""
+    _wunsch(None, art, was, seite_zeigen=False)
+
+
+def _wunsch(request, art, was, mid="", seite_zeigen=True):
     """Checks the rules for switching art to was (an id or "zurueck"), leaves the wish and starts the root unit: here,
     or through the Wärter on the model computer."""
     if not _an():
@@ -485,6 +504,8 @@ def _wunsch(request, art, was, mid=""):
         print("modelle: ausprobieren erledigt", flush=True)
     guard.log("modelle_wechsel", detail=f"{modelle.ARTEN[art][0]}: {name}")
     _live["t"] = None
+    if not seite_zeigen:
+        return None
     return seite(lang="en" if request.query_params.get("lang") == "en" else "de", wechselt=True)
 
 
@@ -573,7 +594,27 @@ async def admin_wechseln(request: Request):
     guard.limit(request, "modelle_wechsel", None, True)
     body = await core.json_body(request, MAX_BODY)
     art, mid = str(body.get("art", ""))[:16], str(body.get("id", ""))[:48]
-    return await asyncio.to_thread(_wunsch, request, art, mid)   # systemctl and the model computer, off the loop
+    if art == "klein":       # the re-ranking model: a setting of this computer, no root and no model computer
+        return await asyncio.to_thread(_klein_wechsel, request, mid)
+    return await asyncio.to_thread(_wunsch, request, art, mid)
+
+
+def _klein_wechsel(request, mid):
+    """Wechseln for the re-ranking model: chat.rerank_model to its size or own id, saved like the settings page; an own
+    one passes modelle.KLEIN_PROBE at its first start, else the small checked one works (nachsortieren.py)."""
+    if not _an():
+        print("modelle: wechsel abgelehnt aus", flush=True)
+        raise HTTPException(409, "Modelle wechseln ist aus (Funktionen → Modelle wechseln).")
+    import admin
+    cfg = load_config()
+    try:
+        m = modelle.klein_pruefen(mid, cfg)
+    except modelle.Fehler as e:
+        _fehler(e)
+    admin.chat_setzen(request, "rerank_model", m["variante"], f"Nachsortieren: {m['name']['de']}")
+    print("modelle: wechsel klein angefragt", flush=True)
+    _live["t"] = None
+    return seite(lang="en" if request.query_params.get("lang") == "en" else "de")   # systemctl and the model computer, off the loop
 
 
 @router.post("/api/admin/modelle/zurueck", dependencies=[Depends(auth), Depends(admin_code)])
@@ -603,6 +644,8 @@ def admin_probe_weg(request: Request):
 async def _vorschlag(body, art, repo, rev, total_gib, mit_token):
     """The own entry the fixed rules make of one commit: a picture or music file (DATEI_ART: the named .gguf file on a
     basis variant), a speech model (its program's family) or a language or picture-understanding model."""
+    if art == "klein":            # an own re-ranking model: the named .onnx file (runs on this computer's CPU)
+        return modelle.klein_vorschlag(await _hf_info(repo, rev), repo, str(body.get("datei", ""))[:200], await _familien(art))
     if art in modelle.DATEI_ART:
         return modelle.datei_vorschlag(await _hf_info(repo, rev), art, repo, str(body.get("datei", ""))[:200],
                                        str(body.get("basis", ""))[:16], total_gib, mit_token)
@@ -610,13 +653,14 @@ async def _vorschlag(body, art, repo, rev, total_gib, mit_token):
 
 
 async def _familien(art, kat=None):
-    """The families (modelle.familie) of the checked models of a speech kind's program, from their pinned commits'
+    """The families (modelle.familie) of the checked models of a speech kind's program (or the checked re-rankers), from their pinned commits'
     metadata; () for the other kinds. An own speech model must be one of them (modelle.SPRACH)."""
-    if art not in modelle.SPRACH:
+    refs = modelle.SPRACH[art][1] if art in modelle.SPRACH else modelle.KLEIN_ROLLE["nachsortieren"] if art == "klein" else ()
+    if not refs:
         return ()
     kat = await asyncio.to_thread(modelle.katalog) if kat is None else kat
     out = []
-    for ref in modelle.SPRACH[art][1]:
+    for ref in refs:
         m = kat.get(ref)
         if m and m["revision"]:
             f = modelle.familie((await _hf_info(m["repo"], m["revision"])).get("config"))
@@ -918,7 +962,7 @@ async def eigen_dazu(request: Request):
         m = await _vorschlag(body, art, repo, rev, total_gib, (await asyncio.to_thread(_hf_token_info, cfg))["gesetzt"])
         if m["revision"] != rev:
             raise modelle.Fehler("antwort")
-        if steuer.remote(cfg):              # the model computer keeps the list and checks the entry again
+        if steuer.remote(cfg) and art != "klein":   # the model computer keeps the list and checks the entry again
             d = steuer.call("eigen_dazu", cfg=cfg, daten=m, timeout=15)
             if not isinstance(d, dict) or d.get("ok") is not True:
                 raise modelle.Fehler(d.get("fehler") if isinstance(d, dict) and d.get("fehler") in GRUND else "rechner")
@@ -989,7 +1033,8 @@ def eigen_weg(request: Request, mid: str):
     try:
         if not modelle.ID.match(mid):
             raise modelle.Fehler("unbekannt")
-        if steuer.remote(cfg):              # the list and the files are the model computer's
+        hier = any(x.get("id") == mid for x in modelle.eigene_eintraege("klein"))    # a re-ranking model is this computer's
+        if steuer.remote(cfg) and not hier:   # the list and the files are the model computer's
             d = steuer.call("eigen_weg", (mid,), cfg=cfg, timeout=60)
             if isinstance(d, dict) and d.get("fehler") == "dateien":
                 raise OSError("dateien")
@@ -1007,3 +1052,121 @@ def eigen_weg(request: Request, mid: str):
     print(f"modelle: eigenes geloescht {'mit dateien' if weg else 'ohne dateien'}", flush=True)
     guard.log("modelle_eigen", detail=f"gelöscht: {mid}")
     return seite(lang="en" if request.query_params.get("lang") == "en" else "de")
+
+
+# ---------------------------------------------------------------- Modellsätze (stage B2)
+SATZ_GRUND = {"name": "Name: 1 bis 40 Buchstaben, Ziffern, Leerzeichen, Punkt, Komma, Strich.",
+              "leer": "Gerade läuft kein Modell, das ein Satz behalten könnte.",
+              "voll": f"Höchstens {modelle.SATZ_MAX} Sätze; erst einen löschen.",
+              "unbekannt": "Diesen Satz gibt es nicht.", "laeuft": "Ein anderer Satz wird gerade eingestellt.",
+              "nichts": "Alle Modelle dieses Satzes laufen schon."}
+
+
+def _satz_fehler(e, was):
+    word = str(e) if str(e) in SATZ_GRUND else "unbekannt"
+    print(f"modelle: satz {was} abgelehnt {word}", flush=True)
+    raise HTTPException(404 if word == "unbekannt" else 409 if word in ("laeuft", "nichts", "voll") else 400, SATZ_GRUND[word])
+
+
+def saetze_zeigen(kat, lang="de"):
+    """The kept sets with the names of their models, and the set being brought back (what is still open)."""
+    i = "en" if lang == "en" else "de"
+    lauf = read_json(modelle.SATZ_LAUF, {}) or {}
+
+    def name(x):
+        return ((kat.get(x) or {}).get("name") or {}).get(i, x)
+    return {"saetze": [{"name": s["name"], "modelle": [[a, name(m)] for a, m in s["modelle"].items()]}
+                       for s in modelle.saetze()],
+            "lauf": {"name": lauf.get("name", ""), "offen": len(lauf.get("offen") or [])} if lauf.get("name") else None,
+            "max": modelle.SATZ_MAX}
+
+
+@router.post("/api/admin/modelle/saetze", dependencies=[Depends(auth), Depends(admin_code)])
+async def satz_dazu(request: Request):
+    """„Als Satz behalten“: the models running now under a name."""
+    guard.limit(request, "modelle_wechsel", None, True)
+    body = await core.json_body(request, MAX_BODY)
+    if not _an():
+        raise HTTPException(409, "Modelle wechseln ist aus (Funktionen → Modelle wechseln).")
+    cfg = load_config()
+    try:
+        kat = (await asyncio.to_thread(_quelle, cfg))[3]
+        await asyncio.to_thread(modelle.satz_speichern, body.get("name"), modelle.satz_jetzt(cfg, kat))
+    except modelle.Fehler as e:
+        _satz_fehler(e, "speichern")
+    print("modelle: satz gespeichert", flush=True)
+    guard.log("modelle_wechsel", detail="Modellsatz gespeichert")
+    return await asyncio.to_thread(seite, lang="en" if request.query_params.get("lang") == "en" else "de")
+
+
+@router.delete("/api/admin/modelle/saetze", dependencies=[Depends(auth), Depends(admin_code)])
+async def satz_weg(request: Request):
+    guard.limit(request, "modelle_wechsel", None, True)
+    name = str(request.query_params.get("name", ""))[:40]
+    try:
+        await asyncio.to_thread(modelle.satz_loeschen, name)
+    except modelle.Fehler as e:
+        _satz_fehler(e, "loeschen")
+    print("modelle: satz geloescht", flush=True)
+    guard.log("modelle_wechsel", detail="Modellsatz gelöscht")
+    return await asyncio.to_thread(seite, lang="en" if request.query_params.get("lang") == "en" else "de")
+
+
+@router.post("/api/admin/modelle/saetze/anwenden", dependencies=[Depends(auth), Depends(admin_code)])
+async def satz_anwenden(request: Request):
+    """„Einstellen“: the switches the set needs, one after the other (satz_schritt, once a minute)."""
+    guard.limit(request, "modelle_wechsel", None, True)
+    body = await core.json_body(request, MAX_BODY)
+    if not _an():
+        raise HTTPException(409, "Modelle wechseln ist aus (Funktionen → Modelle wechseln).")
+    name = str(body.get("name", ""))[:40]
+    cfg = load_config()
+    try:
+        if (read_json(modelle.SATZ_LAUF, {}) or {}).get("name"):
+            raise modelle.Fehler("laeuft")
+        kat = (await asyncio.to_thread(_quelle, cfg))[3]
+        offen = await asyncio.to_thread(modelle.satz_offen, name, cfg, kat)
+        if not offen:
+            raise modelle.Fehler("nichts")
+    except modelle.Fehler as e:
+        _satz_fehler(e, "anwenden")
+    write_json(modelle.SATZ_LAUF, {"name": name, "offen": offen, "zeit": int(time.time())}, indent=1)
+    print(f"modelle: satz anwenden {len(offen)}", flush=True)
+    guard.log("modelle_wechsel", detail=f"Modellsatz einstellen: {len(offen)} Wechsel")
+    await asyncio.to_thread(satz_schritt)
+    return await asyncio.to_thread(seite, lang="en" if request.query_params.get("lang") == "en" else "de")
+
+
+def satz_schritt():
+    """Once a minute (panel.every_minute) while a set is being brought back: asks for its next switch. A switch or
+    measurement still running waits for the next minute; a refused one is left out with its word in the log."""
+    lauf = read_json(modelle.SATZ_LAUF, {}) or {}
+    offen = lauf.get("offen") or []
+    if not lauf.get("name"):
+        return ""
+    if not offen or not _an():
+        _satz_ende("fertig" if not offen else "aus")
+        return "ende"
+    art, mid = offen[0]
+    try:
+        _wunsch(None, art, mid, seite_zeigen=False)
+        wort = "angefragt"
+    except HTTPException as e:
+        if e.status_code == 409 and e.detail in (GRUND.get("laeuft"), GRUND.get("misst")):
+            return "wartet"
+        wort = "uebersprungen"
+    rest = offen[1:]
+    if rest:
+        write_json(modelle.SATZ_LAUF, dict(lauf, offen=rest), indent=1)
+    else:
+        _satz_ende("fertig")
+    print(f"modelle: satz {art} {wort}", flush=True)
+    return wort
+
+
+def _satz_ende(wort):
+    try:
+        os.remove(modelle.SATZ_LAUF)
+    except FileNotFoundError:
+        pass
+    print(f"modelle: satz {wort}", flush=True)

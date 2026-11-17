@@ -448,6 +448,8 @@ async def run(reason="manual", sampling="eigen"):
                             "raw": got["raw"][:600] if got["held"] else "", **({"judge": rated} if rated else {})})
                 _progress["done"] = len(out)
         res = {"t": int(time.time()), "reason": reason, "model": model, "seconds": round(time.time() - t0),
+               # the catalog model that answered (the served name is always the same, llm_tor): Probetag compares by it
+               "katalog": (cfg.get("llm") or {}).get("modell", "") if (cfg.get("llm") or {}).get("enabled") else "",
                "temperature": float(ccfg.get("temperature", 0.3)),
                "tool_temperature": float(ccfg.get("tool_temperature", 0.1)), "cases": out,
                "sampling": sampling, "sampling_values": chat_sampling(ccfg),
@@ -656,6 +658,7 @@ def _history(res):
         x["runs"] = len(seen)
         x["new"] = bool(not x["ok"] and seen and x["id"] not in seen[-1].get("fail", []))
     prev.append({"t": res["t"], "version": res.get("version", ""), "model": res["model"], "passed": res["passed"],
+                 "katalog": res.get("katalog", ""),
                  "sampling": res.get("sampling", "eigen"),
                  "total": res["total"], "ids": [x["id"] for x in res["cases"]],
                  "fail": [x["id"] for x in res["cases"] if not x["ok"]],

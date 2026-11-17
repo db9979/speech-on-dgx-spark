@@ -316,6 +316,7 @@ MODULE = {
     "weiche_unklar": ("weiche", "Unklare Fragen anonym: feste Schwärzung (wie Probleme melden), Leck-Prüfung, versiegelt, 7 Tage, nur Admin"),
     "werkstattseite": ("betrieb", "Zustand → Werkstatt: Aufträge anfragen, rote Tests noch mal, Ergebnisse mit nächsten Schritten, feste Nachtregel"),
     "entwickelnseite": ("betrieb", "Entwickeln auf dem Pi im Panel: Seite mit lokalen Änderungen, Einspielen, Zweigen an GitHub, Terminal im Browser"),
+    "probetag": ("betrieb", "Probetag nach dem Wechsel: Qualitätstest des neuen Sprachmodells, klar schlechter heißt zurück"),
     "modellseite": ("betrieb", "Zustand → Modelle: Katalog, Speicher-Budget, Messen, Wechseln und Zurückholen, eigene Modelle hinzufügen und löschen"),
     "technik": ("betrieb", "Diese Seite: Zustand → Technik und die Architektur-Doku"),
     "technik_knoten": ("betrieb", "Knoten-Seiten: jeder Kasten ganz genau, mit Ablauf, Regeln, Zahlen und Code"),

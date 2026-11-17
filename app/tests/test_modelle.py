@@ -657,11 +657,13 @@ class Seite(unittest.TestCase):
         # wechseln), „Lange Gespräche“ (same switch) and „Verwerfen“ after „Ausprobieren“; stage E5 adds the own models
         # (behind Funktionen → Eigene Modelle): add, delete, the search and the check, which change nothing; stage B1b
         # „Neu starten“ when the language model runs with other settings than its entry (same switch); stage B1c
-        # „Löschen“ of a loose commit in the library and of the Hugging Face token, „Nur laden“, „Nur herunterladen“
+        # „Löschen“ of a loose commit in the library and of the Hugging Face token, „Nur laden“, „Nur herunterladen“;
+        # stage B2 the model sets: keep, delete, bring back (same switch, test_modellsaetze)
         self.assertEqual(sorted(set(re.findall(r"mdPost\('(/api/[a-z/]+)'", js))),
                          ["/api/admin/modelle/bibliothek", "/api/admin/modelle/eigen", "/api/admin/modelle/eigen/",
                           "/api/admin/modelle/herunterladen", "/api/admin/modelle/hftoken", "/api/admin/modelle/laden",
-                          "/api/admin/modelle/messen", "/api/admin/modelle/neustart", "/api/admin/modelle/platz", "/api/admin/modelle/probe", "/api/admin/modelle/wechseln",
+                          "/api/admin/modelle/messen", "/api/admin/modelle/neustart", "/api/admin/modelle/platz", "/api/admin/modelle/probe", "/api/admin/modelle/saetze",
+                          "/api/admin/modelle/saetze/anwenden", "/api/admin/modelle/wechseln",
                           "/api/admin/modelle/zurueck"])
         self.assertEqual(re.findall(r"api\('(/api/admin/modelle/[a-z/]+)',\{method:'POST'", js),
                          ["/api/admin/modelle/eigen/suche", "/api/admin/modelle/eigen/pruefen"])

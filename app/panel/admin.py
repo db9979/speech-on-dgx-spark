@@ -1019,8 +1019,10 @@ def validate(new):
     r = ch.get("rerank_ms", 800)
     if not isinstance(r, int) or isinstance(r, bool) or not 300 <= r <= 2000:
         raise HTTPException(400, "rerank_ms: 300 to 2000")
-    if ch.get("rerank_model", "klein") not in ("klein", "gross"):
-        raise HTTPException(400, "rerank_model: klein or gross")
+    rm = ch.get("rerank_model", "klein")     # or an own re-ranking model of the catalog (modelle.klein_vorschlag)
+    if rm not in ("klein", "gross") and not (isinstance(rm, str) and rm.startswith("eigen-") and modelle.ID.match(rm)
+                                             and (modelle.zur_variante("klein", rm) or {}).get("eigen")):
+        raise HTTPException(400, "rerank_model: klein, gross or an own small model")
     import verbrauch
     for z, (_de, _en, key, top) in verbrauch.ZEITRAEUME.items():   # Kontingent: 0 = no limit in this period
         uq = ch.get(key, verbrauch.QUOTA_DEFAULT_K[z])
@@ -1038,8 +1040,9 @@ def validate(new):
         raise HTTPException(400, "systemone_min: " + ", ".join(str(x) for x in systemone.ROUTE_STEPS))
     if ch.get("route_model", "off") not in ("off", "on", "lean", "systemone"):
         raise HTTPException(400, "route_model: off, on, lean or systemone")
-    for sec in ("asr", "tts"):
-        if not MODEL_ID.fullmatch(str(new[sec]["model"])):
+    for sec in ("asr", "tts"):      # Qwen's own, an own one of this catalog, or the one the model computer switched to
+        v = str(new[sec]["model"])
+        if not (MODEL_ID.fullmatch(v) or modelle.sprach_eigen(sec, v) or v == str((get_config().get(sec) or {}).get("model"))):
             raise HTTPException(400, f"{sec}: only Qwen's own speech models (Qwen/Qwen3-ASR-... or Qwen/Qwen3-TTS-...)")
     if not MODEL_ID.fullmatch(str(new["asr"].get("aligner_model", "Qwen/Qwen3-ForcedAligner-0.6B"))):
         raise HTTPException(400, "aligner: only Qwen's own models")
@@ -1191,6 +1194,18 @@ async def admin_switch(request: Request):
     undo.record(old, new, _by(request), SENSITIVE)
     guard.log("config_switch", detail=f"chat.{key}={'on' if on else 'off'}")
     return {"key": key, "on": on}
+
+
+def chat_setzen(request, key, wert, detail):
+    """One chat setting from another page's fixed rules (Zustand → Modelle: the re-ranking model), saved like the
+    settings page: one write at a time, validate() and Rückgängig."""
+    with _save_lock:   # one config write at a time (_save)
+        new = get_config()
+        new["chat"][key] = wert
+        old = validate(new)
+        write_json(CONFIG_PATH, new, indent=2)
+    undo.record(old, new, _by(request), SENSITIVE)
+    guard.log("config_switch", detail=detail)
 
 
 # Grundausstattung (features.GRUNDAUSSTATTUNG, Dominik 2026-10-17): the card on Funktionen and in the iPhone app.

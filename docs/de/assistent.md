@@ -1893,6 +1893,8 @@ Jede Funktion des Spark mit ihrem Schalter, worauf sie aufbaut, wo man sie einri
 
 - **Eigene Modelle** (Funktionen → Zugang → „Eigene Modelle“; baut auf „Modelle wechseln“): Unter Zustand → Modelle fügt ein Admin ein Modell von Hugging Face hinzu, für das Sprachmodell oder das Bildverständnis.
 
+- **Probetag nach dem Wechsel** (Funktionen → Zugang → „Probetag nach dem Wechsel“; baut auf „Modelle wechseln“): Nach jedem Wechsel des Sprachmodells, sobald es antwortet, läuft einmal der feste Qualitätstest (Zustand → Prüfen → Qualitätstest).
+
 - **Werkstatt** (Funktionen → Zugang → „Werkstatt“): Auf der Seite Zustand → Werkstatt lässt ein Admin den Modell-Rechner in einer abgeschotteten Kopie des Codes arbeiten.
 
 - **Jede Nacht testen** (Funktionen → Zugang → „Jede Nacht testen“; baut auf „Werkstatt“): Einmal pro Nacht startet die Werkstatt von selbst den Testlauf (alle Selbsttests wie auf GitHub, ohne Sprachmodell).

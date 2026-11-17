@@ -141,19 +141,20 @@ def status(cfg=None, now=None):
     if due:
         einstellen(cfg, why="abgleich")
     if d is not None and d.get("modellwahl") != model_choice(cfg):
-        modellwahl(cfg, d.get("modellwahl"))
+        modellwahl(cfg, d.get("modellwahl"), d.get("sprach_eigen"))
     return d
 
 
-def modellwahl(cfg, got):
-    """Takes the model computer's model choice into this computer's configuration (one line per new report)."""
-    seen = json.dumps(got, sort_keys=True)
+def modellwahl(cfg, got, eigen=None):
+    """Takes the model computer's model choice into this computer's configuration (one line per new report); eigen:
+    its own speech models {asr: [repo], tts: [repo]} (modelle.SPRACH), the only other names a speech model may have."""
+    seen = json.dumps([got, eigen], sort_keys=True)
     with _lock:
         if _status["wahl"] == seen:
             return False
         _status["wahl"] = seen
     try:
-        diff = model_choice_take(cfg, got, shipped())
+        diff = model_choice_take(cfg, got, shipped(), eigen)
         with open(CONFIG_PATH) as f:
             raw = json.load(f)
         for sec, vals in diff.items():

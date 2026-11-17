@@ -980,6 +980,12 @@ STECKBRIEFE = {
         ohne_werkzeug=("ohne", "Zustand → Modelle, nur Admins; das Panel liest nur Metadaten von Hugging Face, kein "
                                "Werkzeug"),
         nur_spark=True),
+    # probetag.py (stage B2): after a switch of the language model the fixed quality test decides; worse → back
+    "modelleprobetag": Steckbrief(de="Probetag nach dem Wechsel", en="Trial after a switch", gruppe="sec",
+        schalter=("modelle_probetag",), anleitung="modelleprobetag", parent="modellwechsel",
+        ohne_werkzeug=("ohne", "probetag.py: der feste Qualitätstest und eine feste Regel im Panel entscheiden, kein "
+                               "Werkzeug"),
+        nur_spark=True),
     # werkstattseite.py + werkstatt.py (plan opencode-werkstatt): test run, code measurement, diagnosis and repairs in a
     # sandbox on the model computer (OpenCode, no data, no internet, no push); admins only, the patch goes to a person
     "werkstatt": Steckbrief(de="Werkstatt", en="Workshop", gruppe="sec", schalter=("werkstatt",),

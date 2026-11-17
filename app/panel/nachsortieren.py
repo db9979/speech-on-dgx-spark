@@ -11,6 +11,10 @@ the mixed search's candidates together and gives a score; the best come first, t
   never longer than the budget (the answer is then dropped when it comes), and never while another re-ranking
   runs: in all these cases the order of the mix stays. The quick look "Erst lokal" (keep=False) only re-ranks
   while the model runs anyway.
+- An own model (Dominik 2026-11-17, stage „klein via ONNX“: Zustand → Modelle, Kleine Modelle): chat.rerank_model is
+  then its id, its entry (modelle.klein_vorschlag) names one .onnx file on a pinned commit and its SHA-256. At its first
+  start in this process it must pass modelle.KLEIN_PROBE (the passage that answers scores higher); else it is refused
+  until the panel restarts and the small checked one works instead (back to the model before).
 - The journal gets fixed words and numbers only (never the question or a passage), Logs → Anfragen a step
   "Nachsortieren" with the numbers, the Live page the model while it works.
 """
@@ -28,6 +32,7 @@ PINS = os.path.join(STATE, "doc-rank.json")
 WORKER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "embed_worker.py")
 SIZES = {"klein": ("klein", "small"), "gross": ("groß", "large")}
 NEED_GIB = {v: modelle.zur_variante("klein", v)["need_gib"] for v in SIZES}   # from the model catalog
+_abgelehnt = set()             # own models that failed the probe in this process
 IDLE_STOP = 600
 START_TIMEOUT = 600            # the first start downloads the model
 CANDIDATES = 30                # what the mix hands over (documents.search's own depth)
@@ -51,8 +56,22 @@ def admin_on(c=None):
 
 
 def size(c=None):
+    """The model to use: klein, gross or an own one of the catalog that has not failed its probe."""
     s = _chat(c).get("rerank_model", "klein")
-    return s if s in SIZES else "klein"
+    if s in SIZES:
+        return s
+    if isinstance(s, str) and s.startswith("eigen-") and s not in _abgelehnt and _eigen(s):
+        return s
+    return "klein"
+
+
+def _eigen(s):
+    m = modelle.zur_variante("klein", s)
+    return m if m and m.get("eigen") else None
+
+
+def need_gib(sz):
+    return NEED_GIB.get(sz) or (_eigen(sz) or {}).get("need_gib") or max(NEED_GIB.values())
 
 
 def budget_ms(c=None):
@@ -77,7 +96,7 @@ def busy():
 
 
 def status(now=None):
-    out = dict(_status, running=running(), busy=busy(), size=size(), need_gib=NEED_GIB[size()],
+    out = dict(_status, running=running(), busy=busy(), size=size(), need_gib=need_gib(size()),
                stop_min=IDLE_STOP // 60, budget=budget_ms())
     if running():
         out["stop_in"] = max(0, int(IDLE_STOP - ((now or time.time()) - _last[0])))
@@ -139,7 +158,7 @@ def idle_stop(now=None):
 async def _start():
     global _proc, _size
     sz = size()
-    if _free_gib() < NEED_GIB[sz]:
+    if _free_gib() < need_gib(sz):
         _status.update(state="waiting", error="zu wenig freier Arbeitsspeicher")
         print("wissen: nachsortieren modell wartet | arbeitsspeicher", flush=True)
         return
@@ -149,7 +168,9 @@ async def _start():
         _status.update(state="error", error="Modell nicht im Katalog")
         print("wissen: nachsortieren modell fehler | katalog", flush=True)
         return
-    _proc = await asyncio.create_subprocess_exec(sys.executable, "-I", WORKER, "rank", sz, m["repo"], m["revision"],
+    eigen = bool(m.get("eigen"))      # an own one: the worker loads its named file and checks it against the commit
+    args = ["rank", "eigen", m["repo"], m["revision"], m["datei"]["path"]] if eigen else ["rank", sz, m["repo"], m["revision"]]
+    _proc = await asyncio.create_subprocess_exec(sys.executable, "-I", WORKER, *args,
                                                  stdin=asyncio.subprocess.PIPE,
                                                  stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.DEVNULL,
                                                  limit=4 * 1024**2)
@@ -159,14 +180,24 @@ async def _start():
         if not hello.get("ready"):
             raise RuntimeError("did not start")
         # the commit is the catalog's (modelle.json), never the worker's; a worker that checked another one is refused
+        if eigen and (hello.get("sha") or {}).get(f"{m['repo']}/{m['datei']['path']}") != m["datei"]["sha256"]:
+            raise RuntimeError("model files changed")      # an own file: the SHA-256 its entry was added with
         if hello.get("commit") != m["revision"] or not _check_pins(sz, hello.get("sha"), m["revision"]):
             raise RuntimeError("model files changed")
+        if eigen:
+            q, texts = modelle.KLEIN_PROBE
+            ok, wort = modelle.klein_probe(await _probe_scores(q, list(texts)))
+            print(f"wissen: nachsortieren probe {'ok' if ok else 'fehler'} | {wort}", flush=True)
+            if not ok:
+                _abgelehnt.add(sz)
+                raise RuntimeError("probe")
     except BaseException as e:
         _stop()
         why = str(e) if isinstance(e, RuntimeError) else type(e).__name__
         _status.update(state="error", error={"did not start": "Modell startet nicht (Download oder Datei fehlt)",
-                                             "model files changed": "Modelldateien anders als beim ersten Mal für diesen Stand (state/doc-rank.json)"}.get(why, why))
-        print(f"wissen: nachsortieren modell fehler | {why if why in ('did not start', 'model files changed') else 'start'}", flush=True)
+                                             "model files changed": "Modelldateien anders als beim ersten Mal für diesen Stand (state/doc-rank.json)",
+                                             "probe": "Eigenes Modell hat die Probe nicht bestanden, das kleine geprüfte arbeitet weiter"}.get(why, why))
+        print(f"wissen: nachsortieren modell fehler | {why if why in ('did not start', 'model files changed', 'probe') else 'start'}", flush=True)
         return
     _last[0] = time.time()
     _status.update(state="ready", error="")
@@ -179,6 +210,18 @@ def _wake():
     if _start_task and not _start_task.done():
         return
     _start_task = asyncio.get_running_loop().create_task(_start())
+
+
+async def _probe_scores(query, texts):
+    """The probe's scores, holding the lock so no search writes to the worker meanwhile; None when it does not answer."""
+    global _lock
+    if _lock is None or getattr(_lock, "_loop", None) not in (None, asyncio.get_running_loop()):
+        _lock = asyncio.Lock()
+    async with _lock:
+        try:
+            return await asyncio.wait_for(_scores(query, texts), 60)
+        except (RuntimeError, ValueError, asyncio.TimeoutError):
+            return None
 
 
 async def _scores(query, texts):

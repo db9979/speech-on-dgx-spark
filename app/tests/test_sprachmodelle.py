@@ -95,6 +95,60 @@ class Wechsel(unittest.TestCase):
         self.assertLess(teil.index('"$probe" "$art"'), teil.index('wechsel-schalten "$art" "$alt"'))
 
 
+class Tore(unittest.TestCase):
+    """Where an own speech model's name may stand: engine.sh starts only Qwen's or an own pinned entry of its role's
+    program, the panel saves only Qwen's, a local own one or the one the model computer switched to, and takes from the
+    model computer only Qwen's or one of its reported own ones."""
+    def test_engine_starts_only_qwen_or_an_own_entry(self):
+        m = modelle.eigen_vorschlag(info(), "asr", "beispiel/asr-de", 121, familien=FAM)
+        kat = dict(modelle.katalog(eigene=[]), **{m["id"]: m})
+        self.assertTrue(modelle.sprach_eigen("asr", "beispiel/asr-de", kat))
+        for sec, repo in (("tts", "beispiel/asr-de"), ("asr", "Qwen/Qwen3-ASR-1.7B"), ("asr", "fremd/asr"),
+                          ("asr", "../x"), ("llm", "beispiel/asr-de"), ("asr", 5)):
+            self.assertFalse(modelle.sprach_eigen(sec, repo, kat), (sec, repo))
+        with open(os.path.join(HERE, "..", "engine.sh"), encoding="utf-8") as f:
+            sh = f.read()
+        self.assertIn("^Qwen/Qwen3-(ASR|TTS|ForcedAligner)-", sh)
+        teil = sh[sh.index("QWEN_SPRACHE="):sh.index("REV=\"\"")]
+        for step in ('[ "$ROLE" = asr ] || [ "$ROLE" = tts ] || fail', 'sprach-eigen "$ROLE" "$MODEL"', '[[ "$MODEL" != *..* ]]'):
+            self.assertIn(step, teil)
+        self.assertLess(sh.index("sprach-eigen"), sh.rindex("--trust-remote-code"))
+
+    def test_the_model_computers_choice_only_with_its_own_list(self):
+        import common
+        c = common.load_config()
+        got = common.model_choice(c)
+        got["asr"]["model"] = "beispiel/asr-de"
+        with self.assertRaises(ValueError):
+            common.model_choice_take(c, got, common.shipped())
+        with self.assertRaises(ValueError):
+            common.model_choice_take(c, got, common.shipped(), {"tts": ["beispiel/asr-de"]})
+        self.assertEqual(common.model_choice_take(c, got, common.shipped(), {"asr": ["beispiel/asr-de"]})["asr"]["model"],
+                         "beispiel/asr-de")
+        got = common.model_choice(c)
+        got["asr"]["aligner_model"] = "beispiel/asr-de"      # only the main model may be an own one
+        with self.assertRaises(ValueError):
+            common.model_choice_take(c, got, common.shipped(), {"asr": ["beispiel/asr-de"]})
+
+
+class Anteil(unittest.TestCase):
+    """The speech engines' shares are set for a DGX Spark; on another pool the same GiB (engine.sh: modelle.py anteil)."""
+    def test_the_same_gib_on_another_pool(self):
+        import hardware
+        for pool in (hardware.BEZUG_GIB, 121.0, 0.95 * hardware.BEZUG_GIB):
+            self.assertEqual(modelle.sprach_anteil(0.06, pool), 0.06)          # a Spark: unchanged
+        for pool in (277.0, 60.0):
+            self.assertAlmostEqual(modelle.sprach_anteil(0.06, pool) * pool, 0.06 * hardware.BEZUG_GIB, delta=0.1)
+        self.assertEqual(modelle.sprach_anteil(0.4, 30.0), modelle.SPRACH_ANTEIL_MAX)
+        cfg = modelle.load_config()
+        cfg = dict(cfg, asr=dict(cfg["asr"], enabled=True, recognizer="qwen", backend="vllm", engine_mem=0.06))
+        teil = next(x for x in modelle.budget(cfg, 277.0, modelle.katalog(eigene=[]))["teile"] if x["art"] == "asr")
+        self.assertAlmostEqual(teil["gib"], 0.06 * hardware.BEZUG_GIB + 1.5, delta=0.2)
+        with open(os.path.join(HERE, "..", "engine.sh"), encoding="utf-8") as f:
+            sh = f.read()
+        self.assertLess(sh.index('modelle.py" anteil "$MEM0"'), sh.index('--gpu-memory-utilization "$MEM0"'))
+
+
 class Probe(unittest.TestCase):
     class Fake:
         def __init__(self, states, heard="", fehler=False):

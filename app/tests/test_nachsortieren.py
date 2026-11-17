@@ -92,7 +92,7 @@ class Defaults(Base):
             cfg = ADMIN.get("/api/config").json()
             cfg["chat"][key] = bad
             self.assertEqual(ADMIN.put("/api/config", json=cfg).status_code, 400, (key, bad))
-        self.assertEqual(set(embed_worker.RANK), set(nachsortieren.SIZES))
+        self.assertEqual(set(embed_worker.RANK), set(nachsortieren.SIZES) | {"eigen"})   # eigen: test_eigene_klein
 
 
 class Ranking(Base):

@@ -71,7 +71,7 @@ function mdPlatz(w){const p=w.platz;if(!p||w.laeuft||w.misst)return '';
     `<div class="mut vb-note">${esc(t('Alle Gespräche teilen sich einen Gesprächsspeicher. Mehr Platz kostet Speicher, der Bildern, Musik und dem Sehen-Modell fehlt. Das Sprachmodell startet dafür neu.','All conversations share one context store. More room costs memory that pictures, music and the vision model then lack. The language model restarts for it.'))}</div></div>`}
 async function mdPost(url,body,frage,method='POST'){if(!confirm(frage))return;const msg=$('mdmsg');msg.textContent='';
   // the answer is the page itself (after „Messen“ already showing the measurement that starts in a moment)
-  try{const r=await api(url+(L==='en'?'?lang=en':''),method==='POST'||method==='PUT'||body?{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:{method});
+  try{const r=await api(url+(L==='en'?(url.includes('?')?'&':'?')+'lang=en':''),method==='POST'||method==='PUT'||body?{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:{method});
     let d=null;try{d=await r.json()}catch(_){}loadModelle(d&&d.arten?d:null)}catch(e){msg.textContent=e.message}}
 // „Läuft jetzt“: the memory bar and one tile per kind with the model it runs
 let MD_OFFEN='',MD_MEHR=false;const MD_TREFFER={};
@@ -132,10 +132,14 @@ function mdWahl(d,w){const a=d.arten.find(x=>x.art===MD_OFFEN);if(!a||!w.an||w.l
     `<div class="mut vb-note">${esc(t('Nur offene Modelle mit safetensors, ohne eigenen Code, mit einer Bauart, die die Engine kennt, und die in den Speicher passen. Geladen wird erst beim Ausprobieren, gepinnt auf den geprüften Stand. Passende stehen oben; den Stern bekommt nach fester Regel der erste, dessen Format dieser Rechner am besten kann (NVFP4, dann FP8) und der neben den laufenden Modellen Platz hat.','Only open models with safetensors, without code of their own, with an architecture the engine knows, that fit into memory. It downloads only when trying it, pinned to the checked state. The fitting ones come first; by a fixed rule the star goes to the first whose format this computer runs best (NVFP4, then FP8) and that has room beside the running models.'))}</div>`:'';
   // an own picture or music file (slot „Bilder“/„Musik“): a .gguf file of a repository on a basis variant
   const ba=(w.basen||{})[a.art];
-  const datei=w.eigene&&ba?`<h4>${esc(t('Eigene GGUF-Datei','Own GGUF file'))}</h4><div class="row"><input id="mdfr" placeholder="besitzer/modell" aria-label="${esc(t('Hugging-Face-Name','Hugging Face name'))}" autocomplete="off"> `+
+  const datei=w.eigene&&ba&&a.art==='klein'?mdKleinDatei():w.eigene&&ba?`<h4>${esc(t('Eigene GGUF-Datei','Own GGUF file'))}</h4><div class="row"><input id="mdfr" placeholder="besitzer/modell" aria-label="${esc(t('Hugging-Face-Name','Hugging Face name'))}" autocomplete="off"> `+
     `<input id="mdfd" placeholder="datei.gguf" aria-label="${esc(t('Datei im Repository','File in the repository'))}" autocomplete="off"> <select id="mdfb" aria-label="${esc(t('Grundvariante','Basis'))}">${ba.map(b=>`<option value="${esc(b[0])}">${esc(b[1])}</option>`).join('')}</select> `+
     `<button type="button" class="b sm" id="mdfok">${esc(t('Prüfen und hinzufügen','Check and add'))}</button></div><div class="mut vb-note">${esc(t('Die Datei ersetzt das Hauptmodell der Grundvariante, alles andere bleibt. Vor dem Wechsel prüft der Spark Prüfsumme und Bauart im Dateikopf, danach malt beziehungsweise spielt er eine feste Probe; klappt sie nicht, geht es zurück.','The file replaces the main model of the basis, everything else stays. Before the switch the Spark checks the checksum and the family in the file header, afterwards it paints or plays a fixed probe; if that fails, it goes back.'))}</div>`:'';
-  // the checked recommendation for this computer first (modelle.json „empfohlen“), own models only the second way
+  // an own re-ranking model (slot „Kleine Modelle“): one .onnx file of a repository, no basis
+function mdKleinDatei(){return `<h4>${esc(t('Eigenes Nachsortier-Modell (ONNX)','Own re-ranking model (ONNX)'))}</h4><div class="row"><input id="mdfr" placeholder="besitzer/modell" aria-label="${esc(t('Hugging-Face-Name','Hugging Face name'))}" autocomplete="off"> `+
+  `<input id="mdfd" placeholder="onnx/model_quantized.onnx" aria-label="${esc(t('Datei im Repository','File in the repository'))}" autocomplete="off"> `+
+  `<button type="button" class="b sm" id="mdfok">${esc(t('Prüfen und hinzufügen','Check and add'))}</button></div><div class="mut vb-note">${esc(t('Nur für „Treffer nachsortieren“: eine einzelne ONNX-Datei mit tokenizer.json, ohne Code, öffentlich und von derselben Bauart wie die geprüften. Es läuft auf diesem Rechner auf dem Prozessor. Beim ersten Start muss es eine feste Probe bestehen, sonst arbeitet das kleine geprüfte weiter.','Only for "Re-rank hits": one ONNX file with tokenizer.json, no code, public and of the same family as the checked ones. It runs on this computer on the CPU. At its first start it must pass a fixed probe, else the small checked one keeps working.'))}</div>`}
+// the checked recommendation for this computer first (modelle.json „empfohlen“), own models only the second way
   const emp=a.modelle.find(m=>m.empfohlen);
   const empf=emp?`<div class="mut vb-note">${ic('star')} ${esc(t('Geprüfte Empfehlung für ','Checked recommendation for ')+(d.geraet||t('diesen Rechner','this computer'))+': '+emp.name+(emp.aktiv?t(' (läuft schon)',' (already running)'):''))}</div>`:'';
   return `<div class="card mdwahl"><h3>${esc(a.name)}: ${esc(t('Modell wählen','choose a model'))}</h3>${empf}${mdRegale(a,w)}`+
@@ -146,6 +150,23 @@ function mdRegale(a,w){const ge=a.modelle.filter(m=>!m.eigen).sort((x,y)=>(y.emp
   return (ei.length?`<h4>${esc(t('Geprüft','Checked'))}</h4>`:'')+`<div class="mdkarten">${ge.map(m=>mdKarte(m,a,w)).join('')}</div>`+
     (ei.length?`<h4>${esc(t('Eigene, ungeprüft','Own, unchecked'))}</h4><div class="mut vb-note">${esc(t('Selbst hinzugefügt und nur mit den festen Regeln geprüft (Dateiarten, kein Code, bekannte Bauart, Speicher); wählbar erst nach einer Messung auf diesem Rechner; Hören und Sprechen bestehen beim Wechsel eine feste Probe, sonst geht es zurück.','Added by you and checked only by the fixed rules (file kinds, no code, a known architecture, memory); selectable only after a measurement on this computer; listening and speaking pass a fixed probe when switching, else it goes back.'))}</div><div class="mdkarten">${ei.map(m=>mdKarte(m,a,w)).join('')}</div>`:'')}
 // after „Ausprobieren“: the question with the numbers
+// Modellsätze (stage B2): the models running now kept under a name, brought back in one step (one switch after the other)
+function mdSaetze(d,w){if(!w.an)return '';const l=d.saetze||[],lauf=d.lauf;
+  const zeile=s=>`<div class="mdkarte"><div class="mdkopf"><b>${esc(s.name)}</b></div><div class="mut mdzahl">${esc(s.modelle.map(x=>x[1]).join(' · '))}</div>`+
+    `<div class="mdtun">${lauf?'':`<button type="button" class="b sm" data-mdsa="${esc(s.name)}">${esc(t('Einstellen','Bring back'))}</button> `}<button type="button" class="b sm" data-mdsw="${esc(s.name)}">${esc(t('Löschen','Delete'))}</button></div></div>`;
+  return `<div class="card"><h3>${esc(t('Modellsätze','Model sets'))}</h3>`+
+    (lauf?`<div class="mut vb-note">${esc(t('„'+lauf.name+'“ wird eingestellt, noch '+lauf.offen+' Wechsel.','"'+lauf.name+'" is being brought back, '+lauf.offen+' switches left.'))}</div>`:'')+
+    `<div class="mdkarten">${l.map(zeile).join('')}</div>`+
+    (l.length<(d.max||10)?`<div class="row"><input id="mdsn" maxlength="40" placeholder="${esc(t('z. B. Alltag','e.g. everyday'))}" aria-label="${esc(t('Name des Satzes','Name of the set'))}" autocomplete="off"> <button type="button" class="b sm" id="mdsok">${esc(t('Jetzigen Stand behalten','Keep the current state'))}</button></div>`:'')+
+    `<div class="mut vb-note">${esc(t('Ein Satz behält die Modelle, die jetzt je Art laufen. „Einstellen“ wechselt eine Art nach der anderen, jede mit ihrer Prüfung; eine, die nicht geht, wird übersprungen.','A set keeps the models running now per kind. "Bring back" switches one kind after the other, each with its check; one that does not work is skipped.'))}</div></div>`}
+// Probetag nach dem Wechsel (probetag.py, stage B2): the fixed quality test after a switch of the language model
+const MD_PT={wartet:['wartet, bis das neue Modell antwortet','waits until the new model answers'],laeuft:['der Qualitätstest läuft','the quality test runs'],
+  behalten:['bleibt','stays'],ohne_vergleich:['bleibt, vom Modell davor gab es keinen Lauf','stays, there was no run of the model before'],
+  zurueck:['war schlechter, zurück zum Modell davor','was worse, back to the model before'],fehler:['kein Ergebnis, das Modell bleibt','no result, the model stays'],
+  aus:['ausgeschaltet, nichts entschieden','switched off, nothing decided']};
+function mdProbetag(p){if(!p)return '';const z=x=>x?x[0]+'/'+x[1]:'–';
+  return `<div class="card"><b>${esc(t('Probetag „'+p.name+'“: ','Trial "'+p.name+'": ')+t(...(MD_PT[p.ergebnis]||MD_PT.fehler)))}</b>`+
+    (p.neu||p.vorher?` <span class="mut">${esc(t('Qualitätstest '+z(p.neu)+(p.alt_name?', „'+p.alt_name+'“ vorher '+z(p.vorher):''),'Quality test '+z(p.neu)+(p.alt_name?', "'+p.alt_name+'" before '+z(p.vorher):'')))}</span>`:'')+`</div>`}
 function mdProbe(w){const p=w.probe;if(!p||w.laeuft)return '';
   if(!p.fertig)return `<div class="card"><b>${esc(t('„'+p.name+'“ wird ausprobiert.','Trying "'+p.name+'".'))}</b> <span class="mut">${esc(t('Erst laden und messen, dann fragt die Seite hier.','First download and measure, then the page asks here.'))}</span></div>`;
   const weg=`<button type="button" class="b sm" id="mdpv">${esc(t('Verwerfen','Discard'))}</button>`;
@@ -164,12 +185,13 @@ async function mdDazu(repo){const art=MD_OFFEN,v=await mdPruefen({art,repo});if(
   MD_TREFFER[art]=(MD_TREFFER[art]||[]).filter(h=>h.repo!==repo);
   mdPost('/api/admin/modelle/eigen',{art,repo,revision:v.revision},t('„'+repo+'“ hinzufügen? Stand '+v.revision.slice(0,12)+', Platte '+v.platte_gb+' GB, Speicher ~'+mdGib(v.need_gib)+', Lizenz '+v.lizenz+'. Geladen wird erst beim Ausprobieren.',
     'Add "'+repo+'"? Commit '+v.revision.slice(0,12)+', disk '+v.platte_gb+' GB, memory ~'+mdGib(v.need_gib)+', licence '+v.lizenz+'. It downloads only when trying it.'))}
-async function mdDatei(){const f={art:MD_OFFEN,repo:$('mdfr').value.trim(),datei:$('mdfd').value.trim(),basis:$('mdfb').value},v=await mdPruefen(f);if(!v)return;
+async function mdDatei(){const f={art:MD_OFFEN,repo:$('mdfr').value.trim(),datei:$('mdfd').value.trim(),basis:$('mdfb')?$('mdfb').value:''},v=await mdPruefen(f);if(!v)return;
   mdPost('/api/admin/modelle/eigen',Object.assign(f,{revision:v.revision}),t('„'+f.datei+'“ hinzufügen? Stand '+v.revision.slice(0,12)+', Platte '+v.platte_gb+' GB, Speicher ~'+mdGib(v.need_gib)+', Lizenz '+v.lizenz+'.',
     'Add "'+f.datei+'"? Commit '+v.revision.slice(0,12)+', disk '+v.platte_gb+' GB, memory ~'+mdGib(v.need_gib)+', licence '+v.lizenz+'.'))}
 function mdKnoepfe(d){const main=$('mdmain');
   main.querySelectorAll('[data-mdw]').forEach(b=>b.onclick=()=>{const m=d.arten.flatMap(y=>y.modelle).find(y=>y.id===b.dataset.mdid);
-    mdPost('/api/admin/modelle/wechseln',{art:b.dataset.mdw,id:b.dataset.mdid},t('Zu „'+(m?m.name:b.dataset.mdid)+'“ wechseln? Der Spark lädt und prüft das Modell; das alte bleibt '+d.wechsel.tage+' Tage zum Zurückholen.','Switch to "'+(m?m.name:b.dataset.mdid)+'"? The Spark loads and checks the model; the old one stays '+d.wechsel.tage+' days to bring back.'))});
+    mdPost('/api/admin/modelle/wechseln',{art:b.dataset.mdw,id:b.dataset.mdid},b.dataset.mdw==='klein'?t('„'+(m?m.name:b.dataset.mdid)+'“ zum Nachsortieren nehmen? Es lädt bei der nächsten Suche und besteht zuerst eine feste Probe.','Use "'+(m?m.name:b.dataset.mdid)+'" for re-ranking? It loads at the next search and first passes a fixed probe.'):
+      t('Zu „'+(m?m.name:b.dataset.mdid)+'“ wechseln? Der Spark lädt und prüft das Modell; das alte bleibt '+d.wechsel.tage+' Tage zum Zurückholen.','Switch to "'+(m?m.name:b.dataset.mdid)+'"? The Spark loads and checks the model; the old one stays '+d.wechsel.tage+' days to bring back.'))});
   main.querySelectorAll('[data-mdm]').forEach(b=>b.onclick=()=>{const m=d.arten.flatMap(y=>y.modelle).find(y=>y.id===b.dataset.mdm);
     mdPost('/api/admin/modelle/messen',{id:b.dataset.mdm},t('„'+(m?m.name:b.dataset.mdm)+'“ messen? Der Spark lädt es falls nötig, das Sprachmodell pausiert für etwa 10 bis 25 Minuten und startet danach wieder. Gewechselt wird nichts.','Measure "'+(m?m.name:b.dataset.mdm)+'"? The Spark downloads it if needed, the language model pauses for about 10 to 25 minutes and starts again afterwards. Nothing is switched.'))});
   if($('mdplatzok'))$('mdplatzok').onclick=()=>{const r=main.querySelector('input[name=mdplatz]:checked'),p=(d.wechsel||{}).platz;if(!r||!p)return;
@@ -191,6 +213,9 @@ function mdKnoepfe(d){const main=$('mdmain');
     mdPost('/api/admin/modelle/messen',{id:b.dataset.mdp,probe:true},t('„'+(m?m.name:b.dataset.mdp)+'“ ausprobieren? Der Spark lädt es falls nötig und misst es; das Sprachmodell pausiert für etwa 10 bis 25 Minuten. Danach fragt die Seite, ob gewechselt wird.','Try "'+(m?m.name:b.dataset.mdp)+'"? The Spark downloads it if needed and measures it; the language model pauses for about 10 to 25 minutes. Afterwards the page asks whether to switch.'))});
   main.querySelectorAll('[data-mdh]').forEach(b=>b.onclick=()=>mdDazu(b.dataset.mdh));
   if($('mdfok'))$('mdfok').onclick=mdDatei;
+  if($('mdsok'))$('mdsok').onclick=()=>{const n=$('mdsn').value.trim();if(n)mdPost('/api/admin/modelle/saetze',{name:n},t('Die jetzigen Modelle als „'+n+'“ behalten?','Keep the current models as "'+n+'"?'))};
+  main.querySelectorAll('[data-mdsa]').forEach(b=>b.onclick=()=>mdPost('/api/admin/modelle/saetze/anwenden',{name:b.dataset.mdsa},t('„'+b.dataset.mdsa+'“ einstellen? Der Spark wechselt eine Art nach der anderen; das dauert je Wechsel einige Minuten.','Bring back "'+b.dataset.mdsa+'"? The Spark switches one kind after the other; each switch takes a few minutes.')));
+  main.querySelectorAll('[data-mdsw]').forEach(b=>b.onclick=()=>mdPost('/api/admin/modelle/saetze?name='+encodeURIComponent(b.dataset.mdsw),null,t('„'+b.dataset.mdsw+'“ löschen? Die Modelle bleiben.','Delete "'+b.dataset.mdsw+'"? The models stay.'),'DELETE'));
   main.querySelectorAll('[data-mdr]').forEach(b=>b.onclick=()=>{MD_REZEPT=MD_REZEPT===b.dataset.mdr?'':b.dataset.mdr;MD_ZEILE='';loadModelle(MD_SEITE)});
   if($('mdrzok'))$('mdrzok').onclick=()=>{const f={};main.querySelectorAll('.mdrezept [data-rz]').forEach(x=>{f[x.dataset.rz]=x.type==='number'?Number(x.value||0):x.value.trim()});
     mdPost('/api/admin/modelle/eigen/'+encodeURIComponent(MD_REZEPT)+'/rezept',f,t('Rezept speichern? Die alte Messung gilt dann nicht mehr; danach neu messen.','Save the recipe? The old measurement no longer counts; measure again afterwards.'),'PUT')};
@@ -231,7 +256,7 @@ async function loadModelle(daten){const main=$('mdmain'),msg=$('mdmsg');if(!main
   let d=daten;if(!d)try{d=await (await api('/api/admin/modelle'+(L==='en'?'?lang=en':''))).json()}catch(e){msg.textContent=e.message;return}
   const w=d.wechsel||{};
   MD_SEITE=d;if(MD_OFFEN&&!d.arten.some(a=>a.art===MD_OFFEN))MD_OFFEN='';
-  felderNeu(main,mdWechsel(w)+mdProbe(w)+mdBalken(d.budget)+`<div class="mdkacheln">${d.arten.filter(a=>a.modelle.length).map(a=>mdKachel(a,w)).join('')}</div>`+mdWahl(d,w)+
+  felderNeu(main,mdWechsel(w)+mdProbe(w)+mdProbetag(d.probetag)+mdBalken(d.budget)+mdSaetze(d,w)+`<div class="mdkacheln">${d.arten.filter(a=>a.modelle.length).map(a=>mdKachel(a,w)).join('')}</div>`+mdWahl(d,w)+
     `<details class="mdmehr" id="mdmehr"${MD_MEHR?' open':''}><summary>${esc(t('Mehr: Lange Gespräche, Messwerte, Messen, Zurückholen, letzte Starts, Bibliothek, Hugging-Face-Token','More: long conversations, measurements, measuring, bringing back, last starts, library, Hugging Face token'))}</summary>`+
     `<div class="vb-two">${mdPlatz(w)}${mdBudget(d.budget)}${d.arten.map(a=>mdArt(a,w,d)).join('')}${mdStarts(d)}${mdBib(d)}${mdHf(d)}</div>`+
     `<div class="mut vb-note">${d.geraet?esc(t('Gerät: ','Computer: ')+d.geraet)+' · ':''}${esc(d.messung_zeit?t('Letzte Messung: ','Last measurement: ')+new Date(d.messung_zeit*1000).toLocaleString(L==='en'?'en':'de'):t('Noch keine Messung. „Messen“ beim Modell (mit Funktionen → Modelle wechseln) oder auf dem Spark: sudo speech-spark modelle messen','No measurement yet. „Measure“ at the model (with Features → Routing models) or on the Spark: sudo speech-spark modelle messen'))}`+

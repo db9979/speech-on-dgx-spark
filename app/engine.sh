@@ -59,11 +59,19 @@ else
   else MODEL=$(c model); PORT=$(c engine_port); fi
 fi
 
-# only Qwen's own speech models: the engine runs with --trust-remote-code, so any other repo could
-# bring its own Python code along (the config belongs to the service user, so check it here too); the language
-# models run without it, from the catalog's checked entries only
-[ "${#LLM_ARGS[@]}" -gt 0 ] || [[ "$MODEL" =~ ^Qwen/Qwen3-(ASR|TTS|ForcedAligner)-[A-Za-z0-9._-]+$ ]] \
-  || fail "model '$MODEL' is not one of Qwen's speech models"
+# only Qwen's own speech models or an own one of the catalog (modelle.SPRACH: same family as a checked one, safetensors
+# only, no auto_map, pinned): the speech output runs with --trust-remote-code, so any other repo could bring its own
+# Python code along (the config belongs to the service user, so check it here too); the download never takes *.py
+# (modelle.ERLAUBT) and runs offline. The language models run without it, from the catalog's checked entries only
+QWEN_SPRACHE='^Qwen/Qwen3-(ASR|TTS|ForcedAligner)-[A-Za-z0-9._-]+$'
+if [ "${#LLM_ARGS[@]}" -eq 0 ] && ! [[ "$MODEL" =~ $QWEN_SPRACHE ]]; then
+  [[ "$MODEL" =~ ^[A-Za-z0-9][A-Za-z0-9._-]{0,95}/[A-Za-z0-9][A-Za-z0-9._-]{0,95}$ ]] && [[ "$MODEL" != *..* ]] \
+    || fail "model '$MODEL' is not one of Qwen's speech models"
+  [ "$ROLE" = asr ] || [ "$ROLE" = tts ] || fail "model '$MODEL' is not one of Qwen's speech models"   # never design, klon
+  "${SPEECH_SPARK_PREFIX:-$(dirname "$VENV")}/venv-panel/bin/python" "$(dirname "$(readlink -f "$0")")/modelle.py" \
+      sprach-eigen "$ROLE" "$MODEL" >/dev/null \
+    || fail "model '$MODEL' is neither one of Qwen's speech models nor an own one of the model catalog"
+fi
 # the speech models on their pinned commit from the catalog (modelle.py fest), like the language models. Before every
 # start modelle.py vorbereiten fetches what is missing (only the allowed file kinds) and checks every file against
 # its hash; vLLM then loads exactly that checked commit and never downloads by itself (security review of V01.0.785:
@@ -78,6 +86,9 @@ if [ "${#LLM_ARGS[@]}" -eq 0 ]; then
   [ "$("$PY" "$APP_DIR/modelle.py" vorbereiten "$MID" --revision "$REV" | tail -n1)" = "$REV" ] \
     || fail "the files of '$MODEL' do not match its pinned commit (see: speech-spark logs $ROLE)"
   export HF_HUB_OFFLINE=1
+  # the shares are set for a DGX Spark's memory; on another pool (a DGX Station's GPU) the same GiB (modelle.sprach_anteil)
+  for m in "$MEM0" "$MEM1"; do [[ "$m" =~ ^0?\.[0-9]+$ ]] || fail "engine memory shares must be fractions like 0.05, got '$m'"; done
+  MEM0=$("$PY" "$APP_DIR/modelle.py" anteil "$MEM0" | tail -n1); MEM1=$("$PY" "$APP_DIR/modelle.py" anteil "$MEM1" | tail -n1)
 fi
 [[ "$PORT" =~ ^[0-9]{4,5}$ ]] || fail "invalid port '$PORT'"
 [[ "$SEQS" =~ ^[0-9]{1,3}$ ]] || fail "invalid engine_max_seqs '$SEQS'"

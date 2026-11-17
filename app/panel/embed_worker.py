@@ -6,7 +6,7 @@ JSON line per answer: {"vecs": base64 of float16 values, DIM per text, length 1}
 The first line it writes says whether it is ready, with the SHA-256 of the model files and the commit they were
 checked against.
 
-Started as `embed_worker.py rank klein|gross REPO COMMIT` (nachsortieren.py) it holds a cross-encoder instead: requests
+Started as `embed_worker.py rank klein|gross REPO COMMIT` or `rank eigen REPO COMMIT FILE.onnx` (nachsortieren.py) it holds a cross-encoder instead: requests
 {"query": "...", "texts": [...]}, answers {"scores": [...]} (one raw score per text, higher fits better).
 """
 import base64
@@ -21,7 +21,9 @@ MAX_TOKENS = 512
 MAX_TEXTS = 16
 # the re-ranking models (Stufe 3 of plan suche-schaerfen): size -> (ONNX file, most tokens). Repository and pinned
 # commit come from the model catalog through the caller (docembed.py, nachsortieren.py: modelle.fest), never "main"
-RANK = {"klein": ("onnx/model_qint8_arm64.onnx", 384), "gross": ("onnx/model_quantized.onnx", 512)}
+RANK = {"klein": ("onnx/model_qint8_arm64.onnx", 384), "gross": ("onnx/model_quantized.onnx", 512),
+        "eigen": (None, 512)}                                   # an own one (modelle.klein_vorschlag): its file is named
+ONNX_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._/-]{0,199}\.onnx")
 REPO_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,95}/[A-Za-z0-9][A-Za-z0-9._-]{0,95}")
 REV_RE = re.compile(r"[0-9a-f]{40}")
 RANK_TEXTS = 40
@@ -78,7 +80,7 @@ def hole(repo, rev, f):
     return p, sha
 
 
-def rank_main(size, repo, rev):
+def rank_main(size, repo, rev, datei=None):
     """The cross-encoder: question and passage read together, one score per passage."""
     hinten(False)        # answers a question someone waits for: nice only
     try:
@@ -86,6 +88,7 @@ def rank_main(size, repo, rev):
         import onnxruntime as ort
         from tokenizers import Tokenizer
         f, most = RANK[size]
+        f = f or datei
         (model, sha_m), (tokfile, sha_t) = hole(repo, rev, f), hole(repo, rev, "tokenizer.json")
         sha = {f"{repo}/{f}": sha_m, f"{repo}/tokenizer.json": sha_t}
         tok = Tokenizer.from_file(tokfile)
@@ -117,10 +120,13 @@ def rank_main(size, repo, rev):
 
 def main():
     a = sys.argv[1:]
-    if len(a) == 4 and a[0] == "rank" and a[1] in RANK and REPO_RE.fullmatch(a[2]) and REV_RE.fullmatch(a[3]):
+    if len(a) == 4 and a[0] == "rank" and a[1] in ("klein", "gross") and REPO_RE.fullmatch(a[2]) and REV_RE.fullmatch(a[3]):
+        return rank_main(*a[1:])
+    if (len(a) == 5 and a[:2] == ["rank", "eigen"] and REPO_RE.fullmatch(a[2]) and REV_RE.fullmatch(a[3])
+            and ONNX_RE.fullmatch(a[4]) and ".." not in a[4]):
         return rank_main(*a[1:])
     if not (len(a) == 3 and a[0] == "embed" and REPO_RE.fullmatch(a[1]) and REV_RE.fullmatch(a[2])):
-        say({"ready": False, "error": "usage: embed_worker.py embed REPO COMMIT | rank klein|gross REPO COMMIT"})
+        say({"ready": False, "error": "usage: embed_worker.py embed REPO COMMIT | rank klein|gross REPO COMMIT | rank eigen REPO COMMIT FILE.onnx"})
         return
     repo, rev = a[1], a[2]
     hinten(True)         # background work: the panel, speech and the language model go first

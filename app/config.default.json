@@ -417,6 +417,7 @@
     "angriffsprobe": false,
     "werkstatt_stunde": 3,
     "modelle_eigene": false,
+    "modelle_probetag": false,
     "memory_check": true,
     "memory_ask": false,
     "memory_topics": false,

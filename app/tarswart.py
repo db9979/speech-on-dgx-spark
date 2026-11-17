@@ -170,6 +170,8 @@ def status():
             "mem_avail_gib": mem, "mem_total_gib": total, "einstellungen": model_settings_hash(cfg), "modellwahl": model_choice(cfg), "pause": pause(),
             "commit": str(installed_version().get("commit") or "")[:40], "update": _update_laeuft(), "update_pct": _update_pct(), "rechner": _rechner(),
             "uhr": uhr(), "spark_api": SPARK_API,
+            # the own speech models here (modelle.SPRACH): the panel takes such a name into its model choice only then
+            "sprach_eigen": {a: [m["repo"] for m in modelle.eigene_eintraege(a)] for a in modelle.SPRACH},
             "clients": sum(not c.get("gesperrt") for c in mandanten.clients()) if mandanten.an(cfg) else 0}
 
 

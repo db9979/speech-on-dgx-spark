@@ -339,6 +339,20 @@ def need_gib(repo, default=8):
     return m["need_gib"] if m else default
 
 
+SPRACH_ANTEIL_MAX = 0.5
+
+
+def sprach_anteil(anteil, pool_gib=None):
+    """The speech engines' memory shares (asr.engine_mem, tts.engine_mem_talker/_code2wav) are set for the reference
+    pool, a DGX Spark (hardware.BEZUG_GIB): on a pool more than 10 % larger or smaller (a DGX Station's GPU) the share
+    that gives the same GiB, so the engine keeps its KV cache and leaves the rest to the others; on a Spark unchanged.
+    engine.sh starts with it (modelle.py anteil)."""
+    pool_gib = hardware.profil()["pool_gib"] if pool_gib is None else pool_gib
+    if not isinstance(anteil, (int, float)) or isinstance(anteil, bool) or not pool_gib or abs(pool_gib - hardware.BEZUG_GIB) <= 0.1 * hardware.BEZUG_GIB:
+        return anteil
+    return round(min(SPRACH_ANTEIL_MAX, anteil * hardware.BEZUG_GIB / pool_gib), 4)
+
+
 def zur_variante(art, v, kat=None):
     """The entry of a picture variant or a small model's size (field "variante")."""
     kat = katalog() if kat is None else kat
@@ -369,14 +383,14 @@ def aktiv(cfg, total_gib, kat=None):
         if a.get("recognizer") == "parakeet":
             add(kat.get("parakeet-primeline"))
         else:
-            gib = a["engine_mem"] * total_gib + 1.5 if a.get("backend") == "vllm" and "engine_mem" in a else None
+            gib = sprach_anteil(a["engine_mem"], total_gib) * total_gib + 1.5 if a.get("backend") == "vllm" and "engine_mem" in a else None
             add(zum_repo(a.get("model"), kat), gib)
             if a.get("timestamps"):
                 add(zum_repo(a.get("aligner_model"), kat))
     t = cfg.get("tts", {})
     if t.get("enabled"):
         omni = t.get("backend") == "vllm-omni" and "engine_mem_talker" in t
-        gib = (t["engine_mem_talker"] + t.get("engine_mem_code2wav", 0)) * total_gib + 1.5 if omni else None
+        gib = (sprach_anteil(t["engine_mem_talker"], total_gib) + sprach_anteil(t.get("engine_mem_code2wav", 0), total_gib)) * total_gib + 1.5 if omni else None
         add(zum_repo(t.get("model"), kat), gib)
         if t.get("voicedesign_enabled"):   # on demand (voicedesign_leerlauf_min > 0) like the image understanding
             add(zum_repo(t.get("voicedesign_model"), kat), gib, None if t.get("voicedesign_leerlauf_min", 5) == 0 else "bei_bedarf")
@@ -1491,6 +1505,8 @@ def jetzt_id(art, cfg, kat=None):
     elif art == "musik":
         mus = cfg.get("music", {})
         m = zur_variante("musik", mus.get("variant"), kat) if mus.get("enabled") else None
+    elif art == "klein":               # the re-ranking model the setting names (on or off: it is the chosen one)
+        m = zur_variante("klein", cfg.get("chat", {}).get("rerank_model") or "klein", kat)
     else:
         raise Fehler("art")
     return m["id"] if m else ""
@@ -1555,6 +1571,63 @@ def wechsel_weg(art, m):
     if art in DATEI_ART and m.get("eigen"):
         return f"datei {m['repo']} {m['revision']}"
     return f"wahl {m['wahl']}" if art in INSTALL else f"vllm {m['repo']} {fest_revision(m)}"
+
+
+# Modellsätze (Dominik 2026-11-16 „1-6“ point 4, stage B2): the admin keeps the models of the kinds that switch under a
+# name and later brings them back in one step; the panel then asks for one switch after the other (modellseite).
+SAETZE = os.path.join(STATE, "modelle-saetze.json")
+SATZ_LAUF = os.path.join(STATE, "modelle-satz-lauf.json")
+SATZ_MAX = 10
+SATZ_NAME = re.compile(r"^[A-Za-z0-9ÄÖÜäöüß][A-Za-z0-9ÄÖÜäöüß .,_-]{0,39}$")
+
+
+def saetze(path=None):
+    """The kept sets: [{name, modelle: {art: id}, zeit}], each checked (a broken one is left out)."""
+    out = []
+    for s in (read_json(path or SAETZE, {}).get("saetze") or [])[:SATZ_MAX]:
+        if (isinstance(s, dict) and isinstance(s.get("name"), str) and SATZ_NAME.match(s["name"])
+                and isinstance(s.get("modelle"), dict) and s["modelle"]
+                and all(a in TAUSCH and isinstance(i, str) and ID.match(i) for a, i in s["modelle"].items())):
+            out.append(s)
+    return out
+
+
+def satz_jetzt(cfg, kat=None):
+    """What a set keeps: per kind that switches the model running now (kinds that are off are left out)."""
+    kat = katalog() if kat is None else kat
+    return {a: i for a in TAUSCH if (i := jetzt_id(a, cfg, kat))}
+
+
+def satz_speichern(name, inhalt, now=None, path=None):
+    """Keeps a set under its name (a set of the same name is replaced). Raises Fehler: name, leer, voll."""
+    name = str(name or "").strip()
+    if not SATZ_NAME.match(name):
+        raise Fehler("name")
+    if not inhalt:
+        raise Fehler("leer")
+    alle = [s for s in saetze(path) if s["name"] != name]
+    if len(alle) >= SATZ_MAX:
+        raise Fehler("voll")
+    write_json(path or SAETZE, {"saetze": alle + [{"name": name, "modelle": dict(inhalt),
+                                                    "zeit": int(time.time() if now is None else now)}]}, indent=1)
+
+
+def satz_loeschen(name, path=None):
+    alle = saetze(path)
+    if not any(s["name"] == name for s in alle):
+        raise Fehler("unbekannt")
+    write_json(path or SAETZE, {"saetze": [s for s in alle if s["name"] != name]}, indent=1)
+
+
+def satz_offen(name, cfg, kat=None, path=None):
+    """The switches a set still needs, in the order of TAUSCH: [[art, id]] of the kinds whose model differs and is in
+    the catalog. Raises Fehler("unbekannt") for a set that is not kept."""
+    kat = katalog() if kat is None else kat
+    s = next((x for x in saetze(path) if x["name"] == name), None)
+    if s is None:
+        raise Fehler("unbekannt")
+    return [[a, s["modelle"][a]] for a in TAUSCH if a in s["modelle"] and s["modelle"][a] in kat
+            and jetzt_id(a, cfg, kat) != s["modelle"][a]]
 
 
 def wechsel_merken(art, alt, neu, now=None, path=WECHSEL):
@@ -1790,6 +1863,78 @@ def _name_frei(art, datei):
     return os.path.basename(datei) not in fest
 
 
+# Eigene kleine Modelle (Dominik 2026-11-16 „alle 1-6“ point 2 „klein via ONNX“, 2026-11-17 „mache das projekt bis zu
+# ende durch“): only the re-ranking (chat.rerank_model) takes an own one; the meaning search's embedding stays, because
+# every stored vector belongs to its model. It runs on the panel's computer on the CPU (nachsortieren.py,
+# embed_worker.py), so its entry is kept there, also beside a model computer.
+KLEIN_ROLLE = {"nachsortieren": ("rerank-klein", "rerank-gross")}   # the checked models whose families an own one must share
+ONNX_PFAD = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._/-]{0,199}\.onnx$")
+KLEIN_MAX_BYTES = 2 * 2**30            # one ONNX file without external data (protobuf's own limit)
+KLEIN_NEED_GIB = 6.0                   # like the large checked one: the worker starts only with this much free memory
+KLEIN_PROBE = ("Wie hoch ist der Eiffelturm?",
+               ("Der Eiffelturm in Paris ist mit Antenne etwa 330 Meter hoch.",
+                "Kartoffeln werden im Frühjahr gepflanzt und im Herbst geerntet."))
+
+
+def klein_ok(d):
+    """The own file of a small model: an .onnx path inside the repository, its SHA-256 and size (at most 2 GiB)."""
+    return (isinstance(d, dict) and set(d) == {"path", "sha256", "size"} and isinstance(d["path"], str)
+            and ONNX_PFAD.match(d["path"]) is not None and ".." not in d["path"] and isinstance(d["sha256"], str)
+            and SHA256.match(d["sha256"]) is not None and isinstance(d["size"], int) and not isinstance(d["size"], bool)
+            and 0 < d["size"] <= KLEIN_MAX_BYTES)
+
+
+def klein_vorschlag(info, repo, datei, familien=()):
+    """An own re-ranking model from the Hugging Face metadata of one commit: the named .onnx file (size and SHA-256 from
+    its LFS pointer, no external data beside it), a tokenizer.json, no code, open (the panel's computer has no token),
+    and the family of its config.json one of familien (those of the checked re-rankers). Raises Fehler with a word."""
+    if not REPO.match(str(repo)) or ".." in repo:
+        raise Fehler("repo")
+    if not isinstance(info, dict) or not REV.match(str(info.get("sha", ""))):
+        raise Fehler("antwort")
+    _zugang(info, False)
+    files = {x.get("rfilename"): x for x in info.get("siblings") or [] if isinstance(x, dict) and isinstance(x.get("rfilename"), str)}
+    x = files.get(datei) or {}
+    lfs = x.get("lfs") if isinstance(x.get("lfs"), dict) else {}
+    d = {"path": str(datei), "sha256": lfs.get("sha256"), "size": lfs.get("size")}
+    if (not klein_ok(d) or "tokenizer.json" not in files or len(files) > 2000
+            or any(f.startswith(datei) and f != datei for f in files)):      # model.onnx_data, model.onnx.data
+        raise Fehler("format" if not (isinstance(d["size"], int) and d["size"] > KLEIN_MAX_BYTES) else "budget")
+    cfg = info.get("config") if isinstance(info.get("config"), dict) else {}
+    if any(w in json.dumps(cfg) for w in ('"auto_map"', "trust_remote_code")):
+        raise Fehler("code")
+    if familie(cfg) is None or familie(cfg) not in familien:
+        raise Fehler("familie")
+    card = info.get("cardData") if isinstance(info.get("cardData"), dict) else {}
+    lizenz = _wort(card.get("license") if isinstance(card.get("license"), str) else "", 32) or "unbekannt"
+    name = re.sub(r"[^A-Za-z0-9 ._-]+", "", repo.split("/", 1)[1])[:48] or "Modell"
+    mid = ("eigen-" + _wort(repo.split("/", 1)[1] + "-" + os.path.basename(datei)[:-5], 41)).rstrip("-.")
+    return eigen_ok({"id": mid, "art": "klein", "rolle": "nachsortieren", "variante": mid, "name": {"de": name, "en": name},
+                     "engine": "onnx-cpu", "datei": d, "repo": repo, "revision": info["sha"], "lizenz": lizenz,
+                     "gewerblich": lizenz in FREI, "platte_gb": max(0.01, round(d["size"] / 1e9, 2)),
+                     "need_gib": KLEIN_NEED_GIB, "gemessen": False, "betrieb": "bei_bedarf", "eigen": True})
+
+
+def klein_pruefen(mid, cfg, kat=None):
+    """The fixed rules for using a re-ranking model (a checked one or an own one): an entry of that role, not the one
+    set now. Returns the entry; raises Fehler with a fixed word. The probe at its first start decides (nachsortieren)."""
+    kat = katalog() if kat is None else kat
+    m = kat.get(mid)
+    if not m or m["art"] != "klein" or m.get("rolle") != "nachsortieren" or not m.get("variante"):
+        raise Fehler("art")
+    if jetzt_id("klein", cfg, kat) == mid:
+        raise Fehler("schon")
+    return m
+
+
+def klein_probe(scores):
+    """The fixed probe of a re-ranking model: the passage that answers KLEIN_PROBE's question must score higher than the
+    one that does not. (ok, word)."""
+    if not (isinstance(scores, list) and len(scores) == 2 and all(isinstance(x, (int, float)) and not isinstance(x, bool) for x in scores)):
+        return False, "antwort"
+    return (True, "ok") if scores[0] > scores[1] else (False, "reihenfolge")
+
+
 def datei_laden(mid, kat=None, log=print):
     """Root's step before the switch to an own picture or music file (as the panel's user): fetch the variant's files
     (bildmodell.fetch: size and SHA-256), then the own file's GGUF header must name the same family as its basis's
@@ -1846,6 +1991,13 @@ def datei_probe(art, cfg=None, post=None):
     raise Fehler("art")
 
 
+def sprach_eigen(sec, repo, kat=None):
+    """True when repo is an own speech model (SPRACH) of this kind in the catalog: the configuration may then name it
+    beside Qwen's own (common.MODEL_ID); engine.sh checks the same before it starts (modelle.py sprach-eigen)."""
+    m = zum_repo(repo, kat) if sec in SPRACH and isinstance(repo, str) and REPO.match(repo) and ".." not in repo else None
+    return bool(m and m.get("eigen") and m["art"] == sec and m["engine"] == SPRACH[sec][0])
+
+
 def eigene_eintraege(art, path=None):
     """The own entries of one kind that pass eigen_ok (bildmodell.eigene builds the own variants from them)."""
     out = []
@@ -1877,6 +2029,12 @@ def eigen_ok(m):
         if not (m.get("eigen") is True and str(m["id"]).startswith("eigen-") and m["engine"] == e
                 and m.get("variante") == m["id"] and m.get("basis") in basen and datei_ok(m.get("datei"))
                 and REV.match(m["revision"]) and not {"vllm", "wahl", "rolle", "empfohlen"} & set(m)):
+            raise Fehler("eigen")
+        return m
+    if m.get("art") == "klein":       # an own re-ranking model: one ONNX file on the panel's computer
+        if not (m.get("eigen") is True and str(m["id"]).startswith("eigen-") and m["engine"] == "onnx-cpu"
+                and m.get("rolle") in KLEIN_ROLLE and m.get("variante") == m["id"] and klein_ok(m.get("datei"))
+                and REV.match(m["revision"]) and not {"vllm", "wahl", "empfohlen", "basis"} & set(m)):
             raise Fehler("eigen")
         return m
     if m.get("art") in SPRACH:        # an own speech model: its kind's program, a pinned commit, never a choice of install.sh
@@ -2244,7 +2402,7 @@ def eigen_loeschen(mid, cfg, now=None, path=EIGENE, wechsel=WECHSEL, hf_home=Non
     m = next((x for x in alle if x.get("id") == mid), None)
     if m is None:
         raise Fehler("unbekannt")
-    if any(jetzt_id(a, cfg) == mid for a in TAUSCH):
+    if any(jetzt_id(a, cfg) == mid for a in TAUSCH + ("klein",)):
         raise Fehler("aktiv")
     w = read_json(wechsel, {}).get(m.get("art")) or {}
     if w.get("alt") == mid and (time.time() if now is None else now) - float(w.get("zeit", 0)) <= ALT_TAGE * 86400:
@@ -2558,6 +2716,16 @@ def cli(args, log=print):
             print(f"modelle: geladen {m['id']} geprueft", file=sys.stderr, flush=True)
             log(rev)
             return 0
+        if cmd == "anteil":                 # engine.sh: a speech engine's share for this computer's pool (sprach_anteil)
+            if len(args) != 2 or not re.fullmatch(r"0?\.[0-9]{1,6}", args[1]):
+                raise Fehler("anteil")
+            log(f"{sprach_anteil(float(args[1])):.4f}")
+            return 0
+        if cmd == "sprach-eigen":           # engine.sh: is this repository an own speech model of this role's program?
+            m = zum_repo(args[2]) if len(args) == 3 and args[1] in SPRACH else None
+            ok = bool(m and m.get("eigen") and m["art"] == args[1] and m["engine"] == SPRACH[args[1]][0])
+            log("ja" if ok else "nein")
+            return 0 if ok else 1
         if cmd == "fest":                   # install.sh dl, engine.sh: "<id> <commit>" of a pinned repository
             m = fest(args[1])
             log(f"{m['id']} {m['revision']}")
