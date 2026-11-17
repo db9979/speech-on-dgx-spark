@@ -16741,7 +16741,15 @@
 "file": "Sicherheit und Betrieb",
 "head": "Probleme melden",
 "title": "Käfer-Symbol: Fehler oder Wunsch von jeder Seite",
-"text": "V01.1.466 ist die Beschreibung dann schon vorausgefüllt mit dem, was die Seite bemerkt hat (Art „Fehler“): „Auf der Seite „Kalender“ hat der Käfer 2 Fehler bemerkt:“, darunter je Fehler höchstens Art, Status und Pfad („Anfrage /api/… ist gescheitert (404)“), bei einem JavaScript-Fehler nur Datei und Zeile, nie seine Meldung, höchstens 5 Zeilen, dann „Was ich gerade gemacht habe: “. Du änderst oder löschst den Text vor dem Senden; er wird wie jede Beschreibung anonymisiert und geprüft (melden.js rpFound). Der Käfer bleibt beim Scrollen stehen und steht auch auf Ich. Seit V01.1.473 sitzt er am Rechner oben im Seitenmenü links neben dem Mikrofon, so überdeckt er nie Knöpfe einer Seite (Chat, Fernzugang); am Handy steht er mit Abstand links neben dem Mikrofon. Der Wächter-Test test_ui_browser.Browser.test_report_bug_covers_nothing prüft auf jeder Seite und auf Ich, am Rechner und am Handy, dass kein Knopf, Link, Feld, Mikrofon oder Seitentitel näher als 6 Pixel am Käfer liegt."
+"text": "V01.1.466 ist die Beschreibung dann schon vorausgefüllt mit dem, was die Seite bemerkt hat (Art „Fehler“): „Auf der Seite „Kalender“ hat der Käfer 2 Fehler bemerkt:“, darunter je Fehler höchstens Art, Status und Pfad („Anfrage /api/… ist gescheitert (404)“), bei einem JavaScript-Fehler nur Datei und Zeile, nie seine Meldung, höchstens 5 Zeilen, dann „Was ich gerade gemacht habe: “. Du änderst oder löschst den Text vor dem Senden; er wird wie jede Beschreibung anonymisiert und geprüft (melden.js rpFound). Der Käfer bleibt beim Scrollen stehen und steht auch auf Ich. Seit V01.1.473 sitzt er am Rechner oben im Seitenmenü links neben dem Mikrofon, so überdeckt er nie Knöpfe einer Seite (Chat, Fernzugang); am Handy steht er mit Abstand links neben dem Mikrofon. Der Wächter-Test test_ui_browser.Browser.test_report_bug_covers_nothing prüft auf jeder Seite und auf Ich, am Rechner und am Handy, dass kein Knopf, Link, Feld, Mikrofon oder Seitentitel näher als 6 Pixel am Käfer liegt. Eingaben bleiben (ab V01.1.500, Dominik 2026-11-17): Ich lädt seine Kästen bei jedem Wechsel nach Ich und wenn der Spark wieder antwortet neu; dabei zeichnet Probleme melden sein Formular neu, und bis dahin versc"
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Probleme melden",
+"title": "Käfer-Symbol: Fehler oder Wunsch von jeder Seite",
+"text": "hwand, was schon getippt war. Jetzt stehen Text, Art, Bereich, Zeitraum und Haken danach wieder da, der Cursor bleibt im Feld (melden.js rpKeep, Test test_ui_browser.Browser.test_report_form_keeps_input, Handy und Rechner)."
 },
 {
 "lang": "de",
@@ -34477,7 +34485,15 @@
 "file": "Security and operation",
 "head": "Reporting problems",
 "title": "Ladybug: a fault or a wish from every page",
-"text": " (kind \"Fault\"): \"On the page \"Calendar\" the ladybug noticed 2 errors:\", below it for each error at most kind, status and path (\"Request /api/… failed (404)\"), for a JavaScript error only file and line, never its message, at most 5 lines, then \"What I was doing: \". You change or delete the text before sending; it is anonymized and checked like any description (melden.js rpFound). The ladybug stays in its place while the page scrolls and stands on Me too. Since V01.1.473 it sits on the computer in the head of the side menu left of the microphone, so it never covers a page's buttons (chat, remote access); on the phone it stands left of the microphone with room between. The guard test test_ui_browser.Browser.test_report_bug_covers_nothing checks on every page and on Me, on the computer and the phone, that no button, link, field, microphone or page title lies closer than 6 pixels to the ladybug."
+"text": " (kind \"Fault\"): \"On the page \"Calendar\" the ladybug noticed 2 errors:\", below it for each error at most kind, status and path (\"Request /api/… failed (404)\"), for a JavaScript error only file and line, never its message, at most 5 lines, then \"What I was doing: \". You change or delete the text before sending; it is anonymized and checked like any description (melden.js rpFound). The ladybug stays in its place while the page scrolls and stands on Me too. Since V01.1.473 it sits on the computer in the head of the side menu left of the microphone, so it never covers a page's buttons (chat, remote access); on the phone it stands left of the microphone with room between. The guard test test_ui_browser.Browser.test_report_bug_covers_nothing checks on every page and on Me, on the computer and the phone, that no button, link, field, microphone or page title lies closer than 6 pixels to the ladybug. Input stays (since V01.1.500, Dominik 2026-11-17): Me loads its boxes again on every change to Me and when the Spark answers again; then Reporting problems draws its form anew, and until now what was already typed vanished. Now text, kind, area, time window and ticks stand there again afterward"
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Reporting problems",
+"title": "Ladybug: a fault or a wish from every page",
+"text": "s, the cursor stays in the field (melden.js rpKeep, test test_ui_browser.Browser.test_report_form_keeps_input, phone and computer)."
 },
 {
 "lang": "en",

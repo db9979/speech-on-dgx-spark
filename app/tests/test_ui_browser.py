@@ -1665,6 +1665,37 @@ class Browser(unittest.TestCase):
             for i in ids:
                 documents.delete(me, i)
 
+    def test_report_form_keeps_input(self):
+        """Eingaben bleiben (Dominik 2026-11-17: „beim Issue melden verschwindet die Eingabemaske“): Ich lädt seine
+        Kästen neu (jeder Wechsel nach Ich, „Spark antwortet wieder“), dabei zeichnet Probleme melden sein Formular neu;
+        was die Person schon getippt und gewählt hat, steht danach wieder da, mit dem Cursor im Feld."""
+        async def go():
+            async with async_playwright() as p:
+                for name, w, h in VIEWS:
+                    helpers.set_config(report=True)
+                    br, pg, errors = await self.page(p, w, h, csp=True)
+                    await self.loaded(pg)
+                    await self.until(pg, "typeof PROFILE!=='undefined'&&!!PROFILE")
+                    await pg.evaluate("document.getElementById('wizmodal')&&(document.getElementById('wizmodal').style.display='none')")
+                    await pg.evaluate("openMe('rpbox')")
+                    await pg.wait_for_selector("#rpbox .rptext", state="visible", timeout=20000)
+                    await self.until(pg, "!ME_LOAD.p")
+                    await pg.click("#rpbox [data-rpkind=verbesserung]")
+                    await pg.uncheck("#rpbox .rpsys")
+                    await pg.click("#rpbox .rptext")
+                    await pg.keyboard.type("Die Woche im Kalender")
+                    await pg.evaluate("window._redrawn=false;new MutationObserver(()=>_redrawn=true).observe(document.getElementById('rpbox'),{childList:true})")
+                    await pg.evaluate("openMe('rpbox')")                         # Ich loads its boxes again
+                    await self.until(pg, "_redrawn&&!ME_LOAD.p&&!!document.querySelector('#rpbox .rptext')")
+                    self.assertEqual(await pg.input_value("#rpbox .rptext"), "Die Woche im Kalender", name)
+                    self.assertEqual(await pg.get_attribute("#rpbox [data-rpkind].on", "data-rpkind"), "verbesserung", name)
+                    self.assertFalse(await pg.is_checked("#rpbox .rpsys"), name)
+                    self.assertTrue(await pg.evaluate("document.activeElement===document.querySelector('#rpbox .rptext')"), name)
+                    await pg.keyboard.type(" zeigen")                               # the cursor stayed at the end
+                    self.assertEqual(await pg.input_value("#rpbox .rptext"), "Die Woche im Kalender zeigen", name)
+                    await br.close()
+        asyncio.run(go())
+
     def test_report_bug_on_every_page(self):
         """Käfer-Symbol (Dominik 2026-11-13): on top of every page while „Probleme melden“ is on, never without it; it
         opens the report window with the page's name, the area that fits it, the choice Fehler/Verbesserung and the

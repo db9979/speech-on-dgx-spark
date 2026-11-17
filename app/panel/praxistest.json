@@ -6514,6 +6514,14 @@
 "text": "iPhone-App nach dem nächsten TestFlight-Build, Assistent: oben rechts stehen höchstens Chats, Käfer und „⋯“. Ein Tipp auf „⋯“ öffnet ein Menü mit „Heute“ und „Einstellungen“; beide öffnen ihr Blatt. Der Käfer öffnet „Fehler oder Wunsch melden“.",
 "thread": "Drei-Punkte-Menü in iOS-App reparieren",
 "test": "test_ios_leiste.AssistentLeiste.test_each_side_at_most_three"
+},
+{
+"id": "P944",
+"v": 1500,
+"titel": "Meldeformular behält den Text",
+"text": "Am Handy im Browser und am Rechner: Ich → Probleme melden öffnen, „Verbesserung“ wählen und einen Satz tippen. Dann einmal auf eine andere Seite und zurück nach Ich → Probleme melden (oder kurz warten, bis alles geladen ist). Text, Art und Haken stehen noch da, das Formular verschwindet nicht. Ebenso im Fenster über den Käfer.",
+"thread": "Fehler und Wünsche als Issue melden",
+"test": "test_ui_browser.Browser.test_report_form_keeps_input"
 }
 ]
 }

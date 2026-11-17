@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.500** Probleme melden: getippter Text bleibt stehen, wenn Ich neu lädt
 - **V01.1.499** iPhone-App: „⋯“ oben rechts im Assistenten öffnet wieder Heute und Einstellungen
 - **V01.1.498** Modellsuche mit Empfehlung: passende Modelle zuerst, Stern nach fester Regel, geprüfte Empfehlung je Anwendung
 - **V01.1.497** Modellseite der Spark-Konsole: Eingaben bleiben beim Auffrischen stehen
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.493** Spark-Konsole: neuer Reiter „Modell genau“ mit Anfragen, Warteschlangen, Chat-Modell, GPU und Verlauf, dazu eine Zeile zum Chat-Modell im Überblick
 - **V01.1.492** Modell-Bibliothek auf der Platte und Hugging-Face-Token für schnellere und freigegebene Downloads
 - **V01.1.491** Modell-Rechner genau: Verlauf ohne doppelte Linien, tok/s ohne Zacken
-- **V01.1.490** Notbremse: wird der Speicher knapp, beendet das Sprachmodell die älteste Antwort, bevor DGX OS Programme beendet (aus, Einstellungen → Spark → Betrieb)
 
 
 

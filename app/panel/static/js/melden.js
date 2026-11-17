@@ -58,6 +58,7 @@ async function rpList(root,here){RP.root=root;RP.cur=null;RP.thread=null;here=he
       <button class="b" type="button" data-rpdel="${esc(x.id)}">${esc(t('Löschen','Delete'))}</button></span></li>`};
   const nsw=PROFILE&&root.id==='rpbox'&&d.notify?xsw('report_notify',t('Mich über neue Meldungen informieren','Tell me about new reports'),t('Als Admin sagt dir der Assistent, wenn ein Profil eine Meldung sendet oder ablegt: wer, Bereich und Weg, nie der Text. Aus: keine Nachricht an dich.','As an admin the assistant tells you when a profile sends or keeps a report: who, area and way, never the text. Off: no note to you.')):'';
   const kinds=d.kinds||[{key:'fehler',name:['Fehler','Fault']}];
+  const kept=rpKeep(root);
   root.innerHTML=intro+nsw+`
     <div class="seg rpkind" role="group" aria-label="${esc(t('Art','Kind'))}">${kinds.map((k,i)=>`<button type="button" class="b${i?'':' on'}" data-rpkind="${esc(k.key)}" aria-pressed="${i?'false':'true'}">${esc(t(k.name[0],k.name[1]))}</button>`).join('')}</div>
     <label for="rp_text_${root.id}">${esc(t('Was ist passiert?','What happened?'))}</label>
@@ -74,6 +75,7 @@ async function rpList(root,here){RP.root=root;RP.cur=null;RP.thread=null;here=he
     <h3 style="margin:14px 0 4px">${esc(d.staff?t('Alle Meldungen','All reports'):t('Meine Meldungen','My reports'))}</h3>
     <ul class="facts rplist">${d.items.map(item).join('')||`<li class="mut"><span>${esc(t('Noch keine.','None yet.'))}</span></li>`}</ul>`;
   if(nsw)xbind(root,()=>rpList(root));
+  if(kept)kept();
   {const tx=root.querySelector('.rptext'),f=here&&here.found?rpFound(here):'';if(tx&&f&&!tx.value){tx.value=f}}
   const pn=root.querySelector('.rppagen');if(pn)pn.textContent='('+here.page+' · '+(RP_ERR.length?RP_ERR.length+' '+t('Fehler',RP_ERR.length===1?'error':'errors'):t('keine Fehler','no errors'))+')';
   root.querySelectorAll('[data-rpkind]').forEach(b=>b.onclick=()=>root.querySelectorAll('[data-rpkind]').forEach(x=>{const on=x===b;x.classList.toggle('on',on);x.setAttribute('aria-pressed',on?'true':'false')}));
@@ -90,6 +92,19 @@ async function rpList(root,here){RP.root=root;RP.cur=null;RP.thread=null;here=he
   root.querySelectorAll('[data-rpthread]').forEach(b=>b.onclick=()=>rpThread(root,b.dataset.rpthread));
   root.querySelectorAll('[data-rpdel]').forEach(b=>b.onclick=async()=>{if(!confirm(t('Diese Meldung auf dem Spark löschen? Auf GitHub bleibt eine gesendete Meldung.','Delete this report on the Spark? A sent report stays on GitHub.')))return;
     try{await api('/api/report/delete',xjson('POST',{id:b.dataset.rpdel}));rpList(root)}catch(x){rpMsg(x.message,true)}})}
+// Eingaben bleiben (Dominik 2026-11-17: „beim Issue melden verschwindet die Eingabemaske“): Ich lädt seine Kästen neu
+// (jeder Wechsel nach Ich, „Spark antwortet wieder“, der Mitteilungs-Schalter), dann zeichnet rpList das Formular neu.
+// Was die Person schon getippt oder gewählt hat, steht danach wieder da, samt Cursor; nur die Liste ist frisch.
+function rpKeep(root){const q=s=>root.querySelector(s),tx=q('.rptext');if(!tx||!tx.isConnected)return null;
+  const kd=q('[data-rpkind].on'),had=document.activeElement===tx,a=tx.selectionStart,b=tx.selectionEnd,
+    v={text:tx.value,kind:kd&&kd.dataset.rpkind,area:q('.rparea')&&q('.rparea').value,min:q('.rpmin')&&q('.rpmin').value,
+      chk:[...root.querySelectorAll('input.chk,label.chk input')].map(x=>[x.className,x.checked])};
+  if(!v.text&&!had)return null;
+  return ()=>{const t2=q('.rptext');if(!t2)return;t2.value=v.text;
+    if(v.kind)root.querySelectorAll('[data-rpkind]').forEach(x=>{const on=x.dataset.rpkind===v.kind;x.classList.toggle('on',on);x.setAttribute('aria-pressed',on?'true':'false')});
+    if(v.area&&q('.rparea'))q('.rparea').value=v.area;if(v.min&&q('.rpmin'))q('.rpmin').value=v.min;
+    for(const [c,on] of v.chk){const x=c&&root.querySelector('input.'+c.split(' ')[0]);if(x)x.checked=on}
+    if(had){t2.focus({preventScroll:true});try{t2.setSelectionRange(a,b)}catch{}}}}
 // ---------------------------------------------------------------- the preview
 function rpCounts(c){const n=Object.entries(c||{}).filter(([,v])=>v);return n.length?n.map(([k,v])=>`${v}× [${k}]`).join(', '):t('nichts','nothing')}
 function rpShow(root,r){RP.root=root;RP.cur=r;const p=r.preview||{};if(Array.isArray(r.skip)&&!RP.skip.size)RP.skip=new Set(r.skip);
