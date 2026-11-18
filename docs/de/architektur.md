@@ -105,7 +105,7 @@ flowchart TB
 | Telefon im Panel | UDP 31060, Ton UDP 31062–31068 | Den Spark anrufen (SIP und RTP nur mit der Telefonanlage im Heimnetz) |
 | `speech-spark-turn` | 3478, Relais 49160–49200 | Vermittler für Anrufe von unterwegs (coturn), nur mit dem Schalter an |
 | `speech-spark-guacd` | 4822 (nur lokal) | guacd für Fernzugang → Bildschirm, nur mit `--fernbild`; das Panel startet es, wenn ein Bildschirm aufgeht, es erreicht nur 127.0.0.1 |
-| `speech-spark-llmtor` → `speech-spark-llm` | 31006 → 31016 (nur lokal) | Eigenes Sprachmodell (vLLM) hinter dem LLM-Tor; Bildverständnis `speech-spark-sehen` auf 31017 und Hilfsmodell `speech-spark-helfer` auf 31018 bei Bedarf; ein gemessenes Sprachmodell in Docker läuft in `speech-spark-llm-docker` (root, ohne Netz), `speech-spark-llm` ist dann nur das Tor zu seinem Socket |
+| `speech-spark-llmtor` → `speech-spark-llm` | 31006 → 31016 (nur lokal) | Eigenes Sprachmodell (vLLM) hinter dem LLM-Tor; Bildverständnis `speech-spark-sehen` auf 31017 und Hilfsmodell `speech-spark-helfer` auf 31018 bei Bedarf; nur auf einem Spark allein Einbetten `speech-spark-einbetten` auf 31020 und Nachsortieren `speech-spark-nachsortieren` auf 31021, beide über die Spark-Konsole geladen; ein gemessenes Sprachmodell in Docker läuft in `speech-spark-llm-docker` (root, ohne Netz), `speech-spark-llm` ist dann nur das Tor zu seinem Socket |
 | `speech-spark-bild` | 31005 → 31015 (nur lokal) | Bilder malen und ändern (FLUX.2 klein) |
 | `speech-spark-musik` | 31004 → 31014 (nur lokal) | Musik machen (ACE-Step 1.5), die Engine nur während eines Lieds |
 | `speech-spark-waerter` | 127.0.0.1:31007 | Wärter: feste Befehle vom Panel-Rechner (nur bei Spark teilen, hinter dem TLS-Tor) |
@@ -591,7 +591,7 @@ Spracherkennung und Sprachausgabe als eigene Dienste, mit Vorrang vor allem ande
 | `app/hardware.py` | Hardware-Profil: DGX Spark oder Station aus fester nvidia-smi-Abfrage, GiB des Katalogs als Anteil hier |
 | `app/hftoken.py` | Hugging-Face-Token des Admins: nur auf dem Modell-Rechner, 0600, nur an huggingface.co |
 | `app/kurzref.py` | Kürzere Referenz einer geklonten Stimme: schneidet an einer Pause, behält die Wörter des eigenen Textes |
-| `app/llm_tor.py` | LLM-Tor: Tür zum eigenen Sprachmodell mit Schlüssel, Feldgrenzen, System One und Lebensprobe |
+| `app/llm_tor.py` | LLM-Tor: Tür zum eigenen Sprachmodell mit Schlüssel, Feldgrenzen, System One, Einbetten, Nachsortieren und Lebensprobe |
 | `app/llmstart.py` | Was das eigene Sprachmodell beim Wechseln und Starten tut: feste Schritte, Zeiten, Phase der Engine, Satz für den Chat |
 | `app/modelle.py` | Modell-Katalog (modelle.json): Regeln je Eintrag, Prüfung der Dateien, Messen, Regeln für Wechsel und eigene Modelle |
 | `app/musik_server.py` | Musik-Dienst: startet ACE-Step 1.5 bei Bedarf, prüft und kennzeichnet jedes Lied |

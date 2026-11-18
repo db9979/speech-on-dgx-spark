@@ -618,7 +618,8 @@ class Seite(unittest.TestCase):
         d = modellseite.seite(Budget.own(Budget.CFG)[0], 120, {"zeit": 5, "modelle": {"qwen36-35b-a3b-nvfp4": {
             "ok": True, "tok_s": 24.7, "grund": "x", "frei_start_gib": 90}}})
         arten = {a["art"]: a for a in d["arten"]}
-        self.assertEqual(set(arten), set(modelle.ARTEN))
+        # Einbetten and Nachsortieren only in the Spark-Konsole of a Spark alone (test_einbetten), never on this page
+        self.assertEqual(set(arten), set(modelle.ARTEN) - set(modelle.POOL_ARTEN))
         q = next(m for m in arten["llm"]["modelle"] if m["id"] == "qwen36-35b-a3b-nvfp4")
         self.assertEqual(q["messung"], {"ok": True, "tok_s": 24.7})     # only the fixed numbers, nothing else
         self.assertTrue(q["aktiv"])

@@ -3,7 +3,8 @@
 // their rights, class and limits. A new key is shown once (fresh code); names, networks and numbers all through esc().
 let SPC=null;
 const SPC_RECHT={llm:['Sprachmodell','Language model'],sehen:['Bilder verstehen','Understand pictures'],helfer:['Hilfsmodell','Helper model'],
-  systemone:['Einordnen (System One)','Classify (System One)'],asr:['Hören','Listening'],tts:['Sprechen','Speaking'],bild:['Bilder','Pictures'],musik:['Musik','Music']};
+  systemone:['Einordnen (System One)','Classify (System One)'],asr:['Hören','Listening'],tts:['Sprechen','Speaking'],bild:['Bilder','Pictures'],musik:['Musik','Music'],
+  einbetten:['Einbetten','Embeddings'],nachsortieren:['Nachsortieren','Re-ranking']};
 const SPC_KLASSE={sprache:['Sprache','Speech'],dialog:['Dialog','Dialogue'],hintergrund:['Hintergrund','Background']};
 const spcT=p=>p?t(p[0],p[1]):'';
 async function spcLoad(){const sec=$('spcsec'),box=$('spcbox');if(!sec||!box)return;

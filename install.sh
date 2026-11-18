@@ -513,7 +513,7 @@ ports=""
 [ "$TEILEN" = 1 ] && ports="$ports 31007"   # the Wärter (common.WAERTER_PORT); the door shares the services' ports
 [ "$WITH_BILD" = 1 ] && ports="$ports $(cfg_int .image.port 31005) $(cfg_int .image.engine_port 31015)"
 [ "$WITH_MUSIK" = 1 ] && ports="$ports $(cfg_int .music.port 31004) $(cfg_int .music.engine_port 31014)"
-[ "$LLM_ON" = 1 ] && ports="$ports $(cfg_int .llm.port 31006) $(cfg_int .llm.engine_port 31016) $(cfg_int .llm.sehen_port 31017) $(cfg_int .llm.helfer_port 31018)"
+[ "$LLM_ON" = 1 ] && ports="$ports $(cfg_int .llm.port 31006) $(cfg_int .llm.engine_port 31016) $(cfg_int .llm.sehen_port 31017) $(cfg_int .llm.helfer_port 31018) $(cfg_int .llm.einbetten_port 31020) $(cfg_int .llm.nachsortieren_port 31021)"
 for p in $ports; do
   owner=$(ss -ltnpH "sport = :$p" 2>/dev/null | head -1)
   [ -n "$owner" ] || continue
@@ -1026,7 +1026,7 @@ fi
 {
   printf '%s ALL=(root) NOPASSWD: ' "$SVC_USER"
   first=1
-  for u in asr asr-engine tts tts-engine bild musik tts-design tts-klon turn llm llmtor sehen helfer guacd; do
+  for u in asr asr-engine tts tts-engine bild musik tts-design tts-klon turn llm llmtor sehen helfer einbetten nachsortieren guacd; do
     for a in start stop restart; do
       [ $first = 1 ] || printf ', '
       printf '/usr/bin/systemctl %s speech-spark-%s' "$a" "$u"; first=0
@@ -1219,6 +1219,10 @@ engine_unit asr-engine asr
 engine_unit llm llm
 engine_unit sehen sehen
 engine_unit helfer helfer
+# Einbetten and Nachsortieren (pooling engines, Spark-Konsole on a Spark alone): resident once a model is loaded,
+# enabled and started by the switch (speech-spark-wechsel), off while llm.einbetten_modell / nachsortieren_modell is ""
+engine_unit einbetten einbetten
+engine_unit nachsortieren nachsortieren
 sed -i 's/^Restart=on-failure$/Restart=no/' /etc/systemd/system/speech-spark-sehen.service /etc/systemd/system/speech-spark-helfer.service
 
 # Docker stage 2 (Dominik 2026-11-17): a measured language model in Docker. Root runs the container (speech-spark.sh
@@ -2182,9 +2186,19 @@ if [ "$LLM_ON" = 1 ]; then
   systemctl enable speech-spark-llm-docker.service >/dev/null 2>&1 || true    # starts and stops with speech-spark-llm
   restart_engine llm "$VLLM_LLM_VERSION $("$PREFIX/venv-panel/bin/python" "$PREFIX/app/modelle.py" signatur llm 2>/dev/null \
     || echo unbekannt)"
+  # Einbetten / Nachsortieren: only with a model loaded from the Spark-Konsole (after the language model, engine.sh's order)
+  for pool in einbetten nachsortieren; do
+    if [ -n "$(cfgq -r ".llm.${pool}_modell // \"\"")" ]; then
+      restart_engine "$pool" "$VLLM_LLM_VERSION $("$PREFIX/venv-panel/bin/python" "$PREFIX/app/modelle.py" signatur "$pool" 2>/dev/null \
+        || echo unbekannt)"
+    else
+      systemctl disable --now "speech-spark-$pool.service" 2>/dev/null || true
+    fi
+  done
 else
   systemctl disable --now speech-spark-llmtor.service speech-spark-llm.service speech-spark-llm-docker.service 2>/dev/null || true
   systemctl stop speech-spark-sehen.service speech-spark-helfer.service 2>/dev/null || true
+  systemctl disable --now speech-spark-einbetten.service speech-spark-nachsortieren.service 2>/dev/null || true
 fi
 
 if [ "$WITH_ASR" = 1 ] && [ "$ASR_BACKEND" = vllm ]; then

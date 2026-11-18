@@ -151,6 +151,8 @@ LIST = {
     ("POST", "/api/admin/modelle/neustart"): (CONFIRM, "Spark", "Sprachmodell mit Katalog-Einstellungen neu starten",
                                              "Restart the language model with its catalog settings"),
     ("POST", "/api/admin/modelle/zurueck"): (CONFIRM, "Spark", "Das vorige Modell zurückholen", "Bring back the previous model"),
+    ("POST", "/api/admin/modelle/entladen"): (CONFIRM, "Spark", "Einbetten oder Nachsortieren entladen (Spark-Konsole)",
+                                              "Unload embeddings or re-ranking (Spark-Konsole)"),
 
     ("DELETE", "/api/admin/fernzugang/verlauf"): (CONFIRM, "Spark", "Verlauf des Fernzugangs löschen", "Delete the remote access history"),
     ("DELETE", "/api/admin/spontanhilfe/verlauf"): (CONFIRM, "Spark", "Verlauf der Spontanhilfe löschen", "Delete the spontaneous help history"),

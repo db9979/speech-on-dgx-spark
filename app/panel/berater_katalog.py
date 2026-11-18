@@ -194,6 +194,7 @@ OHNE = {
     "llm": (
         "enabled", "engine_port", "host", "max_body_mb", "modell", "platz", "port", "sehen_leerlauf_min", "sehen_modell",
         "sehen_port", "helfer_leerlauf_min", "helfer_modell", "helfer_port",
+        "einbetten_modell", "einbetten_port", "nachsortieren_modell", "nachsortieren_port",
     ),
     "logs": (
         "keep_days", "live", "live_monitor", "live_names", "live_screens", "max_mb", "trace",

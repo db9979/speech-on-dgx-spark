@@ -50,7 +50,7 @@ import time
 import urllib.request
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from common import MODEL_LOG_UNITS, STATE, klon_noetig, load_config, mem_available_gib, read_json, write_json  # noqa: E402
+from common import MODEL_LOG_UNITS, STATE, klon_noetig, spark_allein, load_config, mem_available_gib, read_json, write_json  # noqa: E402
 import hardware  # noqa: E402
 import hftoken  # noqa: E402
 
@@ -59,7 +59,8 @@ MESSUNG = os.path.join(STATE, "modelle-messung.json")
 ARTEN = {"llm": ("Sprachmodell", "Language model"), "sehen": ("Bildverständnis", "Image understanding"),
          "asr": ("Spracherkennung", "Speech recognition"), "tts": ("Sprachausgabe", "Speech output"),
          "bild": ("Bilder malen", "Painting pictures"), "musik": ("Musik machen", "Making music"),
-         "klein": ("Kleine Modelle (CPU)", "Small models (CPU)"), "helfer": ("Hilfsmodell", "Helper model")}
+         "klein": ("Kleine Modelle (CPU)", "Small models (CPU)"), "helfer": ("Hilfsmodell", "Helper model"),
+         "einbetten": ("Einbetten", "Embeddings"), "nachsortieren": ("Nachsortieren", "Re-ranking")}
 # vllm: an engine this installation starts itself (the strict rules below); the others are run as before by their
 # own services and are listed for the budget: the speech models, sd.cpp, acestep.cpp, ONNX on the CPU
 ENGINES = ("vllm", "qwen-asr", "qwen-tts", "sdcpp", "acestepcpp", "onnx-cpu")
@@ -69,7 +70,7 @@ ANTEIL_MAX = 0.80
 GPU_GIB_MAX = 1024     # gpu_gib of one engine: what vLLM reserves for weights and context, in GiB (any computer)
 MESS_PORT = 31016
 VLLM_KEYS = ("reasoning_parser", "tool_call_parser", "mtp", "max_seqs", "quantization", "bilder_pro_frage", "kv_cache_dtype",
-             "venv", "docker", "entwurf", "entwurf_revision", "batched_tokens")
+             "venv", "docker", "entwurf", "entwurf_revision", "batched_tokens", "pooling")
 # a separate draft model for speculative decoding (Gemma 4's „assistant“, Dominik 2026-11-13 „1“): only a repository
 # name; fetched and checked like the weights, only for an entry still measured (no pinned revision), its MoE on Triton
 # (the recipe for Blackwell desktops: the drafter's default fused MoE path is not built there)
@@ -80,7 +81,23 @@ LOGPROBS_MAX = 20                # top_logprobs an engine started here gives (--
 ROLLEN = {"llm": ("modell", "engine_port", 31016), "sehen": ("sehen_modell", "sehen_port", 31017),   # config llm.*
           # the small helper model beside the language model (Dominik 2026-10-25 „1+2 und 3a b c d e“): fixed-answer
           # questions (System One) and short texts, started on demand by the LLM-Tor, never with tools
-          "helfer": ("helfer_modell", "helfer_port", 31018)}
+          "helfer": ("helfer_modell", "helfer_port", 31018),
+          # Einbetten and Nachsortieren on the GPU (Dominik 2026-11-18 „empfehlung“, plan konsole-neu/plan-einbetten.md):
+          # a pooling engine each, loaded from the Spark-Konsole, behind the LLM-Tor's /v1/embeddings and /v1/rerank
+          "einbetten": ("einbetten_modell", "einbetten_port", 31020),
+          "nachsortieren": ("nachsortieren_modell", "nachsortieren_port", 31021)}
+# the pooling kinds and the fixed ways their engine runs (vllm "pooling"): an embedding model, a cross-encoder, and
+# Qwen3-Reranker, which vLLM runs as a classifier of its "no"/"yes" tokens (fixed overrides from vLLM's own recipe,
+# never from the panel or the model). No chat, no tools, no pictures, no measurement with chat questions.
+POOL_ARTEN = {"einbetten": ("embed",), "nachsortieren": ("rerank", "qwen3-rerank")}
+QWEN3_RERANK = {"architectures": ["Qwen3ForSequenceClassification"], "classifier_from_token": ["no", "yes"],
+                "is_original_qwen3_reranker": True}
+POOL_ARGS = {"embed": ["--runner", "pooling", "--convert", "embed"], "rerank": ["--runner", "pooling"],
+             "qwen3-rerank": ["--runner", "pooling", "--hf-overrides", json.dumps(QWEN3_RERANK, separators=(",", ":"))]}
+POOL_KONTEXT_MIN = 512           # a cross-encoder reads at most 512 tokens; the chat engines need at least 2048
+# offered only on a Spark without a paired panel computer (Dominik 2026-11-18 „wenn es als standalone läuft“): the
+# helper model to choose and the two pooling kinds; paired, everything stays as it was
+ALLEIN_ARTEN = ("helfer", "einbetten", "nachsortieren")
 ANFRAGE_KEYS = ("chat_template_kwargs", "top_k")
 # the only file kinds a model download takes: weights as safetensors, the rest is text; never *.bin/*.pt/*.pkl
 ERLAUBT = ("*.safetensors", "*.json", "*.txt", "*.jinja", "*.model", "*.tiktoken", "*.md", "LICENSE*")
@@ -205,7 +222,8 @@ def _pruefe_vllm(m):
         raise Fehler("gpu_gib")
     for key in ("kontext", "kontext_max"):
         k = m.get(key, m.get("kontext"))
-        if isinstance(k, bool) or not isinstance(k, int) or not 2048 <= k <= 262144:
+        lo = POOL_KONTEXT_MIN if m["art"] in POOL_ARTEN else 2048
+        if isinstance(k, bool) or not isinstance(k, int) or not lo <= k <= 262144:
             raise Fehler("kontext")
     if m.get("kontext_max", m["kontext"]) < m["kontext"]:
         raise Fehler("kontext")
@@ -218,6 +236,14 @@ def _pruefe_vllm(m):
     v, q = m.get("vllm"), m.get("anfrage")
     if not isinstance(v, dict) or set(v) - set(VLLM_KEYS) or not isinstance(q, dict) or set(q) - set(ANFRAGE_KEYS):
         raise Fehler("felder")
+    # a pooling kind: exactly one of its ways, nothing of a chat engine; every other kind never pools
+    if m["art"] in POOL_ARTEN:
+        if (v.get("pooling") not in POOL_ARTEN[m["art"]] or m["kann_sehen"] or m["werkzeuge"] or q
+                or {"reasoning_parser", "tool_call_parser", "mtp", "entwurf", "entwurf_revision", "docker",
+                    "bilder_pro_frage"} & set(v)):
+            raise Fehler("pooling")
+    elif "pooling" in v:
+        raise Fehler("pooling")
     for key in ("reasoning_parser", "tool_call_parser"):
         if key in v and not PARSER.match(str(v[key])):
             raise Fehler(key)
@@ -381,6 +407,8 @@ def aktiv(cfg, total_gib, kat=None):
         if m and not m.get("kann_sehen"):
             add(kat.get(own.get("sehen_modell")), None, "bei_bedarf")
         add(kat.get(own.get("helfer_modell")), None, "bei_bedarf")
+        for art in POOL_ARTEN:         # Einbetten / Nachsortieren: loaded from the Spark-Konsole, then resident
+            add(kat.get(own.get(ROLLEN[art][0])), None, "resident")
     a = cfg.get("asr", {})
     if a.get("enabled"):
         if a.get("recognizer") == "parakeet":
@@ -511,11 +539,13 @@ def vllm_args(m, port=MESS_PORT, revision="", mtp=True, uds="", pool_gib=None):
     a = [m["repo"], "--revision", rev, *(["--uds", uds] if uds else ["--host", "127.0.0.1", "--port", str(port)]),
          "--served-model-name", m["id"], "--max-model-len", str(m["kontext"]),
          "--gpu-memory-utilization", f"{anteil:.2f}", "--max-num-seqs", str(v.get("max_seqs", 8)),
-         "--generation-config", "vllm", "--no-enable-flashinfer-autotune",
+         *([] if v.get("pooling") else ["--generation-config", "vllm"]), "--no-enable-flashinfer-autotune",
          "--disable-uvicorn-access-log",   # stats stay on: /metrics counts the MTP and prefix cache hits
          # usage.prompt_tokens_details.cached_tokens: the panel shows how much of a question came from the prefix cache
          # (chat.timing_lines, verbrauch.py); the cache itself is on by default in vLLM V1
          "--enable-prompt-tokens-details"]
+    if v.get("pooling"):            # Einbetten / Nachsortieren: the fixed way of its kind (POOL_ARGS), nothing else
+        a += POOL_ARGS[v["pooling"]]
     if v.get("quantization"):
         a += ["--quantization", v["quantization"]]
     if v.get("kv_cache_dtype"):
@@ -718,7 +748,7 @@ def start_args(art, cfg, messung=None, kat=None, hf_home=None):
     rev = fest_revision(m, messung)
     pruefen(hf_ordner(m, hf_home), rev, hashes=False)
     zeiger(hf_ordner(m, hf_home), rev)
-    return vllm_args(m, port, rev) + ["--max-logprobs", str(LOGPROBS_MAX)]
+    return vllm_args(m, port, rev) + ([] if m["vllm"].get("pooling") else ["--max-logprobs", str(LOGPROBS_MAX)])
 
 
 DOCKER_LLM = "speech-spark-llm-docker"     # the unit and the container of the language model in Docker (install.sh)
@@ -1514,7 +1544,7 @@ IM_GANG = ("active", "activating", "deactivating", "reloading")
 STAND = re.compile(r"^modelle: [A-Za-z0-9 .,:%/()_+-]{1,160}$")   # a progress line: fixed words and numbers only
 STAND_MAX = 6
 ALT_TAGE = 7                     # the old model stays on disk this long and can be brought back
-TAUSCH = ("llm", "sehen", "asr", "tts", "bild", "musik")          # the kinds that switch (small CPU models come with features)
+TAUSCH = ("llm", "sehen", "asr", "tts", "bild", "musik", "helfer", "einbetten", "nachsortieren")   # the kinds that switch (small CPU models come with features)
 INSTALL = {"asr": "--asr", "tts": "--tts", "bild": "--bild", "musik": "--musik"}   # kinds install.sh sets up (wahl = its short key)
 ENTFERNBAR = ("vllm", "qwen-asr", "qwen-tts")           # models that live in the Hugging Face cache
 
@@ -1531,8 +1561,8 @@ def jetzt_id(art, cfg, kat=None):
     c = cfg.get("llm", {})
     if art == "llm":
         return c.get("modell", "") if c.get("enabled") and c.get("modell") in kat else ""
-    if art == "sehen":
-        return c.get("sehen_modell", "") if c.get("sehen_modell") in kat else ""
+    if art in ROLLEN:                  # sehen, helfer, einbetten, nachsortieren: the one the configuration names
+        return c.get(ROLLEN[art][0], "") if c.get(ROLLEN[art][0]) in kat else ""
     if art == "asr":
         a = cfg.get("asr", {})
         if not a.get("enabled"):
@@ -1592,9 +1622,13 @@ def wechsel_pruefen(art, mid, cfg, total_gib, kat=None, messung=None, profil=Non
                 raise Fehler("ungeprueft")
         if art == "llm" and not cfg.get("llm", {}).get("enabled"):
             raise Fehler("aus")
+        if art in ALLEIN_ARTEN and not spark_allein(cfg):
+            raise Fehler("art")          # paired with a panel computer: as before, not offered
+        if art in ALLEIN_ARTEN and not cfg.get("llm", {}).get("enabled"):
+            raise Fehler("aus")          # they answer through the LLM-Tor, which runs with the own language model
     elif not m.get("wahl") and not (m.get("eigen") and (art in SPRACH or art in DATEI_ART)):   # own: the probe decides
         raise Fehler("wahl")
-    if m.get("eigen") and art == "sehen":      # stage E5: no round trip on demand, so an own one is measured first
+    if m.get("eigen") and art in ("sehen", "helfer"):      # stage E5: no round trip on demand, so an own one is measured first
         messung = read_json(MESSUNG, {}) if messung is None else messung
         if not ((messung.get("modelle") or {}).get(mid) or {}).get("ok"):
             raise Fehler("ungeprueft")
@@ -1725,7 +1759,30 @@ def _wunsch_ok(art, was):
     """A switch (a kind, an id or "zurueck"), „Lange Gespräche“ (art platz, one of PLATZ) or a restart with the
     entry's settings now (art neustart, llm)."""
     return ((art in TAUSCH and (was == "zurueck" or bool(ID.match(str(was))))) or (art == "platz" and was in PLATZ)
-            or (art == "neustart" and was == "llm") or (art == "laden" and bool(ID.match(str(was)))))
+            or (art == "neustart" and was == "llm") or (art == "laden" and bool(ID.match(str(was))))
+            or (art == "aus" and was in POOL_ARTEN))
+
+
+def aus_pruefen(art, cfg, kat=None):
+    """„Entladen“ of Einbetten or Nachsortieren (Spark-Konsole): a pooling kind that runs a model now, on a Spark alone.
+    Returns the entry that runs; raises Fehler (art, schon)."""
+    if art not in POOL_ARTEN or not spark_allein(cfg):
+        raise Fehler("art")
+    mid = jetzt_id(art, cfg, kat)
+    if not mid:
+        raise Fehler("schon")
+    return eintrag(mid, kat)
+
+
+def aus_anfragen(art, cfg, starten, laeuft=False):
+    """„Entladen“ asked for: the rule, the wish for root (art aus), then starten() starts WECHSEL_UNIT."""
+    if laeuft:
+        raise Fehler("laeuft")
+    m = aus_pruefen(art, cfg)
+    wunsch_schreiben("aus", art)
+    if not starten():
+        raise Fehler("start")
+    return m
 
 
 def wunsch_schreiben(art, was, path=WUNSCH):
@@ -1780,7 +1837,7 @@ def messen_pruefen(mid, kat=None):
     kat = katalog() if kat is None else kat
     if not isinstance(mid, str) or not ID.match(mid) or mid not in kat:
         raise Fehler("unbekannt")
-    if kat[mid]["engine"] != "vllm":
+    if kat[mid]["engine"] != "vllm" or kat[mid]["art"] in POOL_ARTEN:     # a pooling engine answers no chat question
         raise Fehler("engine")
     return kat[mid]
 
@@ -1823,14 +1880,20 @@ VLLM_ARCH = {
     "sehen": ("Qwen2VLForConditionalGeneration", "Qwen2_5_VLForConditionalGeneration", "Qwen3VLForConditionalGeneration",
               "Qwen3VLMoeForConditionalGeneration", "Gemma3ForConditionalGeneration", "Mistral3ForConditionalGeneration",
               "LlavaForConditionalGeneration", "Idefics3ForConditionalGeneration", "InternVLChatModel"),
+    # Einbetten: models vLLM pools to one vector each; Nachsortieren: cross-encoders with one relevance score
+    "einbetten": ("Qwen3ForCausalLM", "Qwen2ForCausalLM", "Qwen3Model", "Qwen2Model", "BertModel", "XLMRobertaModel",
+                  "Gemma3TextModel"),
+    "nachsortieren": ("Qwen3ForSequenceClassification", "BertForSequenceClassification",
+                      "XLMRobertaForSequenceClassification", "ModernBertForSequenceClassification"),
 }
+VLLM_ARCH["helfer"] = VLLM_ARCH["llm"]      # an own helper model: a small text model (the same rules, never pictures)
 # the engine's parsers per family (fixed; a family without one gets no tools, the round trip then decides)
 PARSER_FAMILIE = {"Qwen3": {"reasoning_parser": "qwen3", "tool_call_parser": "hermes"},
                   "Qwen2": {"tool_call_parser": "hermes"}, "Llama": {"tool_call_parser": "llama3_json"},
                   "Mistral": {"tool_call_parser": "mistral"}, "Mixtral": {"tool_call_parser": "mistral"}}
 FREI = ("apache-2.0", "mit", "bsd-2-clause", "bsd-3-clause", "openrail", "cc-by-4.0", "llama3.1", "llama3.2", "llama3.3",
         "gemma", "qwen")                # licences that allow commercial use (others are shown as "nur privat")
-KV_GIB = {"llm": 12, "sehen": 4}      # room for the context beside the weights (32K tokens)
+KV_GIB = {"llm": 12, "sehen": 4, "helfer": 4, "einbetten": 2, "nachsortieren": 2}   # room for the context beside the weights
 # own speech models (Dominik 2026-11-16 „alle 1-6“, slot „Hören“ and „Sprechen“): the program that runs the kind, its
 # checked catalog models the family is taken from, and the room an own one needs beside its weights. An own one must
 # be the same family (FAMILIE_KEYS of its config.json equal to the reference's) as a checked model of that program,
@@ -2034,6 +2097,63 @@ def datei_probe(art, cfg=None, post=None):
     raise Fehler("art")
 
 
+# Einbetten / Nachsortieren on the GPU: the fixed probe after loading (speech-spark.sh poolprobe) and the fixed frame
+# Qwen3-Reranker reads (its model card; the LLM-Tor puts every question into it, the markers taken out of the texts)
+RERANK_ANWEISUNG = "Given a web search query, retrieve relevant passages that answer the query"
+QWEN3_VOR = ('<|im_start|>system\nJudge whether the Document meets the requirements based on the Query and the Instruct '
+             'provided. Note that the answer can only be "yes" or "no".<|im_end|>\n<|im_start|>user\n')
+QWEN3_NACH = "<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n"
+
+
+def rerank_texte(m, query, docs):
+    """(query, documents) as the engine of m reads them: Qwen3-Reranker's fixed frame, any other model unchanged."""
+    if (m.get("vllm") or {}).get("pooling") != "qwen3-rerank":
+        return query, list(docs)
+    return (f"{QWEN3_VOR}<Instruct>: {RERANK_ANWEISUNG}\n<Query>: {query}\n",
+            [f"<Document>: {d}{QWEN3_NACH}" for d in docs])
+
+
+def _cos(a, b):
+    na, nb = sum(x * x for x in a) ** 0.5, sum(x * x for x in b) ** 0.5
+    return sum(x * y for x, y in zip(a, b)) / (na * nb) if na and nb else 0.0
+
+
+def pool_probe(art, cfg=None, post=None, gesund=None, frist=GESUND_S, now=time.monotonic, sleep=time.sleep):
+    """The fixed probe after loading Einbetten or Nachsortieren: the engine answers within frist, and for KLEIN_PROBE's
+    question the passage that answers it comes closer (embeddings: cosine) or scores higher (re-ranking) than the one
+    that does not. (ok, word); never a text in the journal."""
+    if art not in POOL_ARTEN:
+        raise Fehler("art")
+    cfg = load_config() if cfg is None else cfg
+    m, port = rolle(art, cfg)
+    post = post or _post
+    gesund = gesund or (lambda: _get(port, "/health", 3) is not None)
+    t0 = now()
+    while True:
+        try:
+            if gesund():
+                break
+        except Exception:
+            pass
+        if now() - t0 > frist:
+            return False, "zeit"
+        sleep(5)
+    frage, (ja, nein) = KLEIN_PROBE
+    try:
+        if art == "einbetten":
+            r = post(port, "/v1/embeddings", {"model": m["id"], "input": [frage, ja, nein]}, 120)
+            v = [x["embedding"] for x in sorted(r["data"], key=lambda x: x["index"])]
+            if len(v) != 3 or not all(isinstance(x, list) and len(x) >= 32 for x in v):
+                return False, "antwort"
+            return (True, "ok") if _cos(v[0], v[1]) > _cos(v[0], v[2]) else (False, "reihenfolge")
+        q, docs = rerank_texte(m, frage, [ja, nein])
+        r = post(port, "/v1/rerank", {"model": m["id"], "query": q, "documents": docs}, 120)
+        scores = {x["index"]: x["relevance_score"] for x in r["results"]}
+        return klein_probe([scores.get(0), scores.get(1)])
+    except Exception:
+        return False, "antwort"
+
+
 def sprach_eigen(sec, repo, kat=None):
     """True when repo is an own speech model (SPRACH) of this kind in the catalog: the configuration may then name it
     beside Qwen's own (common.MODEL_ID); engine.sh checks the same before it starts (modelle.py sprach-eigen)."""
@@ -2151,13 +2271,19 @@ def eigen_vorschlag(info, art, repo, total_gib, mit_token=False, familien=()):
                          "need_gib": max(1, round(need)), "gemessen": False, "betrieb": "resident", "eigen": True})
     sehen = arch in VLLM_ARCH["sehen"]
     fam = next((v for k, v in PARSER_FAMILIE.items() if arch.startswith(k)), {})
+    pool = art in POOL_ARTEN
+    kontext = EIGEN_KONTEXT
+    if pool:     # as long as the model reads (a cross-encoder 512), at most 8192 tokens per text
+        mp = cfg.get("max_position_embeddings")
+        kontext = max(POOL_KONTEXT_MIN, min(8192, mp if isinstance(mp, int) and not isinstance(mp, bool) else 8192))
     m = {"id": ("eigen-" + _wort(repo.split("/", 1)[1], 41)).rstrip("-."), "art": art, "name": {"de": name, "en": name},
          "engine": "vllm", "repo": repo, "revision": info["sha"], "lizenz": lizenz, "gewerblich": lizenz in FREI,
          "platte_gb": max(1, round(sum(sizes) / 1e9)), "need_gib": max(1, round(need)), "gemessen": False,
-         "gpu_gib": round(need + 0.01 * total_gib, 1), "kontext": EIGEN_KONTEXT,
+         "gpu_gib": round(need + 0.01 * total_gib, 1), "kontext": kontext,
          "kann_sehen": sehen, "werkzeuge": art == "llm" and "tool_call_parser" in fam,
-         "vllm": dict(fam if art == "llm" else {}, max_seqs=4), "anfrage": {}, "messen": "auf_wunsch",
-         "betrieb": "resident" if art == "llm" else "bei_bedarf", "eigen": True}
+         "vllm": (dict(max_seqs=8, pooling="embed" if art == "einbetten" else "rerank") if pool
+                  else dict(fam if art == "llm" else {}, max_seqs=4)), "anfrage": {}, "messen": "auf_wunsch",
+         "betrieb": "resident" if art == "llm" or pool else "bei_bedarf", "eigen": True}
     return eigen_ok(m)
 
 
@@ -2182,6 +2308,8 @@ DTYPE_BYTES = {"F64": 8, "I64": 8, "F32": 4, "I32": 4, "U32": 4, "BF16": 2, "F16
 # computer runs best (FORMAT_RANG), then by downloads; the first of them that also fits beside the running models
 # gets the star, with its reasons (format, memory).
 SUCHE_AUFGABEN = {"llm": ("text-generation", "image-text-to-text"), "sehen": ("image-text-to-text",),
+                  "helfer": ("text-generation",), "einbetten": ("feature-extraction", "sentence-similarity"),
+                  "nachsortieren": ("text-classification", "text-ranking"),
                   "asr": ("automatic-speech-recognition",), "tts": ("text-to-speech", "text-to-audio")}
 FORMATE = ("nvfp4", "fp8", "int", "bf16")
 FORMAT_RANG = {True: {"nvfp4": 3, "fp8": 2, "int": 1, "bf16": 1},      # a GPU that runs NVFP4 (hardware.FP4)
@@ -2871,6 +2999,21 @@ def cli(args, log=print):
             ok, wort = datei_probe(args[1])
             log(f"modelle: probe {args[1]} {'ok' if ok else 'fehler ' + wort}")
             return 0 if ok else 3
+        if cmd == "poolprobe":               # speech-spark.sh after loading Einbetten or Nachsortieren
+            ok, wort = pool_probe(args[1])
+            log(f"modelle: probe {args[1]} {'ok' if ok else 'fehler ' + wort}")
+            return 0 if ok else 3
+        if cmd == "aus-pruefen":             # root checks again what the console checked („Entladen“)
+            log(aus_pruefen(args[1], load_config())["id"])
+            return 0
+        if cmd == "aus-schalten":            # … then the kind's model out of the configuration
+            if args[1] not in POOL_ARTEN:
+                raise Fehler("art")
+            raw = _roh()
+            raw.setdefault("llm", {})[ROLLEN[args[1]][0]] = ""
+            _schreib(raw)
+            log(f"modelle: schalter {args[1]} aus")
+            return 0
         if cmd == "sprachprobe":             # speech-spark.sh after the switch of an own speech model
             if args[1] not in SPRACH:
                 raise Fehler("art")

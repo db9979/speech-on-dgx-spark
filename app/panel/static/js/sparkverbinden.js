@@ -14,6 +14,10 @@ function sparkVerbinden(d,host,key,klein){const v=d&&d.verbinden;if(!v)return ''
   const k=klein||'',s=v.https?'https':'http',h=spvHost(host),c=x=>`<code>${esc(x)}</code>`;SPV_PEM=v.zertifikat||'';
   const url=(art,p)=>`${s}://${h}:${v.dienste[art]}${p}`;
   const rows=SPV_DIENST.filter(([a])=>v.dienste[a]).map(([a,p,n])=>`<tr><td>${esc(t(n[0],n[1]))}</td><td>${c(url(a,p))}${a==='llm'?`<div class="${k}">${esc(t('Modellname','Model name'))} ${c(v.modell)} · ${esc(t('Bilder verstehen','Understand pictures'))} ${c('sehen')} · ${esc(t('Hilfsmodell','Helper model'))} ${c('helfer')}</div>`:''}</td></tr>`).join('');
+  // Einbetten / Nachsortieren through the LLM-Tor, only while a model of that kind is loaded (Spark-Konsole, Spark alone)
+  const pool=v.pool||{},prow=(art,p,n)=>pool[art]&&v.dienste.llm?`<tr><td>${esc(t(n[0],n[1]))}</td><td>${c(url('llm',p))}<div class="${k}">${esc(t('Modellname','Model name'))} ${c(pool[art])} · ${esc(t('Recht','Right'))} „${esc(t(n[2],n[3]))}“</div></td></tr>`:'';
+  const prows=prow('einbetten','/v1/embeddings',['Einbetten (OpenAI-kompatibel)','Embeddings (OpenAI compatible)','Einbetten','Embeddings'])
+    +prow('nachsortieren','/v1/rerank',['Nachsortieren (wie Jina/Cohere, z. B. Open WebUI)','Re-ranking (like Jina/Cohere, e.g. Open WebUI)','Nachsortieren','Re-ranking']);
   const schl=key||'sk-spark-…';
   const probe=v.dienste.llm?url('llm','/v1/spark/faehigkeiten'):v.dienste.asr?url('asr','/v1/spark/faehigkeiten'):'';
   return `<h3>${esc(t('Ein Programm verbinden','Connect a program'))}</h3>
@@ -21,7 +25,7 @@ function sparkVerbinden(d,host,key,klein){const v=d&&d.verbinden;if(!v)return ''
     <li>${esc(t('Oben „Für Clients geöffnet“ einschalten, das Netz des Programms eintragen (z. B. 192.168.178.0/24) und „Übernehmen“.','Above, switch on “Open for clients”, enter the program\'s network (e.g. 192.168.178.0/24) and “Apply”.'))}${d.an?'':` <b>${esc(t('Noch aus.','Still off.'))}</b>`}</li>
     <li>${esc(t('Name, Vorrangklasse und Rechte wählen, „Schlüssel erzeugen“ und den Schlüssel sofort kopieren: er ist nur jetzt sichtbar.','Choose name, priority class and rights, “Make key” and copy the key right away: it is visible only now.'))}</li>
     <li>${esc(t('Im Programm eintragen:','Enter in the program:'))}
-      <table class="spvt"><tbody>${rows}<tr><td>${esc(t('API-Schlüssel (Bearer)','API key (Bearer)'))}</td><td>${c(schl)}</td></tr></tbody></table></li>
+      <table class="spvt"><tbody>${rows}${prows}<tr><td>${esc(t('API-Schlüssel (Bearer)','API key (Bearer)'))}</td><td>${c(schl)}</td></tr></tbody></table></li>
     ${v.https?`<li>${esc(t('Zertifikat: der Spark nutzt ein eigenes, selbst signiertes Zertifikat. Die Datei laden und im Programm als vertrauenswürdig eintragen (oft „CA-Zertifikat“ oder „Zertifikat-Datei“); ohne das meldet das Programm einen Zertifikatfehler.','Certificate: the Spark uses a self-signed certificate of its own. Download the file and enter it in the program as trusted (often “CA certificate” or “certificate file”); without it the program reports a certificate error.'))}
       ${SPV_PEM?`<div class="row"><button class="b btn sec" type="button" data-spv="zert">${esc(t('Zertifikat laden','Download certificate'))}</button></div>`:''}
       <div class="${k}">${esc(t('Fingerabdruck (SHA-256) zum Vergleichen:','Fingerprint (SHA-256) to compare:'))} ${c(v.fingerabdruck||'–')}</div></li>`

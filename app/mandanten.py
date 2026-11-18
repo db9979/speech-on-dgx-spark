@@ -10,8 +10,8 @@ Assistant or own scripts, and only while the admin switch api.clients is on (Ein
 Fixed rules (the Spark decides, never the client):
 - a key is made here (KEY_PREFIX + 256 random bits), shown once and kept only as its SHA-256 (STATE/spark-clients.json),
   compared in constant time; a blocked client (gesperrt) or a removed one is refused at once
-- rights per service (RECHTE): a request needs the right of its service; "sehen", "helfer" and "systemone" are rights
-  of their own inside the LLM-Tor. Managing the Spark (Wärter) is never a right of a key: only the paired panel
+- rights per service (RECHTE): a request needs the right of its service; "sehen", "helfer", "systemone", "einbetten"
+  and "nachsortieren" are rights of their own inside the LLM-Tor. Managing the Spark (Wärter) is never a right of a key: only the paired panel
   computer, signed with the Wärter key
 - the priority class (KLASSEN) decides the stage of every request of the client at the services' gates (PrioGate):
   "sprache" goes first like the panel's speech, "dialog" is normal, "hintergrund" is always last. A client never
@@ -44,12 +44,14 @@ import secrets
 import threading
 import time
 
-from common import CONFIG_PATH, LLM_ALIAS as LLM_NAME, MODEL_ARTS, SPARK_API, SPEECH_MARK, STATE, STAGE_HIGH, STAGE_LOW, STAGE_NORMAL, load_config, model_side, read_json, tor_fingerabdruck, tor_zertifikat, run, write_json
+from common import CONFIG_PATH, LLM_ALIAS as LLM_NAME, MODEL_ARTS, SPARK_API, SPEECH_MARK, STATE, STAGE_HIGH, STAGE_LOW, STAGE_NORMAL, load_config, model_side, read_json, spark_allein, tor_fingerabdruck, tor_zertifikat, run, write_json
 
 PATH = os.path.join(STATE, "spark-clients.json")
 KEY_PREFIX = "sk-spark-"
 MAX_CLIENTS = 20
-RECHTE = ("llm", "sehen", "helfer", "systemone", "asr", "tts", "bild", "musik")
+RECHTE = ("llm", "sehen", "helfer", "systemone", "asr", "tts", "bild", "musik", "einbetten", "nachsortieren")
+# the fixed model names of the LLM-Tor's /v1/embeddings and /v1/rerank (Einbetten / Nachsortieren on a Spark alone)
+POOL_NAMEN = {"einbetten": "einbettung", "nachsortieren": "nachsortieren"}
 KLASSEN = {"sprache": STAGE_HIGH, "dialog": STAGE_NORMAL, "hintergrund": STAGE_LOW}
 VORGABE = {"rechte": ["llm"], "klasse": "dialog", "minute": 20, "parallel": 2, "tokens_tag": 300000}
 GRENZEN = {"minute": (1, 600), "parallel": (1, 8), "tokens_tag": (1000, 50000000)}
@@ -238,7 +240,9 @@ def uebersicht(cfg=None):
     cfg = load_config() if cfg is None else cfg
     api = cfg.get("api") or {}
     return {"an": an(cfg), "netze": [str(n) for n in (api.get("clients_from") or [])][:MAX_NETZE],
-            "clients": clients(), "max": MAX_CLIENTS, "rechte": list(RECHTE), "klassen": list(KLASSEN),
+            "clients": clients(), "max": MAX_CLIENTS, "klassen": list(KLASSEN),
+            # Einbetten / Nachsortieren only on a Spark alone (paired with a panel computer everything stays as it was)
+            "rechte": [r for r in RECHTE if r not in POOL_NAMEN or spark_allein(cfg)],
             "vorgabe": VORGABE, "grenzen": {k: list(v) for k, v in GRENZEN.items()}, "verbinden": verbinden(cfg)}
 
 
@@ -258,8 +262,11 @@ def verbinden(cfg=None):
     that runs, the fixed model names. The certificate is public; never a key."""
     cfg = load_config() if cfg is None else cfg
     tls = model_side(cfg)
+    llm = cfg.get("llm") or {}
     return {"https": tls, "dienste": ports(cfg), "modell": LLM_NAME, "zertifikat": tor_zertifikat() if tls else "",
-            "fingerabdruck": tor_fingerabdruck() if tls else ""}
+            "fingerabdruck": tor_fingerabdruck() if tls else "",
+            # Einbetten / Nachsortieren: through the LLM-Tor's port, only while a model of that kind is loaded
+            "pool": {art: name for art, name in POOL_NAMEN.items() if llm.get(f"{art}_modell")}}
 
 
 def im_netz(host, cfg=None):
@@ -433,7 +440,7 @@ def faehigkeiten(client, cfg=None):
     laufen = ports(cfg)
     dienste = {art: {"an": art in laufen, "port": laufen.get(art, 0)} for art in MODEL_ARTS}
     dienste["llm"].update(modell=LLM_NAME, sehen=bool(llm.get("sehen_modell")), helfer=bool(llm.get("helfer_modell")),
-                          systemone=True)
+                          systemone=True, **{art: bool(llm.get(f"{art}_modell")) for art in POOL_NAMEN})
     rechte = list(RECHTE) if client is None else [r for r in RECHTE if darf(client, r)]
     out = {"spark_api": SPARK_API, "version": _version(), "dienste": dienste, "rechte": rechte}
     if client is None:

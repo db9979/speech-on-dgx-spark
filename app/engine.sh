@@ -8,16 +8,18 @@
 #                                       a model in Docker: the door dockertor.py, the engine in speech-spark-llm-docker)
 #   speech-spark-sehen.service       -> engine.sh sehen   (plain vLLM, image understanding, started on demand)
 #   speech-spark-helfer.service      -> engine.sh helfer  (plain vLLM, the small helper model, started on demand)
+#   speech-spark-einbetten.service   -> engine.sh einbetten     (plain vLLM pooling: embeddings, loaded from the
+#   speech-spark-nachsortieren.service -> engine.sh nachsortieren  Spark-Konsole on a Spark alone, then resident)
 # Listens on 127.0.0.1 only; speech-spark-tts / speech-spark-asr / speech-spark-llmtor on the public ports sit in front.
 set -euo pipefail
 
-ROLE="${1:?usage: engine.sh main|design|klon|asr|llm|sehen|helfer}"
+ROLE="${1:?usage: engine.sh main|design|klon|asr|llm|sehen|helfer|einbetten|nachsortieren}"
 CONFIG="${SPEECH_SPARK_CONFIG:-/etc/speech-spark/config.json}"
 STATE_DIR="${SPEECH_SPARK_STATE:-/var/lib/speech-spark/state}"
 VENV="${SPEECH_SPARK_ENGINE_VENV:-/opt/speech-spark/venv-engine}"
 STATE="$STATE_DIR/speech-spark-tts-$ROLE.json"
 [ "$ROLE" = asr ] && STATE="$STATE_DIR/speech-spark-asr-engine.json"
-case "$ROLE" in llm|sehen|helfer) STATE="$STATE_DIR/speech-spark-$ROLE.json" ;; esac
+case "$ROLE" in llm|sehen|helfer|einbetten|nachsortieren) STATE="$STATE_DIR/speech-spark-$ROLE.json" ;; esac
 mkdir -p "$STATE_DIR"
 
 state() {  # $1 = status, $2 = message
@@ -26,7 +28,7 @@ state() {  # $1 = status, $2 = message
 fail() { state error "$1"; echo "ERROR: $1" >&2; exit 1; }
 
 LLM_ARGS=()
-if [ "$ROLE" = llm ] || [ "$ROLE" = sehen ] || [ "$ROLE" = helfer ]; then
+if [ "$ROLE" = llm ] || [ "$ROLE" = sehen ] || [ "$ROLE" = helfer ] || [ "$ROLE" = einbetten ] || [ "$ROLE" = nachsortieren ]; then
   # The catalog builds the whole command (pinned commit, files checked, never trust_remote_code); this script adds
   # only the order, the preflight and the memory guard below. The panel's Python reads the catalog.
   PREFIX="${SPEECH_SPARK_PREFIX:-$(dirname "$VENV")}"
@@ -127,7 +129,7 @@ case "$ROLE" in
   design) others=("$own_llm" "speech-spark-asr-engine $(jq -r .asr.engine_port "$CONFIG")"
                   "speech-spark-tts-engine $(jq -r .tts.engine_port "$CONFIG")"
                   "speech-spark-tts-klon $(jq -r '.tts.klon_port // 31019' "$CONFIG")") ;;
-  sehen|helfer) others=("$own_llm" "speech-spark-asr-engine $(jq -r .asr.engine_port "$CONFIG")"
+  sehen|helfer|einbetten|nachsortieren) others=("$own_llm" "speech-spark-asr-engine $(jq -r .asr.engine_port "$CONFIG")"
                  "speech-spark-tts-engine $(jq -r .tts.engine_port "$CONFIG")") ;;
 esac
 # Never next to a model measurement (speech-spark.sh MESS_ENGINE): tars 2026-10-18 the speech output engine restarted

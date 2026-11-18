@@ -105,7 +105,7 @@ flowchart TB
 | Phone in the panel | UDP 31060, sound UDP 31062–31068 | Calling the Spark (SIP and RTP only with the telephone system in the home network) |
 | `speech-spark-turn` | 3478, relay 49160–49200 | Relay for calls from outside (coturn), only with its switch on |
 | `speech-spark-guacd` | 4822 (local only) | guacd for the screen in Remote access, only with `--fernbild`; the panel starts it when a screen opens, it reaches only 127.0.0.1 |
-| `speech-spark-llmtor` → `speech-spark-llm` | 31006 → 31016 (local only) | Own language model (vLLM) behind the LLM-Tor; image understanding `speech-spark-sehen` on 31017 and helper model `speech-spark-helfer` on 31018 on demand; a measured language model in Docker runs in `speech-spark-llm-docker` (root, no network), `speech-spark-llm` is then only the door to its socket |
+| `speech-spark-llmtor` → `speech-spark-llm` | 31006 → 31016 (local only) | Own language model (vLLM) behind the LLM-Tor; image understanding `speech-spark-sehen` on 31017 and helper model `speech-spark-helfer` on 31018 on demand; only on a Spark alone embeddings `speech-spark-einbetten` on 31020 and re-ranking `speech-spark-nachsortieren` on 31021, both loaded through the Spark-Konsole; a measured language model in Docker runs in `speech-spark-llm-docker` (root, no network), `speech-spark-llm` is then only the door to its socket |
 | `speech-spark-bild` | 31005 → 31015 (local only) | Painting and changing pictures (FLUX.2 klein) |
 | `speech-spark-musik` | 31004 → 31014 (local only) | Making music (ACE-Step 1.5), the engine only while making a song |
 | `speech-spark-waerter` | 127.0.0.1:31007 | Wärter: fixed commands from the panel computer (only with the Spark split, behind the TLS-Tor) |

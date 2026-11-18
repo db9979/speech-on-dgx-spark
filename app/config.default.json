@@ -85,6 +85,10 @@
     "helfer_port": 31018,
     "helfer_modell": "qwen3-4b-instruct-2507-fp8",
     "helfer_leerlauf_min": 60,
+    "einbetten_port": 31020,
+    "einbetten_modell": "",
+    "nachsortieren_port": 31021,
+    "nachsortieren_modell": "",
     "max_body_mb": 32,
     "platz": "standard"
   },

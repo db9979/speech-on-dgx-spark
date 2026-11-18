@@ -435,16 +435,18 @@ def modellgenau_ansicht(request: Request, zeit: str = "20m"):
 # only those installed here (systemctl LoadState), with their port from the config; never started or stopped from here
 def _modell_dienste(cfg):
     llm_cfg = cfg.get("llm") if isinstance(cfg.get("llm"), dict) else {}
-    port = {"llm": llm_cfg.get("engine_port", 31016), "llmtor": llm_cfg.get("port", 31006), "sehen": llm_cfg.get("sehen_port", 31017),
-            "helfer": llm_cfg.get("helfer_port", 31018), "bild": (cfg.get("image") or {}).get("port", 31005),
-            "musik": (cfg.get("music") or {}).get("port", 31004)}
-    modell = {"llm": llm_cfg.get("modell"), "sehen": llm_cfg.get("sehen_modell"), "helfer": llm_cfg.get("helfer_modell")}
+    # the engines of modelle.ROLLEN (language model, image understanding, helper, Einbetten, Nachsortieren) with
+    # their ports and models, the LLM-Tor, pictures and music
+    port = {"llmtor": llm_cfg.get("port", 31006), "bild": (cfg.get("image") or {}).get("port", 31005),
+            "musik": (cfg.get("music") or {}).get("port", 31004),
+            **{art: llm_cfg.get(feld_port, std) for art, (_, feld_port, std) in modelle.ROLLEN.items()}}
+    modell = {art: llm_cfg.get(feld) for art, (feld, _, _) in modelle.ROLLEN.items()}
     units = {**OWN_LLM_UNITS, "bild": ON_DEMAND_UNITS["bild"], "musik": ON_DEMAND_UNITS["musik"]}
     stand = einheiten_stand(list(units.values()))
     out = {}
     for name, unit in units.items():
         st = stand.get(unit) or {}
-        if not st.get("da"):
+        if not st.get("da") or (name in modelle.POOL_ARTEN and not modell.get(name)):   # Einbetten / Nachsortieren: only loaded
             continue
         out[name] = {"unit": unit, "state": st.get("state", "unknown"), "port": port[name] if isinstance(port[name], int) else None}
         if isinstance(modell.get(name), str) and modell[name]:

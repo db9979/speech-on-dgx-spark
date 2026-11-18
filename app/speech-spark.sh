@@ -9,7 +9,7 @@
 #   speech-spark models            choose the models again (same questions as the first install)
 #   speech-spark update [--check]  update to the newest version (like the button in the panel)
 #   speech-spark logs [what] [-n N]  last log lines: asr, tts, asr-engine, tts-engine, tts-design, tts-klon, bild, musik,
-#                                  llm, llmtor, sehen, helfer, tlstor, waerter, notasr, schirm, panel, konsole, watch, update, messen, wechsel,
+#                                  llm, llmtor, sehen, helfer, einbetten, nachsortieren, tlstor, waerter, notasr, schirm, panel, konsole, watch, update, messen, wechsel,
 #                                  werkstatt, entwickeln or all (default)
 #   speech-spark panel enable|disable  add the web panel later, or remove it (its data stays)
 #   speech-spark notzugang [--yes]  locked out: new panel password, its second step and
@@ -226,12 +226,12 @@ cmd_logs() {
   [[ "$n" =~ ^[0-9]{1,5}$ ]] || die "-n needs a number"
   case "$what" in
     all) units=(-u 'speech-spark-*') ;;
-    asr|tts|asr-engine|tts-engine|tts-design|tts-klon|bild|musik|llm|llmtor|sehen|helfer|panel|konsole|watch|update|tlstor|waerter|notasr|schirm) units=(-u "speech-spark-$what") ;;
+    asr|tts|asr-engine|tts-engine|tts-design|tts-klon|bild|musik|llm|llmtor|sehen|helfer|einbetten|nachsortieren|panel|konsole|watch|update|tlstor|waerter|notasr|schirm) units=(-u "speech-spark-$what") ;;
     messen) units=(-u speech-spark-messen -u speech-spark-messen-wunsch -u speech-spark-messen-engine) ;;
     werkstatt) units=(-u speech-spark-werkstatt -u speech-spark-werkstatt-lauf) ;;
     entwickeln) units=(-u speech-spark-update -u speech-spark-lokaltest -u speech-spark-lokaltest-umgebung -u speech-spark-github) ;;
-    wechsel) units=(-u speech-spark-wechsel -u speech-spark-llm -u speech-spark-sehen) ;;
-    *) die "logs: asr, tts, asr-engine, tts-engine, tts-design, tts-klon, bild, musik, llm, llmtor, sehen, helfer, tlstor, waerter, notasr, schirm, panel, konsole, watch, update, messen, wechsel, werkstatt, entwickeln or all" ;;
+    wechsel) units=(-u speech-spark-wechsel -u speech-spark-llm -u speech-spark-sehen -u speech-spark-einbetten -u speech-spark-nachsortieren) ;;
+    *) die "logs: asr, tts, asr-engine, tts-engine, tts-design, tts-klon, bild, musik, llm, llmtor, sehen, helfer, einbetten, nachsortieren, tlstor, waerter, notasr, schirm, panel, konsole, watch, update, messen, wechsel, werkstatt, entwickeln or all" ;;
   esac
   journalctl --namespace=speech-spark "${units[@]}" --no-pager -n "$n"
 }
@@ -320,7 +320,7 @@ MESS_TOR=speech-spark-messen-tor              # an engine in Docker: its socket 
 MESS_WUNSCH_UNIT=speech-spark-messen-wunsch   # Zustand → Modelle „Messen“: a fixed root unit takes the panel's wish
 MESS_PORT=31016
 WECHSEL_UNIT=speech-spark-wechsel   # stage E4: a fixed root unit; the panel and the command line leave a wish for it
-OWN_LLM=(speech-spark-llmtor speech-spark-llm speech-spark-sehen speech-spark-helfer)
+OWN_LLM=(speech-spark-llmtor speech-spark-llm speech-spark-sehen speech-spark-helfer speech-spark-einbetten speech-spark-nachsortieren)
 mem_gib() { awk '/^MemAvailable:/ {printf "%.1f", $2 / 1048576}' /proc/meminfo; }
 
 # waits until the free memory stops growing (an engine that just stopped gives it back slowly), at most 3 minutes
@@ -602,9 +602,27 @@ wechsel() {  # $1 = art, $2 = id
       as_panel_user wartung.py llm 30 && pause=1 || echo "modelle: wechsel ohne wartungspause"
     fi
     as_panel_user ../modelle.py wechsel-schalten "$art" "$mid" || { echo "modelle: wechsel $art abgelehnt einstellung"; [ "$art" = llm ] && llmschritt ende zurueck einstellung; return 1; }
-    if [ "$art" = sehen ]; then
-      systemctl stop speech-spark-sehen.service || true    # on demand: the next picture starts the new model
+    if [ "$art" = sehen ] || [ "$art" = helfer ]; then
+      systemctl stop "speech-spark-$art.service" || true    # on demand: the next picture or helper question starts it
       ok=1
+    elif [ "$art" = einbetten ] || [ "$art" = nachsortieren ]; then
+      # Einbetten / Nachsortieren (Spark-Konsole on a Spark alone): resident, so start it and probe it (modelle.pool_probe);
+      # without a good probe back to the model before, or off again when there was none
+      systemctl stop "speech-spark-$art.service" 2>/dev/null || true
+      mem_settle
+      systemctl enable "speech-spark-$art.service" >/dev/null 2>&1 || true
+      systemctl start "speech-spark-$art.service" || true
+      if as_panel_user ../modelle.py poolprobe "$art"; then
+        ok=1
+      elif [ "$alt" != - ]; then
+        echo "modelle: wechsel $art fehler, zurueck"
+        as_panel_user ../modelle.py wechsel-schalten "$art" "$alt" && systemctl restart "speech-spark-$art.service" \
+          || echo "modelle: wechsel $art zurueck fehler"
+      else
+        echo "modelle: wechsel $art fehler, aus"
+        as_panel_user ../modelle.py aus-schalten "$art" || echo "modelle: wechsel $art aus fehler"
+        systemctl disable --now "speech-spark-$art.service" 2>/dev/null || true
+      fi
     else
       llmschritt schritt wechsel 3 "$mid"
       systemctl stop speech-spark-llm.service || true
@@ -698,6 +716,17 @@ laden_setzen() {  # $1 = id of the catalog, an own entry or a download entry
   return 0
 }
 
+# „Entladen“ in the Spark-Konsole: Einbetten or Nachsortieren off again (modelle.py checks the rule again here)
+aus_setzen() {  # $1 = einbetten or nachsortieren
+  local out
+  case "$1" in einbetten|nachsortieren) ;; *) echo "modelle: entladen abgelehnt wunsch"; return 1 ;; esac
+  out=$(as_panel_user ../modelle.py aus-pruefen "$1") \
+    || { grep '^modelle: ' <<<"$out" || true; echo "modelle: entladen $1 abgelehnt"; return 1; }
+  as_panel_user ../modelle.py aus-schalten "$1" || { echo "modelle: entladen $1 abgelehnt einstellung"; return 1; }
+  systemctl disable --now "speech-spark-$1.service" 2>/dev/null || true
+  echo "modelle: entladen $1 ok"
+}
+
 cmd_wunsch_intern() {
   local art was out
   out=$(as_panel_user ../modelle.py wunsch-nehmen) || true
@@ -707,6 +736,7 @@ cmd_wunsch_intern() {
   if [ "$art" = platz ]; then platz_setzen "$was"; return; fi
   if [ "$art" = neustart ]; then neustart_setzen; return; fi
   if [ "$art" = laden ]; then laden_setzen "$was"; return; fi
+  if [ "$art" = aus ]; then aus_setzen "$was"; return; fi
   if [ "$was" = zurueck ]; then
     out=$(as_panel_user ../modelle.py zurueck-ziel "$art") || true
     was=$(tail -n1 <<<"$out")

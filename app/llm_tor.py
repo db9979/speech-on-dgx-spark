@@ -26,6 +26,12 @@ This service sits on llm.port (31006, on the network like the speech APIs) and a
   llm.helfer_port, no tools, Dominik 2026-10-25): while it is not running it is started in the background and the
   question gets 503 "loading" at once, so the panel asks the language model instead and never waits; it stops after
   llm.helfer_leerlauf_min minutes without a question;
+- Einbetten and Nachsortieren (Dominik 2026-11-18, only loaded from the Spark-Konsole on a Spark alone): POST
+  /v1/embeddings (OpenAI's form, model name EINBETTUNG) and POST /v1/rerank (the Jina/Cohere form Open WebUI sends,
+  model name NACHSORTIEREN) go to the pooling engines llm.einbetten_modell / llm.nachsortieren_modell; only plain
+  texts within fixed limits (POOL_TEXTE_MAX texts, TEXT_MAX characters each), always last in line ("Hintergrund"),
+  a Spark-Client needs the right "einbetten" or "nachsortieren"; the answer carries the fixed name, never a text in
+  the journal. Qwen3-Reranker gets its fixed frame (modelle.rerank_texte), the model's markers taken out first;
 - the developer key (Entwickeln auf dem Pi, app/entwickeln.py): OpenCode of the user spark-dev asks with its own key,
   not the shared api.key; only its SHA-256 is known here (entwickeln.schluessel_sha256, "" while the admin switch is
   off). Such a request may only chat and list the models, is always last in line (stage "hinten", never aged up:
@@ -74,6 +80,10 @@ KANARIE_S = 60                 # quiet seconds before the canary asks again
 SEHEN_START_S = 300            # the image engine has this long to load on demand
 HELFER_START_S = 600           # the helper engine's start in the background is given up after this long
 HELFER = "helfer"              # the model name that asks for the helper model
+EINBETTUNG, NACHSORTIEREN = mandanten.POOL_NAMEN["einbetten"], mandanten.POOL_NAMEN["nachsortieren"]   # fixed model names
+POOL_TEXTE_MAX = 256           # texts of one /v1/embeddings request, documents of one /v1/rerank request
+TEXT_MAX = 32000               # characters of one text (about the engine's 8192 tokens)
+DIMENSIONEN = (32, 4096)       # an embedding's length a program may ask for (models that allow a shorter one)
 ECHT_S = 15                    # the engine is asked which model it serves at most this often
 FERTIG_MAX = 20                # finished requests kept for Modell-Rechner genau
 ERGEBNISSE = ("fertig", "abgebrochen", "zeit", "fehler", "bremse")
@@ -263,7 +273,7 @@ auth_entwickler = [Depends(_mit_entwickler)]
 client = httpx.AsyncClient(timeout=httpx.Timeout(900, connect=5))
 started = time.time()
 stats = {"requests": 0, "refused": 0, "failures": 0, "tokens_in": 0, "tokens_out": 0, "systemone": 0, "sehen": 0,
-         "helfer": 0, "helfer_laedt": 0, "entwickler": 0, "entwickler_voll": 0}
+         "helfer": 0, "helfer_laedt": 0, "entwickler": 0, "entwickler_voll": 0, "einbetten": 0, "nachsortieren": 0}
 canary = {"status": "loading", "ms": None, "t": 0.0}
 fertig = deque(maxlen=FERTIG_MAX)     # the last finished requests: fixed words and numbers (_ende)
 haengt = {"an": False, "zaehler": None, "t": 0.0}
@@ -669,6 +679,166 @@ async def _systemone_fragen(questions, state, fence, served, port, wer):
                                                        "x-systemone-branches": str(len(questions)), "x-systemone-modell": wer})
 
 
+# ---------------------------------------------------------------- Einbetten / Nachsortieren (pure checks, tested)
+def _texte(x, feld):
+    """A list of plain texts within the limits; Abgelehnt with the field's name otherwise (no token ids, no pictures)."""
+    if isinstance(x, str):
+        x = [x]
+    if (not isinstance(x, list) or not 1 <= len(x) <= POOL_TEXTE_MAX
+            or not all(isinstance(t, str) and 0 < len(t) <= TEXT_MAX for t in x)):
+        raise Abgelehnt(feld)
+    return x
+
+
+def einbetten_pruefen(body, m):
+    """The engine's body for /v1/embeddings: input (one text or a list), the engine's own name, floats only, an
+    optional length (dimensions) within DIMENSIONEN."""
+    if not isinstance(body, dict):
+        raise Abgelehnt("body")
+    out = {"model": m["id"], "input": _texte(body.get("input"), "input"), "encoding_format": "float"}
+    if body.get("encoding_format") not in (None, "float"):
+        raise Abgelehnt("encoding_format")
+    d = body.get("dimensions")
+    if d is not None:
+        if isinstance(d, bool) or not isinstance(d, int) or not DIMENSIONEN[0] <= d <= DIMENSIONEN[1]:
+            raise Abgelehnt("dimensions")
+        out["dimensions"] = d
+    return out
+
+
+def _dokument(d):
+    """A document of /v1/rerank: a text, or {"text": …} as Jina sends it."""
+    return d.get("text") if isinstance(d, dict) and set(d) == {"text"} else d
+
+
+def nachsortieren_pruefen(body, m):
+    """(the engine's body, the documents as sent) for /v1/rerank: a query and documents as plain texts, an optional
+    top_n; Qwen3-Reranker's frame around them (modelle.rerank_texte), its markers taken out of the texts first."""
+    if not isinstance(body, dict):
+        raise Abgelehnt("body")
+    q = body.get("query")
+    if not isinstance(q, str) or not 0 < len(q) <= TEXT_MAX:
+        raise Abgelehnt("query")
+    docs = body.get("documents")
+    docs = _texte([_dokument(d) for d in docs] if isinstance(docs, list) else docs, "documents")
+    n = body.get("top_n")
+    if n is not None and (isinstance(n, bool) or not isinstance(n, int) or not 1 <= n <= len(docs)):
+        raise Abgelehnt("top_n")
+    rahmen = (m.get("vllm") or {}).get("pooling") == "qwen3-rerank"
+    eq, ed = modelle.rerank_texte(m, defuse_marks(q) if rahmen else q, [defuse_marks(d) if rahmen else d for d in docs])
+    return {"model": m["id"], "query": eq, "documents": ed, **({"top_n": n} if n else {})}, docs
+
+
+def rerank_antwort(data, docs, mit_text):
+    """The engine's answer in the form programs read: index and relevance_score per document, the document as it was
+    sent (never the frame) only when asked (return_documents), the fixed model name."""
+    out = []
+    for r in (data.get("results") or []) if isinstance(data, dict) else []:
+        i, s = r.get("index") if isinstance(r, dict) else None, r.get("relevance_score") if isinstance(r, dict) else None
+        if isinstance(i, int) and not isinstance(i, bool) and 0 <= i < len(docs) and isinstance(s, (int, float)) \
+                and not isinstance(s, bool) and math.isfinite(s):
+            out.append({"index": i, "relevance_score": float(s), **({"document": {"text": docs[i]}} if mit_text else {})})
+    out.sort(key=lambda r: -r["relevance_score"])
+    u = data.get("usage") if isinstance(data, dict) and isinstance(data.get("usage"), dict) else {}
+    return {"model": NACHSORTIEREN, "results": out,
+            "usage": {"total_tokens": int(u.get("total_tokens") or u.get("prompt_tokens") or 0)}}
+
+
+pool_tore = {}             # one gate per pooling engine (its max_seqs slots), every request last in line
+
+
+async def _pool(request, art, recht):
+    """The common way of /v1/embeddings and /v1/rerank: the engine of art must be loaded, the client within its
+    tokens, then the body checked, last in line through the kind's gate. Returns (entry, port, kunde)."""
+    c = cfg()
+    if not c.get(modelle.ROLLEN[art][0]):
+        print(f"llmtor: {art} abgelehnt nicht geladen", flush=True)
+        raise HTTPException(404, "model")
+    m, port = modelle.rolle(art, {"llm": c})
+    kunde = getattr(request.state, "client", None)
+    if kunde is not None and not mandanten.tokens_ok(kunde):
+        mandanten.melden(kunde, "tokens", recht)
+        raise HTTPException(429, "tokens")
+    return m, port, kunde
+
+
+async def _pool_senden(art, m, port, kunde, pfad, body):
+    """Sends one checked body to the pooling engine, last in line; (status, data) and the tokens counted."""
+    if bremse["an"]:
+        print("llmtor: bremse abgelehnt", flush=True)
+        raise HTTPException(503, "memory")
+    await mandanten.halten(kunde, art)        # E3: "Hintergrund" waits while somebody speaks on the Spark
+    tor = pool_tore.setdefault(art, PrioGate(int(m["vllm"].get("max_seqs", 8))))
+    try:
+        ticket = await tor.enter(STAGE_LOW, fest=True)
+    except GateFull:
+        print(f"llmtor: {art} abgelehnt voll", flush=True)
+        raise HTTPException(503, "busy")
+    t0 = time.monotonic()
+    try:
+        r = await client.post(_url(port, pfad), json=body, timeout=120)
+    except httpx.HTTPError:
+        stats["failures"] += 1
+        print(f"llmtor: {art} fehler engine", flush=True)
+        raise HTTPException(503, "engine")
+    finally:
+        tor.leave(ticket)
+    try:
+        data = r.json()
+    except ValueError:
+        data = {}
+    u = data.get("usage") if isinstance(data, dict) and isinstance(data.get("usage"), dict) else {}
+    n = u.get("prompt_tokens") or u.get("total_tokens") or 0
+    n = n if isinstance(n, int) and not isinstance(n, bool) and 0 <= n < 10**9 else 0
+    stats["tokens_in"] += n
+    if kunde is not None:
+        mandanten.tokens_zaehlen(kunde, n)
+    stats[art] += 1
+    print(f"llmtor: {art} {r.status_code} {len(body.get('input') or body.get('documents') or [])} texte "
+          f"{int((time.monotonic() - t0) * 1000)} ms", flush=True)
+    return r.status_code, data
+
+
+@app.post("/v1/embeddings", dependencies=[Depends(api_key_dependency("einbetten"))])
+async def embeddings(request: Request):
+    """Einbetten: OpenAI's /v1/embeddings with the fixed model name EINBETTUNG."""
+    try:
+        body = await request.json()
+    except ValueError:
+        raise HTTPException(400, "json")
+    m, port, kunde = await _pool(request, "einbetten", "einbetten")
+    try:
+        out = einbetten_pruefen(body, m)
+    except Abgelehnt as e:
+        stats["refused"] += 1
+        print(f"llmtor: einbetten abgelehnt {e}", flush=True)
+        raise HTTPException(400, f"field: {e}")
+    status, data = await _pool_senden("einbetten", m, port, kunde, "/v1/embeddings", out)
+    if status != 200 or not isinstance(data, dict):
+        raise HTTPException(503 if status >= 500 else 400, "engine")
+    return JSONResponse(dict(data, model=EINBETTUNG))
+
+
+@app.post("/v1/rerank", dependencies=[Depends(api_key_dependency("nachsortieren"))])
+async def rerank(request: Request):
+    """Nachsortieren: the Jina/Cohere /v1/rerank (Open WebUI's external re-ranker) with the fixed name NACHSORTIEREN."""
+    try:
+        body = await request.json()
+    except ValueError:
+        raise HTTPException(400, "json")
+    m, port, kunde = await _pool(request, "nachsortieren", "nachsortieren")
+    try:
+        out, docs = nachsortieren_pruefen(body, m)
+    except Abgelehnt as e:
+        stats["refused"] += 1
+        print(f"llmtor: nachsortieren abgelehnt {e}", flush=True)
+        raise HTTPException(400, f"field: {e}")
+    status, data = await _pool_senden("nachsortieren", m, port, kunde, "/v1/rerank", out)
+    if status != 200:
+        raise HTTPException(503 if status >= 500 else 400, "engine")
+    return JSONResponse(rerank_antwort(data, docs, body.get("return_documents") is True))
+
+
 @app.get("/v1/spark/faehigkeiten")
 def spark_faehigkeiten(client=Depends(mandanten.faehigkeiten_dep())):
     """What this Spark offers and what the key may (mandanten.faehigkeiten, plan spark-entkoppeln E2)."""
@@ -686,6 +856,9 @@ async def models(request: Request):
         data.append({"id": "sehen", "object": "model", "owned_by": "speech-spark"})
     if cfg().get("helfer_modell") and (kunde is None or mandanten.darf(kunde, "helfer")):
         data.append({"id": HELFER, "object": "model", "owned_by": "speech-spark"})
+    for art, name in (("einbetten", EINBETTUNG), ("nachsortieren", NACHSORTIEREN)):
+        if cfg().get(modelle.ROLLEN[art][0]) and (kunde is None or mandanten.darf(kunde, art)):
+            data.append({"id": name, "object": "model", "owned_by": "speech-spark"})
     return {"object": "list", "data": data}
 
 

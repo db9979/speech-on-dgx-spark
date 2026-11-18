@@ -15308,6 +15308,22 @@
 "src": "installation",
 "file": "Installation im Detail",
 "head": "Spark-Konsole: eigene Webseite des Spark",
+"title": "GPU-Modelle bereitstellen (seit V01.1.523, Dominik 2026-11-18)",
+"text": "GPU-Modelle bereitstellen (seit V01.1.523, Dominik 2026-11-18): Läuft der Spark allein, also ohne gekoppelten Pi, zeigt *Modelle* in der Konsole zwei Arten mehr: *Einbetten* (macht aus Texten Vektoren für eine Suche) und *Nachsortieren* (ordnet Suchtreffer nach ihrer Bedeutung), dazu ist das *Hilfsmodell* wählbar. Standardmäßig ist keins der beiden geladen; „Laden“ beim geprüften Modell (Qwen3-Embedding 0.6B und Qwen3-Reranker 0.6B, je etwa 4 GiB) holt es mit festem Stand, startet es als eigenen vLLM-Dienst auf der GPU (speech-spark-einbetten auf 31020, speech-spark-nachsortieren auf 31021, nur auf 127.0.0.1) und prüft es mit einer festen Probe: der Satz, der die Probefrage beantwortet, muss vorne liegen, sonst geht es zurück. „Entladen“ schaltet es wieder ab. Eigene Modelle dieser Arten gehen nach denselben Regeln wie beim Sprachmodell (nur safetensors, kein Code aus dem Repository, nur bekannte Bauarten); ein eigenes Hilfsmodell erst nach einer Messung. Programme erreichen beide über das LLM-Tor: POST /v1/embeddings (wie bei OpenAI, Modellname einbettung) und POST /v1/rerank (wie bei Jina und Cohere, so fragt Open WebUI, Modellname nachsortieren), mit den Rechten „Einbetten“ und "
+},
+{
+"lang": "de",
+"src": "installation",
+"file": "Installation im Detail",
+"head": "Spark-Konsole: eigene Webseite des Spark",
+"title": "GPU-Modelle bereitstellen (seit V01.1.523, Dominik 2026-11-18)",
+"text": "„Nachsortieren“ unter *Verbindungen*; der Kasten „Programm verbinden“ nennt dann Adresse und Modellnamen. Je Anfrage höchstens 256 Texte mit je 32 000 Zeichen, immer als „Hintergrund“ hinter der Sprache, die Grenzen des Programms gelten; das Log nennt nur Anzahl und Millisekunden. Ist ein Pi gekoppelt, bleibt alles wie vorher."
+},
+{
+"lang": "de",
+"src": "installation",
+"file": "Installation im Detail",
+"head": "Spark-Konsole: eigene Webseite des Spark",
 "title": "Spark-Konsole: eigene Webseite des Spark",
 "text": "Die Konsole ist derselbe Code wie das Panel in einem eigenen Modus: sie spricht nur https auf Port 31010, antwortet nur diesem Rechner und den Netzen aus konsole.netze (höchstens 8, nur private Netze, nicht weiter als /8) und nur auf ihre eigenen Wege; alles andere (Assistent, Profile, Werkzeuge) ist 404. Bei geteilter Installation lässt die Firewall der Tür ihren Port nur aus diesen Netzen herein. sudo speech-spark konsole aus schaltet sie wieder ab."
 },
@@ -16629,7 +16645,7 @@
 "file": "Sicherheit und Betrieb",
 "head": "Spark-Clients (seit V01.1.437)",
 "title": "Spark-Clients (seit V01.1.437)",
-"text": "- Schalter und Netze: „Für Clients geöffnet“ (api.clients, aus) und die Netze im Heimnetz (api.clients_from, höchstens 8, nur private Netze, nicht weiter als /8). Erst dann öffnet ein Client-Schlüssel etwas. Bei getrennten Rechnern lässt das TLS-Tor nur den Panel-Rechner und diese Netze herein, und root baut die Firewall neu aus der Konfiguration (feste Einheit speech-spark-clients-fw); auf dem Spark allein prüft jeder Dienst die Adresse selbst. Funktionen → Spark-Clients aus schließt die Dienste wieder. - Schlüssel: sk-spark- und 256 Bit Zufall, nur einmal gezeigt (frischer Code), gespeichert nur als SHA-256 in spark-clients.json, in konstanter Zeit verglichen. Höchstens 20 Clients; Sperren und Löschen wirken sofort. - Rechte je Dienst: Sprachmodell, Bilder verstehen, Hilfsmodell, Einordnen (System One), Hören, Sprechen, Bilder, Musik. Ohne Recht antwortet der Dienst 403 „recht“. Den Spark verwalten (Wärter) kann kein Client, Bilder und Musik anhalten auch nicht. - Vorrangklasse: „Sprache“ wartet an den Toren der Dienste wie die Stimme des Assistenten vorn, „Dialog“ normal, „Hintergrund“ immer zuletzt: es rückt beim Warten nie auf und wartet, solange auf dem Spark jemand spricht ("
+"text": "- Schalter und Netze: „Für Clients geöffnet“ (api.clients, aus) und die Netze im Heimnetz (api.clients_from, höchstens 8, nur private Netze, nicht weiter als /8). Erst dann öffnet ein Client-Schlüssel etwas. Bei getrennten Rechnern lässt das TLS-Tor nur den Panel-Rechner und diese Netze herein, und root baut die Firewall neu aus der Konfiguration (feste Einheit speech-spark-clients-fw); auf dem Spark allein prüft jeder Dienst die Adresse selbst. Funktionen → Spark-Clients aus schließt die Dienste wieder. - Schlüssel: sk-spark- und 256 Bit Zufall, nur einmal gezeigt (frischer Code), gespeichert nur als SHA-256 in spark-clients.json, in konstanter Zeit verglichen. Höchstens 20 Clients; Sperren und Löschen wirken sofort. - Rechte je Dienst: Sprachmodell, Bilder verstehen, Hilfsmodell, Einordnen (System One), Hören, Sprechen, Bilder, Musik, auf einem Spark ohne gekoppelten Pi auch Einbetten und Nachsortieren (seit V01.1.523). Ohne Recht antwortet der Dienst 403 „recht“. Den Spark verwalten (Wärter) kann kein Client, Bilder und Musik anhalten auch nicht. - Einbetten und Nachsortieren (seit V01.1.523, nur Spark allein): POST /v1/embeddings und POST /v1/rerank am LLM-Tor gehen an eigene v"
 },
 {
 "lang": "de",
@@ -16637,7 +16653,7 @@
 "file": "Sicherheit und Betrieb",
 "head": "Spark-Clients (seit V01.1.437)",
 "title": "Spark-Clients (seit V01.1.437)",
-"text": "Sprachmarke von Hören und Sprechen, 3 Sekunden), höchstens 60 Sekunden, dann als Letzter in der Reihe (Paket E3, Zeile sparkclient: gehalten sprache …). Ein Client wählt seine Stufe nie selbst; nur „Sprache“ zählt als jemand, der spricht. - Grenzen: Anfragen pro Minute je Dienst, gleichzeitig am Sprachmodell und Tokens pro Tag (aus der Zählung der Engine, auch beim Streamen); vorgegeben 20/min, 2 gleichzeitig, 300 000 Tokens/Tag. Beim Anlegen und später mit „Grenzen“ je Client einstellbar; leer oder 0 heißt keine Grenze, „Keine Grenzen“ hebt alle drei auf (dann bremst nur der Vorrang). Darüber 429 „limit“, „parallel“ oder „tokens“. Die Zähler leben im Speicher des Dienstes. - Fähigkeiten (Paket E2): GET /v1/spark/faehigkeiten am Sprachmodell, an Hören und an Sprechen sagt mit Schlüssel, welche Dienste der Spark anbietet, unter welchem festen Modellnamen, was der Schlüssel darf, und die Spark-API-Version (common.SPARK_API). Danach richten sich Clients, nicht nach der Versionsnummer; Zustand → Live zeigt sie beim Modell-Rechner, wenn sie abweicht. - Log und Daten: Zeilen sparkclient: … mit Client-Kennung, festen Wörtern und Zahlen, eine Ablehnung derselben Art höchstens einmal pro Mi"
+"text": "LLM-Dienste im Pooling-Modus (speech-spark-einbetten, speech-spark-nachsortieren, nur 127.0.0.1), die erst nach „Laden“ in der Spark-Konsole laufen. Das Tor nimmt nur reine Texte (keine Token-IDs, höchstens 256 je Anfrage, je 32 000 Zeichen, nur Zahlen als Ergebnis), setzt den Modellnamen der Engine, schickt alles als „Hintergrund“ zuletzt durch ein eigenes Tor je Dienst und zählt die Token zum Tageslimit des Programms. Beim Qwen3-Reranker legt es den festen Rahmen aus der Modellkarte um Frage und Texte und nimmt vorher die Steuerzeichen des Modells aus den Texten (textnorm.defuse_marks); die Antwort nennt die Texte nur so, wie das Programm sie geschickt hat. Gestartet wird nur mit festem Stand, ohne Code aus dem Repository, mit festen Schaltern aus modelle.POOL_ARGS (für den Qwen3-Reranker die Überschreibungen aus dem vLLM-Rezept); nach dem Laden muss die feste Probe bestehen, sonst geht es zurück. Log llmtor: einbetten|nachsortieren <status> <n> texte <ms> ms, nie ein Text. - Vorrangklasse: „Sprache“ wartet an den Toren der Dienste wie die Stimme des Assistenten vorn, „Dialog“ normal, „Hintergrund“ immer zuletzt: es rückt beim Warten nie auf und wartet, solange auf dem Spark jema"
 },
 {
 "lang": "de",
@@ -16645,7 +16661,15 @@
 "file": "Sicherheit und Betrieb",
 "head": "Spark-Clients (seit V01.1.437)",
 "title": "Spark-Clients (seit V01.1.437)",
-"text": "nute; nie Namen, Schlüssel oder Inhalte. Das Änderungsprotokoll nennt Öffnen, Schließen, Anlegen, Ändern und Löschen. - Durch das TLS-Tor: Es verbindet sich von 127.0.0.2 mit den Diensten. „Nur dieser Rechner“ (kein Schlüssel gesetzt, Einzelheiten unter /health) gilt dafür nicht mehr; vorher sah jeder Anrufer durch die Tür aus wie der Rechner selbst."
+"text": "nd spricht (Sprachmarke von Hören und Sprechen, 3 Sekunden), höchstens 60 Sekunden, dann als Letzter in der Reihe (Paket E3, Zeile sparkclient: gehalten sprache …). Ein Client wählt seine Stufe nie selbst; nur „Sprache“ zählt als jemand, der spricht. - Grenzen: Anfragen pro Minute je Dienst, gleichzeitig am Sprachmodell und Tokens pro Tag (aus der Zählung der Engine, auch beim Streamen); vorgegeben 20/min, 2 gleichzeitig, 300 000 Tokens/Tag. Beim Anlegen und später mit „Grenzen“ je Client einstellbar; leer oder 0 heißt keine Grenze, „Keine Grenzen“ hebt alle drei auf (dann bremst nur der Vorrang). Darüber 429 „limit“, „parallel“ oder „tokens“. Die Zähler leben im Speicher des Dienstes. - Fähigkeiten (Paket E2): GET /v1/spark/faehigkeiten am Sprachmodell, an Hören und an Sprechen sagt mit Schlüssel, welche Dienste der Spark anbietet, unter welchem festen Modellnamen, was der Schlüssel darf, und die Spark-API-Version (common.SPARK_API). Danach richten sich Clients, nicht nach der Versionsnummer; Zustand → Live zeigt sie beim Modell-Rechner, wenn sie abweicht. - Log und Daten: Zeilen sparkclient: … mit Client-Kennung, festen Wörtern und Zahlen, eine Ablehnung derselben Art höchstens e"
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Spark-Clients (seit V01.1.437)",
+"title": "Spark-Clients (seit V01.1.437)",
+"text": "inmal pro Minute; nie Namen, Schlüssel oder Inhalte. Das Änderungsprotokoll nennt Öffnen, Schließen, Anlegen, Ändern und Löschen. - Durch das TLS-Tor: Es verbindet sich von 127.0.0.2 mit den Diensten. „Nur dieser Rechner“ (kein Schlüssel gesetzt, Einzelheiten unter /health) gilt dafür nicht mehr; vorher sah jeder Anrufer durch die Tür aus wie der Rechner selbst."
 },
 {
 "lang": "de",
@@ -33236,6 +33260,22 @@
 "src": "installation",
 "file": "Installation in detail",
 "head": "Spark-Konsole: the Spark's own web page",
+"title": "Providing GPU models (since V01.1.523, Dominik 2026-11-18)",
+"text": "Providing GPU models (since V01.1.523, Dominik 2026-11-18): When the Spark runs alone, without a paired Pi, *Models* in the console shows two more kinds: *Embeddings* (turns texts into vectors for a search) and *Re-ranking* (orders search hits by meaning), and the *helper model* can be chosen. By default neither is loaded; \"Load\" on the checked model (Qwen3-Embedding 0.6B and Qwen3-Reranker 0.6B, about 4 GiB each) fetches it at a pinned commit, starts it as a vLLM service of its own on the GPU (speech-spark-einbetten on 31020, speech-spark-nachsortieren on 31021, only on 127.0.0.1) and checks it with a fixed probe: the sentence that answers the probe question must come first, otherwise it goes back. \"Unload\" switches it off again. Own models of these kinds follow the same rules as for the language model (safetensors only, no code from the repository, known architectures only); an own helper model only after a measurement. Programs reach both through the LLM-Tor: POST /v1/embeddings (like OpenAI, model name einbettung) and POST /v1/rerank (like Jina and Cohere, the way Open WebUI asks, model name nachsortieren), with the rights \"Embeddings\" and \"Re-ranking\" under *Connections*; the "
+},
+{
+"lang": "en",
+"src": "installation",
+"file": "Installation in detail",
+"head": "Spark-Konsole: the Spark's own web page",
+"title": "Providing GPU models (since V01.1.523, Dominik 2026-11-18)",
+"text": "box \"Connect a program\" then names the address and model names. At most 256 texts of 32,000 characters each per request, always as \"Background\" behind speech, the program's limits apply; the log names only counts and milliseconds. With a Pi paired, everything stays as before."
+},
+{
+"lang": "en",
+"src": "installation",
+"file": "Installation in detail",
+"head": "Spark-Konsole: the Spark's own web page",
 "title": "Spark-Konsole: the Spark's own web page",
 "text": "The console is the panel's code in a mode of its own: it speaks only https on port 31010, answers only this computer and the networks of konsole.netze (at most 8, private networks only, not wider than /8) and only its own paths; everything else (assistant, profiles, tools) is 404. With a split install the door's firewall lets its port in only from these networks. sudo speech-spark konsole aus switches it off again."
 },
@@ -34485,7 +34525,7 @@
 "file": "Security and operation",
 "head": "Spark clients (since V01.1.437)",
 "title": "Spark clients (since V01.1.437)",
-"text": "- Switch and networks: \"Für Clients geöffnet\" (api.clients, off) and the networks in the home network (api.clients_from, at most 8, private networks only, not wider than /8). Only then does a client key open anything. With separate computers the TLS door lets in only the panel computer and these networks, and root builds the firewall anew from the configuration (fixed unit speech-spark-clients-fw); on a Spark alone every service checks the address itself. Features → Spark clients off closes the services again. - Keys: sk-spark- and 256 random bits, shown once (fresh code), stored only as SHA-256 in spark-clients.json, compared in constant time. At most 20 clients; blocking and deleting take effect at once. - Rights per service: language model, understanding pictures, helper model, classifying (System One), listening, speaking, pictures, music. Without the right the service answers 403 \"recht\". No client can manage the Spark (Wärter) or stop pictures and music. - Priority class: \"Sprache\" waits at the services' gates in front like the assistant's voice, \"Dialog\" normal, \"Hintergrund\" always last: it never moves up while waiting and waits while somebody speaks on the Spark (speech ma"
+"text": "- Switch and networks: \"Für Clients geöffnet\" (api.clients, off) and the networks in the home network (api.clients_from, at most 8, private networks only, not wider than /8). Only then does a client key open anything. With separate computers the TLS door lets in only the panel computer and these networks, and root builds the firewall anew from the configuration (fixed unit speech-spark-clients-fw); on a Spark alone every service checks the address itself. Features → Spark clients off closes the services again. - Keys: sk-spark- and 256 random bits, shown once (fresh code), stored only as SHA-256 in spark-clients.json, compared in constant time. At most 20 clients; blocking and deleting take effect at once. - Rights per service: language model, understanding pictures, helper model, classifying (System One), listening, speaking, pictures, music, on a Spark without a paired Pi also embeddings and re-ranking (since V01.1.523). Without the right the service answers 403 \"recht\". No client can manage the Spark (Wärter) or stop pictures and music. - Embeddings and re-ranking (since V01.1.523, Spark alone only): POST /v1/embeddings and POST /v1/rerank at the LLM-Tor go to vLLM services of t"
 },
 {
 "lang": "en",
@@ -34493,7 +34533,7 @@
 "file": "Security and operation",
 "head": "Spark clients (since V01.1.437)",
 "title": "Spark clients (since V01.1.437)",
-"text": "rk of listening and speaking, 3 seconds), at most 60 seconds, then last in line (package E3, line sparkclient: gehalten sprache …). A client never picks its stage itself; only \"Sprache\" counts as somebody speaking. - Limits: requests per minute per service, at once at the language model and tokens per day (from the engine's count, also when streaming); preset 20/min, 2 at once, 300 000 tokens/day. Adjustable per client when making it and later with \"Limits\"; empty or 0 means no limit, \"No limits\" lifts all three (then only the priority holds back). Above them 429 \"limit\", \"parallel\" or \"tokens\". The counts live in the service's memory. - Capabilities (package E2): GET /v1/spark/faehigkeiten at the language model, listening and speaking says with a key which services the Spark offers, under which fixed model name, what the key may, and the Spark API version (common.SPARK_API). Clients go by it, not by the version number; Status → Live shows it at the model computer when it differs. - Log and data: lines sparkclient: … with the client's id, fixed words and numbers, a refusal of the same kind at most once a minute; never names, keys or contents. The change log names opening, closing, "
+"text": "heir own in pooling mode (speech-spark-einbetten, speech-spark-nachsortieren, only 127.0.0.1), which run only after \"Load\" in the Spark-Konsole. The door takes plain texts only (no token ids, at most 256 per request, 32,000 characters each, only numbers as the result), sets the engine's model name, sends everything as \"Background\" last through a gate of its own per service and counts the tokens toward the program's daily limit. For Qwen3-Reranker it puts the fixed frame of the model card around query and texts and first takes the model's control markers out of the texts (textnorm.defuse_marks); the answer names the texts only as the program sent them. It starts only at a pinned commit, without code from the repository, with fixed flags from modelle.POOL_ARGS (for Qwen3-Reranker the overrides of vLLM's recipe); after loading the fixed probe must pass, otherwise it goes back. Log llmtor: einbetten|nachsortieren <status> <n> texte <ms> ms, never a text. - Priority class: \"Sprache\" waits at the services' gates in front like the assistant's voice, \"Dialog\" normal, \"Hintergrund\" always last: it never moves up while waiting and waits while somebody speaks on the Spark (speech mark of list"
 },
 {
 "lang": "en",
@@ -34501,7 +34541,15 @@
 "file": "Security and operation",
 "head": "Spark clients (since V01.1.437)",
 "title": "Spark clients (since V01.1.437)",
-"text": "making, changing and deleting. - Through the TLS door: it connects to the services from 127.0.0.2. \"Only this machine\" (no key set, details under /health) no longer holds for it; before, every caller through the door looked like the machine itself."
+"text": "ening and speaking, 3 seconds), at most 60 seconds, then last in line (package E3, line sparkclient: gehalten sprache …). A client never picks its stage itself; only \"Sprache\" counts as somebody speaking. - Limits: requests per minute per service, at once at the language model and tokens per day (from the engine's count, also when streaming); preset 20/min, 2 at once, 300 000 tokens/day. Adjustable per client when making it and later with \"Limits\"; empty or 0 means no limit, \"No limits\" lifts all three (then only the priority holds back). Above them 429 \"limit\", \"parallel\" or \"tokens\". The counts live in the service's memory. - Capabilities (package E2): GET /v1/spark/faehigkeiten at the language model, listening and speaking says with a key which services the Spark offers, under which fixed model name, what the key may, and the Spark API version (common.SPARK_API). Clients go by it, not by the version number; Status → Live shows it at the model computer when it differs. - Log and data: lines sparkclient: … with the client's id, fixed words and numbers, a refusal of the same kind at most once a minute; never names, keys or contents. The change log names opening, closing, making, ch"
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Spark clients (since V01.1.437)",
+"title": "Spark clients (since V01.1.437)",
+"text": "anging and deleting. - Through the TLS door: it connects to the services from 127.0.0.2. \"Only this machine\" (no key set, details under /health) no longer holds for it; before, every caller through the door looked like the machine itself."
 },
 {
 "lang": "en",

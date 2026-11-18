@@ -48,7 +48,7 @@ import modelleneu  # noqa: E402
 import probetag  # noqa: E402
 import quality  # noqa: E402
 import steuer  # noqa: E402
-from common import journal, load_config, read_json, write_json  # noqa: E402
+from common import journal, load_config, read_json, spark_allein, write_json  # noqa: E402
 from core import admin_code, admin_code_fresh, auth  # noqa: E402
 
 LIVE_EVERY = 30          # seconds the Live view reuses the budget (systemctl and /proc are not read on every look)
@@ -238,18 +238,25 @@ def seite(cfg=None, total_gib=None, messung=None, lang="de", gestartet=False, we
     gemessen = messung.get("modelle") or {}
     platte = {(e["repo"], e["revision"]) for e in buch["bibliothek"]}
     arten = []
+    # Hilfsmodell, Einbetten and Nachsortieren to choose: only in the Spark-Konsole of a Spark alone (Dominik
+    # 2026-11-18); the pooling kinds are not shown anywhere else
+    allein = konsole.aktiv() and spark_allein(cfg)
     for art, namen in modelle.ARTEN.items():
+        if art in modelle.POOL_ARTEN and not allein:
+            continue
         rows = []
         emp = modelle.empfohlen(art, kat, profil)      # the checked recommendation for this kind of computer
         for mid, m in kat.items():
             if m["art"] != art:
                 continue
             r = gemessen.get(mid) or {}
-            nein = (_waehlbar(art, mid, cfg, total_gib, kat, messung, profil) if an and art in modelle.TAUSCH
+            nein = (_waehlbar(art, mid, cfg, total_gib, kat, messung, profil)
+                    if an and art in modelle.TAUSCH and (allein or art not in modelle.ALLEIN_ARTEN)
                     else _klein_nein(mid, cfg, kat) if an and art == "klein" else "art")
             rows.append({"id": mid, "name": m["name"]["en" if i else "de"], "engine": m["engine"], "need_gib": m["need_gib"],
                          "waehlbar": not nein, "nein": "" if nein in ("art", "schon", "wahl") else nein,
-                         "eigen": bool(m.get("eigen")), "messbar": an and m["engine"] == "vllm", "empfohlen": mid == emp,
+                         "eigen": bool(m.get("eigen")), "empfohlen": mid == emp,
+                         "messbar": an and m["engine"] == "vllm" and art not in modelle.POOL_ARTEN,
                          # how the configuration runs it (VoiceDesign on demand), else the catalog's way
                          "gemessen": m["gemessen"], "betrieb": (laufend.get(mid) or {}).get("betrieb") or m["betrieb"], "lizenz": m["lizenz"], "gewerblich": m["gewerblich"],
                          "aktiv": mid in laufend, "gib": (laufend.get(mid) or {}).get("gib"), "fest": bool(m["revision"]),
@@ -261,7 +268,9 @@ def seite(cfg=None, total_gib=None, messung=None, lang="de", gestartet=False, we
                          # „Nur laden“ (stage B1c): a pinned model of the cache that is not on the disk yet
                          "laden": bool(an and m["engine"] in modelle.ENTFERNBAR and m["revision"]
                                        and (m["repo"], m["revision"]) not in platte)})
-        arten.append({"art": art, "name": namen[i], "modelle": rows, "empfohlen": emp})
+        arten.append({"art": art, "name": namen[i], "modelle": rows, "empfohlen": emp,
+                      # „Entladen“ (Spark-Konsole): Einbetten / Nachsortieren off again while one is loaded
+                      **({"entladbar": an and bool(modelle.jetzt_id(art, cfg, kat))} if art in modelle.POOL_ARTEN else {})})
     laeuft = ((_laeuft() if laeuft is None else laeuft) or wechselt) if an else False
     misst = bool(_misst() if misst is None else misst)
     stand = (_stand() if stand is None else stand) if misst else []
@@ -277,7 +286,7 @@ def seite(cfg=None, total_gib=None, messung=None, lang="de", gestartet=False, we
     wechsel = {"an": an, "laeuft": laeuft, "misst": misst or gestartet, "stand": stand, "platz": platz, "probe": probe,
                "start": _start_zeigen(start, kat, i),
                "alte": modelle.alte(cfg, kat=kat, daten=wechsel) if an else {},
-               "tage": modelle.ALT_TAGE, "eigene": _eigen_an(cfg),
+               "tage": modelle.ALT_TAGE, "eigene": _eigen_an(cfg), "allein": allein,
                # the basis variants an own picture or music file can stand on (modelle.DATEI_ART), with their names
                "basen": dict({a: [[b, modelle.basis_variante(a, b)["name"]] for b in x[1]] for a, x in modelle.DATEI_ART.items()},
                              klein=[]),     # an own re-ranking model: one .onnx file, no basis
@@ -631,6 +640,34 @@ def _klein_wechsel(request, mid):
     return seite(lang="en" if request.query_params.get("lang") == "en" else "de")   # systemctl and the model computer, off the loop
 
 
+@router.post("/api/admin/modelle/entladen", dependencies=[Depends(auth), Depends(admin_code)])
+async def admin_entladen(request: Request):
+    """„Entladen“ in the Spark-Konsole: Einbetten or Nachsortieren off again (root's speech-spark-wechsel)."""
+    guard.limit(request, "modelle_wechsel", None, True)
+    body = await core.json_body(request, MAX_BODY)
+    return await asyncio.to_thread(_entladen, request, str(body.get("art", ""))[:16])
+
+
+def _entladen(request, art):
+    cfg = load_config()
+    if not konsole.aktiv() or steuer.remote(cfg):
+        print("modelle: entladen abgelehnt art", flush=True)
+        raise HTTPException(400, GRUND["art"])
+    if _misst():
+        _fehler("misst", "entladen")
+    try:
+        name = modelle.aus_anfragen(art, cfg, _starten, _laeuft())["name"]["de"]
+    except modelle.Fehler as e:
+        if str(e) == "start":
+            print("modelle: entladen start fehler", flush=True)
+            raise HTTPException(503, GRUND["start"])
+        _fehler(e, "entladen")
+    print(f"modelle: entladen {art} angefragt", flush=True)
+    guard.log("modelle_wechsel", detail=f"{modelle.ARTEN[art][0]} entladen: {name}")
+    _live["t"] = None
+    return seite(lang="en" if request.query_params.get("lang") == "en" else "de", wechselt=True)
+
+
 @router.post("/api/admin/modelle/zurueck", dependencies=[Depends(auth), Depends(admin_code)])
 async def admin_zurueck(request: Request):
     """Zurückholen: the model before the last switch of this kind, within 7 days."""
@@ -657,7 +694,10 @@ def admin_probe_weg(request: Request):
 # ---------------------------------------------------------------- stage E5: own models
 async def _vorschlag(body, art, repo, rev, total_gib, mit_token):
     """The own entry the fixed rules make of one commit: a picture or music file (DATEI_ART: the named .gguf file on a
-    basis variant), a speech model (its program's family) or a language or picture-understanding model."""
+    basis variant), a speech model (its program's family) or a language or picture-understanding model; a helper,
+    embedding or re-ranking model only in the Spark-Konsole of a Spark alone."""
+    if art in modelle.ALLEIN_ARTEN and not (konsole.aktiv() and spark_allein(load_config())):
+        raise modelle.Fehler("art")
     if art == "klein":            # an own re-ranking model: the named .onnx file (runs on this computer's CPU)
         return modelle.klein_vorschlag(await _hf_info(repo, rev), repo, str(body.get("datei", ""))[:200], await _familien(art))
     if art in modelle.DATEI_ART:

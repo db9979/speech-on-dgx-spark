@@ -12,17 +12,21 @@ const L=EN?'en':'de';   // modellgenau.js (Modell genau) reads the language as t
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const RECHT={llm:t('Sprachmodell','Language model'),sehen:t('Bilder verstehen','Understand pictures'),helfer:t('Hilfsmodell','Helper model'),
-  systemone:t('Einordnen (System One)','Classify (System One)'),asr:t('Hören','Listening'),tts:t('Sprechen','Speaking'),bild:t('Bilder','Pictures'),musik:t('Musik','Music')};
+  systemone:t('Einordnen (System One)','Classify (System One)'),asr:t('Hören','Listening'),tts:t('Sprechen','Speaking'),bild:t('Bilder','Pictures'),musik:t('Musik','Music'),
+  einbetten:t('Einbetten','Embeddings'),nachsortieren:t('Nachsortieren','Re-ranking')};
 const KLASSE={sprache:t('Sprache','Speech'),dialog:t('Dialog','Dialogue'),hintergrund:t('Hintergrund','Background')};
 const DIENST={asr:t('Spracherkennung','Speech recognition'),tts:t('Sprachausgabe','Speech output'),llm:t('Sprachmodell','Language model'),
-  llmtor:'LLM-Tor',sehen:t('Sehen','Vision'),helfer:t('Hilfsmodell','Helper model'),bild:t('Bilder','Pictures'),musik:t('Musik','Music')};
+  llmtor:'LLM-Tor',sehen:t('Sehen','Vision'),helfer:t('Hilfsmodell','Helper model'),bild:t('Bilder','Pictures'),musik:t('Musik','Music'),
+  einbetten:t('Einbetten','Embeddings'),nachsortieren:t('Nachsortieren','Re-ranking')};
 // the services by what they do (Überblick): symbol, name, one line; the kind of model in Modelle it opens
 const AUFGABE={llm:['brain',t('Sprachmodell','Language model'),t('Gespräche, Werkzeuge, Zusammenfassungen','Talks, tools, summaries'),'llm'],
   asr:['ear',t('Hören','Listening'),t('Spracherkennung','Speech recognition'),'asr'],tts:['speaker',t('Sprechen','Speaking'),t('Sprachausgabe','Speech output'),'tts'],
   helfer:['bulb',t('Hilfsmodell','Helper model'),t('schnelles Einordnen','quick sorting'),'helfer'],sehen:['eye',t('Bilder verstehen','Understand pictures'),t('Bildverständnis','Image understanding'),'sehen'],
   bild:['image',t('Bilder malen','Painting pictures'),t('Bilder auf Wunsch','Pictures on request'),'bild'],musik:['music',t('Musik','Music'),t('Musik machen','Making music'),'musik'],
+  einbetten:['db',t('Einbetten','Embeddings'),t('Texte als Vektoren für die Suche','Texts as vectors for search'),'einbetten'],
+  nachsortieren:['bars',t('Nachsortieren','Re-ranking'),t('Treffer nach Bedeutung ordnen','Order hits by meaning'),'nachsortieren'],
   llmtor:['route','LLM-Tor',t('Tür für Assistent und Programme','Door for the assistant and programs'),'']};
-const ART_IC={llm:'brain',sehen:'eye',asr:'ear',tts:'speaker',bild:'image',musik:'music',klein:'cpu',helfer:'bulb'};
+const ART_IC={llm:'brain',sehen:'eye',asr:'ear',tts:'speaker',bild:'image',musik:'music',klein:'cpu',helfer:'bulb',einbetten:'db',nachsortieren:'bars'};
 // only the notes about the Spark itself; the rest of /api/status's notes are the assistant's (old data of a panel that ran here)
 const HINWEISE=['memory','watchdog','systemupdate','systemupdate_neustart'];
 const LOGS=['llm','llmtor','asr','asr-engine','tts','tts-engine','update','konsole'];
@@ -230,6 +234,8 @@ async function assistentAct(){const m=x=>{const el=$('kamsg');if(el)el.textConte
 // detail on the right. The page polls while a switch or a measurement runs.
 const gib=x=>x==null?'–':(Math.round(x*10)/10)+' GiB';
 const EIGEN_ARTEN=['llm','sehen','asr','tts','bild','musik'];
+// on a Spark alone also the helper model, Einbetten and Nachsortieren (the page says so: wechsel.allein)
+const ALLEIN_ARTEN=['helfer','einbetten','nachsortieren'];
 // the search's star and the checked recommendation (Dominik 2026-11-16 „1-3“): fixed rules of the panel, shown as they come
 const FORMAT={nvfp4:'NVFP4',fp8:'FP8',int:'INT4/8',bf16:'BF16'};
 const NEIN={schon:t('schon im Katalog','already in the catalog'),zugang:t('privat oder mit Freigabe','private or gated'),aufgabe:t('andere Aufgabe','another task'),
@@ -242,7 +248,9 @@ function treffer(x){const w=x.warum||{},zahl=[FORMAT[x.format]||'',x.need_gib!=n
 const ART_SATZ={llm:t('Das Sprachmodell für Gespräche, Werkzeuge und Zusammenfassungen.','The language model for talks, tools and summaries.'),
   sehen:t('Versteht Bilder und Fotos.','Understands pictures and photos.'),asr:t('Macht aus Sprache Text.','Turns speech into text.'),
   tts:t('Spricht die Antworten.','Speaks the answers.'),bild:t('Malt Bilder auf Wunsch.','Paints pictures on request.'),musik:t('Macht Musik auf Wunsch.','Makes music on request.'),
-  helfer:t('Ein kleines Modell für schnelles Einordnen.','A small model for quick sorting.'),klein:t('Kleine Modelle auf dem Prozessor.','Small models on the processor.')};
+  helfer:t('Ein kleines Modell für schnelles Einordnen.','A small model for quick sorting.'),klein:t('Kleine Modelle auf dem Prozessor.','Small models on the processor.'),
+  einbetten:t('Macht aus Texten Vektoren für die Suche, für Programme wie Open WebUI.','Turns texts into vectors for search, for programs such as Open WebUI.'),
+  nachsortieren:t('Ordnet Suchtreffer nach ihrer Bedeutung, für Programme wie Open WebUI.','Orders search hits by meaning, for programs such as Open WebUI.')};
 let MOD=null,MOD_T=null,MOD_FUND=null;
 async function modelle(sub,msg){const el=$('tab-modelle');clearTimeout(MOD_T);
   try{MOD=await (await api('/api/admin/modelle?lang='+(EN?'en':'de'))).json()}catch(e){el.innerHTML=`<p class="k">${esc(e.message)}</p>`;return}
@@ -279,6 +287,7 @@ function modDraw(msg){const el=$('tab-modelle'),d=MOD,b=d.budget||{},teile=b.tei
         :`<div class="k">${esc(t('Nichts geladen.','Nothing loaded.'))}</div>`}
         ${speicher(b)}
         <div class="row">${m&&m.messbar?`<button class="btn sec" type="button" data-m="messen" data-id="${esc(m.id)}"${busy?' disabled':''}>${esc(t('Messen','Measure'))}</button>`:''}
+          ${a.entladbar?`<button class="btn link" type="button" data-m="entladen" data-art="${esc(a.art)}"${busy?' disabled':''}>${esc(t('Entladen','Unload'))}</button>`:''}
           ${zur?`<button class="btn link" type="button" data-m="zurueck" data-art="${esc(a.art)}"${busy?' disabled':''}>${esc(t('Vorheriges zurückholen','Bring back the previous one'))}</button>`:''}
           ${a.art==='llm'?`<a class="btn link" href="#modellgenau">${esc(t('Modell genau','Model in detail'))} ›</a>`:''}</div></div>
       ${e&&!e.aktiv?`<div class="ksec">${esc(t('Geprüfte Empfehlung','Checked recommendation'))}</div><div class="kgrp"><div class="krow"><span class="kt"><b>${esc(e.name)}</b>
@@ -290,7 +299,7 @@ function modDraw(msg){const el=$('tab-modelle'),d=MOD,b=d.budget||{},teile=b.tei
   else if(sub==='eigen'){const f=MOD_FUND;
     det=`<div class="kkick">${esc(t('Modelle','Models'))}</div><h1>${esc(t('Eigenes Modell von Hugging Face','Own model from Hugging Face'))}</h1>
     <div class="ksub">${esc(t('Nur Gewichte als safetensors, kein Code aus dem Repository, eine Architektur, die der Spark kennt. Geladen wird erst beim Wechseln. Passende Treffer stehen oben, den Stern bekommt nach fester Regel der erste mit dem besten Format für diesen Rechner und Platz neben den laufenden Modellen.','Weights as safetensors only, no code from the repository, an architecture the Spark knows. It is downloaded only when you switch to it. Fitting hits come first; by a fixed rule the star goes to the first with the best format for this computer and room beside the running models.'))}</div>${start}
-    <div class="kcard"><div class="row"><select id="kmart" aria-label="${esc(t('Art','Kind'))}">${EIGEN_ARTEN.map(x=>`<option value="${x}">${esc(arten.find(a=>a.art===x)?.name||x)}</option>`).join('')}</select>
+    <div class="kcard"><div class="row"><select id="kmart" aria-label="${esc(t('Art','Kind'))}">${EIGEN_ARTEN.concat(w.allein?ALLEIN_ARTEN:[]).map(x=>`<option value="${x}">${esc(arten.find(a=>a.art===x)?.name||x)}</option>`).join('')}</select>
       <input id="kmq" class="grow" maxlength="80" placeholder="${esc(t('Suchen, z. B. qwen3 nvfp4','Search, e.g. qwen3 nvfp4'))}" aria-label="${esc(t('Suche','Search'))}"><button class="btn sec" type="button" data-m="suche">${esc(t('Suchen','Search'))}</button></div>
     <div id="kmtreffer" data-halten></div>
     <div class="row"><input id="kmrepo" class="grow" maxlength="200" placeholder="org/name" aria-label="${esc(t('Name auf Hugging Face','Name on Hugging Face'))}"><button class="btn sec" type="button" data-m="pruefen">${esc(t('Prüfen','Check'))}</button></div>
@@ -313,6 +322,7 @@ function modDraw(msg){const el=$('tab-modelle'),d=MOD,b=d.budget||{},teile=b.tei
 async function modAct(a,b){const m=x=>{const el=$('kmmsg');if(el)el.textContent=x};const L='?lang='+(EN?'en':'de');
   try{
     if(a==='wechseln'){MOD=await post('/api/admin/modelle/wechseln'+L,{art:b.dataset.art,id:b.dataset.id});return modDraw(t('Wechsel angefragt.','Switch requested.'))}
+    if(a==='entladen'){MOD=await post('/api/admin/modelle/entladen'+L,{art:b.dataset.art});return modDraw(t('Entladen angefragt.','Unloading requested.'))}
     if(a==='zurueck'){MOD=await post('/api/admin/modelle/zurueck'+L,{art:b.dataset.art});return modDraw(t('Zurückholen angefragt.','Bring-back requested.'))}
     if(a==='messen'){MOD=await post('/api/admin/modelle/messen'+L,{id:b.dataset.id});return modDraw(t('Messung angefragt. Das Sprachmodell pausiert währenddessen.','Measurement requested. The language model pauses meanwhile.'))}
     if(a==='weg'){MOD=await (await api('/api/admin/modelle/eigen/'+encodeURIComponent(b.dataset.id)+L,{method:'DELETE'})).json();MOD_FUND=null;return modDraw(t('Gelöscht.','Deleted.'))}

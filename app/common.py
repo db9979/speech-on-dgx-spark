@@ -731,7 +731,8 @@ SERVICES = {"asr": "speech-spark-asr", "tts": "speech-spark-tts"}
 UNITS = dict(SERVICES, **{"asr-engine": "speech-spark-asr-engine", "tts-engine": "speech-spark-tts-engine",
                           "tts-design": "speech-spark-tts-design", "tts-klon": "speech-spark-tts-klon"})
 OWN_LLM_UNITS = {"llm": "speech-spark-llm", "llmtor": "speech-spark-llmtor", "sehen": "speech-spark-sehen",
-                 "helfer": "speech-spark-helfer"}
+                 "helfer": "speech-spark-helfer", "einbetten": "speech-spark-einbetten",
+                 "nachsortieren": "speech-spark-nachsortieren"}
 # units that run only for a while on the model computer and are shown under Logs → Dienste: their lines live there,
 # so the panel reads them through the Wärter like the model units (Dominik 2026-10-26: „Modellwechsel“ was empty)
 MODEL_LOG_UNITS = {"wechsel": "speech-spark-wechsel", "llmdocker": "speech-spark-llm-docker"}   # Docker stage 2: the container
@@ -1013,6 +1014,13 @@ def model_host(cfg=None):
     cfg = load_config() if cfg is None else cfg
     host = str((cfg.get("models") or {}).get("host") or "").strip()
     return host if MODEL_HOST_RE.fullmatch(host) else "127.0.0.1"
+
+
+def spark_allein(cfg=None):
+    """True on a Spark that runs alone: no panel computer (a Raspberry Pi) is paired with it (api.tls_from empty).
+    The Spark-Konsole offers the helper model, Einbetten and Nachsortieren only then (Dominik 2026-11-18)."""
+    cfg = load_config() if cfg is None else cfg
+    return not (cfg.get("api") or {}).get("tls_from")
 
 
 def model_local(cfg=None):

@@ -6669,5 +6669,32 @@
 "thread": "Spark-Website moderner und aufgeräumter gestalten",
 "test": "test_konsole.Seite.test_overview_shows_the_model_services_of_this_computer"
 }
+,
+{
+"id": "P964",
+"v": 1523,
+"titel": "Einbetten und Nachsortieren in der Konsole laden",
+"text": "Auf tars (ohne gekoppelten Pi) https://<ip>:31010 → Modelle: es gibt die Arten „Einbetten“ und „Nachsortieren“, beide „nichts geladen“. Bei Einbetten die Empfehlung Qwen3-Embedding 0.6B „Laden“ (Code): nach einigen Minuten steht sie als „läuft“ da, der Speicherbalken zeigt etwa 4 GiB mehr. Dasselbe bei Nachsortieren. Klappt es nicht: Wartung → Logs oder sudo speech-spark logs wechsel und die Zeile „modelle: probe …“ nennen. „Entladen“ schaltet es wieder ab.",
+"thread": "Spark-Website moderner und aufgeräumter gestalten",
+"test": "test_einbetten.Konsole.test_only_in_the_console_alone"
+}
+,
+{
+"id": "P965",
+"v": 1523,
+"titel": "Open WebUI nutzt Einbetten und Nachsortieren des Spark",
+"text": "Konsole → Verbindungen: einem Programm die Rechte „Einbetten“ und „Nachsortieren“ geben; der Kasten „So trägst du es im Programm ein“ nennt …:31006/v1/embeddings mit Modellname einbettung und …:31006/v1/rerank mit nachsortieren. In Open WebUI → Admin → Dokumente: Embedding-Engine „OpenAI“, URL http(s)://<ip>:31006/v1, Schlüssel, Modell einbettung; Reranking-Engine „Extern“, URL …/v1/rerank, Modell nachsortieren. Ein Dokument hochladen und danach fragen: die Antwort kennt den Inhalt.",
+"thread": "Spark-Website moderner und aufgeräumter gestalten",
+"test": "test_einbetten.Tor.test_rerank_in_the_form_programs_read"
+}
+,
+{
+"id": "P966",
+"v": 1523,
+"titel": "Hilfsmodell in der Konsole wählen",
+"text": "Konsole → Modelle → Hilfsmodell: die Art lässt sich wählen; ist ein anderes Hilfsmodell im Katalog oder ein eigenes gemessenes da, „Laden“ (Code). Ist ein Pi gekoppelt, gibt es Einbetten und Nachsortieren nicht und das Hilfsmodell bleibt fest.",
+"thread": "Spark-Website moderner und aufgeräumter gestalten",
+"test": "test_einbetten.NurAllein.test_switch_rules"
+}
 ]
 }
