@@ -486,8 +486,7 @@ def offer(ctx):
     if not who or not ctx.get("own") or ctx.get("private") is False or ctx.get("client") == "mcp" \
             or not features.allowed("doclink", who["id"]) or not URL.search(str(ctx.get("text") or "")):
         return None
-    return {"tools": TOOLS, "hint": HINT, "changes": {"link_als_dokument"},
-            "filler": {"link_als_dokument": ("Ich hole die Seite.", "Fetching the page.")}}
+    return {"tools": TOOLS, "hint": HINT, "changes": {"link_als_dokument"}}
 
 
 async def tool(name, args, ctx):

@@ -800,7 +800,7 @@ SEITEN = {
         "heute": [],
     },
     "antwort": {
-        "stand": "0b8de19389",
+        "stand": "cf5bde756d",
         "bezug": {
             "chat.MAX_SAVES": ["s11"], "chat.LOOP_SAME": ["s11"], "chat._answer": ["s4", "s5", "s11"], "chat_modell.model_turn": ["s4", "s11"], "chat_modell.herkunft_und_chip": ["s3"], "chat_modell.quellenangabe_zeile": ["s3"], "chat_ton.speech_out": ["s8"],
             "chat.split_sentences": ["s5"], "chat.said_key": ["s8"], "chat.no_code": ["s8"],
@@ -860,10 +860,12 @@ SEITEN = {
               ("drei Aufgaben: Modell, Sprachausgabe, Brücke", "three tasks: model, speech output, bridge"),
               ("Zwei Warteschlangen verbinden alles: eine für die Ereignisse ans Gerät, eine für Sätze an die "
                "Sprachausgabe. Ist die Sofortige Rückmeldung frei, spielt sofort ein aufgenommener Satz (ohne GPU); "
-               "bleibt die Antwort danach still, kommt einmal ein Brücken-Satz.",
+               "bleibt die Antwort danach still, kommt einmal ein Brücken-Satz, nach dem ersten Satz erst nach 10 s Stille. "
+               "Höchstens ein Füllsatz, nur vom Spark; etwa jeder dritte nennt die Person beim Namen.",
                "Two queues connect everything: one for events to the device, one for sentences to speech output. When "
                "the instant acknowledgement is allowed, a recorded sentence plays at once (no GPU); if the answer then "
-               "stays silent, one bridge sentence follows.")),
+               "stays silent, one bridge sentence follows, after a first sentence only after 10 s of quiet. At most one "
+               "filler, from the Spark only; about every third one names the person.")),
             S("s3", "schritt", ("Was das Panel selbst erledigt", "What the panel does itself"),
               ("Smart Home, Erst lokal, direkter Abruf", "smart home, local first, direct fetch"),
               ("Hat die Vorbereitung entschieden, dass das Panel selbst handelt (ein Schaltbefehl, Zustände lesen, "
@@ -1156,7 +1158,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Werkzeuge (chat_tools.run)
     "werkzeuge": {
-        "stand": "60e7d18954",
+        "stand": "b6732dfc21",
         "bezug": {
             "chat.LOCKED_OUTSIDE": ["s4"], "notaus.INTERNET_TOOLS": ["s3"], "werkzeuge.NAMES": ["s11"],
             "chat_tools.run": ["s2", "s7"], "chat.wrap_outside": ["s9"], "chat.LOCKED_AFTER_MAIL": ["s4"],
@@ -1183,13 +1185,15 @@ SEITEN = {
                "(nur Gesagtes oder Bestätigtes, profiles._cap), antwortet memory_save „Not done“ mit dem Weg zum Aufräumen. "
                "Was memory_save behält, steht als „Gemerkt: …“ mit „Rückgängig“ unter der Antwort (Gemerkt-Hinweis). "
                "Mit „Lesende Werkzeuge gleichzeitig“ starten nur lesende Aufrufe einer Runde zusammen (gleichzeitig.auswahl); "
-               "jeder geht trotzdem einzeln durch alle Prüfungen hier, in der Reihenfolge des Modells.",
+               "jeder geht trotzdem einzeln durch alle Prüfungen hier, in der Reihenfolge des Modells. Kam noch kein "
+               "Satz, sagt der Spark währenddessen einen wechselnden Satz der Gruppe des Werkzeugs (ack.filler).",
                "At most {chat.MAX_CALLS} calls per round run, and a tool stopped after errors does not run again. Memory "
                "notes are limited to {chat.MAX_SAVES} per answer; when the memory is full (only things said or confirmed, "
                "profiles._cap), memory_save answers „Not done“ with the way to tidy up. "
                "What memory_save keeps stands as „Remembered: …“ with „Undo“ under the answer (Remembered note). "
                "With „Reading tools at the same time“ only reading calls of a round start together (gleichzeitig.auswahl); "
-               "each still goes through every check here on its own, in the model's order.")),
+               "each still goes through every check here on its own, in the model's order. When nothing was said yet, "
+               "the Spark says a varying sentence of the tool's group meanwhile (ack.filler).")),
             S("s2", "frage", ("In dieser Runde angeboten?", "Offered in this round?"),
               ("nur die Liste der Runde", "only the round's list"),
               ("Nur Werkzeuge aus der Liste dieser Runde laufen. Die Liste ist schon um Sperren gekürzt; alles andere "

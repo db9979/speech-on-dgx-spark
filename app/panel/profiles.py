@@ -337,6 +337,19 @@ def valid_call(call):
         and not re.search(r"\d{4}|_", call) and len(call.split()) <= 3
 
 
+def spoken_name(uid):
+    """How the Spark names this profile in its own ready-made sentences (ack.py): the Rufname, else the profile name
+    when it reads like a first name ("Dominik", never "db" or "Admin 2"); "" when neither fits."""
+    row = next((u for u in names() if u["id"] == uid), None) if uid else None
+    if not row:
+        return ""
+    call = str(row.get("call") or "").strip()
+    if call and valid_call(call) and re.search(r"[aeiouyäöü]", call.lower()):
+        return call
+    name = str(row.get("name") or "").strip()
+    return name if re.fullmatch(r"[A-ZÄÖÜ][a-zäöüß]{2,19}", name) else ""
+
+
 def valid_pin(pin):
     return isinstance(pin, str) and re.fullmatch(r"\S{4,64}", pin) is not None
 

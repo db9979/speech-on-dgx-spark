@@ -387,8 +387,6 @@ final class Conversation: ObservableObject {
     /// when the running turn began (transcribing, thinking or speaking after rest or listening) and since when its sound stalls
     private var turnAt = Date()
     private var stalledSince: Date?
-    /// the short sentence the car says at once while the Spark looks (write(hint:)); stopped with the turn
-    private var hintTask: Task<Void, Never>?
     private var streamDone = true
     /// "Ins Wort fallen: erst anhalten" (zwischenruf.py, V01.0.944): talking over the answer only paused it. held: the
     /// answer so far ended on a question (then even "ja" is a new question); answerTask: the answer that keeps coming
@@ -703,8 +701,6 @@ final class Conversation: ObservableObject {
     func stop(_ why: String = "gestoppt") {
         task?.cancel()
         task = nil
-        hintTask?.cancel()
-        hintTask = nil
         quietUntil = Date().addingTimeInterval(Self.quietAfterStop)
         dropHeld()
         audio.stopPlaying()
@@ -1112,9 +1108,9 @@ final class Conversation: ObservableObject {
     }
 
     // ---------------------------------------------------------------- asking
-    /// hint: in the car a short sentence said at once while the Spark looks (Mails, Fristen, Mein Tag: their tools
-    /// take seconds, the car seemed stuck; Dominik 2026-10-21 „4“). Only while nothing of the answer plays yet.
-    func write(_ text: String, hint: String? = nil, recheck: Bool = false) {
+    /// The opening sentence while the Spark looks comes from the Spark itself (ack.py, varied, one per answer); the app
+    /// says none of its own (Dominik 2026-11-18: in the car its own one was cut off by the Spark's and sounded bumpy).
+    func write(_ text: String, recheck: Bool = false) {
         let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
         if Demo.live, !text.isEmpty {   // the demo answers here with an example (Demo.swift), nothing goes out
             messages.append(Message(role: "user", text: text))
@@ -1129,21 +1125,9 @@ final class Conversation: ObservableObject {
             return
         }
         task?.cancel()
-        hintTask?.cancel()
-        hintTask = nil
         audio.stopPlaying()
         error = nil
         task = Task { await send(text, api, typed: true, recheck: recheck) }
-        if let hint, inCar {
-            hintTask = Task { [weak self] in
-                do {
-                    for try await pcm in api.say(hint) {
-                        guard let self, !Task.isCancelled, self.phase == .thinking else { break }
-                        self.audio.play(pcm)
-                    }
-                } catch {}
-            }
-        }
     }
 
     /// A tap on a suggested sentence: it goes into the text field, the person sends it themselves.
@@ -1256,8 +1240,6 @@ final class Conversation: ObservableObject {
         guard turnRunning, inCar else { return }
         task?.cancel()
         task = nil
-        hintTask?.cancel()
-        hintTask = nil
         audio.stopPlaying()
         streamDone = true
         if messages.last?.role == "assistant" && messages.last?.text.isEmpty == true { messages.removeLast() }

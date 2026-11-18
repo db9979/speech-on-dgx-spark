@@ -1009,7 +1009,9 @@ class Quick(unittest.TestCase):
         kinds = [e["type"] for e in evs]
         # the filler is spoken (audio only) before the answer text arrives
         self.assertLess(kinds.index("tts_request"), kinds.index("text"))
-        self.assertEqual(evs[kinds.index("tts_request")]["chars"], len("Ich schaue in unseren früheren Gesprächen nach."))
+        import ack   # one sentence of the group „verlauf“, varied (ack.filler)
+        self.assertIn(evs[kinds.index("tts_request")]["chars"],
+                      {len(de) for de, _ in ack.PHRASES["verlauf"] if ack.NAME not in de})
 
 
 class Briefing(unittest.TestCase):

@@ -62,7 +62,7 @@ class Rows(unittest.TestCase):
     def test_no_question_from_the_car_waits_in_the_outbox(self):
         car = read("CarPlayScene.swift")
         self.assertEqual(car.count("Conversation.shared.write("), 1)
-        self.assertIn("reachable { Conversation.shared.write(question, hint: hint) }", car)
+        self.assertIn("reachable { Conversation.shared.write(question) }", car)
         reach = body(car, "private func reachable(")
         self.assertIn("await talk.check()", reach)
         self.assertIn('flash("offline")', reach)
@@ -202,9 +202,10 @@ class RoundTwo(unittest.TestCase):
         self.assertIn("task?.cancel()", slow)
         self.assertIn('base("zu langsam")', slow)
         car = read("CarPlayScene.swift")
-        for kind in ('"Mails", hint:', '"Fristen", hint:', '"Termine", hint:', '"MeinTag", hint:'):
+        for kind in ('"Mails")', '"Fristen")', '"Termine")', '"MeinTag")'):
             self.assertIn(kind, car)
-        self.assertIn("self.phase == .thinking", body(a, "func write("))   # the hint never talks over the answer
+        # the sentence while the Spark looks comes from the Spark (ack.py), the app says none that could be cut off
+        self.assertNotIn("api.say(", body(a, "func write("))
 
     def test_my_day_reminder_and_briefing_rows(self):
         car = read("CarPlayScene.swift")
@@ -365,10 +366,11 @@ class CodeReview(unittest.TestCase):
         self.assertLess(tell.rindex("guard !Task.isCancelled else { return }"), tell.index("streamDone = true"))
         rep = body(a, "func repeatLast()")
         self.assertLess(rep.index("guard !Task.isCancelled else { return }"), rep.index("answered()"))
-        # the car's short sentence is a task of its own, stopped with the turn
-        self.assertIn("hintTask = Task {", body(a, "func write("))
-        self.assertIn("!Task.isCancelled, self.phase == .thinking", body(a, "func write("))
-        self.assertIn("hintTask?.cancel()", body(a, "func stop("))
+        # one opening sentence, from the Spark only (ack.py; Dominik 2026-11-18: the app's own one was cut off by the
+        # Spark's in the car): the app never says one of its own while it waits
+        self.assertNotIn("api.say(", body(a, "func write("))
+        self.assertNotIn("hintTask", a)
+        self.assertNotIn("hint:", read("CarPlayScene.swift"))
         # a Spark call rings or runs: no microphone after an answer
         self.assertIn('if CallCenter.shared.active { base("Anruf"); return }', body(a, "private func answered()"))
 

@@ -375,7 +375,7 @@ def offer(ctx):
     who = ctx.get("who")
     if not who or not usable(who["id"]):
         return None
-    return {"tools": [TOOL], "hint": HINT, "outside": set(), "filler": {"weather": ("Ich schaue nach dem Wetter.", "Let me check the weather.")}}
+    return {"tools": [TOOL], "hint": HINT, "outside": set()}
 
 
 async def tool(name, args, ctx):

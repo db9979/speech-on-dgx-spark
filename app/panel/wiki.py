@@ -206,9 +206,7 @@ def offer(ctx):
     if own:
         tools.append(ARCHIVE)
         hint += " " + ARCHIVE_HINT
-    return {"tools": tools, "hint": hint, "outside": {"wikipedia", "article_more", "archive_search"},
-            "filler": {"wikipedia": ("Ich schaue in der Wikipedia nach.", "Let me check Wikipedia."),
-                       "archive_search": ("Ich schaue in deinem Archiv nach.", "Let me check your archive.")}}
+    return {"tools": tools, "hint": hint, "outside": {"wikipedia", "article_more", "archive_search"}}
 
 
 async def tool(name, args, ctx):

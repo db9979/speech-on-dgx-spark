@@ -71,8 +71,7 @@ def offer(ctx):
         return None
     if not WORDS.search(str(ctx.get("text") or "")) or not is_admin(who["id"]) or not features.allowed(KEY, who["id"]):
         return None
-    return {"tools": [TOOL], "hint": HINT, "changes": {"code_auftrag"}, "keep": {"code_auftrag"},
-            "filler": {"code_auftrag": ("Ich gebe OpenCode den Auftrag.", "Handing the order to OpenCode.")}}
+    return {"tools": [TOOL], "hint": HINT, "changes": {"code_auftrag"}, "keep": {"code_auftrag"}}
 
 
 def _wunsch(w):

@@ -6651,6 +6651,14 @@
 "text": "Als Admin den Notaus Stufe 1 („Außen zu“) auslösen, dann im Assistenten (Browser, iPhone oder CarPlay) fragen „Suche im Internet nach Rezepten für Lasagne“: sofort kommt „Das Internet ist gerade gesperrt, der Notaus ist an. Versuch es bitte später noch einmal.“, ohne „Ich schau nach“ davor. Notaus wieder aufheben: dieselbe Frage sucht wieder.",
 "thread": "Gesperrte Dienste sofort ansagen",
 "test": "test_gesperrt.InTheAnswer.test_notaus_said_at_once_without_the_model"
+},
+{
+"id": "P962",
+"v": 1520,
+"titel": "Ein Füllsatz, nicht abgebrochen, mit Abwechslung",
+"text": "Im Auto „Mein Tag“ antippen (oder das Briefing beim Einsteigen): genau ein kurzer Satz kommt sofort, ganz ausgesprochen, dann die Antwort; kein zweiter Satz direkt danach. Fünfmal hintereinander „Welche Termine habe ich morgen?“ fragen: jedes Mal ein anderer Satz, nie zweimal derselbe Anfang, ab und zu mit deinem Rufnamen (Ich → Gespräch → Chats).",
+"thread": "Füllsätze abwechslungsreicher und glatter machen",
+"test": "test_ack.InTheAnswer.test_one_filler_not_two_in_a_row"
 }
 ]
 }

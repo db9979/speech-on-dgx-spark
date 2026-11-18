@@ -96,7 +96,7 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
                              image: UIImage(systemName: "sun.max"))
         day.handler = { [weak self] _, done in
             done()
-            self?.ask(Self.dayQuestion, "MeinTag", hint: String(localized: "Ich schaue, was heute ansteht …"))
+            self?.ask(Self.dayQuestion, "MeinTag")
         }
         self.day = day
         let remind = CPListItem(text: String(localized: "Erinnerung sprechen"), detailText: String(localized: "Sag, woran und wann"),
@@ -222,7 +222,7 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
                                  image: UIImage(systemName: "calendar"))
             cal.handler = { [weak self] _, done in
                 done()
-                self?.ask(String(localized: "Was steht heute und morgen an?"), "Termine", hint: String(localized: "Ich schaue in deinen Kalender …"))
+                self?.ask(String(localized: "Was steht heute und morgen an?"), "Termine")
             }
             out.append(cal)
         }
@@ -231,7 +231,7 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
                                   image: UIImage(systemName: "envelope"))
             post.handler = { [weak self] _, done in
                 done()
-                self?.ask(String(localized: "Habe ich neue Mails?"), "Mails", hint: String(localized: "Ich schaue in deine Mails …"))
+                self?.ask(String(localized: "Habe ich neue Mails?"), "Mails")
             }
             out.append(post)
         }
@@ -240,7 +240,7 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
                                  image: UIImage(systemName: "tray.full"))
             due.handler = { [weak self] _, done in
                 done()
-                self?.ask(String(localized: "Was muss ich diese Woche erledigen?"), "Fristen", hint: String(localized: "Ich schaue nach deinen Fristen …"))
+                self?.ask(String(localized: "Was muss ich diese Woche erledigen?"), "Fristen")
             }
             out.append(due)
         }
@@ -293,9 +293,9 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
     }
 
     /// A row that asks a fixed question (Termine, Mails, Fristen); `kind` is a fixed word for the Ton-Protokoll.
-    private func ask(_ question: String, _ kind: String, hint: String? = nil) {
+    private func ask(_ question: String, _ kind: String) {
         AudioEngine.note("CarPlay: Knopf \(kind)")
-        reachable { Conversation.shared.write(question, hint: hint) }
+        reachable { Conversation.shared.write(question) }
     }
 
     /// „Dungeon-Master spielen“ (Dominik 2026-10-23 „Alles umsetzten“, 2026-10-24 Punkt 11): a list of the own running
@@ -607,7 +607,7 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
             guard let self, self.interface != nil, talk.phase == .idle || talk.phase == .waiting,
                   Prefs.carBriefingDay != today else { return }
             Prefs.carBriefingDay = today
-            self.ask(Self.dayQuestion, "Briefing beim Verbinden", hint: String(localized: "Guten Tag. Ich schaue, was heute ansteht …"))
+            self.ask(Self.dayQuestion, "Briefing beim Verbinden")
         }
     }
 

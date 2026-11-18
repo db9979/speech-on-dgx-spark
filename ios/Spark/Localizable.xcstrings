@@ -16231,56 +16231,6 @@
         }
       }
     },
-    "Ich schaue, was heute ansteht …": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Let me look at what's on today …"
-          }
-        }
-      }
-    },
-    "Guten Tag. Ich schaue, was heute ansteht …": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hello. Let me look at what's on today …"
-          }
-        }
-      }
-    },
-    "Ich schaue in deine Mails …": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Let me look at your mail …"
-          }
-        }
-      }
-    },
-    "Ich schaue nach deinen Fristen …": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Let me look at your deadlines …"
-          }
-        }
-      }
-    },
-    "Ich schaue in deinen Kalender …": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Let me look at your calendar …"
-          }
-        }
-      }
-    },
     "Nicht erkannt, tipp zum Sprechen": {
       "localizations": {
         "en": {

@@ -634,8 +634,7 @@ def offer(ctx):
         _recent[uid] = time.time()   # the wish itself: the assistant may ask back, the answer still paints
     if not features.allowed(KEY, uid):
         return {"tools": [], "hint": off_hint(uid)} if asked else None
-    return {"tools": [TOOL], "hint": HINT, "changes": {"bild_malen"}, "keep": {"bild_malen"},
-            "filler": {"bild_malen": ("Ich male das Bild.", "Painting the picture.")}}
+    return {"tools": [TOOL], "hint": HINT, "changes": {"bild_malen"}, "keep": {"bild_malen"}}
 
 
 async def tool(name, args, ctx):

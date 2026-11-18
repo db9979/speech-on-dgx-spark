@@ -528,7 +528,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Werkstatt
     "werkstatt": {
-        "stand": "31de0d9508",
+        "stand": "9a602e1474",
         "bezug": {
             "werkstattseite.auftrag_geben": ["s1"], "werkstattseite.nacht_art": ["s1"], "werkstattseite.NACHT_FENSTER_H": ["s1"],
             "werkstatt.pruefen": ["s2"], "werkstatt.TEXT_MAX": ["s2"],

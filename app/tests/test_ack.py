@@ -101,6 +101,48 @@ class Rules(unittest.TestCase):
             self.assertIn(opts[0][0], texts[:len(ack.PHRASES)])
         self.assertLessEqual(2 * len(texts), ack.MAX_CLIPS)                  # both languages of a voice fit
 
+    def test_never_the_same_start_twice(self):
+        """Dominik 2026-11-18: still too often the same; two sentences in a row never start with the same word."""
+        said = [ack.phrase("mail", "turns4") for _ in range(30)]
+        for a, b in zip(said, said[1:]):
+            self.assertNotEqual(ack._first(a), ack._first(b), (a, b))
+        for g, opts in ack.PHRASES.items():
+            self.assertGreaterEqual(len([v for v in opts if ack.NAME not in v[0]]), 10, g)   # about fifteen per group
+            for de, en in opts:
+                self.assertEqual(ack.NAME in de, ack.NAME in en, de)                         # both languages alike
+
+    def test_sometimes_with_the_name(self):
+        """Dominik 2026-11-18: now and then the person's name, never "{name}" itself and never without a name."""
+        plain = [ack.phrase("kalender", "turns5") for _ in range(60)]
+        self.assertFalse(any("{" in t for t in plain))
+        named = [ack.phrase("kalender", "turns6", name="Dominik") for _ in range(90)]
+        self.assertFalse(any("{" in t for t in named))
+        n = sum("Dominik" in t for t in named)
+        self.assertTrue(5 <= n <= 60, n)
+        self.assertIn("Moment, Dominik, ich hol deine Termine.", ack.all_texts(name="Dominik"))
+        self.assertNotIn("Moment, Dominik, ich hol deine Termine.", ack.all_texts())
+        self.assertLessEqual(2 * len(ack.all_texts(name="Dominik")), ack.MAX_CLIPS)
+
+    def test_spoken_name(self):
+        """The Rufname, else a name that reads like a first name; never an abbreviation like "db"."""
+        import profiles
+        rows = [{"id": "u1", "name": "db", "call": ""}, {"id": "u2", "name": "Dominik", "call": ""},
+                {"id": "u3", "name": "db2", "call": "Papa"}, {"id": "u4", "name": "Admin 2", "call": ""}]
+        with mock.patch.object(profiles, "names", return_value=rows):
+            self.assertEqual([profiles.spoken_name(u) for u in ("u1", "u2", "u3", "u4", "", "nix")],
+                             ["", "Dominik", "Papa", "", "", ""])
+
+    def test_tool_fillers_vary(self):
+        """The sentence while a tool runs comes from its group, varied like the recorded ones."""
+        for tool, g in ack.TOOL_GROUPS.items():
+            self.assertIn(g, ack.PHRASES, tool)
+        said = {ack.filler("calendar_events", {}, "turns7") for _ in range(12)}
+        self.assertGreater(len(said), 6)
+        self.assertEqual(ack.filler("eigenes", {"eigenes": ("Ich schaue nach.", "Let me check.")}, "turns7", True),
+                         "Let me check.")
+        self.assertIsNone(ack.filler("eigenes", {}, "turns7"))
+        self.assertEqual(ack.group_of(["kalender"], direct="daily_briefing"), "tag")
+
     def test_recording_per_voice(self):
         k1 = ack.key({"voice": "ryan"}, "Moment.", "German")
         k2 = ack.key({"voice": "serena"}, "Moment.", "German")
@@ -174,6 +216,13 @@ class InTheAnswer(unittest.TestCase):
         self.assertTrue(sound and sound[0] == CLIP[:ack.CHUNK])            # the recording before anything else
         self.assertTrue(any(e["type"] == "timing" and "first_ack" in e for e in evs))
         self.assertFalse(any(e["type"] == "text" and "Kalender" in e.get("delta", "") for e in evs))   # not in the text
+
+    def test_one_filler_not_two_in_a_row(self):
+        """Dominik 2026-11-18: after the opening sentence no second one right away (only after a long quiet)."""
+        p = profile("Ack5")
+        with mock.patch.object(ack, "BRIDGE_S", 0.0), mock.patch.object(ack, "BRIDGE_AFTER_ACK_S", 30.0):
+            sound = self.audio(ask(p, "Welche Termine habe ich morgen?"))
+        self.assertEqual(sound.count(CLIP[:ack.CHUNK]), 1)
 
     def test_small_talk_gets_none(self):
         p = profile("Ack2")

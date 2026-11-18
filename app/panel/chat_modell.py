@@ -1,6 +1,7 @@
 """chat_modell.py: the model side of an answer, cut out of chat._answer (plan Aufräumen, Richtlinie Teil 17).
 Same code, same order; chat._answer hands every value over by name."""
 import ablauf
+import ack
 import aendern
 import answercheck
 import asyncio
@@ -432,10 +433,11 @@ async def model_turn(*, acked, body, c, came_from, carry, ccfg, cfg, check_on, e
             # model's first round would only have picked it; its result goes in like any tool result
             t_dr = time.time()
             st["offered"] = {direct}
-            filler = chat.FILLERS.get(direct) or ex["filler"].get(direct)
+            filler = ack.filler(direct, ex["filler"], who and who["id"],
+                                chat.guess_language(messages[-1]["content"]) == "English", getattr(turn, "ack_name", ""))
             if filler and st["first"] and not dienstwacht.tool_gone(direct, who["id"] if who else ""):
                 st["first"] = False
-                await sentences.put(filler[1] if chat.guess_language(messages[-1]["content"]) == "English" else filler[0])
+                await sentences.put(filler)
             dargs = getattr(turn, "direct_args", None) or {}   # a date the panel worked out or fixed words (intent.direct_args)
             result = await run_tool(direct, dict(dargs), st)
             if getattr(turn, "steps_on", False):   # Ablauf zeigen: the tool the panel called itself
@@ -538,14 +540,14 @@ async def model_turn(*, acked, body, c, came_from, carry, ccfg, cfg, check_on, e
                 {"id": x["id"], "type": "function", "function": {"name": x["name"], "arguments": x["arguments"]}}
                 for x in calls]})
             # (not for a tool the Notaus holds off or whose service is gone: its fixed sentence comes at once instead)
-            filler = next((chat.FILLERS.get(x["name"]) or ex["filler"][x["name"]] for x in calls
-                           if (x["name"] in chat.FILLERS or x["name"] in ex["filler"]) and x["name"] not in locked(st)
-                           and not dienstwacht.tool_gone(x["name"], who["id"] if who else "")), None)
-            if filler and st["first"] and not trace["said"].strip():
-                # something to hear at once while the tool runs
+            slow = next((x["name"] for x in calls
+                         if (x["name"] in ack.TOOL_GROUPS or x["name"] in ex["filler"]) and x["name"] not in locked(st)
+                         and not dienstwacht.tool_gone(x["name"], who["id"] if who else "")), None)
+            if slow and st["first"] and not trace["said"].strip():
+                # something to hear at once while the tool runs (varied, ack.filler)
                 st["first"] = False
                 en = chat.guess_language(messages[-1]["content"]) == "English"
-                await sentences.put(filler[1] if en else filler[0])
+                await sentences.put(ack.filler(slow, ex["filler"], who and who["id"], en, getattr(turn, "ack_name", "")))
             # Lesende Werkzeuge gleichzeitig (gleichzeitig.py): only reading tools by fixed rules start together; their
             # results go on below in the model's order, every step after them as before
             started = {}

@@ -1513,13 +1513,6 @@ class ContextFull(RuntimeError):
     """The LLM refused the request as longer than its context."""
 
 
-# A first sentence to hear while a slower tool runs (web search and the briefing say their own).
-FILLERS = {"calendar_events": ("Ich schaue in deinen Kalender.", "Let me check your calendar."),
-           "mail_list": ("Ich schaue in deine E-Mails.", "Let me check your e-mail."),
-           "mail_search": ("Ich schaue in deine E-Mails.", "Let me check your e-mail."),
-           "mail_read": ("Ich lese die Mail.", "Let me read that e-mail."),
-           "history_search": ("Ich schaue in unseren früheren Gesprächen nach.", "Let me look at our earlier conversations."),
-           "document_search": ("Ich schaue in deinen Dokumenten nach.", "Let me check your documents.")}
 # Thanks, greetings and goodbyes need no tool round
 # longest single message the panel takes into a turn (a pasted page fits; 4 MB of spaces does not)
 MAX_TURN_CHARS = 20000
@@ -2195,6 +2188,7 @@ async def _answer(request, turn):
     # when the profile's Kontingent is used up (verbrauch.over: its fixed sentence comes at once, a "Moment, ich schau"
     # before it would promise a look that never comes)
     ack_lang, acked = None, False
+    turn.ack_name = profiles.spoken_name(who["id"]) if who and own_browser else ""   # „Moment, Dominik, …“ (ack.NAME_SHARE)
     if who and own_browser and body.get("speak") is not False and not wartung.paused("llm") and body.get("client") not in ("watch", "siri") \
             and not verbrauch.over(who["id"]) \
             and messages and messages[-1]["role"] == "user" and not turn.pics and features.allowed("ack", who["id"], ccfg) \
@@ -2207,14 +2201,14 @@ async def _answer(request, turn):
                            bool(getattr(turn, "web_tap", "") and getattr(turn, "local_task", None)))
         if grp:
             text = ack.pick(grp, who["id"], ack_lang == "English",
-                            ack.recorded(tts_body, ack_lang))
+                            ack.recorded(tts_body, ack_lang), name=turn.ack_name)
             if text and ack.clip(ack.key(tts_body, text, ack_lang)):
                 sentences.put_nowait(("clip", text, "ack"))
                 acked = True
         if names != ["plaudern"] and not (set(names) & {"smarthome"}):
             ack.count(grp or (route.label() if route else "unklar"), acked)
-        if not ack.missing_ok(tts_body, ack_lang):   # recorded once per voice, in a pause of the TTS
-            ack.later(ack.record_missing(tts_url, api_headers(), tts_body, ack_lang))
+        if not ack.missing_ok(tts_body, ack_lang, turn.ack_name):   # recorded once per voice, in a pause of the TTS
+            ack.later(ack.record_missing(tts_url, api_headers(), tts_body, ack_lang, name=turn.ack_name))
     trace = {"calls": list(cal_note), "said": "", "llm": ""}  # for the profile's tool log; llm: the model's own words
     # Logs → Anfragen (tracelog.py, admin switch logs.trace): only ways, tool names and numbers, never text
     tr = turn.tr = start_trace(request, turn, tm["req"], t0)
@@ -2537,6 +2531,7 @@ async def _answer(request, turn):
         until = max(played_until, now) + len(pcm) / 48000
         echo.played(mine, until)
         if kind == "ack":
+            tm["ack_until"] = until   # the bridge after it waits for ack.BRIDGE_AFTER_ACK_S of quiet (bridge below)
             await out.put({"type": "timing", "first_ack": round(now - t0, 3)})
             try:   # Zustand → Prüfen shows it beside "Bis zum ersten Ton", never in it
                 await asyncio.to_thread(latency.add_ack, now - t0)
@@ -2548,11 +2543,15 @@ async def _answer(request, turn):
         return until
 
     async def bridge():
-        """One more short sentence when the answer has not made a sound after ack.BRIDGE_S seconds (once)."""
+        """One more short sentence when the answer has not made a sound after ack.BRIDGE_S seconds (once). After an
+        opening sentence only when it has been quiet for ack.BRIDGE_AFTER_ACK_S since (one filler, not two in a row;
+        Dominik 2026-11-18)."""
         await asyncio.sleep(max(0.0, ack.BRIDGE_S - (time.time() - t0)))
+        if acked:
+            await asyncio.sleep(max(0.0, tm.get("ack_until", t0) + ack.BRIDGE_AFTER_ACK_S - time.time()))
         if tm["audio"] is None:
             text = ack.pick("bridge", who["id"], ack_lang == "English",
-                            ack.recorded(tts_body, ack_lang))
+                            ack.recorded(tts_body, ack_lang), name=turn.ack_name)
             if text and ack.clip(ack.key(tts_body, text, ack_lang)):
                 await sentences.put(("clip", text, "bridge"))
 

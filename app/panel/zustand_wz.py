@@ -167,8 +167,7 @@ def offer(ctx):
         return None
     if not WORDS.search(str(ctx.get("text") or "")):
         return None
-    return {"tools": [TOOL], "hint": HINT, "keep": {"spark_zustand"},
-            "filler": {"spark_zustand": ("Ich schaue nach.", "Let me check.")}}
+    return {"tools": [TOOL], "hint": HINT, "keep": {"spark_zustand"}}
 
 
 async def tool(name, args, ctx):
