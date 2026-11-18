@@ -32,8 +32,8 @@ import speakers  # noqa: E402
 import wyoming  # noqa: E402
 import telefon  # noqa: E402
 import profiles  # noqa: E402
-from common import (CONFIG_PATH, MODEL_CHOICE, MODEL_ID, estimate_gib, klon_noetig, load_config, model_local, model_url,  # noqa: E402
-                    write_json)
+from common import (CONFIG_PATH, MODEL_CHOICE, MODEL_ID, ON_DEMAND_UNITS, OWN_LLM_UNITS, einheiten_stand, estimate_gib,  # noqa: E402
+                    klon_noetig, load_config, model_local, model_url, write_json)
 import modelle  # noqa: E402
 from core import (  # noqa: E402
     json_body,
@@ -430,6 +430,28 @@ def modellgenau_ansicht(request: Request, zeit: str = "20m"):
     return modellgenau.ansicht(zeit if zeit in modellgenau.ZEITEN else "20m")
 
 
+# the model services of this computer for the Spark-Konsole's overview (Dominik 2026-11-18: „hier fehlen die anderen
+# zugänge der restlichen modelle“): the own language model, the LLM-Tor, vision, the helper model, pictures and music,
+# only those installed here (systemctl LoadState), with their port from the config; never started or stopped from here
+def _modell_dienste(cfg):
+    llm_cfg = cfg.get("llm") if isinstance(cfg.get("llm"), dict) else {}
+    port = {"llm": llm_cfg.get("engine_port", 31016), "llmtor": llm_cfg.get("port", 31006), "sehen": llm_cfg.get("sehen_port", 31017),
+            "helfer": llm_cfg.get("helfer_port", 31018), "bild": (cfg.get("image") or {}).get("port", 31005),
+            "musik": (cfg.get("music") or {}).get("port", 31004)}
+    modell = {"llm": llm_cfg.get("modell"), "sehen": llm_cfg.get("sehen_modell"), "helfer": llm_cfg.get("helfer_modell")}
+    units = {**OWN_LLM_UNITS, "bild": ON_DEMAND_UNITS["bild"], "musik": ON_DEMAND_UNITS["musik"]}
+    stand = einheiten_stand(list(units.values()))
+    out = {}
+    for name, unit in units.items():
+        st = stand.get(unit) or {}
+        if not st.get("da"):
+            continue
+        out[name] = {"unit": unit, "state": st.get("state", "unknown"), "port": port[name] if isinstance(port[name], int) else None}
+        if isinstance(modell.get(name), str) and modell[name]:
+            out[name]["model"] = modell[name]
+    return out
+
+
 def _status(cfg, healths):
     services = {}
     for name, unit in SERVICES.items():
@@ -470,6 +492,8 @@ def _status(cfg, healths):
             services["tts"]["engines"].append(
                 {"name": "tts-klon", "kind": "vllm-omni", "unit": UNITS["tts-klon"], "state": unit_state(UNITS["tts-klon"]),
                  "model": t.get("klon_model", ""), "port": t.get("klon_port", 31019), "estimate_gib": per_engine})
+    if os.environ.get("SPEECH_SPARK_KONSOLE") == "1":   # konsole.ENV: the console on the model computer shows its models too
+        services.update(_modell_dienste(cfg))
     return {"time": time.time(), "system": sysd, "gpu": steuer.gpu(),
             "services": services, "history": list(history),
             "alerts": health.alerts(), "watchdog": health.events[-10:], "glance": glance(cfg),

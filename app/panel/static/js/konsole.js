@@ -128,13 +128,13 @@ async function ueberblick(){const el=$('tab-ueberblick');let d;
   spark($('kogpus'),VERLAUF.gpu,100);spark($('komems'),VERLAUF.mem,s.mem_total_gib||undefined);spark($('kotoks'),VERLAUF.tok);
   // the services by what they do; the language model opens Modell genau, the others their kind in Modelle
   const reihe=Object.keys(AUFGABE).filter(n=>sv[n]).concat(namen.filter(n=>!AUFGABE[n]));
-  setHtml($('kolist'),reihe.map(n=>{const v=sv[n],a=AUFGABE[n]||['cpu',DIENST[n]||n,'',''],eng=(v.engines||[]).map(x=>x.model||x.name).filter(Boolean);
+  setHtml($('kolist'),reihe.map(n=>{const v=sv[n],a=AUFGABE[n]||['cpu',DIENST[n]||n,'',''],eng=(v.engines||[]).map(x=>x.model||x.name).concat(v.model?[v.model]:[]).filter(Boolean);
     const schlecht=(v.engines||[]).find(x=>x.state==='failed');
     return row({ic:a[0],title:a[1],sub:[eng.join(', ')||a[2],schlecht?t('Motor startet nicht','engine does not start'):''].filter(Boolean).join(' · '),
       right:schlecht&&v.state==='active'?zust('failed'):zust(v.state),href:n==='llm'?'#modellgenau':a[3]?'#modelle/'+a[3]:''})}).join(''));
   const al=(d.alerts||[]).filter(a=>HINWEISE.includes(a.kind));
   setHtml($('kohin'),al.length?`<div class="ksec">${esc(t('Hinweise','Notes'))}</div><div class="kgrp">${al.map(a=>row({ic:'info',title:a.text||a.message||a})).join('')}</div>`:'');
-  setHtml($('koports'),`<table class="kports">${namen.map(n=>`<tr><td>${esc(DIENST[n]||n)}</td><td class="mono">${esc(sv[n].port||'')}</td><td>${zust(sv[n].state)}</td></tr>`+
+  setHtml($('koports'),`<table class="kports">${namen.map(n=>`<tr><td>${esc(DIENST[n]||n)}${sv[n].model?' · '+esc(sv[n].model):''}</td><td class="mono">${esc(sv[n].port||'')}</td><td>${zust(sv[n].state)}</td></tr>`+
     (sv[n].engines||[]).map(x=>`<tr><td class="k">↳ ${esc(x.name)} · ${esc(x.model||'')}</td><td class="mono">${esc(x.port||'')}</td><td>${zust(x.state)}</td></tr>`).join('')).join('')}</table>`)}
 
 // ---------------------------------------------------------------- Verbindungen: the assistant and the programs

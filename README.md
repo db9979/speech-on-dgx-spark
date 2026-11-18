@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.521** Spark console: the overview also shows this computer's language model, LLM-Tor, helper model, vision, pictures and music
 - **V01.1.520** Fillers: more varied, now and then with your name, only one per answer and no longer cut off in the car
 - **V01.1.519** Blocked services are said at once: "The internet is blocked right now, please try again later" instead of "Let me look" and nothing
 - **V01.1.518** Spark console reordered: four areas in a side bar (at the bottom on a phone), overview with one sentence and tiles with history, models and connections as list and detail, maintenance with updates and logs, light and dark follow the system
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.514** Foreign model services (Ollama, LM Studio) for everyone or as a fallback
 - **V01.1.513** RED-FIX: test for restarting the language model independent of the order
 - **V01.1.512** Error log: Home Assistant live no longer drops all the time, SparkHilfe Mac and "0 errors" no longer count as errors
-- **V01.1.511** Reporting problems: the admin may send 30 reports a day instead of 3
 
 
 

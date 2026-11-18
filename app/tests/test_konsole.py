@@ -195,6 +195,29 @@ class Seite(Base):
             self.assertEqual(c.get("/static/js/zeichnen.js").status_code, 200)
             self.assertEqual(c.get("/static/js/modellgenau.js").status_code, 200)
 
+    def test_overview_shows_the_model_services_of_this_computer(self):
+        """Dominik 2026-11-18 „hier fehlen die anderen zugänge der restlichen modelle“: in the console the overview lists
+        the language model, LLM-Tor, vision, helper, pictures and music installed here, with port and model; the panel
+        (no console mode) stays as it was."""
+        import admin
+        def stand(units, lauf=None):
+            return {u: {"state": "active" if u.endswith(("-llm", "-llmtor")) else "inactive", "seit": None, "eintritt": 0,
+                        "da": not u.endswith(("-sehen", "-musik"))} for u in units}
+        cfg = common.load_config()
+        with mock.patch.object(admin, "einheiten_stand", stand):
+            with mock.patch.dict(os.environ, {konsole.ENV: "1"}):
+                sv = admin._status(cfg, {n: None for n in admin.SERVICES})["services"]
+            panel_sv = admin._status(cfg, {n: None for n in admin.SERVICES})["services"]
+        for name in ("llm", "llmtor", "helfer", "bild"):
+            self.assertIn(name, sv)
+        self.assertNotIn("sehen", sv)                       # not installed here
+        self.assertNotIn("musik", sv)
+        self.assertEqual(sv["llm"]["state"], "active")
+        self.assertEqual(sv["llm"]["port"], cfg["llm"]["engine_port"])
+        self.assertEqual(sv["llmtor"]["port"], cfg["llm"]["port"])
+        self.assertTrue(set(sv) >= set(admin.SERVICES))      # Hören and Sprechen stay
+        self.assertEqual(set(panel_sv), set(admin.SERVICES))  # the panel is unchanged
+
     def test_overview_shows_only_hints_about_the_spark_itself(self):
         static = os.path.join(os.path.dirname(panel.__file__), "static")
         with open(os.path.join(static, "js", "konsole.js"), encoding="utf-8") as f:
