@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older versions (V01.0.000 to V01.0.999 and the lines before version numbers): [CHANGELOG-V01.0.md](CHANGELOG-V01.0.md).
 
+- **V01.1.522** · 2026-11-18 · ROT-FIX: Hilfe-Kopie der Doku nach V01.1.521 neu erzeugt (test_hilfe.test_docs_copy_is_current).
 - **V01.1.521** · 2026-11-18 · Spark-Konsole, Überblick (Dominik 2026-11-18 „hier fehlen die anderen zugänge der restlichen modelle“): im Konsolen-Prozess nennt /api/status auch die auf diesem Rechner eingerichteten Modell-Dienste (Sprachmodell, LLM-Tor, Bildverständnis, Hilfsmodell, Bilder, Musik) mit Port, Modell und Zustand; das Panel bleibt unverändert
 - **V01.1.520** · 2026-11-18 · Füllsätze: höchstens einer pro Antwort und nur vom Spark (die iPhone-App sagt im Auto keinen eigenen mehr, der abgebrochen wurde), 462 statt 219 Sätze, nie zweimal derselbe Anfang, etwa jeder dritte mit Namen, auch die Sätze während eines Werkzeugs wechseln
 - **V01.1.519** · 2026-11-18 · Gesperrte Dienste sofort ansagen (Dominik): sperrt der Notaus die Werkzeuge einer Frage oder sieht der Dienst-Wächter ihren Dienst als weg, sagt das Panel sofort in einem festen Satz, was gesperrt ist, und dass man es später noch einmal versuchen soll, ohne Modell und ohne „Ich schau nach“ davor (chat_turn.sperre); kein Sofort-Satz bei vollem Kontingent, kein Füllsatz vor einer Websuche oder einem Werkzeug, das nicht laufen kann

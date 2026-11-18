@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.522** Rot-Fix: Hilfe-Kopie der Doku nach V01.1.521 neu erzeugt
 - **V01.1.521** Spark-Konsole: der Überblick zeigt auch Sprachmodell, LLM-Tor, Hilfsmodell, Bildverständnis, Bilder und Musik dieses Rechners
 - **V01.1.520** Füllsätze: abwechslungsreicher, ab und zu mit Namen, nur einer pro Antwort und im Auto nicht mehr abgebrochen
 - **V01.1.519** Gesperrte Dienste sofort ansagen: „Das Internet ist gerade gesperrt, versuch es später noch einmal“ statt „Ich schau nach“ und dann nichts
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.515** Spark-Konsole: GGUF-Zeile nur bei Bildern und Musik
 - **V01.1.514** Fremde Modell-Dienste (Ollama, LM Studio) für alle oder als Ersatz
 - **V01.1.513** ROT-FIX: Test zum Neustart des Sprachmodells unabhängig von der Reihenfolge
-- **V01.1.512** Fehlerlog: Home Assistant live trennt nicht mehr ständig, SparkHilfe-Mac und „0 errors“ nicht mehr als Fehler
 
 
 
