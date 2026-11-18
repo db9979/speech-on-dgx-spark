@@ -646,8 +646,8 @@ class Seitenbild(unittest.TestCase):
                     self.assertLessEqual(await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth"), 0, w)
                     if os.environ.get("MG_SHOT"):
                         await pg.screenshot(path=os.path.join(os.environ["MG_SHOT"], f"konsole-modellgenau-{w}.png"), full_page=True)
-                    await pg.click("#ktabs a[data-tab='logs']")
-                    self.assertTrue(await pg.evaluate("document.getElementById('zmgdet').hidden"))   # leaving the tab stops the poll
+                    await pg.click("#ktabs a[data-tab='wartung']")
+                    await b.until(pg, "document.getElementById('zmgdet').hidden")   # leaving the tab stops the poll
                     self.assertEqual(errors, [], w)
                     await br.close()
         asyncio.run(go())

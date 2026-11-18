@@ -6635,6 +6635,14 @@
 "text": "Im Kalender am Rechner einen Termin mit langer Notiz antippen, „Weiter lesen“: die Karte bleibt im Bildschirm und lässt sich bis zum Ende der Notiz scrollen. Am Handy ebenso im Blatt von unten.",
 "thread": "Fehler und Wünsche als Issue melden",
 "test": "test_kalender_seite.Page.test_views_fit_and_the_settings_sit_here"
+},
+{
+"id": "P960",
+"v": 1518,
+"titel": "Spark-Konsole neu geordnet",
+"text": "Auf tars https://<ip>:31010 öffnen: links vier Bereiche (Überblick, Modelle, Verbindungen, Wartung), oben im Überblick ein Satz zum Zustand, Kacheln mit Verlauf. Unter Modelle eine Art anklicken, unter Verbindungen ein Programm: das Detail steht rechts. Die Zurück-Taste des Browsers geht zur vorigen Seite. Am Handy Leiste unten, Liste und Detail je eine Seite. Hell und dunkel wie das System.",
+"thread": "Spark-Website moderner und aufgeräumter gestalten",
+"test": "test_konsole.Bild.test_every_area"
 }
 ]
 }

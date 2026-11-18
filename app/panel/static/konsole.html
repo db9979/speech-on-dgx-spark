@@ -1,34 +1,35 @@
 <!doctype html>
-<html lang="de" data-theme="dark">
+<html lang="de">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Spark-Konsole</title>
 <link rel="icon" href="/static/favicon-32.png">
 <link rel="stylesheet" href="/static/tokens.css">
 <link rel="stylesheet" href="/static/konsole.css">
 <link rel="stylesheet" href="/static/modellgenau.css">
+<script src="/static/js/icons.js" defer></script>
 <script src="/static/js/sparkverbinden.js" defer></script>
 <script src="/static/js/zeichnen.js" defer></script>
 <script src="/static/js/konsole.js" defer></script>
 <script src="/static/js/modellgenau.js" defer></script>
 </head>
 <body>
-<header class="top">
-  <div class="logo">SPARK <b id="kname">Konsole</b></div>
-  <nav class="tabs" id="ktabs" hidden>
-    <a href="#ueberblick" data-tab="ueberblick">Überblick</a>
-    <a href="#modellgenau" data-tab="modellgenau">Modell genau</a>
-    <a href="#modelle" data-tab="modelle">Modelle</a>
-    <a href="#clients" data-tab="clients">Clients</a>
-    <a href="#assistent" data-tab="assistent">Assistent</a>
-    <a href="#updates" data-tab="updates">Updates</a>
-    <a href="#logs" data-tab="logs">Logs</a>
+<!-- Spark-Konsole neu (Dominik 2026-11-18 „1-6“): a side bar with four areas on a computer, the same four as a bar at
+     the bottom of a phone; Modelle and Verbindungen as list and detail. Light and dark follow the system. -->
+<div class="kapp">
+<aside class="kside" id="kside" hidden>
+  <div class="kbrand"><span class="klogo" aria-hidden="true">S</span><div><b id="kname">Spark</b><small id="khost"></small></div></div>
+  <nav class="knav" id="ktabs">
+    <a href="#ueberblick" data-tab="ueberblick"><i data-ic="home"></i><span>Überblick</span></a>
+    <a href="#modelle" data-tab="modelle"><i data-ic="cpu"></i><span>Modelle</span></a>
+    <a href="#verbindungen" data-tab="verbindungen"><i data-ic="link"></i><span>Verbindungen</span></a>
+    <a href="#wartung" data-tab="wartung"><i data-ic="wrench"></i><span>Wartung</span><em class="kdotb" id="kwdot" hidden></em></a>
   </nav>
-  <div class="right"><span id="kstate"></span> <button class="btn sec" type="button" id="kout" hidden>Abmelden</button></div>
-</header>
+  <div class="kfoot"><div id="kstate"></div><div id="kupd"></div><button class="klink" type="button" id="kout">Abmelden</button></div>
+</aside>
 <main id="kmain">
-  <section id="klogin" class="card login" hidden>
+  <section id="klogin" class="kcard klogin" hidden>
     <h1 id="klt">Anmelden</h1>
     <p class="k" id="kld">Die Konsole dieses Spark. Nur im Heimnetz, mit dem Passwort aus der Installation.</p>
     <form id="klform">
@@ -39,20 +40,22 @@
     </form>
   </section>
   <section id="tab-ueberblick" class="tab" hidden></section>
-  <!-- Modell genau (modellgenau.js, the same page as Zustand → Modell-Rechner genau in the panel) -->
-  <section id="tab-modellgenau" class="tab" hidden><div id="zmgdet" hidden>
-    <h1 id="kmgt">Modell genau</h1>
-    <div class="k mgmeta" id="zmgmeta"></div>
-    <div id="zmgbody"></div>
-  </div></section>
+  <!-- Modell genau (modellgenau.js, the same page as Zustand → Modell-Rechner genau in the panel): a detail of Überblick -->
+  <section id="tab-modellgenau" class="tab" hidden>
+    <a class="kback" href="#ueberblick" data-tab="ueberblick" id="kmgback">‹ Überblick</a>
+    <div id="zmgdet" hidden>
+      <h1 id="kmgt">Modell genau</h1>
+      <div class="k mgmeta" id="zmgmeta"></div>
+      <div id="zmgbody"></div>
+    </div>
+  </section>
   <section id="tab-modelle" class="tab" hidden></section>
-  <section id="tab-clients" class="tab" hidden></section>
-  <section id="tab-assistent" class="tab" hidden></section>
-  <section id="tab-updates" class="tab" hidden></section>
-  <section id="tab-logs" class="tab" hidden></section>
+  <section id="tab-verbindungen" class="tab" hidden></section>
+  <section id="tab-wartung" class="tab" hidden></section>
 </main>
+</div>
 <div id="kcode" class="modal" hidden>
-  <div class="card">
+  <div class="kcard">
     <h2 id="kct">Code bestätigen</h2>
     <p class="k" id="kcd">Diese Änderung braucht einen frischen Code aus der Authenticator-App.</p>
     <input type="text" id="kcin" inputmode="numeric" autocomplete="one-time-code" aria-label="Code">

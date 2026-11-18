@@ -170,8 +170,9 @@ class Seite(Base):
             self.assertIn("/static/modellgenau.css", page)
             self.assertLess(page.index("/static/js/zeichnen.js"), page.index(first))
             self.assertLess(page.index(first), page.index("/static/js/modellgenau.js"))
-        for i in ('id="zmgdet"', 'id="zmgmeta"', 'id="zmgbody"', 'data-tab="modellgenau"'):
+        for i in ('id="zmgdet"', 'id="zmgmeta"', 'id="zmgbody"'):
             self.assertIn(i, html)
+        self.assertIn('data-tab="modellgenau"', js)       # since 2026-11-18 a detail of Überblick, no area of its own
         self.assertIn("'modellgenau'", re.search(r"const TABS=\[([^\]]*)\]", js).group(1))
         self.assertIn("modellgenau:mgOpen", js)
         self.assertIn("mgClose()", js)
@@ -209,6 +210,126 @@ class Seite(Base):
         for k in ("latency", "livecheck", "quality"):   # the assistant's own hints stay on the Pi
             self.assertNotIn(k, kinds)
         self.assertIn("HINWEISE.includes(a.kind)", js)
+
+
+STATIC = os.path.join(os.path.dirname(os.path.abspath(panel.__file__)), "static")
+
+
+def lies(*p):
+    with open(os.path.join(STATIC, *p), encoding="utf-8") as f:
+        return f.read()
+
+
+class Ordnung(unittest.TestCase):
+    """Dominik 2026-11-18 „1-6“ (Tafeln konsole-neu/1-4): four areas instead of seven tabs, Modelle and Verbindungen as
+    list and detail, the address says where you are (back button), light and dark follow the system, line symbols only
+    from icons.js."""
+
+    def test_four_areas_and_the_address(self):
+        html, js = lies("konsole.html"), lies("js", "konsole.js")
+        nav = re.search(r'<nav class="knav" id="ktabs">(.*?)</nav>', html, re.S).group(1)
+        self.assertEqual(re.findall(r'data-tab="([a-z]+)"', nav), ["ueberblick", "modelle", "verbindungen", "wartung"])
+        self.assertNotIn("data-theme", html)                   # follows the system, never always dark
+        self.assertLess(html.index("/static/js/icons.js"), html.index("/static/js/konsole.js"))
+        self.assertIn("addEventListener('hashchange'", js)     # back button and links move between the areas
+        self.assertNotIn("replaceState", js)
+        for weg in ("#modelle/", "#verbindungen/c/", "#verbindungen/neu", "#verbindungen/assistent", "#wartung/log/", "#modellgenau"):
+            self.assertIn(weg, js)
+        # Clients and Assistent koppeln are one area, Updates and Logs another; each part is still there
+        for teil in ("function koppelDetail", "function clientDetail", "function neuDetail", "function netzDetail",
+                     "async function updates", "async function logs"):
+            self.assertIn(teil, js)
+
+    def test_lists_and_details_keep_what_the_user_types(self):
+        js = lies("js", "konsole.js")
+        for name in ("async function verbindungen", "function modDraw"):
+            body = js[js.index(name):]
+            body = body[:body.index("\nasync function") if "\nasync function" in body else len(body)]
+            self.assertIn("felderNeu(el,", body, name)      # a redraw keeps fields, focus and scroll (zeichnen.js)
+        self.assertIn('class="kld', js)
+        css = lies("konsole.css")
+        self.assertIn(".kld:not(.open) .kdet,.kld.open .klist{display:none}", css)   # a phone: list or detail
+        self.assertNotRegex(css, r":hover\{[^}]*(transform|translate|scale)")          # nothing jumps
+
+
+@unittest.skipUnless(__import__("tests.test_ui_browser", fromlist=["browser_ok"]).browser_ok(), "no Playwright/Chromium here")
+class Bild(unittest.TestCase):
+    """Every area and detail at 1280 and 390 px under the strict CSP: no error, no sideways scrolling, the area marked,
+    on a phone list or detail; the back button goes back."""
+    ANTWORT = {
+        "/api/whoami": {"admin": True, "version": "V01.1.999"},
+        "/api/status": {"gpu": {"util": 38, "temp": 61, "power": 74}, "system": {"mem_total_gib": 120, "mem_avail_gib": 31, "cpu": 12},
+                        "services": {"llm": {"port": 31016, "state": "active"}, "asr": {"port": 31001, "state": "active"},
+                                     "musik": {"port": 31004, "state": "failed"}},
+                        "alerts": [{"kind": "memory", "text": "Speicher zu 74 % belegt."}], "genau": {"laufen": 2, "warten": 0, "tok_s": 61.8, "kv": 23}},
+        "/api/admin/modelle": {"geraet": "GB10", "budget": {"gesamt": 120, "teile": [{"name": "Sprachmodell", "gib": 62}]}, "wechsel": {"alte": {"llm": 1}},
+                               "arten": [{"art": "llm", "name": "Sprachmodell", "modelle": [
+                                   {"id": "a", "name": "Modell A", "engine": "vllm", "aktiv": True, "gib": 62, "messbar": True, "empfohlen": False},
+                                   {"id": "b", "name": "Modell B", "engine": "vllm", "waehlbar": True, "need_gib": 58, "empfohlen": True},
+                                   {"id": "c", "name": "Eigenes C", "engine": "vllm", "waehlbar": True, "need_gib": 20, "eigen": True}]}]},
+        "/api/admin/spark-clients": {"an": True, "netze": ["192.168.178.0/24"], "max": 20, "klassen": ["sprache", "dialog", "hintergrund"],
+                                     "rechte": ["llm", "asr"], "vorgabe": {"klasse": "dialog", "rechte": ["llm"], "minute": 60, "parallel": 2, "tokens_tag": 0},
+                                     "host": "tars", "clients": [{"id": "x1", "name": "Open WebUI", "rechte": ["llm"], "klasse": "dialog",
+                                                                  "minute": 60, "parallel": 2, "tokens_tag": 0}]},
+        "/api/konsole/koppeln": {"stand": "gekoppelt"},
+        "/api/update": {"installed": {"version": "V01.1.999"}, "remote": {"version": "V01.1.999"}},
+        "/api/update/progress": {"log": []},
+    }
+
+    @classmethod
+    def setUpClass(cls):
+        from tests.test_ui_browser import Browser
+        Browser.setUpClass.__func__(cls)
+
+    def test_every_area(self):
+        import asyncio
+        from urllib.parse import urlparse
+        from tests.test_ui_browser import Browser, async_playwright
+        b = Browser("run")
+        b.port = self.port
+        html = lies("konsole.html")
+        antwort = self.ANTWORT
+
+        async def api(route, request=None):
+            weg = urlparse(route.request.url).path
+            if weg.startswith("/api/logs/"):
+                return await route.fulfill(status=200, content_type="text/plain", body="llm: fertig 61\n")
+            await route.fulfill(status=200, content_type="application/json", body=json.dumps(antwort.get(weg, {})))
+
+        async def go():
+            async with async_playwright() as p:
+                for w, h in ((1280, 900), (390, 844)):
+                    br, pg, errors = await b.page(p, w, h, csp=True)
+                    base = f"http://127.0.0.1:{self.port}"
+                    csp = (await pg.request.get(base + "/")).headers.get("content-security-policy", "")
+                    await pg.route("**/konsole-probe", lambda route, request=None: route.fulfill(
+                        status=200, content_type="text/html", body=html, headers={"Content-Security-Policy": csp}))
+                    await pg.route("**/api/**", api)
+                    await pg.goto(base + "/konsole-probe")
+                    await b.until(pg, "!!document.querySelector('#kohero .kt')")
+                    self.assertIn("Musik", await pg.inner_text("#kohero"))       # what does not run, in one sentence
+                    self.assertEqual(await pg.evaluate("document.querySelectorAll('#ktabs .ic').length"), 4)
+                    for weg, area, sel in (("modelle/llm", "modelle", "#tab-modelle .kdet h1"), ("verbindungen/c/x1", "verbindungen", "[data-recht-c]"),
+                                           ("verbindungen/neu", "verbindungen", "#kcname"), ("verbindungen/assistent", "verbindungen", "[data-a='code']"),
+                                           ("wartung/log/llm", "wartung", "#klog"), ("modelle/eigen", "modelle", "#kmrepo"), ("modellgenau", "ueberblick", "#zmgdet:not([hidden])")):
+                        await pg.evaluate(f"location.hash='{weg}'")
+                        await b.until(pg, f"!!document.querySelector(\"{sel}\")")
+                        self.assertEqual(await pg.evaluate("document.querySelector('#ktabs a.on').dataset.tab"), area, weg)
+                        self.assertLessEqual(await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth"), 0, (w, weg))
+                        if w < 761 and area in ("modelle", "verbindungen"):   # a phone shows the detail alone
+                            self.assertTrue(await pg.evaluate(f"!!document.querySelector('#tab-{area} .kld.open')"), weg)
+                        if os.environ.get("KONSOLE_SHOT"):
+                            await pg.screenshot(path=os.path.join(os.environ["KONSOLE_SHOT"], f"{w}-{weg.replace('/', '_')}.png"), full_page=True)
+                    await pg.go_back()
+                    await b.until(pg, "!document.getElementById('tab-modelle').hidden")   # back: Modelle → eigenes Modell
+                    if w < 761:
+                        await pg.evaluate("location.hash='modelle'")
+                        # the list alone: drawn anew without the detail once the answer is there
+                        await b.until(pg, "!!document.querySelector('#tab-modelle .kld:not(.open) .klist')")
+                        self.assertTrue(await pg.evaluate("getComputedStyle(document.getElementById('kside')).position==='fixed'"))
+                    self.assertEqual(errors, [], w)
+                    await br.close()
+        asyncio.run(go())
 
 
 class Koppeln(Base):

@@ -1707,12 +1707,12 @@ SEITEN = {
                  "every vLLM engine from /metrics, why the GPU throttles and the memory per service. With a Pi the "
                  "Wärter sends it with its status, without a Pi the panel asks itself. modellgenau.pruefen takes only "
                  "known keys, numbers in range and fixed words."),
-                ("Die Spark-Konsole (konsole.py, Port {konsole.PORT}) zeigt dieselbe Seite als Reiter „Modell genau“ "
-                 "und im Überblick eine Zeile zum Chat-Modell (modellgenau.fuer_live über /api/status); ihr Prozess misst "
+                ("Die Spark-Konsole (konsole.py, Port {konsole.PORT}) zeigt dieselbe Seite als „Modell genau“, "
+                 "ein Detail ihres Überblicks, und dort eine Kachel zum Chat-Modell (modellgenau.fuer_live über /api/status); ihr Prozess misst "
                  "im Hintergrund mit, gekoppelt wie allein. Panel und Konsole laden dieselben Dateien modellgenau.js, "
                  "modellgenau.css und zeichnen.js.",
-                 "The Spark-Konsole (konsole.py, port {konsole.PORT}) shows the same page as its tab „Model in detail“ "
-                 "and in its overview one line about the chat model (modellgenau.fuer_live through /api/status); its "
+                 "The Spark-Konsole (konsole.py, port {konsole.PORT}) shows the same page as „Model in detail“, "
+                 "a detail of its overview, and there a tile about the chat model (modellgenau.fuer_live through /api/status); its "
                  "process measures in the background, paired or alone. Panel and console load the same files "
                  "modellgenau.js, modellgenau.css and zeichnen.js."),
                 ("Das LLM-Tor bittet die Engine bei jedem Stream um die Zähler in jedem Stück (continuous_usage_stats) "
