@@ -171,6 +171,7 @@ def status():
             "mem_avail_gib": mem, "mem_total_gib": total, "einstellungen": model_settings_hash(cfg), "modellwahl": model_choice(cfg), "pause": pause(),
             "commit": str(installed_version().get("commit") or "")[:40], "update": _update_laeuft(), "update_pct": _update_pct(), "rechner": _rechner(),
             "uhr": uhr(), "spark_api": SPARK_API, "mischbetrieb": mischbetrieb.ist_an(),
+            "mischbetrieb_frei": mischbetrieb.stimme_frei(),
             # the own speech models here (modelle.SPRACH): the panel takes such a name into its model choice only then
             "sprach_eigen": {a: [m["repo"] for m in modelle.eigene_eintraege(a)] for a in modelle.SPRACH},
             "clients": sum(not c.get("gesperrt") for c in mandanten.clients()) if mandanten.an(cfg) else 0}
@@ -750,4 +751,7 @@ if __name__ == "__main__":
     if not waerter_key():
         print("waerter: ohne schluessel, kein start", flush=True)
         sys.exit(1)
+    # Mischbetrieb's Speicher-Wache (mischbetrieb.wache_lauf): only while it is on, only our two engines
+    threading.Thread(target=mischbetrieb.wache_lauf, daemon=True, name="mischwache",
+                     args=(einheit, lambda units: einheiten_stand(units, run), mem_available_gib, threading.Event())).start()
     uvicorn.run(app, host="127.0.0.1", port=WAERTER_PORT, log_level="warning")

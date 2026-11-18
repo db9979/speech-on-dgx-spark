@@ -16,6 +16,12 @@ Fixed rules (the shell's root part only runs what this module prints, words of f
 - While it is on, engine.sh starts none of the GESPERRT roles (also not after an update, a reboot or a wish of the
   console), and modelle.wechsel_pruefen refuses a switch or a measurement of the ARTEN with the word „mischbetrieb“.
 - The Wärter's status says „mischbetrieb“ (tarswart.status); the panel computer reads it (steuer.mischbetrieb).
+- Speicher-Wache (M3, wache): the other project's engines take 25-40 GB more than they count while they start; on unified
+  memory a box without free memory freezes. So every WACHE_S seconds the Wärter looks: while a unit of the other project
+  (FREMD_EINHEITEN) starts (activating, or active for less than START_S) or less than FREI_MIN GiB are free, Hören's
+  and Sprechen's engines (EIGENE) stop and give their memory back („frei“, the panel computer hears with Parakeet and
+  shows the answers as text); once nothing starts and ZURUECK_GIB GiB are free RUHIG_N looks in a row, they start
+  again. It only starts what it stopped itself.
 
 Only the standard library and common; one file STATE/mischbetrieb.json (0600). Log lines start with "modelle:" and
 hold fixed words and catalog ids only.
@@ -38,6 +44,18 @@ KLEIN = {"asr": "qwen3-asr-0.6b", "tts": "qwen3-tts-0.6b-base"}
 GESPERRT = ("llm", "sehen", "helfer", "einbetten", "nachsortieren", "design", "klon")
 # kinds of modelle.py that neither switch nor are measured while it is on
 ARTEN = ("llm", "sehen", "helfer", "einbetten", "nachsortieren", "bild", "musik")
+# Speicher-Wache: the other project's units (Alzeo's systemd units, by the names its lane registry gives them: data only,
+# never its code), our engines, the thresholds
+FREMD_EINHEITEN = ("qwen38-sglang", "qwen38-flash", "qwen38-image", "qwen38-video", "qwen38-kolibri", "qwen38-nemotron",
+                   "qwen38-nemotron-super", "qwen38-flash-local", "qwen38-ornith-122b", "qwen38-flash-unsloth",
+                   "qwen38-keepalive")
+EIGENE = ("asr-engine", "tts-engine")     # common.UNITS keys; the front ends speech-spark-asr/-tts stay
+WACHE_S = 5            # seconds between two looks
+FREI_MIN = 6           # GiB available: below, our engines give their memory back
+START_S = 900          # a unit of the other project active for less than this many seconds still starts
+ZURUECK_GIB = 18       # GiB available before ours load again (about 7 GiB for them and a reserve)
+RUHIG_N = 6            # looks in a row with nothing starting and enough free memory
+BEWEGT = ("activating", "deactivating", "reloading")
 # the units „an“ stops and disables (the language model's Docker container is part of speech-spark-llm)
 EINHEITEN = tuple(OWN_LLM_UNITS.values()) + ("speech-spark-llm-docker", ON_DEMAND_UNITS["bild"],
                                             ON_DEMAND_UNITS["musik"], UNITS["tts-design"], UNITS["tts-klon"])
@@ -95,12 +113,64 @@ def aus(cfg, kat, path=None, roh=None, schreib=None):
                 sek.pop(k, None)      # it was not set before: the shipped default counts again
         raw[sec] = sek
     (schreib or modelle._schreib)(raw)
-    write_json(path or DATEI, dict(d, an=False, bis=int(time.time())), indent=1, mode=0o600)
+    write_json(path or DATEI, dict(d, an=False, frei=False, bis=int(time.time())), indent=1, mode=0o600)
     sprach = d.get("sprach") or {}
     wechsel = [(art, sprach[art]) for art in KLEIN if sprach.get(art) and sprach[art] in kat
                and modelle.jetzt_id(art, cfg, kat) != sprach[art]]
     print(f"modelle: mischbetrieb aus, {len(wechsel)} wechsel", flush=True)
     return wechsel
+
+
+def startet(einheiten):
+    """True while a unit of the other project starts: {unit: einheiten_stand entry}."""
+    return any(isinstance(u, dict) and u.get("da") is not False
+               and (u.get("state") in BEWEGT or (u.get("state") == "active" and isinstance(u.get("seit"), (int, float))
+                                                  and u["seit"] < START_S))
+               for u in (einheiten or {}).values())
+
+
+def wache(frei_gib, einheiten, frei, ruhig):
+    """One look (fixed rule): returns (action, ruhig) with action "freigeben", "zurueck" or None. frei: our engines are
+    stopped by the guard now; ruhig: good looks in a row so far. Unknown memory (None) never brings them back."""
+    if not frei:
+        if startet(einheiten) or (frei_gib is not None and frei_gib < FREI_MIN):
+            return "freigeben", 0
+        return None, 0
+    gut = not startet(einheiten) and frei_gib is not None and frei_gib >= ZURUECK_GIB
+    ruhig = ruhig + 1 if gut else 0
+    return ("zurueck", 0) if ruhig >= RUHIG_N else (None, ruhig)
+
+
+def stimme_frei(path=None):
+    """The guard has stopped Hören's and Sprechen's engines now (the Wärter's status „mischbetrieb_frei“)."""
+    d = stand(path)
+    return d.get("an") is True and d.get("frei") is True
+
+
+def wache_lauf(einheit, stand_holen, mem, stop, path=None, sleep=time.sleep):
+    """The Wärter's thread: every WACHE_S seconds one look while Mischbetrieb is on. einheit(action, teil): the Wärter's
+    systemctl; stand_holen(units): common.einheiten_stand; mem(): GiB available. Logs one line per action."""
+    ruhig = 0
+    while not stop.is_set():
+        sleep(WACHE_S)
+        try:
+            d = stand(path)
+            if d.get("an") is not True:
+                ruhig = 0
+                continue
+            try:
+                frei_gib = mem()
+            except OSError:
+                frei_gib = None
+            aktion, ruhig = wache(frei_gib, stand_holen(list(FREMD_EINHEITEN)), d.get("frei") is True,
+                                  ruhig)
+            if aktion:
+                ok = all((einheit("stop" if aktion == "freigeben" else "start", t) or {}).get("ok") for t in EIGENE)
+                write_json(path or DATEI, dict(stand(path), frei=aktion == "freigeben"), indent=1, mode=0o600)
+                print(f"modelle: mischbetrieb wache {aktion} {'ok' if ok else 'fehler'} "
+                      f"{-1 if frei_gib is None else round(frei_gib)} gib frei", flush=True)
+        except Exception as e:   # noqa: BLE001 - the guard goes on
+            print("modelle: mischbetrieb wache fehler", type(e).__name__, flush=True)
 
 
 def main(argv):

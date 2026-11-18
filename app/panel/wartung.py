@@ -181,6 +181,15 @@ def mischbetrieb():
         return False
 
 
+def stimme_frei():
+    """Mischbetrieb's Speicher-Wache stopped Hören and Sprechen on the model computer for a while (steuer.stimme_frei)."""
+    try:
+        import steuer
+        return steuer.stimme_frei()
+    except Exception:
+        return False
+
+
 def paused(part):
     """True while this part (llm, asr, tts, bild) is paused and the admin switch is on, or in Notbetrieb; there the
     speech recognition goes on when this computer's Parakeet hears (notbetrieb.hoert, chat.notbetrieb_asr). The
@@ -191,6 +200,11 @@ def paused(part):
         return True
     if part == "llm" and mischbetrieb():
         return True
+    if part in ("asr", "tts") and stimme_frei():
+        if part == "asr":
+            import notbetrieb as nb
+            return not nb.hoert()
+        return True
     if not notbetrieb():
         return False
     if part == "asr":
@@ -200,9 +214,10 @@ def paused(part):
 
 
 def quiet(part):
-    """The Dienst-Wächter and the watchdog leave the part alone: paused on purpose and its time not yet over, or the
-    language model off on purpose in Mischbetrieb."""
-    return (_pause(part) and not state()["overdue"]) or (part == "llm" and mischbetrieb())
+    """The Dienst-Wächter and the watchdog leave the part alone: paused on purpose and its time not yet over, the
+    language model off on purpose in Mischbetrieb, or Hören and Sprechen while its Speicher-Wache gave their memory away."""
+    return ((_pause(part) and not state()["overdue"]) or (part == "llm" and mischbetrieb())
+            or (part in ("asr", "tts") and stimme_frei()))
 
 
 def left_min(now=None):

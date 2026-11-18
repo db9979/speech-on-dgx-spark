@@ -84,6 +84,53 @@ class AnAus(Ablage):
         self.assertNotIn("speech-spark-asr-engine", mischbetrieb.EINHEITEN)
 
 
+class Wache(Ablage):
+    """M3 Speicher-Wache: our engines give their memory back while the other project starts or memory runs short, and
+    come back only after RUHIG_N calm looks; it only starts what it stopped itself."""
+
+    def test_the_rule(self):
+        laeuft = {"qwen38-sglang": {"state": "active", "seit": 5000, "da": True}}
+        neu = {"qwen38-sglang": {"state": "active", "seit": 30, "da": True}}
+        self.assertEqual(mischbetrieb.wache(40, laeuft, False, 0), (None, 0))
+        self.assertEqual(mischbetrieb.wache(40, neu, False, 0)[0], "freigeben", "it starts: give the memory back")
+        self.assertEqual(mischbetrieb.wache(40, {"x": {"state": "activating", "da": True}}, False, 0)[0], "freigeben")
+        self.assertEqual(mischbetrieb.wache(mischbetrieb.FREI_MIN - 1, laeuft, False, 0)[0], "freigeben")
+        self.assertEqual(mischbetrieb.wache(None, laeuft, False, 0), (None, 0), "unknown memory alone does nothing")
+        self.assertEqual(mischbetrieb.wache(40, {"x": {"state": "inactive", "da": False}}, False, 0), (None, 0))
+        ruhig = 0
+        for _ in range(mischbetrieb.RUHIG_N - 1):
+            aktion, ruhig = mischbetrieb.wache(mischbetrieb.ZURUECK_GIB, laeuft, True, ruhig)
+            self.assertIsNone(aktion)
+        self.assertEqual(mischbetrieb.wache(mischbetrieb.ZURUECK_GIB - 1, laeuft, True, ruhig), (None, 0), "calm anew")
+        self.assertEqual(mischbetrieb.wache(None, laeuft, True, 99), (None, 0))
+        self.assertEqual(mischbetrieb.wache(mischbetrieb.ZURUECK_GIB, laeuft, True, mischbetrieb.RUHIG_N - 1)[0], "zurueck")
+        self.assertGreater(mischbetrieb.ZURUECK_GIB - 7, mischbetrieb.FREI_MIN, "loading ours never gives it back at once")
+
+    def test_the_loop_stops_and_starts_only_ours(self):
+        import threading
+        mischbetrieb.an(self.cfg(), self.kat, roh={}, schreib=self.schreib)
+        calls, stop = [], threading.Event()
+        frei = iter([40, 3] + [40] * (mischbetrieb.RUHIG_N + 1))
+        def sleep(_s):
+            try:
+                self.mem = next(frei)
+            except StopIteration:
+                stop.set()
+        mischbetrieb.wache_lauf(lambda a, t: calls.append((a, t)) or {"ok": True},
+                                lambda units: {u: {"state": "active", "seit": 9999, "da": True} for u in units},
+                                lambda: self.mem, stop, sleep=sleep)
+        self.assertEqual(calls, [("stop", "asr-engine"), ("stop", "tts-engine"), ("start", "asr-engine"),
+                                 ("start", "tts-engine")])
+        self.assertFalse(mischbetrieb.stimme_frei())
+        mischbetrieb.aus(self.cfg(), self.kat, roh={}, schreib=self.schreib)
+        calls.clear()
+        stop.clear()
+        frei = iter([3, 3])
+        mischbetrieb.wache_lauf(lambda a, t: calls.append((a, t)) or {"ok": True}, lambda units: {}, lambda: self.mem,
+                                stop, sleep=sleep)
+        self.assertEqual(calls, [], "off: the guard never touches a unit")
+
+
 class Sperren(Ablage):
     def setUp(self):
         super().setUp()
@@ -132,6 +179,21 @@ class Panel(unittest.TestCase):
         self.assertTrue(wartung.quiet("llm"))
         self.assertEqual(wartung.sentence(), wartung.MISCHBETRIEB[0])
         self.assertEqual(wartung.sentence(True), wartung.MISCHBETRIEB[1])
+
+    def test_while_the_guard_gave_the_voice_away(self):
+        import notbetrieb
+        with mock.patch.object(steuer, "stimme_frei", lambda now=None: True):
+            with mock.patch.object(notbetrieb, "hoert", lambda cfg=None, now=None: True):
+                self.assertFalse(wartung.paused("asr"), "Parakeet on the panel computer hears")
+            with mock.patch.object(notbetrieb, "hoert", lambda cfg=None, now=None: False):
+                self.assertTrue(wartung.paused("asr"))
+            self.assertTrue(wartung.paused("tts"))
+            self.assertTrue(wartung.quiet("asr") and wartung.quiet("tts"), "no outage alarm")
+        with mock.patch.object(steuer, "remote", lambda cfg=None: True), \
+                mock.patch.object(steuer, "weg", lambda now=None: False), \
+                mock.patch.object(steuer, "stimme_frei", lambda now=None: True), \
+                mock.patch.object(notbetrieb, "admin_on", lambda c: True):
+            self.assertTrue(notbetrieb.hoert({"chat": {}}))
 
     def test_a_foreign_service_answers_instead(self):
         with mock.patch.object(llm, "fremd", lambda ccfg: {"id": "f1"}):

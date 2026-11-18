@@ -51,10 +51,11 @@ def admin_on(c=None):
 
 
 def hoert(cfg=None, now=None):
-    """Parakeet on this computer hears: the models run elsewhere, the admin switched it on and they are gone."""
+    """Parakeet on this computer hears: the models run elsewhere, the admin switched it on and they are gone, or the
+    model computer's Speicher-Wache stopped its speech recognition in Mischbetrieb (steuer.stimme_frei)."""
     try:
         cfg = load_config() if cfg is None else cfg
-        return steuer.remote(cfg) and admin_on(cfg.get("chat", {})) and steuer.weg(now)
+        return steuer.remote(cfg) and admin_on(cfg.get("chat", {})) and (steuer.weg(now) or steuer.stimme_frei(now))
     except Exception:
         return False
 

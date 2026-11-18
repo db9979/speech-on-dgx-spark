@@ -1386,6 +1386,7 @@ cmd_mischbetrieb() {
       done
       systemctl is-active --quiet speech-spark-tlstor 2>/dev/null && systemctl restart speech-spark-tlstor || true
       if [ "$1" = aus ]; then
+        systemctl start speech-spark-asr-engine.service speech-spark-tts-engine.service 2>/dev/null || true   # the Speicher-Wache may have stopped them
         echo "Mischbetrieb aus. Damit das eigene Sprachmodell, Bilder und Musik wieder starten: sudo speech-spark update"
       else
         echo "Mischbetrieb an. Jetzt kann das andere Projekt den Speicher nutzen; zurück mit: sudo speech-spark mischbetrieb aus"

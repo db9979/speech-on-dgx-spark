@@ -6712,8 +6712,15 @@
 "titel": "Mischbetrieb an und aus",
 "text": "Auf tars: sudo speech-spark mischbetrieb an. Danach laufen nur Hören und Sprechen (kleine Modelle), Zustand → Live zeigt beim Modell-Rechner „Mischbetrieb“, eine Frage ohne fremden Dienst bekommt sofort den festen Satz, mit Alzeo „Für alle“ antwortet Alzeo; der Assistent hört und spricht. Dann sudo speech-spark mischbetrieb aus und sudo speech-spark update: alles wie vorher.",
 "thread": "tars für Alzeo nutzen, Assistent behalten",
-"wichtig": true,
-"test": "test_mischbetrieb.AnAus.test_an_remembers_and_aus_restores_exactly"
+"wichtig": true
+},
+{
+"id": "P969",
+"v": 1526,
+"titel": "Speicher-Wache im Mischbetrieb",
+"text": "Mischbetrieb an, dann in Alzeo eine Lane starten. Während sie startet, zeigt Zustand → Live beim Modell-Rechner „Hören und Sprechen pausieren“, der Assistent hört trotzdem (Parakeet auf dem Pi) und zeigt Antworten als Text; tars friert nicht ein. Etwa eine halbe Minute nach dem Start der Lane (mindestens 18 GiB frei) spricht der Assistent wieder.",
+"thread": "tars für Alzeo nutzen, Assistent behalten",
+"wichtig": true
 }
 ]
 }
