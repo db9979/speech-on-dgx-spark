@@ -9,6 +9,7 @@ import chat
 import features
 import fixes
 import datetime
+import dienstwacht
 import frisch
 import gedaechtnis
 import gespraech
@@ -432,7 +433,7 @@ async def model_turn(*, acked, body, c, came_from, carry, ccfg, cfg, check_on, e
             t_dr = time.time()
             st["offered"] = {direct}
             filler = chat.FILLERS.get(direct) or ex["filler"].get(direct)
-            if filler and st["first"]:
+            if filler and st["first"] and not dienstwacht.tool_gone(direct, who["id"] if who else ""):
                 st["first"] = False
                 await sentences.put(filler[1] if chat.guess_language(messages[-1]["content"]) == "English" else filler[0])
             dargs = getattr(turn, "direct_args", None) or {}   # a date the panel worked out or fixed words (intent.direct_args)
@@ -536,8 +537,10 @@ async def model_turn(*, acked, body, c, came_from, carry, ccfg, cfg, check_on, e
             msgs.append({"role": "assistant", "content": None, "tool_calls": [
                 {"id": x["id"], "type": "function", "function": {"name": x["name"], "arguments": x["arguments"]}}
                 for x in calls]})
+            # (not for a tool the Notaus holds off or whose service is gone: its fixed sentence comes at once instead)
             filler = next((chat.FILLERS.get(x["name"]) or ex["filler"][x["name"]] for x in calls
-                           if x["name"] in chat.FILLERS or x["name"] in ex["filler"]), None)
+                           if (x["name"] in chat.FILLERS or x["name"] in ex["filler"]) and x["name"] not in locked(st)
+                           and not dienstwacht.tool_gone(x["name"], who["id"] if who else "")), None)
             if filler and st["first"] and not trace["said"].strip():
                 # something to hear at once while the tool runs
                 st["first"] = False

@@ -122,11 +122,13 @@ async def _run(t, name, args, st):
             print("lokal: weiter ins Web, Ergebnis der Suche vorab", flush=True)
             return vorab["text"]
         await t.out.put({"type": "search", "query": query})
-        if st["first"]:  # something to hear while the search runs
+        gone = dienstwacht.tool_down(name, t.who["id"] if t.who else "")
+        # something to hear while the search runs; not when the search cannot run and no archive answers instead
+        # (Gesperrte Dienste sofort ansagen: no "Ich schaue kurz nach" before "nicht erreichbar")
+        if st["first"] and (not gone or (t.who and t.own_browser and kiwix.web_fallback(t.who["id"]))):
             st["first"] = False
             en = guess_language(t.messages[-1]["content"]) == "English"
             await t.sentences.put("Let me look that up." if en else "Ich schaue kurz nach.")
-        gone = dienstwacht.tool_down(name, t.who["id"] if t.who else "")
         try:
             if gone:          # SearXNG or the internet is gone: straight to the archive, else the fixed sentence
                 raise dienstwacht.Down(gone)

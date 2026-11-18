@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.519** Blocked services are said at once: "The internet is blocked right now, please try again later" instead of "Let me look" and nothing
 - **V01.1.518** Spark console reordered: four areas in a side bar (at the bottom on a phone), overview with one sentence and tiles with history, models and connections as list and detail, maintenance with updates and logs, light and dark follow the system
 - **V01.1.517** Red fix: three self-tests set their own switches and no longer depend on the time of day
 - **V01.1.516** Night run: no misleading "Not quite current", the ladybug ignores a harmless browser note, long appointment notes scroll
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.512** Error log: Home Assistant live no longer drops all the time, SparkHilfe Mac and "0 errors" no longer count as errors
 - **V01.1.511** Reporting problems: the admin may send 30 reports a day instead of 3
 - **V01.1.510** Documents: one search over names and content at once, hits per document with a snippet, places open the reading view right there
-- **V01.1.509** Reading documents in a view of its own over the whole area: opens at the place, search words marked, "1 of N", contents, text or original
 
 
 

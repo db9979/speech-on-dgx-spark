@@ -6643,6 +6643,14 @@
 "text": "Auf tars https://<ip>:31010 öffnen: links vier Bereiche (Überblick, Modelle, Verbindungen, Wartung), oben im Überblick ein Satz zum Zustand, Kacheln mit Verlauf. Unter Modelle eine Art anklicken, unter Verbindungen ein Programm: das Detail steht rechts. Die Zurück-Taste des Browsers geht zur vorigen Seite. Am Handy Leiste unten, Liste und Detail je eine Seite. Hell und dunkel wie das System.",
 "thread": "Spark-Website moderner und aufgeräumter gestalten",
 "test": "test_konsole.Bild.test_every_area"
+},
+{
+"id": "P961",
+"v": 1519,
+"titel": "Gesperrtes Internet sofort angesagt",
+"text": "Als Admin den Notaus Stufe 1 („Außen zu“) auslösen, dann im Assistenten (Browser, iPhone oder CarPlay) fragen „Suche im Internet nach Rezepten für Lasagne“: sofort kommt „Das Internet ist gerade gesperrt, der Notaus ist an. Versuch es bitte später noch einmal.“, ohne „Ich schau nach“ davor. Notaus wieder aufheben: dieselbe Frage sucht wieder.",
+"thread": "Gesperrte Dienste sofort ansagen",
+"test": "test_gesperrt.InTheAnswer.test_notaus_said_at_once_without_the_model"
 }
 ]
 }

@@ -40,6 +40,9 @@ import saetze  # noqa: E402
 import llm  # noqa: E402
 import verlaufkurz  # noqa: E402  (Lange Gespräche zusammenfassen, bottom layer)
 import wartung  # noqa: E402  (Wartungspause)
+import dienstwacht  # noqa: E402  (Gesperrte Dienste sofort ansagen: a service gone)
+import kiwix  # noqa: E402
+import notaus  # noqa: E402
 
 
 def at_speaker(request, body):
@@ -81,6 +84,63 @@ def notaus_note(held, mine=False):
     return (f"Notaus Stufe {held} ist an: " + ("Du kannst nichts ändern oder auslösen und " if held >= 2 or mine else "")
             + "erreichst nichts im Internet. Fragt der Nutzer danach, sag ihm genau das in einem Satz: der Notaus "
             "sperrt es, bis ein Admin ihn aufhebt.")
+
+
+# Gesperrte Dienste sofort ansagen (Dominik 2026-11-18: „du sagst, du guckst nach, und dann passiert nichts“): the
+# person's sentence per kind of lock, de and en (the Notaus kinds of notaus.STAGE, "mine" for Mein Notaus)
+SPERRE_SATZ = {
+    "internet": ("Das Internet ist gerade gesperrt, der Notaus ist an. Versuch es bitte später noch einmal.",
+                 "The internet is blocked right now, the emergency stop is on. Please try again later."),
+    "aktion": ("Aktionen sind gerade gesperrt, der Notaus ist an. Versuch es bitte später noch einmal.",
+               "Actions are blocked right now, the emergency stop is on. Please try again later."),
+    "mine": ("Dein eigener Notaus ist an und sperrt Aktionen in deinem Namen. Du hebst ihn unter Ich → Sicherheit auf.",
+             "Your own emergency stop is on and blocks actions in your name. You lift it under Me → Security."),
+}
+
+
+def sperre(z):
+    """Gesperrte Dienste sofort ansagen, by fixed rules on the Weiche's groups of this turn (intent.GROUPS), never
+    the model. For each recognised group with tools: "frei" when one of its tools is offered and its service is not
+    known to be gone; "notaus" when the Notaus took its tools away in this turn (z.notaus_weg); "dienst" when every
+    offered tool of it has its service gone (dienstwacht.tool_gone; the web search with the own archive as fallback stays
+    free); else not offered (not set up, not released: the model says so as before). Returns None when a group is
+    free, none is recognised or none is locked; {"art": "gesperrt", "de", "en", "kinds"} when no group is free and at
+    least one is locked (chat._answer says it as the panel's fixed answer instead of an instant "Ich schau nach")."""
+    if not z.who or not z.own_browser or z.mcp or z.pics or z.carry or z.room_far \
+            or not z.messages or z.messages[-1]["role"] != "user":
+        return None
+    groups = [g for g in (z.route.names if z.route else []) if (z.intent.GROUPS.get(g) or (None,))[0]]
+    if not groups:
+        return None
+    kinds = []
+    for g in groups:
+        tools = set(z.intent.GROUPS[g][0])
+        have = tools & z.offered_all
+        if have:
+            if all(dienstwacht.tool_gone(t, z.who["id"]) and not (t == "web_search" and kiwix.web_fallback(z.who["id"]))
+                   for t in have):
+                kinds.append(("dienst", sorted(have)[0]))
+                continue
+            return None
+        weg = tools & z.notaus_weg
+        if weg:
+            kind = "internet" if weg & notaus.INTERNET_TOOLS else "aktion"
+            kinds.append(("mine" if kind == "aktion" and z.held < 2 else kind, ""))
+    if not kinds:
+        return None
+    de, en = [], []
+    for kind, tool in dict.fromkeys(kinds):
+        if kind == "dienst":
+            d, e = dienstwacht.down_sentence(tool, z.who["id"]), dienstwacht.down_sentence(tool, z.who["id"], True)
+        else:
+            notaus.refuse("aktion" if kind == "mine" else kind, z.who["id"])
+            d, e = SPERRE_SATZ[kind]
+        if d not in de:
+            de.append(d)
+            en.append(e)
+    names = ",".join(sorted({k for k, _ in kinds}))
+    print(f"chat: gesperrt {names} | {len(groups)} Gruppen, feste Antwort", flush=True)
+    return {"art": "gesperrt", "de": " ".join(de), "en": " ".join(en), "kinds": names}
 
 
 # a plain yes that finds no proposal of its own device and conversation (profiles.quelle), while one waits elsewhere or
@@ -492,7 +552,6 @@ async def _wer(z):
     # the Notaus by a fixed sentence (notaus.phrase): the panel decides from the person's own whole sentence, the
     # model only says the result; never over MCP, never for a stranger's voice at a shared speaker (who is then None)
     if not z.role_cmd and z.who and not z.mcp and z.messages[-1]["role"] == "user":
-        import notaus
         z.notaus = notaus
         z.na = z.notaus.phrase(z.messages[-1]["content"])
         if z.na:
@@ -791,7 +850,6 @@ async def _rechte(z):
     # new appointments: only the profile's own login or device key, and only after a yes (see calendars.py)
     # Notaus stage 2 (notaus.py): no "Ja" carries anything out, every proposal waiting in this conversation is
     # dropped, and below no tool that changes something is offered (stage 1: none that goes to the internet)
-    import notaus
     z.notaus = notaus
     z.held = z.notaus.level()
     # Mein Notaus (notaus.py): this profile's own, like stage 2 for its actions only (reading goes on)
@@ -1042,9 +1100,12 @@ async def _werkzeuge(z):
         z.tools = z.kept
     if z.held or z.mine:
         z.gone_n = len(z.tools)
-        z.tools = [t for t in z.tools if t["function"]["name"] not in z.notaus.locked_tools(z.held, z.ex["changes"], z.mine)]
+        z.notaus_weg = {t["function"]["name"] for t in z.tools} & z.notaus.locked_tools(z.held, z.ex["changes"], z.mine)
+        z.tools = [t for t in z.tools if t["function"]["name"] not in z.notaus_weg]
         z.system = z.per_turn(z.system, notaus_note(z.held, z.mine))
         print(f"notaus: Stufe {z.held}{' + Mein Notaus' if z.mine else ''} - {z.gone_n - len(z.tools)} Werkzeuge nicht angeboten", flush=True)
+    else:
+        z.notaus_weg = set()
     if z.mcp:   # only what the connection was given (mcpserver.ASK_TOOLS), never more than the rights above left
         z.tools = [t for t in z.tools if t["function"]["name"] in z.mcp["tools"]]
     if z.pics or z.role_cmd:
@@ -1091,6 +1152,9 @@ async def _werkzeuge(z):
     # question
     z.tools_stable = list(z.tools) if z.cache_on else None
     z.offered_all = {t["function"]["name"] for t in z.tools}
+    # Gesperrte Dienste sofort ansagen (Dominik 2026-11-18): the recognised Weiche groups can do nothing in this turn
+    # (Notaus, a service gone): the panel says so at once, never "Ich schau nach" and then nothing (chat._answer)
+    z.sperre = sperre(z)
     # a way the person chose after the panel asked (klaeren weg) narrows to it even with „Gezielte Werkzeugwahl“ off:
     # the person named it in so many words; like every narrowing it only takes away
     if (z.route_on or z.weg) and z.tools and not z.pics and not z.ha_direct and not z.ha_wait:
@@ -1175,9 +1239,7 @@ async def _werkzeuge(z):
             z.quellen.note(z.lk_kind, z.lk_ctx.get("info"))
         # the panel's own web search only where the person may search the web in this turn: offered, no answer from
         # mail carried along, not held by the Notaus, its service not known to be gone (dienstwacht)
-        import dienstwacht
         z.dienstwacht = dienstwacht
-        import notaus
         z.notaus = notaus
         z.web_ok = "web_search" in z.offered_all and z.carry != "mail" and "web_search" not in z.notaus.locked_tools(
             z.notaus.level(), z.ex["changes"], bool(z.who and z.notaus.own(z.who["id"]))) \

@@ -2183,10 +2183,20 @@ async def _answer(request, turn):
                                                       guess_language(messages[-1]["content"]) == "English")
         if said:
             fixed = ("ueberblick", said)
+    # Gesperrte Dienste sofort ansagen (chat_turn.sperre, Dominik 2026-11-18): every recognised group is held off by
+    # the Notaus or its service is gone: the panel's fixed sentence at once (what is locked, try again later), never
+    # "Ich schau nach" and then nothing; on every client (web, app, CarPlay, speakers), like every fixed answer
+    sperre = getattr(turn, "sperre", None) or {}
+    if not fixed and sperre.get("art") == "gesperrt" and not getattr(turn, "kl_took", False):
+        en_s = guess_language(messages[-1]["content"]) == "English"
+        fixed = ("gesperrt", sperre["en" if en_s else "de"])
     # "Sofortige Rückmeldung" (ack.py): right away a ready-made sentence of what the Spark does now, chosen by fixed
-    # rules (Weiche group, "Erst lokal", a direct fetch) and played from a recording (no GPU); never small talk
+    # rules (Weiche group, "Erst lokal", a direct fetch) and played from a recording (no GPU); never small talk, never
+    # when the profile's Kontingent is used up (verbrauch.over: its fixed sentence comes at once, a "Moment, ich schau"
+    # before it would promise a look that never comes)
     ack_lang, acked = None, False
     if who and own_browser and body.get("speak") is not False and not wartung.paused("llm") and body.get("client") not in ("watch", "siri") \
+            and not verbrauch.over(who["id"]) \
             and messages and messages[-1]["role"] == "user" and not turn.pics and features.allowed("ack", who["id"], ccfg) \
             and not getattr(turn, "kl_took", False) and not fixed:   # the panel's own question or answer needs no bridge
         ack_lang = tts_body.get("language") if tts_body.get("language") in ("German", "English") else \

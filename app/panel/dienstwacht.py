@@ -1078,24 +1078,49 @@ def _mine(sid, uid):
     return bool(keys) and all(parts.get(k) is False for k in keys)
 
 
-def tool_down(name, uid):
-    """The fixed sentence for a tool whose service the Dienst-Wächter sees gone, else ''. Only with the switches."""
+def _tool_gone(name, uid):
+    """(service id, since) when the Dienst-Wächter sees this tool's service gone for this profile, else None. Only
+    with the switches; never for guests."""
     sid = TOOL_SVC.get(name)
     if not sid or not uid or not features.allowed("dienstnutzer", uid):
-        return ""
+        return None
     e = _read()["svc"].get(sid) or {}
     inet = (_read()["svc"].get("inet") or {}).get("st") == "down"
     if e.get("st") == "down" and _mine(sid, uid):
-        since, svc = e.get("since"), sid
-    elif inet and (sid in ("inet", "web") or e.get("st") == "inet" or e.get("net")):
-        since, svc = (_read()["svc"]["inet"].get("since")), "inet"
-    else:
+        return sid, e.get("since")
+    if inet and (sid in ("inet", "web") or e.get("st") == "inet" or e.get("net")):
+        return "inet", _read()["svc"]["inet"].get("since")
+    return None
+
+
+def tool_gone(name, uid):
+    """Whether the Dienst-Wächter sees this tool's service gone for this profile (no log line)."""
+    return bool(_tool_gone(name, uid))
+
+
+def down_sentence(name, uid, en=False):
+    """The person's sentence for a tool whose service is gone ("Mail ist gerade nicht erreichbar (seit 09:12).
+    Versuch es bitte später noch einmal."), else ''. One source for tool_down (the model's instruction) and
+    gesperrt.py (the panel's fixed answer before any model)."""
+    g = _tool_gone(name, uid)
+    if not g:
         return ""
-    de = f"{SVC[svc][0]} ist gerade nicht erreichbar (seit {_hm(since or time.time())})."
+    svc, since = g
     print(f"dienstwacht: {name} not tried, {svc} is gone", flush=True)
-    return (f"Not done: the service {SVC[svc][1]} is not reachable right now, the Spark's service watch sees it gone. "
-            f"Tell the user exactly this in one sentence, in their language: \"{de}\" Do not guess an answer, do not "
-            "try again, do not offer a workaround.")
+    if en:
+        return f"{SVC[svc][1]} is not reachable right now (since {_hm(since or time.time())}). Please try again later."
+    return f"{SVC[svc][0]} ist gerade nicht erreichbar (seit {_hm(since or time.time())}). Versuch es bitte später noch einmal."
+
+
+def tool_down(name, uid):
+    """The model's instruction for a tool whose service the Dienst-Wächter sees gone, else ''."""
+    g = _tool_gone(name, uid)
+    if not g:
+        return ""
+    de = down_sentence(name, uid)
+    return (f"Not done: the service {SVC[g[0]][1]} is not reachable right now, the Spark's service watch sees it gone. "
+            f"Tell the user exactly this in one or two short sentences, in their language: \"{de}\" Do not guess an "
+            "answer, do not try again, do not offer a workaround.")
 
 
 # ---------------------------------------------------------------- loop

@@ -800,7 +800,7 @@ SEITEN = {
         "heute": [],
     },
     "antwort": {
-        "stand": "883a46e43b",
+        "stand": "0b8de19389",
         "bezug": {
             "chat.MAX_SAVES": ["s11"], "chat.LOOP_SAME": ["s11"], "chat._answer": ["s4", "s5", "s11"], "chat_modell.model_turn": ["s4", "s11"], "chat_modell.herkunft_und_chip": ["s3"], "chat_modell.quellenangabe_zeile": ["s3"], "chat_ton.speech_out": ["s8"],
             "chat.split_sentences": ["s5"], "chat.said_key": ["s8"], "chat.no_code": ["s8"],
@@ -809,7 +809,7 @@ SEITEN = {
             "taten.announces": ["s7", "s12"], "vorrat.WAIT": ["s11"], "frisch.nachsatz": ["s12"],
             "taten.COVERS": ["s7"], "quellenangabe.genannt": ["s3"], "quellenangabe.vergiss": ["s3"],
             "proactive.warn_wish": ["s12"], "proactive.wetter_zusage": ["s12"],
-            "laufend.add": ["s14"],
+            "laufend.add": ["s14"], "chat_turn.sperre": ["s1"],
         },
         "kurz": ("Hier entsteht die Antwort: Das Panel fragt das Sprachmodell in Runden, lässt angebotene Werkzeuge "
                  "laufen, prüft jeden fertigen Satz mit festen Regeln und schickt Text und Ton als einen Strom ans Gerät. "
@@ -837,7 +837,10 @@ SEITEN = {
                "ihren Knöpfen, ohne Modell und ohne Werkzeug, und „Woher weißt du das?“ als feste Antwort des Panels "
                "aus der gemerkten Quelle der letzten Antwort (quellenangabe.antwort). Gesprochen bekommt „Was gibt’s "
                "Neues?“ mit „Natürliches Gespräch“ einen festen kurzen Überblick aus eigenen Zahlen und Uhrzeiten "
-               "(chat_modell.gespraech_ueberblick, gespraech.teil).",
+               "(chat_modell.gespraech_ueberblick, gespraech.teil). Kann keine erkannte Weiche-Gruppe gerade etwas "
+               "tun, weil der Notaus ihre Werkzeuge sperrt oder ihr Dienst weg ist (chat_turn.sperre), kommt sofort "
+               "der feste Satz, was gesperrt ist und dass man es später noch einmal versuchen soll, ohne Modell und "
+               "ohne Sofort-Satz davor; ist das Kontingent voll, kommt auch kein Sofort-Satz.",
                "chat() checks the rate limit, sets the mark „speech is running“ (background work waits) and shows the "
                "profile's other devices „answering“. Then chat_turn.prepare works out rights, locks, system prompt and "
                "the offered tools; _answer takes over. When the language model pauses (maintenance pause, emergency "
@@ -849,7 +852,10 @@ SEITEN = {
                "question with its buttons, without a model and without a tool, and „Where did you get that?“ as the "
                "panel's fixed answer from the kept source of the last answer (quellenangabe.antwort). Spoken, „What's "
                "new?“ gets a fixed short overview from the profile's own numbers and times with „Natural conversation“ "
-               "(chat_modell.gespraech_ueberblick, gespraech.teil).")),
+               "(chat_modell.gespraech_ueberblick, gespraech.teil). When no recognised Weiche group can do anything "
+               "right now, because the kill switch locks its tools or its service is gone (chat_turn.sperre), the "
+               "fixed sentence comes at once, saying what is locked and to try again later, without a model and "
+               "without an instant sentence before it; with the quota used up no instant sentence comes either.")),
             S("s2", "schritt", ("Strom öffnen, Sofort-Satz", "Open the stream, instant sentence"),
               ("drei Aufgaben: Modell, Sprachausgabe, Brücke", "three tasks: model, speech output, bridge"),
               ("Zwei Warteschlangen verbinden alles: eine für die Ereignisse ans Gerät, eine für Sätze an die "
@@ -1121,6 +1127,7 @@ SEITEN = {
             ("chat.chat", ("Rate-Limit, Sprache zuerst, „antwortet gerade“", "rate limit, speech first, „answering“")),
             ("chat._answer", ("führt Modellseite, Sprachausgabe und Ereignisse zu einem Strom zusammen", "joins model side, speech output and events into one stream")),
             ("laufend.add", ("die laufende Antwort für Notaus Stufe 3", "the running answer for kill switch stage 3")),
+            ("chat_turn.sperre", ("gesperrte Gruppe: fester Satz statt „Ich schau nach“", "locked group: fixed sentence instead of „let me look“")),
             ("chat_ton.speech_out", ("Sätze an die Sprachausgabe, Ton als Strom", "sentences to the speech output, sound as a stream")),
             ("chat_modell.model_turn", ("Runden mit dem Modell, Werkzeuge, Prüfungen", "rounds with the model, tools, checks")),
             ("chat_modell.herkunft_und_chip", ("Herkunftszeile und „Auch im Internet suchen“ unter der Antwort", "line of origin and „Also search the web“ under the answer")),
@@ -1149,7 +1156,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Werkzeuge (chat_tools.run)
     "werkzeuge": {
-        "stand": "f98a624fef",
+        "stand": "60e7d18954",
         "bezug": {
             "chat.LOCKED_OUTSIDE": ["s4"], "notaus.INTERNET_TOOLS": ["s3"], "werkzeuge.NAMES": ["s11"],
             "chat_tools.run": ["s2", "s7"], "chat.wrap_outside": ["s9"], "chat.LOCKED_AFTER_MAIL": ["s4"],
