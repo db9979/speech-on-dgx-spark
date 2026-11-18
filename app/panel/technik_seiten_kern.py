@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "llm": {
-        "stand": "7291780773",
+        "stand": "40646302f4",
         "bezug": {
             "chat.chat": ["s1"], "chat._answer": ["s2", "s4", "s6"], "llm.model": ["s3"], "llm.known_model": ["s3"], "llm.url": ["s1"], "llm.complete": ["s1"],
             "chat.sampling": ["s4"], "chat.first_within": ["s8"], "chat.ContextFull": ["s7"],
@@ -53,7 +53,9 @@ SEITEN = {
                "anderen Rechner, der nicht antwortet (Notbetrieb, steuer.weg), gilt dasselbe mit dem Satz „Der Spark macht "
                "gerade Pause.“; der Dienst-Wächter meldet den Ausfall trotzdem. Mit Funktionen → Notbetrieb mit Parakeet "
                "hört dann Parakeet auf dem Panel-Rechner, und feste Befehle (Home Assistant, Uhrzeit, Erinnerungen) "
-               "gehen ohne Modell (notbetrieb.antwort).",
+               "gehen ohne Modell (notbetrieb.antwort). Im Mischbetrieb des Modell-Rechners (steuer.mischbetrieb: ein "
+               "anderes Projekt hat die GPU) ist das eigene Modell mit Absicht aus: fester Satz, kein Ausfall-Alarm. "
+               "Antwortet ein fremder Modell-Dienst (llm.fremd), hält keine dieser Pausen die Frage an.",
                "When an admin paused the language model for an update, the panel does not ask it at all: the answer is "
                "a fixed sentence with the time left at once, the Weiche and System One do not ask either. Background "
                "work on the model waits until the pause ends and does not count that as a cancel. At the end of the "
@@ -63,7 +65,10 @@ SEITEN = {
                "computer that does not answer (emergency mode, steuer.weg), the same holds with the sentence “The Spark "
                "is taking a break right now.”; the Dienst-Wächter still reports the outage. With Features → Emergency "
                "mode with Parakeet, Parakeet on the panel computer then hears, and fixed commands (Home Assistant, time, "
-               "reminders) work without a model (notbetrieb.antwort)."),
+               "reminders) work without a model (notbetrieb.antwort). In Mischbetrieb of the model computer "
+               "(steuer.mischbetrieb: another project has the GPU) the own model is off on purpose: a fixed sentence, "
+               "no outage alarm. While a foreign model service answers (llm.fremd), none of these pauses holds the "
+               "question."),
               ("stop", "ja", ("„Ich werde gerade aktualisiert …“", "„I am being updated right now …“"))),
             S("s2", "schritt", ("Verbindung für diese Antwort", "Connection for this answer"),
               ("Zeitlimit {chat.TIMEOUT_RANGE.0} bis {chat.TIMEOUT_RANGE.1} s", "time limit {chat.TIMEOUT_RANGE.0} to {chat.TIMEOUT_RANGE.1} s"),

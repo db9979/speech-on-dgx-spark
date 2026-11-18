@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.525** Mischbetrieb: the DGX Spark works for another project, the assistant keeps listening and speaking
 - **V01.1.524** Alzeo as a foreign model service: several checked models, the panel follows the running lane
 - **V01.1.523** Spark console on a Spark alone: embeddings and re-ranking as GPU services for programs such as Open WebUI, the helper model to choose
 - **V01.1.522** Red fix: help copy of the docs regenerated after V01.1.521
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.518** Spark console reordered: four areas in a side bar (at the bottom on a phone), overview with one sentence and tiles with history, models and connections as list and detail, maintenance with updates and logs, light and dark follow the system
 - **V01.1.517** Red fix: three self-tests set their own switches and no longer depend on the time of day
 - **V01.1.516** Night run: no misleading "Not quite current", the ladybug ignores a harmless browser note, long appointment notes scroll
-- **V01.1.515** Spark console: GGUF row only for pictures and music
 
 
 

@@ -28,11 +28,11 @@ HELFER_JOBS = ("Gedächtnis-Themen", "Uhr-Antworten", "Uhr-Nachfragen")
 
 def fremd(ccfg):
     """The foreign model service the panel asks now instead of the own language model (fremdmodell.ziel: „Für alle“,
-    or „Ersatz“ while the model computer is gone), None for the own one. ccfg "eigen": the own model's checks
+    or „Ersatz“ while the model computer is gone or its own model is off in Mischbetrieb), None for the own one. ccfg "eigen": the own model's checks
     (quality test, Probetag, Dienst prüfen) always ask the own one. netguard is asked again at every use."""
     if ccfg.get("eigen"):
         return None
-    x = fremdmodell.ziel(features.admin_on("fremdmodelle", ccfg), steuer.weg())
+    x = fremdmodell.ziel(features.admin_on("fremdmodelle", ccfg), steuer.weg() or steuer.mischbetrieb())
     if x is None:
         return None
     try:

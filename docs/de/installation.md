@@ -57,6 +57,7 @@ Am Ende stehen Adressen, Schlüssel und fertige `curl`-Beispiele auf dem Bildsch
 | `sudo speech-spark umziehen --von <name-oder-ip>` | Auf dem neuen Panel-Rechner: Umzug holen, einspielen, prüfen (geht auch beim Koppeln mit `install.sh --mode panel`) |
 | `sudo speech-spark zurueckholen --von <name-oder-ip>` | Auf dem Modell-Rechner: das Panel zurückholen, danach läuft wieder alles auf einem Rechner |
 | `sudo speech-spark teilen firewall [aus]` | die Ports der Tür nur vom Panel-Rechner (`api.tls_from`) erreichbar machen (nftables, Tabelle `speech_spark_teilen`), oder wieder aus |
+| `sudo speech-spark mischbetrieb [status]\|an\|aus` | Mischbetrieb (seit V01.1.525): ein anderes Projekt wie Alzeo bekommt die GPU des Modell-Rechners, der Spark behält nur Hören und Sprechen mit den kleinen Modellen; `aus` stellt genau den Stand von vorher wieder her. Einzelheiten unter *Sicherheit und Betrieb → Mischbetrieb* |
 | `sudo speech-spark clients [liste]` | Spark-Clients: andere Programme mit eigenem Schlüssel, Rechten und Grenzen (`an <netz>`, `aus`, `neu <name> <rechte> [klasse]`, `sperren`, `entsperren`, `weg <id>`); Einzelheiten unter *Sicherheit und Betrieb → Spark-Clients* |
 | `sudo speech-spark konsole an <netz> [netz …]` | die Spark-Konsole einschalten: eigene Webseite dieses Spark unter `https://<ip>:31010`, nur aus den genannten Netzen im Heimnetz; `aus` schaltet sie ab, `status` zeigt sie |
 

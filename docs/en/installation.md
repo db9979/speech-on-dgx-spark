@@ -57,6 +57,7 @@ At the end the addresses, the key and ready-made `curl` examples are printed and
 | `sudo speech-spark umziehen --von <name-or-ip>` | On the new panel computer: fetch the move, restore, check (also happens when pairing with `install.sh --mode panel`) |
 | `sudo speech-spark zurueckholen --von <name-or-ip>` | On the model computer: take the panel back; everything runs on one computer again |
 | `sudo speech-spark teilen firewall [aus]` | make the door's ports reachable only from the panel computer (`api.tls_from`, nftables table `speech_spark_teilen`), or off again |
+| `sudo speech-spark mischbetrieb [status]\|an\|aus` | Mischbetrieb (since V01.1.525): another project such as Alzeo gets the model computer's GPU, the Spark keeps only Hören and Sprechen with the small models; `aus` restores exactly the state before. Details under *Security and operation → Mischbetrieb* |
 | `sudo speech-spark clients [liste]` | Spark clients: other programs with a key of their own, rights and limits (`an <net>`, `aus`, `neu <name> <rights> [class]`, `sperren`, `entsperren`, `weg <id>`); details under *Security and operation → Spark clients* |
 | `sudo speech-spark konsole an <net> [net …]` | switch the Spark-Konsole on: this Spark's own web page at `https://<ip>:31010`, only from the given networks in the home network; `aus` switches it off, `status` shows it |
 

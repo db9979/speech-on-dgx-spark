@@ -6705,5 +6705,15 @@
 "thread": "tars für Alzeo nutzen, Assistent behalten",
 "test": "test_fremdmodell.Endpunkte.test_the_look_follows_the_lane"
 }
+,
+{
+"id": "P968",
+"v": 1525,
+"titel": "Mischbetrieb an und aus",
+"text": "Auf tars: sudo speech-spark mischbetrieb an. Danach laufen nur Hören und Sprechen (kleine Modelle), Zustand → Live zeigt beim Modell-Rechner „Mischbetrieb“, eine Frage ohne fremden Dienst bekommt sofort den festen Satz, mit Alzeo „Für alle“ antwortet Alzeo; der Assistent hört und spricht. Dann sudo speech-spark mischbetrieb aus und sudo speech-spark update: alles wie vorher.",
+"thread": "tars für Alzeo nutzen, Assistent behalten",
+"wichtig": true,
+"test": "test_mischbetrieb.AnAus.test_an_remembers_and_aus_restores_exactly"
+}
 ]
 }

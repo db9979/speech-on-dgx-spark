@@ -27,6 +27,16 @@ state() {  # $1 = status, $2 = message
 }
 fail() { state error "$1"; echo "ERROR: $1" >&2; exit 1; }
 
+# Mischbetrieb (app/mischbetrieb.py): the memory belongs to another project; these roles stay off, also after an update
+case "$ROLE" in
+  llm|sehen|helfer|einbetten|nachsortieren|design|klon)
+    if "${SPEECH_SPARK_PREFIX:-$(dirname "$VENV")}/venv-panel/bin/python" "$(dirname "$(readlink -f "$0")")/mischbetrieb.py" sperrt "$ROLE"; then
+      state off "Mischbetrieb: sudo speech-spark mischbetrieb aus"
+      echo "modelle: mischbetrieb $ROLE bleibt aus"
+      exit 0
+    fi ;;
+esac
+
 LLM_ARGS=()
 if [ "$ROLE" = llm ] || [ "$ROLE" = sehen ] || [ "$ROLE" = helfer ] || [ "$ROLE" = einbetten ] || [ "$ROLE" = nachsortieren ]; then
   # The catalog builds the whole command (pinned commit, files checked, never trust_remote_code); this script adds

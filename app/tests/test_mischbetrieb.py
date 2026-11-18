@@ -1,0 +1,165 @@
+"""Mischbetrieb (app/mischbetrieb.py, plan alzeo-mischbetrieb M2/M5, Dominik 2026-11-18 „1a 2a 3a“): another project
+(Alzeo) gets the DGX Spark's GPU, the Spark keeps Hören and Sprechen with the small models. „an“ remembers exactly
+what it changes and „aus“ restores exactly that; while it is on nothing of the language model, Bilder or Musik starts,
+switches or is measured; the panel computer answers with a fixed sentence or the foreign model service, the
+Dienst-Wächter counts no outage, and the Live view says it. No time of day."""
+import json
+import os
+import shutil
+import subprocess
+import tempfile
+import unittest
+from unittest import mock
+
+from tests import helpers
+
+helpers.start()
+import panel  # noqa: E402,F401
+import fremdmodell  # noqa: E402
+import llm  # noqa: E402
+import mischbetrieb  # noqa: E402
+import modelle  # noqa: E402
+import steuer  # noqa: E402
+import wartung  # noqa: E402
+
+FREMD = llm.fremd   # the real one, before a test replaces it
+APP = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+class Ablage(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp(prefix="misch-")
+        self.addCleanup(shutil.rmtree, self.tmp, True)
+        self.datei = os.path.join(self.tmp, "mischbetrieb.json")
+        p = mock.patch.object(mischbetrieb, "DATEI", self.datei)
+        p.start()
+        self.addCleanup(p.stop)
+        self.kat = modelle.katalog()
+        self.geschrieben = []
+
+    def schreib(self, raw):
+        self.geschrieben.append(json.loads(json.dumps(raw)))
+
+    def cfg(self, asr="Qwen/Qwen3-ASR-1.7B", tts="Qwen/Qwen3-TTS-12Hz-1.7B-Base"):
+        return {"llm": {"enabled": True, "modell": "qwen36-35b-a3b-nvfp4"}, "image": {"enabled": True},
+                "music": {"enabled": False}, "asr": {"enabled": True, "recognizer": "qwen", "model": asr},
+                "tts": {"enabled": True, "model": tts, "voicedesign_enabled": True}}
+
+
+class AnAus(Ablage):
+    def test_an_remembers_and_aus_restores_exactly(self):
+        roh = {"llm": {"enabled": True, "port": 31006}, "image": {"enabled": True, "variant": "4b-q8"},
+               "tts": {"voicedesign_enabled": True}, "chat": {"llm_url": "x"}}
+        wechsel = mischbetrieb.an(self.cfg(), self.kat, roh=json.loads(json.dumps(roh)), schreib=self.schreib, now=0)
+        self.assertEqual(wechsel, [("asr", "qwen3-asr-0.6b"), ("tts", "qwen3-tts-0.6b-base")])
+        neu = self.geschrieben[-1]
+        self.assertEqual((neu["llm"]["enabled"], neu["image"]["enabled"], neu["music"]["enabled"],
+                          neu["tts"]["voicedesign_enabled"], neu["tts"]["klon_enabled"]), (False,) * 5)
+        self.assertEqual((neu["llm"]["port"], neu["image"]["variant"], neu["chat"]), (31006, "4b-q8", {"llm_url": "x"}))
+        self.assertTrue(mischbetrieb.ist_an())
+        self.assertEqual(oct(os.stat(self.datei).st_mode & 0o777), "0o600")
+        self.assertEqual(mischbetrieb.an(self.cfg(), self.kat, roh={}, schreib=self.schreib), [], "a second an: nothing")
+        self.assertEqual(len(self.geschrieben), 1)
+        klein = self.cfg("Qwen/Qwen3-ASR-0.6B", "Qwen/Qwen3-TTS-12Hz-0.6B-Base")
+        back = mischbetrieb.aus(klein, self.kat, roh=json.loads(json.dumps(neu)), schreib=self.schreib)
+        self.assertEqual(back, [("asr", "qwen3-asr-1.7b"), ("tts", "qwen3-tts-1.7b-base")])
+        self.assertEqual(self.geschrieben[-1], dict(roh, tts={"voicedesign_enabled": True}, music={}),
+                         "exactly the old values; a value that was not set is gone again")
+        self.assertFalse(mischbetrieb.ist_an())
+        self.assertEqual(mischbetrieb.aus(klein, self.kat, roh={}, schreib=self.schreib), [])
+
+    def test_never_to_a_bigger_model(self):
+        klein = self.cfg("Qwen/Qwen3-ASR-0.6B", "Qwen/Qwen3-TTS-12Hz-0.6B-Base")
+        self.assertEqual(mischbetrieb.an(klein, self.kat, roh={}, schreib=self.schreib), [])
+
+    def test_engine_roles_and_units(self):
+        self.assertEqual(mischbetrieb.main(["sperrt", "llm"]), 1, "off: everything starts")
+        mischbetrieb.an(self.cfg(), self.kat, roh={}, schreib=self.schreib)
+        for rolle in mischbetrieb.GESPERRT:
+            self.assertEqual(mischbetrieb.main(["sperrt", rolle]), 0, rolle)
+        for rolle in ("main", "asr", "x; rm -rf /"):
+            self.assertEqual(mischbetrieb.main(["sperrt", rolle]), 1, rolle)
+        self.assertIn("speech-spark-llm-docker", mischbetrieb.EINHEITEN)
+        self.assertNotIn("speech-spark-tts-engine", mischbetrieb.EINHEITEN)
+        self.assertNotIn("speech-spark-asr-engine", mischbetrieb.EINHEITEN)
+
+
+class Sperren(Ablage):
+    def setUp(self):
+        super().setUp()
+        mischbetrieb.an(self.cfg(), self.kat, roh={}, schreib=self.schreib)
+
+    def test_no_switch_and_no_measurement(self):
+        for art, mid in (("llm", "qwen36-35b-a3b-nvfp4-ohne-mtp"), ("asr", "qwen3-asr-1.7b")):
+            with self.assertRaises(modelle.Fehler, msg=art) as e:
+                modelle.wechsel_pruefen(art, mid, self.cfg(), 120, self.kat)
+            self.assertEqual(str(e.exception), "mischbetrieb")
+        with self.assertRaises(modelle.Fehler) as e:
+            modelle.messliste(["llm"], self.kat)
+        self.assertEqual(str(e.exception), "mischbetrieb")
+        import modellseite
+        self.assertIn("mischbetrieb aus", modellseite.GRUND["mischbetrieb"])
+
+    def test_the_shell_keeps_to_it(self):
+        with open(os.path.join(APP, "engine.sh"), encoding="utf-8") as f:
+            eng = f.read()
+        self.assertIn('mischbetrieb.py" sperrt "$ROLE"', eng)
+        self.assertLess(eng.index("mischbetrieb.py"), eng.index("LLM_ARGS=()"), "before any engine starts")
+        with open(os.path.join(APP, "speech-spark.sh"), encoding="utf-8") as f:
+            sh = f.read()
+        self.assertIn("mischbetrieb.py sperrt llm; then echo \"modelle: messung abgelehnt mischbetrieb\"", sh)
+        self.assertIn('[[ "$art" =~ ^(asr|tts)$ ]]', sh, "root runs only switches of Hören and Sprechen")
+        r = subprocess.run(["bash", "-n", os.path.join(APP, "speech-spark.sh")], capture_output=True)
+        self.assertEqual(r.returncode, 0, r.stderr)
+
+
+class Panel(unittest.TestCase):
+    """The panel computer: the language model off on purpose, no outage, a fixed sentence or the foreign service."""
+
+    def setUp(self):
+        for name, wert in (("mischbetrieb", lambda now=None: True), ("weg", lambda now=None: False)):
+            p = mock.patch.object(steuer, name, wert)
+            p.start()
+            self.addCleanup(p.stop)
+        p = mock.patch.object(llm, "fremd", lambda ccfg: None)
+        p.start()
+        self.addCleanup(p.stop)
+
+    def test_fixed_sentence_and_no_outage(self):
+        self.assertTrue(wartung.paused("llm"))
+        self.assertFalse(wartung.paused("asr"), "Hören goes on")
+        self.assertFalse(wartung.paused("tts"), "Sprechen goes on")
+        self.assertTrue(wartung.quiet("llm"))
+        self.assertEqual(wartung.sentence(), wartung.MISCHBETRIEB[0])
+        self.assertEqual(wartung.sentence(True), wartung.MISCHBETRIEB[1])
+
+    def test_a_foreign_service_answers_instead(self):
+        with mock.patch.object(llm, "fremd", lambda ccfg: {"id": "f1"}):
+            self.assertFalse(wartung.paused("llm"))
+
+    def test_ersatz_steps_in(self):
+        tmp = tempfile.mkdtemp(prefix="misch-fremd-")
+        self.addCleanup(shutil.rmtree, tmp, True)
+        with mock.patch.object(fremdmodell, "DATEI", os.path.join(tmp, "f.json")):
+            fid = fremdmodell.speichern("", "Alzeo", "http://192.168.178.171:30001/v1")
+            fremdmodell.geprueft(fid, "qwen3.8-27b")
+            fremdmodell.nutzung("", fid)
+            with mock.patch.object(llm, "fremd", FREMD), mock.patch.object(steuer, "mischbetrieb", lambda now=None: True), \
+                    mock.patch.object(steuer, "weg", lambda now=None: False), \
+                    mock.patch.object(llm.netguard, "allowed", lambda ip, port, level: None):
+                x = llm.fremd({"modelle_fremd": True})
+                self.assertEqual((x or {}).get("id"), fid, "Ersatz while the own model is off in Mischbetrieb")
+            with mock.patch.object(llm, "fremd", FREMD), mock.patch.object(steuer, "mischbetrieb", lambda now=None: False), \
+                    mock.patch.object(steuer, "weg", lambda now=None: False):
+                self.assertIsNone(llm.fremd({"modelle_fremd": True}))
+
+    def test_live_says_it(self):
+        with mock.patch.object(steuer, "remote", lambda cfg=None: True), \
+                mock.patch.object(steuer, "cached", lambda max_age=60, now=None: {"mischbetrieb": True, "einheiten": {}}):
+            self.assertTrue(steuer.for_live()["mischbetrieb"])
+        with open(os.path.join(APP, "panel", "live.py"), encoding="utf-8") as f:
+            self.assertIn("Mischbetrieb: nur Hören und Sprechen", f.read())
+
+
+if __name__ == "__main__":
+    unittest.main()

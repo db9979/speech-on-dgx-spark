@@ -66,6 +66,7 @@ GRUND = {"art": "Diese Art lässt sich nicht wechseln.", "unbekannt": "Das Model
          "revision": "Das Modell ist noch nicht gemessen. Auf dem Spark: sudo speech-spark modelle messen",
          "aus": "Erst auf das eigene Sprachmodell umziehen: sudo speech-spark modelle llm uebernehmen",
          "wahl": "Dieses Modell kommt nur zusammen mit einem anderen.", "schon": "Dieses Modell läuft schon.",
+         "mischbetrieb": "Der Spark ist im Mischbetrieb: erst auf dem Spark sudo speech-spark mischbetrieb aus.",
          "budget": "Zu knapp: mit diesem Modell bleibt weniger als die Reserve frei.",
          "keins": "Es gibt kein voriges Modell zum Zurückholen.", "frist": "Das vorige Modell ist älter als 7 Tage.",
          "wunsch": "ungültig", "ungeprueft": "Erst messen: sudo speech-spark modelle messen <id>",

@@ -13,6 +13,7 @@ update) are never sent there.
     logs(name, n)               the last log lines of a model unit, here or there
     modelle()                   what Zustand → Modelle needs from the model computer (checked), None without answer
     cached()                    the last status without asking (the Wartungspause reads the model computer's pause)
+    mischbetrieb()              another project has the model computer's GPU (mischbetrieb.py), from the last status
     weg()                       Notbetrieb: the model computer has not answered for GONE seconds
     stumm_s()                   seconds since it last answered (Zustand → Überblick → Rechner)
     for_live()                  the Live view's box „Modell-Rechner“: reachable, units active, version, pause
@@ -215,6 +216,16 @@ def cached(max_age=60, now=None):
     return d if d is not None and t and now - t <= max_age else None
 
 
+def mischbetrieb(now=None):
+    """Mischbetrieb (mischbetrieb.py on the model computer): another project has its GPU, the own language model, Bilder
+    and Musik are off on purpose, Hören and Sprechen go on. From the last status, never asks; False on one Spark."""
+    if not remote():
+        import mischbetrieb as mb
+        return mb.ist_an()
+    d = cached(now=now)
+    return bool(d and d.get("mischbetrieb") is True)
+
+
 def for_live(now=None):
     """Zustand → Live, box „Modell-Rechner“ (only with the models on another computer): kind, counts and status only."""
     if not remote():
@@ -226,7 +237,8 @@ def for_live(now=None):
              if isinstance(u, dict) and u.get("state") != "unknown" and u.get("da") is not False]   # installed ones only
     v = str(d.get("version") or "")
     out = {"on": True, "ok": True, "aktiv": sum(u.get("state") == "active" for u in units), "n": len(units),
-           "version": v if v.startswith("V") and len(v) <= 20 else "", "pause": bool((d.get("pause") or {}).get("on"))}
+           "version": v if v.startswith("V") and len(v) <= 20 else "", "pause": bool((d.get("pause") or {}).get("on")),
+           "mischbetrieb": d.get("mischbetrieb") is True}
     # Spark-Clients (mandanten.py): its API version only when it differs from this panel's, the open clients only when any
     api, cl = d.get("spark_api"), d.get("clients")
     if isinstance(api, int) and not isinstance(api, bool) and api != SPARK_API:

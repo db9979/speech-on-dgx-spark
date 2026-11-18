@@ -506,6 +506,7 @@ def messliste(was, kat=None):
     NVFP4 of it with the draft model and 16384 tokens per step, on request);
     no word means llm and sehen. Only models that run or were measured stay in the catalog (Dominik 2026-11-11)."""
     kat = katalog() if kat is None else kat
+    _mischbetrieb_frei("llm")         # Mischbetrieb (mischbetrieb.py): nothing is measured, the memory is the other project's
     was = list(was) or ["llm", "sehen"]
     wunsch = {"qwen36": ("qwen36-35b-a3b-nvfp4", "qwen36-35b-a3b-nvfp4-ohne-mtp"),     # Dominik 2026-10-18 „ja 1“
               "flash": ("qwen38-flash-next-fp4",),     # Docker; share 0.65 never started (tars 2026-10-21)
@@ -1601,6 +1602,17 @@ def mit_wechsel(cfg, art, m):
     return c
 
 
+def _mischbetrieb_frei(art, m=None, kat=None):
+    """Mischbetrieb (mischbetrieb.py, Dominik 2026-11-18 „1a“): no switch or measurement of its kinds, and Hören and
+    Sprechen never to a model bigger than its small one; raises Fehler("mischbetrieb")."""
+    import mischbetrieb
+    if not mischbetrieb.ist_an():
+        return
+    klein = (kat or {}).get(mischbetrieb.KLEIN.get(art, "")) or {}
+    if art in mischbetrieb.ARTEN or (m and klein and m.get("need_gib", 0) > klein.get("need_gib", 0)):
+        raise Fehler("mischbetrieb")
+
+
 def wechsel_pruefen(art, mid, cfg, total_gib, kat=None, messung=None, profil=None):
     """The fixed rules of a switch (the panel decides, never a model): a kind that switches, an entry of that kind from
     the catalog, for an own engine a pinned commit (catalog or measured), for the others an entry install.sh offers,
@@ -1612,6 +1624,7 @@ def wechsel_pruefen(art, mid, cfg, total_gib, kat=None, messung=None, profil=Non
     m = eintrag(mid, kat)
     if m["art"] != art:
         raise Fehler("art")
+    _mischbetrieb_frei(art, m, kat)
     if art in ROLLEN:
         if m["engine"] != "vllm":
             raise Fehler("engine")

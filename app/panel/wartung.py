@@ -60,6 +60,11 @@ CLIP_DAYS = 1                  # the speakers' sentence is made anew once a day 
 SHORT = ("Ich werde gerade aktualisiert und bin gleich wieder da.", "I am being updated right now and will be back shortly.")
 # Notbetrieb (plan Raspberry-Pi split B5): the model computer does not answer (off, restarting); its own file too
 NOTBETRIEB = ("Der Spark macht gerade Pause.", "The Spark is taking a break right now.")
+# Mischbetrieb (mischbetrieb.py, Dominik 2026-11-18 „1a“): another project has the model computer's GPU and no foreign model
+# service answers now
+MISCHBETRIEB = ("Mein Sprachmodell ist gerade abgeschaltet, weil der Spark für ein anderes Projekt rechnet. Bitte später "
+                "noch einmal.", "My language model is switched off right now because the Spark is working for another "
+                "project. Please try again later.")
 
 _cache = {"key": None, "state": None}
 _seen = {"since": None, "bad": False}   # what the loop already wrote into the journal
@@ -157,10 +162,34 @@ def notbetrieb():
         return False
 
 
+def _fremd_antwortet():
+    """A foreign model service answers for the language model now (llm.fremd: „Für alle“, or „Ersatz“ while the model
+    computer is gone or in Mischbetrieb): then the own model's pause, Notbetrieb or Mischbetrieb do not hold the chat."""
+    try:
+        import llm
+        return llm.fremd(load_config().get("chat", {})) is not None
+    except Exception:
+        return False
+
+
+def mischbetrieb():
+    """The model computer is in Mischbetrieb (steuer.mischbetrieb): its own language model is off on purpose."""
+    try:
+        import steuer
+        return steuer.mischbetrieb()
+    except Exception:
+        return False
+
+
 def paused(part):
     """True while this part (llm, asr, tts, bild) is paused and the admin switch is on, or in Notbetrieb; there the
-    speech recognition goes on when this computer's Parakeet hears (notbetrieb.hoert, chat.notbetrieb_asr)."""
+    speech recognition goes on when this computer's Parakeet hears (notbetrieb.hoert, chat.notbetrieb_asr). The
+    language model also while the model computer is in Mischbetrieb; never while a foreign model service answers."""
+    if part == "llm" and _fremd_antwortet():
+        return False
     if _pause(part):
+        return True
+    if part == "llm" and mischbetrieb():
         return True
     if not notbetrieb():
         return False
@@ -171,8 +200,9 @@ def paused(part):
 
 
 def quiet(part):
-    """The Dienst-Wächter and the watchdog leave the part alone: paused on purpose and its time not yet over."""
-    return _pause(part) and not state()["overdue"]
+    """The Dienst-Wächter and the watchdog leave the part alone: paused on purpose and its time not yet over, or the
+    language model off on purpose in Mischbetrieb."""
+    return (_pause(part) and not state()["overdue"]) or (part == "llm" and mischbetrieb())
 
 
 def left_min(now=None):
@@ -186,6 +216,8 @@ def sentence(en=False, now=None):
     _n["asked"] += 1
     if not state()["on"] and notbetrieb():
         return NOTBETRIEB[1 if en else 0]
+    if not _pause("llm") and mischbetrieb():
+        return MISCHBETRIEB[1 if en else 0]
     m = left_min(now)
     if state()["overdue"] or m < 1:
         return SHORT[1 if en else 0]

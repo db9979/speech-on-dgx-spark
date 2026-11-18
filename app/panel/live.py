@@ -2450,6 +2450,7 @@ def snapshot(view="admin", now=None):
             x["sub"] = (("nicht erreichbar" + (" · Notbetrieb" if mr.get("notbetrieb") else "")) if not mr.get("ok") else
                         f"{mr.get('aktiv', 0)} von {mr.get('n', 0)} Diensten aktiv" + (f" · {mr['version']}" if mr.get("version") else "")
                         + (" · Wartungspause" if mr.get("pause") else "")
+                        + (" · Mischbetrieb: nur Hören und Sprechen" if mr.get("mischbetrieb") else "")
                         + (f" · {mr['clients']} Spark-Clients" if mr.get("clients") else "")
                         + (f" · Spark-API {mr['api']}" if mr.get("api") else ""))
             rm = rb.get("modell") or {}   # Rechner: GPU, free memory and CPU of the model computer (numbers only)

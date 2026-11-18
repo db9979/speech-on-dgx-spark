@@ -528,6 +528,7 @@ Live overview, logs, watchers, backup, update, help and the admin pages.
 | `app/panel/loopwacht.py` | Hänge-Wächter des Panels: the panel answers every request on one event loop, so one piece of heavy work on it (2026-10-18: Ordner auslassen with thousands of … |
 | `app/mandanten.py` | Spark-Clients: other programs use the Spark's services with a key of their own, with rights, limits and a priority class, only in the home network. |
 | `app/panel/meldung.py` | Probleme melden: a problem report from the panel, the phone apps, Telegram, the voice and the speakers as an issue on GitHub, with anonymized log lines. |
+| `app/mischbetrieb.py` | Mischbetrieb: the DGX Spark serves another project (Alzeo, his Qwen project), and the Spark keeps only Hören and Sprechen there, with the small models, so th … |
 | `app/modellblick.py` | Modell-Rechner genau: what the computer with the models does right now, for the page Status → Summary → Model computer in detail (panel/modellgenau.py). |
 | `app/panel/modelleneu.py` | Neu verfügbar: once a day the panel asks Hugging Face's public list for the newest models of a few fixed publishers (modelle.NEU_HERAUSGEBER), checks them wi … |
 | `app/panel/modellgenau.py` | Status → Summary → Model computer in detail: what the computer with the models does right now and did lately. |
@@ -873,6 +874,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/meldungen` | Report drafts | – | no |
 | `state/mfa-admin.json` | Admin's second step | sealed | yes |
 | `state/migrated-chunk10` | One-time migration done | – | no |
+| `state/mischbetrieb.json` | Mischbetrieb: on or off, since when, the previous values and models of Hören and Sprechen | mode 0600 | no |
 | `state/mitschreib-links.json` | Write links for lists (hashes) | hashes only | yes |
 | `state/modelle-eigene.json` | The admin's own models (Hugging Face name, pinned commit, memory need) | – | no |
 | `state/modelle-geladen.json` | Models fetched with “Download only” (Hugging Face name, pinned commit, size) | – | no |
@@ -3242,7 +3244,7 @@ flowchart TD
 ```
 
 1. <a id="kn-llm-s1"></a>**Speech first**: When an answer starts and with every streamed piece the panel sets the mark „speech is running“. Background work on the model waits until 20 seconds after it and is cancelled as soon as somebody speaks; after 3 cancels it gives up for this time.
-2. <a id="kn-llm-s1w"></a>**Maintenance pause?**: When an admin paused the language model for an update, the panel does not ask it at all: the answer is a fixed sentence with the time left at once, the Weiche and System One do not ask either. Background work on the model waits until the pause ends and does not count that as a cancel. At the end of the time the pause only ends once the model answers 2 times in a row. With “Automatically on restart” the panel pauses by itself as soon as a language model service restarts or switches (at most 30 min) and goes on once the model answers again. When the model runs on another computer that does not answer (emergency mode, steuer.weg), the same holds with the sentence “The Spark is taking a break right now.”; the Dienst-Wächter still reports the outage. With Features → Emergency mode with Parakeet, Parakeet on the panel computer then hears, and fixed commands (Home Assistant, time, reminders) work without a model (notbetrieb.antwort).
+2. <a id="kn-llm-s1w"></a>**Maintenance pause?**: When an admin paused the language model for an update, the panel does not ask it at all: the answer is a fixed sentence with the time left at once, the Weiche and System One do not ask either. Background work on the model waits until the pause ends and does not count that as a cancel. At the end of the time the pause only ends once the model answers 2 times in a row. With “Automatically on restart” the panel pauses by itself as soon as a language model service restarts or switches (at most 30 min) and goes on once the model answers again. When the model runs on another computer that does not answer (emergency mode, steuer.weg), the same holds with the sentence “The Spark is taking a break right now.”; the Dienst-Wächter still reports the outage. With Features → Emergency mode with Parakeet, Parakeet on the panel computer then hears, and fixed commands (Home Assistant, time, reminders) work without a model (notbetrieb.antwort). In Mischbetrieb of the model computer (steuer.mischbetrieb: another project has the GPU) the own model is off on purpose: a fixed sentence, no outage alarm. While a foreign model service answers (llm.fremd), none of these pauses holds the question.
 3. <a id="kn-llm-s2"></a>**Connection for this answer**: Every answer has its own connection with the configured time limit (a value outside does not count) and five seconds to connect. When a key is set, it goes along as Bearer. The model is a fixed own service and does not go through the guard.
 4. <a id="kn-llm-s3"></a>**Model name**: When no model is configured, the panel asks /models and takes the first name, again every 120 seconds. The own LLM-Tor always names the same „sprachmodell“ there, whatever model runs; which one really runs it asks the engine itself and sends along in the field „modell“. Live, control centre, case display and computer view show that (llm.known_model), never only the setting.
 5. <a id="kn-llm-s4"></a>**Build the request**: The request streams, with length, temperature, top_p, top_k and presence_penalty from the settings (0 = the server's default; the quality test compares with Qwen's recommendation). Thinking is off unless „Think first“ is on. While a tool is chosen its own temperature applies. The server always reports at the end how much it read and wrote and how much came from its cache.
@@ -3980,7 +3982,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Seal**: vault.seal turns the value into „enc1:“ and a Fernet token (encrypted and protected against change). A value already sealed stays as it is.
 5. <a id="kn-state-s5"></a>**Write atomically**: common.write_json writes into a fresh temporary file next to it, never through a link, gives it the rights of the old file (a new one is readable for the service only) and then swaps it in one step. A crash in the middle leaves the old file whole.
 6. <a id="kn-state-s6"></a>**Read**: A sealed value is opened with the key. If the key does not fit (backup from another Spark), an empty value comes back and the account has to be entered again. Older unsealed values are read and sealed the next time they are saved.
-7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 52), otherwise the line gives its reason (dateien.STATE_LOCAL, 129). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
+7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 52), otherwise the line gives its reason (dateien.STATE_LOCAL, 130). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
 8. <a id="kn-state-s8"></a>**Move backup?**: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup.
 9. <a id="kn-state-s9"></a>**Fine when restoring?**: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays.
 10. <a id="kn-state-s10"></a>**Put in place with a way back**: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back.
@@ -3991,7 +3993,7 @@ flowchart TD
 #### Numbers (from the code)
 
 - **52** files in every backup ([step 7](#kn-state-s7))
-- **129** files and folders that stay out with a reason ([step 7](#kn-state-s7))
+- **130** files and folders that stay out with a reason ([step 7](#kn-state-s7))
 - **8 MB** largest file when restoring ([step 9](#kn-state-s9))
 - **12** characters the move password has at least ([step 8](#kn-state-s8))
 

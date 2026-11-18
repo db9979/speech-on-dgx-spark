@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.525** Mischbetrieb: der DGX Spark rechnet für ein anderes Projekt, der Assistent hört und spricht weiter
 - **V01.1.524** Alzeo als fremder Modell-Dienst: mehrere geprüfte Modelle, das Panel folgt der laufenden Lane
 - **V01.1.523** Spark-Konsole bei Spark allein: Einbetten und Nachsortieren als GPU-Dienste für Programme wie Open WebUI, Hilfsmodell wählbar
 - **V01.1.522** Rot-Fix: Hilfe-Kopie der Doku nach V01.1.521 neu erzeugt
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.518** Spark-Konsole neu geordnet: vier Bereiche in einer Seitenleiste (am Handy unten), Überblick mit einem Satz und Verlaufskacheln, Modelle und Verbindungen als Liste und Detail, Wartung mit Updates und Logs, hell und dunkel nach System
 - **V01.1.517** ROT-FIX: drei Selbsttests setzen ihre Schalter selbst und hängen nicht mehr von der Uhrzeit ab
 - **V01.1.516** Nachtlauf: kein irreführendes „Nicht ganz aktuell“, Käfer übergeht harmlose Browser-Meldung, lange Termin-Notizen scrollen
-- **V01.1.515** Spark-Konsole: GGUF-Zeile nur bei Bildern und Musik
 
 
 

@@ -43,6 +43,7 @@
 #   speech-spark systemupdate [status]|pruefen  System-Updates: this computer's apt state, or check now (apt update, simulate)
 #   speech-spark systemupdate einspielen|neustart  the fixed apt run of the panel's „Jetzt einspielen“, or the restart it needs
 #   speech-spark gputakt [status]|setzen  GPU-Taktgrenze: the chosen and the set clock cap, or set it again now
+#   speech-spark mischbetrieb [status]|an|aus  Mischbetrieb: another project gets the GPU, the Spark keeps Hören and Sprechen
 #   speech-spark clients [liste]|an [netz …]|aus|neu <name> <rechte> [klasse]|sperren|entsperren|weg <id>  Spark-Clients
 #   speech-spark konsole [status]|an <netz> [netz …]|aus  Spark-Konsole: own web page https://<ip>:31010, home network only
 set -euo pipefail
@@ -453,6 +454,7 @@ mess_restore() {
 # inside the unit $MESS_UNIT (or $MESS_WUNSCH_UNIT), as root: $@ = catalog ids
 cmd_messen_intern() {
   local mid repo rev commit out rc minutes image ids=() commits=()
+  if as_panel_user ../mischbetrieb.py sperrt llm; then echo "modelle: messung abgelehnt mischbetrieb"; return 1; fi
   MESS_LLM=(); MESS_PAUSE=0
   for mid in "$@"; do
     repo=$(as_panel_user ../modelle.py feld "$mid" repo) && rev=$(as_panel_user ../modelle.py feld "$mid" revision) \
@@ -1351,6 +1353,48 @@ gputakt_setzen() {
   fi
 }
 
+# Mischbetrieb (app/mischbetrieb.py, Dominik 2026-11-18 „1a 2a 3a“): the DGX serves another project (Alzeo), the Spark
+# keeps Hören and Sprechen with the small models. The Python part changes the configuration and names the switches;
+# root stops and disables the fixed units it lists and runs only `modelle wechseln asr|tts <catalog id>`
+cmd_mischbetrieb() {
+  local zeile art mid u out zeilen=()
+  case "${1:-status}" in
+    status) as_panel_user ../mischbetrieb.py status ;;
+    an|aus)
+      need_root mischbetrieb "$1"
+      for u in "$WECHSEL_UNIT" "$MESS_UNIT" "$MESS_WUNSCH_UNIT" speech-spark-update; do
+        im_gang "$u" && die "$u is running; try again afterwards"
+      done
+      if [ "$1" = an ]; then
+        echo "Mischbetrieb an: das eigene Sprachmodell, Bilder, Musik und VoiceDesign gehen aus, Hören und Sprechen nehmen die kleinen Modelle."
+        ask_yes "${2:-}"
+      fi
+      out=$(as_panel_user ../mischbetrieb.py "$1") || die "mischbetrieb: abgelehnt"
+      grep '^modelle: ' <<<"$out" || true
+      mapfile -t zeilen < <(grep '^wechsel ' <<<"$out" || true)
+      if [ "$1" = an ]; then
+        while read -r u; do
+          [[ "$u" =~ ^speech-spark-[a-z-]{2,30}$ ]] || continue
+          systemctl disable --now "$u.service" >/dev/null 2>&1 || true
+        done < <(as_panel_user ../mischbetrieb.py einheiten)
+        echo "modelle: mischbetrieb einheiten aus"
+      fi
+      for zeile in "${zeilen[@]}"; do
+        read -r _ art mid <<<"$zeile"
+        [[ "$zeile" == "wechsel "* ]] && [[ "$art" =~ ^(asr|tts)$ ]] && [[ "$mid" =~ ^[a-z0-9][a-z0-9.-]{1,47}$ ]] || continue
+        run_wechsel "$art" "$mid" || echo "modelle: mischbetrieb wechsel $art fehler"
+      done
+      systemctl is-active --quiet speech-spark-tlstor 2>/dev/null && systemctl restart speech-spark-tlstor || true
+      if [ "$1" = aus ]; then
+        echo "Mischbetrieb aus. Damit das eigene Sprachmodell, Bilder und Musik wieder starten: sudo speech-spark update"
+      else
+        echo "Mischbetrieb an. Jetzt kann das andere Projekt den Speicher nutzen; zurück mit: sudo speech-spark mischbetrieb aus"
+      fi
+      ;;
+    *) die "speech-spark mischbetrieb [status]|an [--yes]|aus" ;;
+  esac
+}
+
 cmd_gputakt() {
   case "${1:-status}" in
     intern) [ "${INVOCATION_ID:-}" ] || die "only inside its own unit"; [ -x "$GPU_NVSMI" ] || { echo "gputakt: ohne gpu"; return 0; }; gputakt_setzen ;;
@@ -1411,6 +1455,7 @@ case "${1:-}" in
   wissen) shift; cmd_wissen "$@" ;;
   systemupdate) shift; cmd_systemupdate "$@" ;;
   gputakt) shift; cmd_gputakt "$@" ;;
+  mischbetrieb) shift; cmd_mischbetrieb "$@" ;;
   clients) shift; need_root clients "$@"; as_panel_user ../mandanten.py "$@" ;;
   konsole) shift; need_root konsole "$@"; cmd_konsole "$@" ;;   # Spark-Clients (mandanten.py): as the service user
   lokal) shift; cmd_lokal "$@" ;;
