@@ -770,6 +770,16 @@ WAERTER_PORT = 31007
 NOTASR_PORT = 31009
 NOTASR_IDLE = 600      # seconds without a recording before Parakeet gives its memory back
 ASR_UMWEG = None       # set by panel/notbetrieb.py: callable(cfg) -> True while this computer's Parakeet hears
+# Pi-Stimme (plan alzeo-mischbetrieb M4, pistimme.py): the Piper voice Thorsten on this computer's CPU speaks while the
+# model computer's speech output is gone (Notbetrieb) or given away by its Speicher-Wache (Mischbetrieb)
+NOTTTS_PORT = 31022
+NOTTTS_IDLE = 600      # seconds without a sentence before the voice gives its memory back
+TTS_UMWEG = None       # set by panel/notbetrieb.py: callable(cfg) -> True while this computer's voice speaks
+
+
+def ist_pistimme(url):
+    """The address goes to this computer's Pi-Stimme (its sound is never kept as another voice's)."""
+    return str(url).startswith(f"http://127.0.0.1:{NOTTTS_PORT}/")
 WAERTER_KEY = os.path.join(STATE, "waerter.key")
 WARTUNG_FILE = os.path.join(STATE, "wartung.json")   # the Wartungspause (panel/wartung.py); on the model computer its wish
 
@@ -1123,6 +1133,8 @@ def model_url(art, path="", cfg=None):
     cfg = load_config() if cfg is None else cfg
     if art == "asr" and ASR_UMWEG is not None and ASR_UMWEG(cfg):   # Notbetrieb: the model computer is gone
         return f"http://127.0.0.1:{NOTASR_PORT}{path}"
+    if art == "tts" and TTS_UMWEG is not None and TTS_UMWEG(cfg):   # the model computer's speech output is gone
+        return f"http://127.0.0.1:{NOTTTS_PORT}{path}"
     host = model_host(cfg)
     port = WAERTER_PORT if art == "waerter" else int(cfg[MODEL_ARTS[art]]["port"])
     if model_local(cfg):

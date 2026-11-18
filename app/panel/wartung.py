@@ -39,6 +39,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))   # common.py, also as a script (speech-spark pause)
 import features  # noqa: E402
 import guard  # noqa: E402
+import steuer  # noqa: E402
 from common import WARTUNG_FILE, load_config, model_side, write_json  # noqa: E402
 
 FILE = WARTUNG_FILE
@@ -100,7 +101,6 @@ def _clean(d):
 def _fern(now=None):
     """The model computer's pause while its time runs (from its last status, never asked here), else None."""
     try:
-        import steuer
         if not steuer.remote():
             return None
         p = _clean((steuer.cached() or {}).get("pause") or {})
@@ -156,7 +156,6 @@ def notbetrieb():
     """Notbetrieb: the models run on another computer that has not answered lately (steuer.weg); every part counts
     as paused (the fixed sentence at once, background work waits), but the Dienst-Wächter reports it (not quiet)."""
     try:
-        import steuer
         return steuer.weg()
     except Exception:
         return False
@@ -175,7 +174,6 @@ def _fremd_antwortet():
 def mischbetrieb():
     """The model computer is in Mischbetrieb (steuer.mischbetrieb): its own language model is off on purpose."""
     try:
-        import steuer
         return steuer.mischbetrieb()
     except Exception:
         return False
@@ -184,7 +182,6 @@ def mischbetrieb():
 def stimme_frei():
     """Mischbetrieb's Speicher-Wache stopped Hören and Sprechen on the model computer for a while (steuer.stimme_frei)."""
     try:
-        import steuer
         return steuer.stimme_frei()
     except Exception:
         return False
@@ -192,7 +189,8 @@ def stimme_frei():
 
 def paused(part):
     """True while this part (llm, asr, tts, bild) is paused and the admin switch is on, or in Notbetrieb; there the
-    speech recognition goes on when this computer's Parakeet hears (notbetrieb.hoert, chat.notbetrieb_asr). The
+    speech recognition goes on when this computer's Parakeet hears (notbetrieb.hoert, chat.notbetrieb_asr), the speech
+    output when its Piper voice speaks (notbetrieb.spricht, chat.notbetrieb_tts). The
     language model also while the model computer is in Mischbetrieb; never while a foreign model service answers."""
     if part == "llm" and _fremd_antwortet():
         return False
@@ -200,17 +198,10 @@ def paused(part):
         return True
     if part == "llm" and mischbetrieb():
         return True
-    if part in ("asr", "tts") and stimme_frei():
-        if part == "asr":
-            import notbetrieb as nb
-            return not nb.hoert()
-        return True
-    if not notbetrieb():
-        return False
-    if part == "asr":
+    if part in ("asr", "tts") and (stimme_frei() or notbetrieb()):
         import notbetrieb as nb
-        return not nb.hoert()
-    return True
+        return not (nb.hoert() if part == "asr" else nb.spricht())
+    return notbetrieb()
 
 
 def quiet(part):
@@ -303,7 +294,6 @@ def end(why, now=None):
     now = time.time() if now is None else now
     s, f = _local(), _fern(now)
     if f and why == "weiter":
-        import steuer
         d = steuer.call("weiter")
         ok = isinstance(d, dict) and d.get("ok") is True
         print(f"wartung: modell-rechner weiter {'ok' if ok else 'fehler'}", flush=True)
@@ -353,7 +343,6 @@ async def tick(now=None, answers=_answers):
     row end it; not answering when the time is over: the pause stays, one push."""
     now = time.time() if now is None else now
     try:            # models on another computer: its status (with its pause) stays fresh without a question waiting
-        import steuer
         if steuer.remote():
             await asyncio.to_thread(steuer.status)
     except Exception as e:
@@ -422,7 +411,6 @@ def _look(unit):
     """(ActiveState, when it last became active) of a unit, None when it is not installed. A model unit on another
     computer: from its Wärter's status."""
     import core
-    import steuer
     if steuer._remote_unit(unit):
         u = ((steuer.status() or {}).get("einheiten") or {}).get(unit) or {}
         return None if u.get("state") in (None, "unknown") else (u["state"], str(u.get("eintritt", "")))
@@ -483,11 +471,12 @@ async def auto_tick(now=None, look=_look):
 async def clips_tick(now=None):
     """Keeps the speakers' file of the short sentence fresh while the speech output works (esp32.pause_clip)."""
     c = load_config().get("chat", {})
-    import steuer
     if not (admin_on() or steuer.remote()) or paused("tts") or not (c.get("esp32") or c.get("wyoming")):   # only with speakers or Assist
         return False
     import esp32
     import notbetrieb
+    if notbetrieb.spricht():   # the Pi-Stimme speaks now: the files keep the voice of the model computer
+        return False
     now = time.time() if now is None else now
     made = await esp32.make_pause_clips(now)
     return await notbetrieb.make_clips(now, lambda text: esp32.tts_stream("", text)) or made

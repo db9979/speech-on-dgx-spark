@@ -33,7 +33,7 @@ import re
 import threading
 import time
 
-from common import STATE
+from common import STATE, ist_pistimme
 
 BRIDGE_S = 6.0          # seconds after the question without any sound of the answer: the second sentence
 BRIDGE_AFTER_ACK_S = 10.0   # after an opening sentence the second one only after this long without a sound
@@ -760,6 +760,8 @@ async def record_missing(url, headers, tts_body, lang, texts=None, sleep=asyncio
     import httpx
     import stufe
     import vorrang
+    if ist_pistimme(url):   # the Pi-Stimme: never kept as this voice's clip
+        return 0
     texts = texts or all_texts(lang == "English", name)
     todo = []
     with _lock:

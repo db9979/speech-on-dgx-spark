@@ -248,9 +248,9 @@ def for_live(now=None):
              if isinstance(u, dict) and u.get("state") != "unknown" and u.get("da") is not False]   # installed ones only
     v = str(d.get("version") or "")
     out = {"on": True, "ok": True, "aktiv": sum(u.get("state") == "active" for u in units), "n": len(units),
-           "version": v if v.startswith("V") and len(v) <= 20 else "", "pause": bool((d.get("pause") or {}).get("on")),
-           "mischbetrieb": d.get("mischbetrieb") is True,
-           "stimme_frei": d.get("mischbetrieb") is True and d.get("mischbetrieb_frei") is True}
+           "version": v if v.startswith("V") and len(v) <= 20 else "", "pause": bool((d.get("pause") or {}).get("on"))}
+    if d.get("mischbetrieb") is True:   # Mischbetrieb (mischbetrieb.py): only when on, and whether its guard took the voice
+        out.update(mischbetrieb=True, stimme_frei=d.get("mischbetrieb_frei") is True)
     # Spark-Clients (mandanten.py): its API version only when it differs from this panel's, the open clients only when any
     api, cl = d.get("spark_api"), d.get("clients")
     if isinstance(api, int) and not isinstance(api, bool) and api != SPARK_API:

@@ -14,7 +14,10 @@ fixed rules, without any language model:
 Everything else keeps the fixed sentence (wartung.NOTBETRIEB). The speech output runs on the model computer too, so a
 speaker or Home Assistant hears these answers from files made while it was there (make_clips, in the loop of
 wartung.py): whole sentences and building blocks for the time and the count, never a name or a text of a profile.
-Browser and apps show the answer as text. Logs: "notbetrieb: …" with fixed words and numbers.
+Browser and apps show the answer as text. With the admin switch chat.notbetrieb_tts (Funktionen → Pi-Stimme, off by
+default) this computer speaks by itself instead (pistimme.py on 127.0.0.1:NOTTTS_PORT, common.model_url sends "tts"
+there while spricht() is true), also while the Speicher-Wache of the model computer gave its voice away. Logs:
+"notbetrieb: …" with fixed words and numbers.
 """
 import datetime
 import os
@@ -61,6 +64,23 @@ def hoert(cfg=None, now=None):
 
 
 common.ASR_UMWEG = hoert   # common.model_url: "asr" goes to this computer's Parakeet while it hears
+
+
+def stimme_an(c=None):
+    return features.admin_on("notbetriebtts", c)
+
+
+def spricht(cfg=None, now=None):
+    """The Pi-Stimme (pistimme.py, speech-spark-nottts) speaks: the models run elsewhere, the admin switched it on, and
+    their speech output is gone (Notbetrieb) or the Speicher-Wache gave it away (Mischbetrieb, steuer.stimme_frei)."""
+    try:
+        cfg = load_config() if cfg is None else cfg
+        return steuer.remote(cfg) and stimme_an(cfg.get("chat", {})) and (steuer.weg(now) or steuer.stimme_frei(now))
+    except Exception:
+        return False
+
+
+common.TTS_UMWEG = spricht   # common.model_url: "tts" goes to this computer's voice while it speaks
 
 
 def _blocks(en):
@@ -213,10 +233,13 @@ def files_ready(now=None):
 
 
 def for_live(now=None):
-    """Live: on or off, hearing or not, how many fixed commands and fixed sentences, files ready (only numbers)."""
+    """Live: on or off, hearing or not, how many fixed commands and fixed sentences, files ready, the Pi-Stimme on,
+    speaking and its voice there (only numbers and states)."""
     c = load_config()
     if not steuer.remote(c):
         return None
     have, need = files_ready()
+    import pistimme
     return {"on": admin_on(c.get("chat", {})), "hoert": hoert(c, now), "commands": _n["commands"], "fixed": _n["fixed"],
-            "files": have, "need": need}
+            "files": have, "need": need, "stimme": stimme_an(c.get("chat", {})), "spricht": spricht(c, now),
+            "stimme_da": pistimme.da()}

@@ -2461,6 +2461,9 @@ def snapshot(view="admin", now=None):
             if nbl.get("on"):   # Notbetrieb mit Parakeet: hearing or not, fixed commands, speaker files (numbers only)
                 x["sub"] += ((f" · Parakeet hört · {nbl.get('commands', 0)} Befehle · {nbl.get('fixed', 0)} feste Sätze")
                              if nbl.get("hoert") else f" · Notbetrieb-Sätze {nbl.get('files', 0)} von {nbl.get('need', 0)}")
+            if nbl.get("stimme"):   # Pi-Stimme: speaking now or ready, the voice there or missing (no text)
+                x["sub"] += (" · Pi-Stimme spricht" if nbl.get("spricht") else
+                             " · Pi-Stimme bereit" if nbl.get("stimme_da") else " · Pi-Stimme fehlt")
         if x["id"] in ("qwen", "modell"):   # Modell-Rechner genau (modellgenau.py): requests and tokens, numbers only
             x["sub"] += _genau(x["id"])
         if x["id"] == "panelrechner":   # Panel-Rechner: CPU, memory, temperature, disk (numbers only, no name)

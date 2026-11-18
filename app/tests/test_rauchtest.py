@@ -19,7 +19,7 @@ APP = helpers.APP
 # the scripts each front end starts (both kinds: the proxy in front of an engine, the transformers server)
 ENTRY = {"asr": ("asr_proxy.py", "asr_server.py"), "tts": ("tts_proxy.py", "tts_server.py"), "bild": ("bild_server.py",),
          "musik": ("musik_server.py",), "llmtor": ("llm_tor.py",), "tlstor": ("tlstor.py",), "waerter": ("tarswart.py",),
-         "notasr": ("asr_proxy.py",), "schirm": ("steuerzentrale.py",)}
+         "notasr": ("asr_proxy.py",), "nottts": ("pistimme.py",), "schirm": ("steuerzentrale.py",)}
 SAFE = re.compile(r"[A-Za-z0-9_][A-Za-z0-9_./-]*")
 
 
@@ -62,7 +62,7 @@ class Smoke(unittest.TestCase):
         for path in sorted(glob.glob(os.path.join(APP, "panel", "*.py"))):
             with self.subTest(module=os.path.basename(path)):
                 importlib.import_module(os.path.basename(path)[:-3])
-        for name in ("common", "textnorm", "tempo", "parakeet", "asr_proxy", "tts_proxy", "llm_tor", "einordnung", "modelle"):
+        for name in ("common", "textnorm", "tempo", "parakeet", "asr_proxy", "tts_proxy", "llm_tor", "einordnung", "modelle", "pistimme"):
             with self.subTest(module=name):
                 importlib.import_module(name)
 

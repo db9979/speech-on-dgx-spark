@@ -372,6 +372,7 @@ FEATURES = (
     F(**steckbrief.feature("wartung")),
     F(**steckbrief.feature("wartungauto")),
     F(**steckbrief.feature("notbetriebasr")),
+    F(**steckbrief.feature("notbetriebtts")),
     F(**steckbrief.feature("gehaeuse")),
     F(**steckbrief.feature("systemupdates")),
     F(**steckbrief.feature("systemnachtpanel")),

@@ -398,6 +398,7 @@ ADMIN_ON_OK = {
     "fernordner.py:on": "admin only: the folders of the paired systems on the admin's page, admin-only doors, no profile part",
     "wachposten.py:an": "admin only: notes to the admins in fixed words, no profile part",
     "schirm.py:admin_on": "admin only: the control centre on the panel computer's screen, no profile part",
+    "notbetrieb.py:stimme_an": "Spark-wide Pi voice on the panel computer; it only speaks the answers the model computer's voice would speak, no profile part",
     "notbetrieb.py:admin_on": "Spark-wide emergency mode with Parakeet on the panel computer; the fixed commands keep the turn's own rights (HA, reminders)",
     "weiche_abstimmen.py:an": "admin only: tuning the Weiche's words on its page, no profile part",
     "weiche_unklar.py:on": "admin only: whether the Weiche page says collecting is on; each turn asks features.allowed (wanted)",

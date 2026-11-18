@@ -361,6 +361,7 @@
     "wartung": false,
     "wartung_auto": false,
     "notbetrieb_asr": false,
+    "notbetrieb_tts": false,
     "gehaeuse": false,
     "system_updates": false,
     "spark_clients": false,

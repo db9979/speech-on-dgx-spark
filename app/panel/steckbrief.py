@@ -909,6 +909,12 @@ STECKBRIEFE = {
         ohne_werkzeug=("ohne", "notbetrieb.py: feste Befehle nach festen Regeln, nur im Notbetrieb, kein "
                                "Sprachmodell und kein Werkzeug"),
         begleiter="spark", nur_spark=True),
+    # pistimme.py: with the models on another computer, the Piper voice on this one speaks while theirs is gone
+    "notbetriebtts": Steckbrief(de="Pi-Stimme", en="Pi voice", gruppe="sec",
+        schalter=("notbetrieb_tts",), anleitung="notbetriebtts",
+        ohne_werkzeug=("ohne", "pistimme.py: spricht nur die Antworten, die sonst die Sprachausgabe des Modell-Rechners "
+                               "spräche; kein Sprachmodell und kein Werkzeug"),
+        begleiter="spark", nur_spark=True),
     # gehaeuse.py: the case of a panel computer (Pironman 5): OLED pages for the admin, status LEDs, fan thresholds
     "gehaeuse": Steckbrief(de="Gehäuse", en="Case", gruppe="sec", schalter=("gehaeuse",), anleitung="gehaeuse",
         ohne_werkzeug=("ohne", "gehaeuse.py: Anzeige und LEDs am Panel-Rechner nach festen Regeln, nur Zahlen und "

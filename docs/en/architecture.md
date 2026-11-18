@@ -112,6 +112,7 @@ flowchart TB
 | `speech-spark-tlstor` | the same ports with TLS | TLS-Tor of the model computer (only with the Spark split), plus `speech-spark-teilen-fw` and `speech-spark-clients-fw` (firewall anew for Spark clients) |
 | `speech-spark-konsole` | HTTPS 31010 | Spark-Konsole: the model computer's own web page (four areas: overview with model in detail, models, connections with clients and pair an assistant, maintenance with updates and logs), only from `konsole.netze`, only with `speech-spark konsole an`; with `speech-spark-koppelcode` (root shows a pairing code at a click, only with the door); on the panel computer `speech-spark-koppeln` (root pairs with name and code from Einstellungen → Spark) |
 | `speech-spark-notasr` | 127.0.0.1:31009 | Emergency mode with Parakeet on the panel computer while the model computer is gone |
+| `speech-spark-nottts` | 127.0.0.1:31022 | Pi voice on the panel computer when the model computer's speech output is gone or given away in Mischbetrieb |
 | `speech-spark-watch` | – | Watchdog, only without the panel |
 | `speech-spark-update` | – | Update, only on request |
 | `speech-spark-wechsel` | – | Switch one model (Status → Models), only on request |
@@ -636,6 +637,7 @@ Panel on its own computer, models on the DGX: pairing, TLS-Tor, Wärter and the 
 | `app/panel/gehaeuse.py` | Gehäuse. |
 | `app/panel/geraetebild.py` | Geräte-Bild: a picture of each computer on its card. |
 | `app/panel/notbetrieb.py` | Notbetrieb mit Parakeet. |
+| `app/pistimme.py` | Pi-Stimme: when the panel runs on a computer of its own and the model computer's speech output is gone (Notbetrieb) or given away by its Speicher-Wache (Misc … |
 | `app/panel/rechenteile.py` | Status → Summary → Computers, „Wer rechnet gerade“: which part inside the panel takes the CPU, next to the services of both computers (rechner.dienste_cpu). |
 | `app/rechner.py` | The values of one computer for Status → Summary → Computers: CPU, memory, disk, network, temperature, fan, power flags, running time, device and system name, … |
 | `app/panel/rechnerblick.py` | Status → Summary → Computers: when the panel and the models run on two computers (Spark teilen), both side by side: a tile each on top and a card each under … |
@@ -912,6 +914,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/openwebui.json` | Open WebUI: ids of key and MCP connection per profile | – | yes |
 | `state/panel-password` | Admin password (hash) | hash | yes |
 | `state/personen-vorrang.json` | Priority per profile | – | yes |
+| `state/pistimme` | Pi voice: the Piper voice Thorsten (sherpa-onnx package, checked against its pinned checksum) | – | no |
 | `state/praxistest-stand.json` | Hands-on test: per point the mark (works, problem, later) and the time | – | yes |
 | `state/quality-cases.json` | Own test questions | – | yes |
 | `state/quality-helfer.json` | Last comparison of helper model and language model | – | no |
@@ -3982,7 +3985,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Seal**: vault.seal turns the value into „enc1:“ and a Fernet token (encrypted and protected against change). A value already sealed stays as it is.
 5. <a id="kn-state-s5"></a>**Write atomically**: common.write_json writes into a fresh temporary file next to it, never through a link, gives it the rights of the old file (a new one is readable for the service only) and then swaps it in one step. A crash in the middle leaves the old file whole.
 6. <a id="kn-state-s6"></a>**Read**: A sealed value is opened with the key. If the key does not fit (backup from another Spark), an empty value comes back and the account has to be entered again. Older unsealed values are read and sealed the next time they are saved.
-7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 52), otherwise the line gives its reason (dateien.STATE_LOCAL, 130). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
+7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 52), otherwise the line gives its reason (dateien.STATE_LOCAL, 131). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
 8. <a id="kn-state-s8"></a>**Move backup?**: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup.
 9. <a id="kn-state-s9"></a>**Fine when restoring?**: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays.
 10. <a id="kn-state-s10"></a>**Put in place with a way back**: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back.
@@ -3993,7 +3996,7 @@ flowchart TD
 #### Numbers (from the code)
 
 - **52** files in every backup ([step 7](#kn-state-s7))
-- **130** files and folders that stay out with a reason ([step 7](#kn-state-s7))
+- **131** files and folders that stay out with a reason ([step 7](#kn-state-s7))
 - **8 MB** largest file when restoring ([step 9](#kn-state-s9))
 - **12** characters the move password has at least ([step 8](#kn-state-s8))
 

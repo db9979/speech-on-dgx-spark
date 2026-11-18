@@ -859,6 +859,9 @@ if [ "$PANEL_ONLY" = 1 ]; then   # Notbetrieb mit Parakeet: the model is there b
   { cat "$INSTALL_FROM/app/parakeet.py"; echo 'download()'; } \
     | sudo -u "$SVC_USER" HF_HOME="$VAR/hf" "$PREFIX/venv-panel/bin/python" - \
     || warn "Parakeet download failed; run sudo ./install.sh --mode panel again for the emergency mode"
+  say "Fetching the Pi voice for the emergency mode (~64 MB, checked against its pinned SHA-256)"
+  sudo -u "$SVC_USER" SPEECH_SPARK_STATE="$VAR/state" "$PREFIX/venv-panel/bin/python" "$INSTALL_FROM/app/pistimme.py" laden \
+    || warn "Pi voice download failed; run sudo ./install.sh --mode panel again for the Pi voice"
 fi
 if [ "$DOWNLOAD" = 1 ]; then
   # every speech model on its pinned commit from the catalog, only the allowed file kinds, then each file checked
@@ -1868,9 +1871,38 @@ PrivateTmp=yes
 [Install]
 WantedBy=multi-user.target
 EOF
+# Pi-Stimme (plan alzeo-mischbetrieb M4), only on the panel computer: the Piper voice Thorsten on 127.0.0.1:31022
+# (common.NOTTTS_PORT, app/pistimme.py); it speaks only while the model computer's speech output is gone or given away
+# and chat.notbetrieb_tts is on (panel/notbetrieb.py spricht), loads at the first sentence, unloads after 10 minutes
+cat >/etc/systemd/system/speech-spark-nottts.service <<EOF
+[Unit]
+Description=Speech on DGX Spark: Piper voice for the emergency mode (the model computer does not speak)
+After=network-online.target
+
+[Service]
+LogNamespace=speech-spark
+User=$SVC_USER
+Group=$SVC_USER
+WorkingDirectory=$PREFIX/app
+$common_env
+ExecStart=$PREFIX/venv-panel/bin/python $PREFIX/app/pistimme.py
+Restart=on-failure
+RestartSec=10
+MemoryMax=1G
+# speech output: like the speech services first (Dominik 2026-10-18), the last core stays for the system
+Nice=-5
+CPUWeight=1000
+IOWeight=1000
+CPUQuota=$PANEL_CPU
+NoNewPrivileges=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target
+EOF
 else
-  systemctl disable --now speech-spark-notasr.service 2>/dev/null || true
-  rm -f /etc/systemd/system/speech-spark-notasr.service
+  systemctl disable --now speech-spark-notasr.service speech-spark-nottts.service 2>/dev/null || true
+  rm -f /etc/systemd/system/speech-spark-notasr.service /etc/systemd/system/speech-spark-nottts.service
 fi
 # Hardware-Watchdog (Dominik 2026-10-18 "5a"), only on a Raspberry Pi: systemd tells the Pi's watchdog every few
 # seconds that it still runs; if the whole computer freezes, the watchdog restarts it after RuntimeWatchdogSec (15 s,
@@ -2224,7 +2256,7 @@ svc_print() {  # $1 = service: everything it runs from, as one stream (only hash
   done
   cat -- "$PREFIX"/venv-*/.pkgs "$PREFIX/venv-panel/.locked" 2>/dev/null || true
 }
-restart_front() {  # $1 = service (asr, tts, bild, musik, llmtor, tlstor, waerter, notasr or schirm)
+restart_front() {  # $1 = service (asr, tts, bild, musik, llmtor, tlstor, waerter, notasr, nottts or schirm)
   local fp mark="$PREFIX/.restart-$1"
   fp=$(svc_print "$1" | sha256sum | cut -c1-64)
   systemctl enable "speech-spark-$1.service" >/dev/null 2>&1
@@ -2282,7 +2314,7 @@ fi
 
 [ "$LLM_ON" = 1 ] && restart_front llmtor
 
-[ "$PANEL_ONLY" = 1 ] && restart_front notasr
+if [ "$PANEL_ONLY" = 1 ]; then restart_front notasr; restart_front nottts; fi
 # B9: the Steuerzentrale runs only while the admin switch is on (panel/schirm.py); an update restarts it then. Only a
 # screen: when it does not come back, the update goes on (the Dienst-Wächter reports it), it never stops the update.
 if systemctl is-active -q speech-spark-schirm.service 2>/dev/null; then

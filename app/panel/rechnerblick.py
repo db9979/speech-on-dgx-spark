@@ -44,7 +44,8 @@ RAM_MIN_GIB = 0.5      # GiB available memory on the panel computer (the model c
 DIENSTE_S = 15         # seconds the panel computer's unit states are kept
 # the model computer's parts shown as chips (its status "einheiten"), the panel computer's own units
 MODELL_TEILE = ("asr", "tts", "llm", "llmtor", "sehen", "helfer", "bild", "musik", "werkstatt")
-PANEL_UNITS = {"turn": "speech-spark-turn", "notasr": "speech-spark-notasr", "gehaeuse": "speech-spark-gehaeuse",
+PANEL_UNITS = {"turn": "speech-spark-turn", "notasr": "speech-spark-notasr", "nottts": "speech-spark-nottts",
+               "gehaeuse": "speech-spark-gehaeuse",
                "schirm": "speech-spark-schirm", "guacd": "speech-spark-guacd"}
 # the parts that run only for a job and then stop again: the image understanding (the LLM-Tor starts it for a picture
 # question), one Werkstatt order, the case's setup (Einrichten/Entfernen; the case itself runs in the panel). Resting

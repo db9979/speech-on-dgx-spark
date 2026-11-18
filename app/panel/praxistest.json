@@ -6721,6 +6721,14 @@
 "text": "Mischbetrieb an, dann in Alzeo eine Lane starten. Während sie startet, zeigt Zustand → Live beim Modell-Rechner „Hören und Sprechen pausieren“, der Assistent hört trotzdem (Parakeet auf dem Pi) und zeigt Antworten als Text; tars friert nicht ein. Etwa eine halbe Minute nach dem Start der Lane (mindestens 18 GiB frei) spricht der Assistent wieder.",
 "thread": "tars für Alzeo nutzen, Assistent behalten",
 "wichtig": true
+},
+{
+"id": "P970",
+"v": 1527,
+"titel": "Pi-Stimme spricht, wenn tars schweigt",
+"text": "Auf dem Pi: sudo ./install.sh --mode panel (holt die Stimme, im Protokoll „notbetrieb: pistimme laden ok“). Funktionen → Pi-Stimme an. Auf tars die Sprachausgabe stoppen (oder Mischbetrieb an und eine Alzeo-Lane starten): eine Frage im Panel wird mit der Stimme Thorsten gesprochen, Zustand → Live zeigt „Pi-Stimme spricht“. Läuft die Sprachausgabe auf tars wieder, kommt die gewohnte Stimme zurück, und die Sätze der Rückmeldung klingen weiter wie vorher.",
+"thread": "tars für Alzeo nutzen, Assistent behalten",
+"wichtig": true
 }
 ]
 }

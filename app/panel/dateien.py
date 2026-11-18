@@ -391,6 +391,7 @@ DATEIEN = [
     state("wartung-satz-de.pcm", "Wartungssatz als Ton", "Maintenance sentence as sound", lokal="Wartungssatz für Lautsprecher, macht der Spark selbst neu"),
     state("wartung-satz-en.pcm", "Wartungssatz als Ton (Englisch)", "Maintenance sentence as sound (English)", lokal="Wartungssatz für Lautsprecher, macht der Spark selbst neu"),
     state("notbetrieb-satz-de.pcm", "Notbetrieb-Satz als Ton", "Emergency sentence as sound", lokal="Satz für Lautsprecher, wenn der Modell-Rechner fehlt; macht der Spark selbst neu"),
+    state("pistimme", "Pi-Stimme: die Piper-Stimme Thorsten (sherpa-onnx-Paket, gegen ihre feste Prüfsumme geprüft)", "Pi voice: the Piper voice Thorsten (sherpa-onnx package, checked against its pinned checksum)", lokal="lädt die Einrichtung des Panel-Rechners, gleich auf jedem Gerät"),
     state("notbetrieb-saetze", "Feste Sätze und Bausteine für den Notbetrieb als Ton", "Fixed sentences and building blocks for emergency mode as sound", lokal="Sätze für Lautsprecher, wenn der Modell-Rechner fehlt; macht der Spark selbst neu"),
     state("umzug-hinweis.json", "Hinweis nach dem Umzug (nur die Zeit)", "Hint after the move (time only)", lokal="gilt nur für den Rechner, auf den das Panel umgezogen ist (14 Tage)"),
     state("notbetrieb-satz-en.pcm", "Notbetrieb-Satz als Ton (Englisch)", "Emergency sentence as sound (English)", lokal="Satz für Lautsprecher, wenn der Modell-Rechner fehlt; macht der Spark selbst neu"),

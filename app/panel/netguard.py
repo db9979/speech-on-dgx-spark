@@ -117,6 +117,7 @@ DIRECT_OK = {
     "admin": ("sprachmodell", "Sprachmodell (/models), eigene Sprachdienste und der Suchtest an der eingetragenen SearXNG-Adresse"),
     "agent": ("sprachmodell", "Sprachmodell und SearXNG"),
     "android": ("fest", "App-Release von GitHub, Datei mit SHA-256 geprüft"),
+    "pistimme": ("fest", "Stimmpaket von GitHub (sherpa-onnx), nur bei der Einrichtung, Datei mit fester SHA-256 geprüft"),
     "apns": ("fest", "Apple-Push (api.push.apple.com); Notaus-Meldungen laufen selbst darüber"),
     "begleiter": ("fest", "Sprachausgabe auf localhost und Begleiter-Release von GitHub (SHA-256 geprüft)"),
     "spontansteuern": ("fest", "SparkHilfe-Release von GitHub (Verzeichnis signiert, sobald es einen Schlüssel gibt; jede Datei mit SHA-256 geprüft)"),

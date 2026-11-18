@@ -9,7 +9,7 @@
 #   speech-spark models            choose the models again (same questions as the first install)
 #   speech-spark update [--check]  update to the newest version (like the button in the panel)
 #   speech-spark logs [what] [-n N]  last log lines: asr, tts, asr-engine, tts-engine, tts-design, tts-klon, bild, musik,
-#                                  llm, llmtor, sehen, helfer, einbetten, nachsortieren, tlstor, waerter, notasr, schirm, panel, konsole, watch, update, messen, wechsel,
+#                                  llm, llmtor, sehen, helfer, einbetten, nachsortieren, tlstor, waerter, notasr, nottts, schirm, panel, konsole, watch, update, messen, wechsel,
 #                                  werkstatt, entwickeln or all (default)
 #   speech-spark panel enable|disable  add the web panel later, or remove it (its data stays)
 #   speech-spark notzugang [--yes]  locked out: new panel password, its second step and
@@ -227,12 +227,12 @@ cmd_logs() {
   [[ "$n" =~ ^[0-9]{1,5}$ ]] || die "-n needs a number"
   case "$what" in
     all) units=(-u 'speech-spark-*') ;;
-    asr|tts|asr-engine|tts-engine|tts-design|tts-klon|bild|musik|llm|llmtor|sehen|helfer|einbetten|nachsortieren|panel|konsole|watch|update|tlstor|waerter|notasr|schirm) units=(-u "speech-spark-$what") ;;
+    asr|tts|asr-engine|tts-engine|tts-design|tts-klon|bild|musik|llm|llmtor|sehen|helfer|einbetten|nachsortieren|panel|konsole|watch|update|tlstor|waerter|notasr|nottts|schirm) units=(-u "speech-spark-$what") ;;
     messen) units=(-u speech-spark-messen -u speech-spark-messen-wunsch -u speech-spark-messen-engine) ;;
     werkstatt) units=(-u speech-spark-werkstatt -u speech-spark-werkstatt-lauf) ;;
     entwickeln) units=(-u speech-spark-update -u speech-spark-lokaltest -u speech-spark-lokaltest-umgebung -u speech-spark-github) ;;
     wechsel) units=(-u speech-spark-wechsel -u speech-spark-llm -u speech-spark-sehen -u speech-spark-einbetten -u speech-spark-nachsortieren) ;;
-    *) die "logs: asr, tts, asr-engine, tts-engine, tts-design, tts-klon, bild, musik, llm, llmtor, sehen, helfer, einbetten, nachsortieren, tlstor, waerter, notasr, schirm, panel, konsole, watch, update, messen, wechsel, werkstatt, entwickeln or all" ;;
+    *) die "logs: asr, tts, asr-engine, tts-engine, tts-design, tts-klon, bild, musik, llm, llmtor, sehen, helfer, einbetten, nachsortieren, tlstor, waerter, notasr, nottts, schirm, panel, konsole, watch, update, messen, wechsel, werkstatt, entwickeln or all" ;;
   esac
   journalctl --namespace=speech-spark "${units[@]}" --no-pager -n "$n"
 }
@@ -1461,6 +1461,6 @@ case "${1:-}" in
   konsole) shift; need_root konsole "$@"; cmd_konsole "$@" ;;   # Spark-Clients (mandanten.py): as the service user
   lokal) shift; cmd_lokal "$@" ;;
   entwickeln) shift; cmd_entwickeln "$@" ;;
-  ""|-h|--help|help) sed -n '2,47p' "$0" | sed 's/^# \{0,1\}//' ;;
+  ""|-h|--help|help) sed -n '2,48p' "$0" | sed 's/^# \{0,1\}//' ;;
   *) die "unknown command: $1 (see: speech-spark help)" ;;
 esac

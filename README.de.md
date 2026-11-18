@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.527** Pi-Stimme: spricht der DGX Spark gerade nicht (weg oder Speicher-Wache), spricht der Panel-Rechner selbst mit der Piper-Stimme Thorsten; Admin-Schalter, ab Werk aus
 - **V01.1.526** Speicher-Wache im Mischbetrieb: startet das andere Projekt oder wird der Speicher knapp, geben Hören und Sprechen auf dem DGX Spark ihren Speicher frei, der Pi hört solange mit Parakeet
 - **V01.1.525** Mischbetrieb: der DGX Spark rechnet für ein anderes Projekt, der Assistent hört und spricht weiter
 - **V01.1.524** Alzeo als fremder Modell-Dienst: mehrere geprüfte Modelle, das Panel folgt der laufenden Lane
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.520** Füllsätze: abwechslungsreicher, ab und zu mit Namen, nur einer pro Antwort und im Auto nicht mehr abgebrochen
 - **V01.1.519** Gesperrte Dienste sofort ansagen: „Das Internet ist gerade gesperrt, versuch es später noch einmal“ statt „Ich schau nach“ und dann nichts
 - **V01.1.518** Spark-Konsole neu geordnet: vier Bereiche in einer Seitenleiste (am Handy unten), Überblick mit einem Satz und Verlaufskacheln, Modelle und Verbindungen als Liste und Detail, Wartung mit Updates und Logs, hell und dunkel nach System
-- **V01.1.517** ROT-FIX: drei Selbsttests setzen ihre Schalter selbst und hängen nicht mehr von der Uhrzeit ab
 
 
 
