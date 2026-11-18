@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older versions (V01.0.000 to V01.0.999 and the lines before version numbers): [CHANGELOG-V01.0.md](CHANGELOG-V01.0.md).
 
+- **V01.1.517** · 2026-11-18 · ROT-FIX: drei Selbsttests setzen ihre Schalter selbst und hängen nicht mehr von der Uhrzeit ab (Uhr-Tagesblick, Morgenbriefing in der ersten Runde, Tagesstart kurz vor Mitternacht)
 - **V01.1.516** · 2026-11-17 · Nachtlauf (Issues 16 bis 19 in spark-meldungen): „Nicht ganz aktuell“ nennt Mails, Wetter und Pakete nur, wenn die Antwort davon spricht, und ein Suchtreffer mit Tag und Jahr im Titel zählt als von heute; der Käfer zählt die harmlose Browser-Meldung „ResizeObserver loop …“ nicht mehr; lange Termin-Notizen scrollen in der Karte (P957 bis P959)
 - **V01.1.515** · 2026-11-17 · Spark-Konsole, Eigenes Modell: die Zeile für eine GGUF-Datei und ihre Grundvariante erscheint nur bei Bildern und Musik und zeigt nur die Grundvarianten dieser Art (Dominik: sie stand auch beim Sprachmodell, Bild und Musik gemischt)
 - **V01.1.514** · 2026-11-17 · Fremde Modell-Dienste: ein Sprachmodell eines anderen Rechners im Heimnetz (Ollama, LM Studio, OpenAI-Schnittstelle) unter Zustand → Modelle eintragen, vom Panel prüfen lassen (deutscher Satz, Werkzeugaufruf) und „Für alle“ oder als „Ersatz“ nutzen, solange der Modell-Rechner weg ist; nur eine IP im Heimnetz, netguard bei jeder Anfrage, der Schlüssel nie auf einer Seite, die eigenen Prüfungen bleiben beim eigenen Modell (P956)

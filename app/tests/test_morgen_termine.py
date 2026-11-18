@@ -79,6 +79,8 @@ class BriefingByName(unittest.TestCase):
             self.assertEqual(intent.classify(text).names, ["spark"], text)
 
     def test_first_round_reads_the_day(self):
+        # its own switches: other tests in the same run leave Gezielte Werkzeugwahl or Eindeutiges direkt abrufen off
+        helpers.set_config(routing=True, direct_read=True, public=False)
         a = profile("Briefingmensch")
         uid = a.get("/api/whoami").json()["profile"]["id"]
         calendars.add(uid, calendars.entry({"name": "Privat", "url": f"http://127.0.0.1:{helpers.CAL_PORT}/dav/",

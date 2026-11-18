@@ -1620,7 +1620,11 @@ class TagesstartTeile(unittest.TestCase):
         mail_briefing = mail.briefing
         self.saved.append((mail, "briefing", mail_briefing))
         mail.briefing = lambda uid: "Unread e-mails: none."
-        profiles.reminders = lambda uid: [{"due": (time.time() + 600) * 1000, "text": "Blumen gießen"}]
+        # a reminder of today at any hour: 10 minutes from now, or 10 minutes ago in the last minutes before midnight
+        # (the briefing takes reminders before tomorrow; at 23:55 "now + 600 s" would already be tomorrow)
+        later = datetime.datetime.now(zone) + datetime.timedelta(seconds=600)
+        due = time.time() + (600 if later.date() == datetime.datetime.now(zone).date() else -600)
+        profiles.reminders = lambda uid: [{"due": due * 1000, "text": "Blumen gießen"}]
 
         async def weather(uid, zone=None, private=True):
             return [("weather", "Wetter: sonnig")]

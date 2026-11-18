@@ -42,13 +42,15 @@ def code_of(setup):
 
 class Pebble(unittest.TestCase):
     def setUp(self):
-        helpers.set_config(pebble=True, deny={})
+        # public=False: a guest access left on by another test would let a watch key through assistant() without
+        # a profile (401 in _watch_prof instead of 503); every test here wants the key alone to decide
+        helpers.set_config(pebble=True, deny={}, public=False)
         pebblewatch._pending.clear()
         for k in [k for k in guard._rate if k[0] == "pair"]:   # every test client shares one address
             guard._rate.pop(k, None)
 
     def tearDown(self):
-        helpers.set_config(pebble=False, face="robot", deny={}, pebble_health=False, chats=False)
+        helpers.set_config(pebble=False, face="robot", deny={}, pebble_health=False, chats=False, public=False)
 
     def watch_of(self, name):
         """A paired watch of a new profile: (its client, the key header, the profile's id)."""
@@ -95,8 +97,8 @@ class Pebble(unittest.TestCase):
         finally:
             helpers.set_config(reminders=True, memory=True)
         helpers.set_config(pebble=False)   # the watch off: its key asks nothing, the profile stores no commands
-        try:
-            self.assertEqual(app.get("/api/watch/sync", headers=h).status_code, 401)
+        try:   # "not now" (503) like every switched-off device key, the pairing stays (V01.0.388)
+            self.assertEqual(app.get("/api/watch/sync", headers=h).status_code, 503)
             self.assertEqual(a.put("/api/profile/pebble/quick", json={"quick": ["Licht an"]}).status_code, 403)
         finally:
             helpers.set_config(pebble=True)
@@ -490,7 +492,7 @@ class Pebble(unittest.TestCase):
             helpers.set_config(pebble=False)
             self.assertEqual(app.get("/api/watch/poll?id=nope", headers=h).status_code, 503)
         finally:
-            helpers.set_config(public=True)
+            helpers.set_config(public=False)
 
     def test_report_line_only_numbers_and_fixed_words(self):
         job = watch.Job(speak=True)
@@ -506,6 +508,7 @@ class Pebble(unittest.TestCase):
         self.assertNotIn("<script>", line)
         # once per answer
         watch.JOBS[job.id] = job
+        helpers.set_config(public=True)   # the phone reports without a login here: guest access on, set by this test
         try:
             c = TestClient(panel.app)
             self.assertTrue(c.post("/api/watch/report", json={"id": job.id, "outcome": "ok"}).json()["ok"])
