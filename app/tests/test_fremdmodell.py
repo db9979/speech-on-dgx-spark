@@ -51,10 +51,51 @@ class Regeln(Ablage):
                           ("ftp://192.168.178.20:21/v1", "adresse"), ("http://u:p@192.168.178.20:1234/v1", "adresse"),
                           ("http://192.168.178.20:1234/v2", "adresse"), ("http://192.168.178.20:1234/v1?x=1", "adresse"),
                           ("http://8.8.8.8:1234/v1", "heimnetz"), ("http://127.0.0.1:11434/v1", "heimnetz"),
-                          ("http://169.254.1.1:1234/v1", "heimnetz"), ("http://192.168.178.20:31006/v1", "port")):
+                          ("http://169.254.1.1:1234/v1", "heimnetz")):
             with self.assertRaises(fremdmodell.Fehler, msg=url) as e:
                 fremdmodell.basis(url)
             self.assertEqual(str(e.exception), wort, url)
+
+    def test_several_checked_models_and_the_lane_follows(self):
+        """Alzeo serves one model at a time (Dominik 2026-11-18 „1a“): the panel takes the first checked model the
+        service lists now, skips the service while it lists none or does not answer, and goes back by the same rule."""
+        fid = fremdmodell.speichern("", "Alzeo", "http://192.168.178.171:30001/v1", "alzeo-key")
+        fremdmodell.geprueft(fid, "qwen3.8-27b")
+        fremdmodell.geprueft(fid, "nemotron-3.5-bolt")
+        fremdmodell.nutzung(fid, "")
+        x = fremdmodell.finde(fremdmodell.stand(), fid)
+        self.assertEqual(fremdmodell.lanes(x), ["qwen3.8-27b", "nemotron-3.5-bolt"])
+        self.assertIsNone(fremdmodell.folgen(fid, ["nemotron-3.5-bolt"]), "the model in use is listed: no change")
+        self.assertEqual(fremdmodell.folgen(fid, ["qwen3.8-27b"]), "qwen3.8-27b")
+        self.assertEqual(fremdmodell.ziel(True, False)["modell"], "qwen3.8-27b")
+        self.assertIsNone(fremdmodell.folgen(fid, ["kolibri-1"]), "an unchecked lane is never taken")
+        fremdmodell.STATUS[fid] = {"ok": False, "wort": "fehlt"}
+        self.assertIsNone(fremdmodell.ziel(True, False), "no checked lane listed: the own model answers")
+        fremdmodell.STATUS[fid] = {"ok": True, "wort": ""}
+        self.assertEqual(fremdmodell.ziel(True, False)["id"], fid)
+        # a changed file behind the panel's back: a lane whose signature does not fit is no lane
+        with open(fremdmodell.DATEI) as f:
+            raw = json.load(f)
+        raw["dienste"][0]["lanes"]["nemotron-3.5-bolt"] = "0" * 16
+        with open(fremdmodell.DATEI, "w") as f:
+            json.dump(raw, f)
+        self.assertIsNone(fremdmodell.folgen(fid, ["nemotron-3.5-bolt"]))
+        # another address: every check is gone
+        fremdmodell.speichern(fid, "Alzeo", "http://192.168.178.172:30001/v1")
+        self.assertEqual(fremdmodell.lanes(fremdmodell.finde(fremdmodell.stand(), fid)), [])
+        for i in range(fremdmodell.LANES_MAX + 2):
+            fremdmodell.geprueft(fid, f"m{i}")
+        self.assertEqual(len(fremdmodell.lanes(fremdmodell.finde(fremdmodell.stand(), fid))), fremdmodell.LANES_MAX)
+
+    def test_ersatz_when_fuer_alle_is_down(self):
+        a = fremdmodell.speichern("", "Alzeo", "http://192.168.178.171:30001/v1")
+        b = fremdmodell.speichern("", "Mac", MAC)
+        for x in (a, b):
+            fremdmodell.geprueft(x, "m1")
+        fremdmodell.nutzung(a, b)
+        fremdmodell.STATUS[a] = {"ok": False, "wort": "erreichbar"}
+        self.assertIsNone(fremdmodell.ziel(True, False))
+        self.assertEqual(fremdmodell.ziel(True, True)["id"], b)
 
     def test_usable_only_after_the_check_on_this_address_and_model(self):
         fid = fremdmodell.speichern("", "Mac Studio", MAC, "geheim-123")
@@ -242,6 +283,30 @@ class Endpunkte(Ablage):
         self.assertEqual((r.status_code, r.json()["wahl"], r.json()["ersatz"]), (200, fid, fid))
         self.assertEqual(self.admin.delete(f"/api/admin/modelle/fremd/{fid}").status_code, 200)
         self.assertEqual(fremdmodell.stand(), {"dienste": [], "wahl": "", "ersatz": ""})
+
+    def test_the_spark_own_services_are_refused_through_netguard(self):
+        helpers.set_config(modelle_fremd=True)
+        with mock.patch.object(fremdseite.netguard, "own_service", lambda ip, port: port == 31006):
+            r = self.admin.put("/api/admin/modelle/fremd", json={"name": "Tor", "url": "http://192.168.178.171:31006/v1"})
+            self.assertEqual(r.status_code, 400)
+            self.assertIn("Diensten des Sparks", r.text)
+            r = self.admin.put("/api/admin/modelle/fremd", json={"name": "Alzeo", "url": "http://192.168.178.171:30001/v1"})
+            self.assertEqual(r.status_code, 200, r.text)
+
+    def test_the_look_follows_the_lane(self):
+        """status_tick: Alzeo switched to another checked lane; the panel follows, logs fixed words only."""
+        helpers.set_config(modelle_fremd=True)
+        fid = fremdmodell.speichern("", "Alzeo", "http://192.168.178.171:30001/v1")
+        fremdmodell.geprueft(fid, "qwen3.8-27b")
+        fremdmodell.geprueft(fid, "nemotron-3.5-bolt")
+        for liste, modell, ok in ((("qwen3.8-27b",), "qwen3.8-27b", True), (("kolibri-1",), "qwen3.8-27b", False),
+                                  (("nemotron-3.5-bolt",), "nemotron-3.5-bolt", True)):
+            def client(x, timeout, liste=liste):
+                return httpx.AsyncClient(transport=httpx.MockTransport(dienst(modelle=liste)), timeout=timeout)
+            with mock.patch.object(fremdseite, "_client", client):
+                asyncio.run(fremdseite.status_tick())
+            x = fremdmodell.finde(fremdmodell.stand(), fid)
+            self.assertEqual((x["modell"], fremdmodell.STATUS[fid]["ok"]), (modell, ok), liste)
 
     def test_live_only_numbers(self):
         fremdmodell.speichern("", "Mac Studio", MAC, "geheim-123")

@@ -6696,5 +6696,14 @@
 "thread": "Spark-Website moderner und aufgeräumter gestalten",
 "test": "test_einbetten.NurAllein.test_switch_rules"
 }
+,
+{
+"id": "P967",
+"v": 1524,
+"titel": "Alzeo als fremden Modell-Dienst eintragen",
+"text": "Zustand → Modelle → Fremde Modell-Dienste: Alzeo mit http://<IP des DGX Spark>:30001/v1 und seinem Schlüssel eintragen (wird angenommen), eine Lane prüfen, in Alzeo auf eine zweite Lane wechseln und auch prüfen. Danach in Alzeo zurückwechseln: nach höchstens einer Minute zeigt die Karte „läuft:“ mit der neuen Lane, und Fragen gehen weiter.",
+"thread": "tars für Alzeo nutzen, Assistent behalten",
+"test": "test_fremdmodell.Endpunkte.test_the_look_follows_the_lane"
+}
 ]
 }

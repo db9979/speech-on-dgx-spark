@@ -250,7 +250,8 @@ function mdFremdKarte(x,d){const s=x.status||{},l=MD_FREMD_LISTE[x.id];
   const nutzung=[d.wahl===x.id?t('für alle','for everyone'):'',d.ersatz===x.id?t('Ersatz','fallback'):''].filter(Boolean).join(' · ');
   return `<div class="card"><b>${esc(x.name)}</b> <span class="pill">${esc(t('fremd, ungeprüft','foreign, unchecked'))}</span> ${st}`+
     `<div class="mut">${esc(x.url)} · ${esc(x.https?t('https','https'):t('ohne https: der Text geht unverschlüsselt durchs Heimnetz','without https: the text crosses the home network unencrypted'))}${x.schluessel?' · '+esc(t('mit Schlüssel','with key')):''}</div>`+
-    `<div class="row">${x.geprueft?`<span class="pill ok">${esc(t('geprüft: ','checked: ')+x.modell)}</span>`+(nutzung?` <span class="pill">${esc(nutzung)}</span>`:''):esc(t('Noch kein geprüftes Modell.','No checked model yet.'))}</div>`+
+    `<div class="row">${x.geprueft?`<span class="pill ok">${esc(t('läuft: ','running: ')+x.modell)}</span>`+(nutzung?` <span class="pill">${esc(nutzung)}</span>`:''):esc(t('Noch kein geprüftes Modell.','No checked model yet.'))}</div>`+
+    ((x.lanes||[]).length>1?`<div class="mut">${esc(t('Geprüft: ','Checked: ')+x.lanes.join(', ')+t('. Wechselt der Dienst auf eines davon, folgt der Spark von selbst.','. When the service switches to one of them, the Spark follows by itself.'))}</div>`:'')+
     (d.an?`<div class="row">`+(l?`<select id="mdfm_${esc(x.id)}" aria-label="${esc(t('Modell','Model'))}">${l.map(m=>`<option${m===x.modell?' selected':''}>${esc(m)}</option>`).join('')}</select> <button type="button" class="b sm" data-mdfp="${esc(x.id)}">${esc(t('Prüfen','Check'))}</button>`:
       `<button type="button" class="b sm" data-mdfl="${esc(x.id)}">${esc(t('Modelle holen','Get models'))}</button>`)+
       ` <button type="button" class="b sm danger" data-mdfx="${esc(x.id)}">${esc(t('Löschen','Delete'))}</button></div>`:'')+`</div>`}

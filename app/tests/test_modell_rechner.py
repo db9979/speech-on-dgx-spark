@@ -140,6 +140,16 @@ class Netguard(unittest.TestCase):
         self.assertIsNone(self.check("192.168.178.171", "192.168.178.171", 443), "other ports stay home network")
         self.assertIsNone(self.check("127.0.0.1", "192.168.178.171", 31001), "all-in-one: a LAN device like any")
 
+    def test_below_the_spark_ports_another_program_may_serve(self):
+        """Mischbetrieb (Dominik 2026-11-18 „1a“): Alzeo on the model computer serves its text lane on 30001 with its
+        own key; the Spark's services there are 31000-31099, so only those count as own ground. On this machine the
+        whole range 30000-31099 stays closed (an engine there may take no key)."""
+        self.assertIsNone(self.check("192.168.178.171", "192.168.178.171", 30001))
+        self.assertIsNotNone(self.check("192.168.178.171", "192.168.178.171", 31016))
+        self.assertIsNotNone(self.check("192.168.178.171", "127.0.0.1", 30001))
+        self.assertIsNotNone(self.check("192.168.178.171", "127.0.0.1", 30020))
+        self.assertTrue(netguard.SPARK_PORTS < netguard.OWN_PORTS)
+
     def test_a_name_is_looked_up(self):
         with mock.patch.object(netguard.socket, "getaddrinfo",
                                return_value=[(2, 1, 6, "", ("192.168.178.171", 0))]) as look:

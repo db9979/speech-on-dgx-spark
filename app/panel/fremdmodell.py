@@ -4,11 +4,16 @@ in addition to the own one („Für alle“) or only while the model computer is
 
 Fixed rules, the panel decides (Richtlinie Teil 2):
 - at most MAX services, each with a name, an address http(s)://<IP in the home network>:<port>/v1 (an IP, never a
-  name: no name can point elsewhere later; fremdseite and llm.py check it with netguard at every use), optionally a
-  key, and one model name the service listed itself;
+  name: no name can point elsewhere later; fremdseite and llm.py check it with netguard at every use, which also
+  refuses the Spark's own services, netguard.own_service), optionally a key, and the model names the service listed
+  itself;
 - usable only after the panel's own check (fremdseite.pruefen: the model in /v1/models, a German sentence, a tool
   call) on exactly this address and model: "geprueft" holds their signature, so a change of either needs the check
   again;
+- several checked models per service (lanes, at most LANES_MAX; Alzeo serves one model at a time and switches between
+  them, Dominik 2026-11-18 „1a“): when the service no longer lists the model in use, the panel takes the first checked
+  one it lists now (folgen, from fremdseite's look every minute) and goes back by the same rule; a service that does
+  not answer or lists no checked model is left out (ziel) until it does again;
 - „Für alle“ (wahl): the panel asks it instead of the own model; „Ersatz“ (ersatz): only while the model computer is
   gone (steuer.weg); the own model's checks (quality test, Probetag), System One and the helper model stay own.
 
@@ -30,7 +35,7 @@ ID = re.compile(r"^f[1-9]$")
 NAME_MAX = 30
 MODELL = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:/@+-]{0,127}$")     # Ollama "qwen3:30b-a3b", LM Studio "org/model"
 KEY = re.compile(r"^[\x21-\x7e]{1,200}$")
-EIGENE_PORTS = set(range(30000, 31100)) | {31443}                    # the Spark's own services (netguard.OWN_PORTS)
+LANES_MAX = 8          # checked models per service (Alzeo has about ten text lanes; one runs at a time)
 _lock = threading.Lock()
 STATUS = {}   # id -> {"ok", "wort", "ms", "tok_s", "t"}: the last look (fremdseite), in memory, never a key or a text
 
@@ -53,8 +58,6 @@ def basis(url):
         raise Fehler("adresse")
     if not ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_multicast or ip.is_unspecified:
         raise Fehler("heimnetz")
-    if port in EIGENE_PORTS:
-        raise Fehler("port")
     host = f"[{ip}]" if ip.version == 6 else str(ip)
     return f"{u.scheme}://{host}:{port}/v1"
 
@@ -70,13 +73,26 @@ def sig(d):
     return hashlib.sha256(f"{d.get('url', '')}|{d.get('modell', '')}".encode()).hexdigest()[:16]
 
 
+def _lanes_gut(v):
+    return v is None or (isinstance(v, dict) and len(v) <= LANES_MAX
+                         and all(MODELL.match(str(k)) and isinstance(s, str) for k, s in v.items()))
+
+
 def _gut(d):
     try:
         return (isinstance(d, dict) and ID.match(str(d.get("id", ""))) and 1 <= len(str(d.get("name", ""))) <= NAME_MAX
                 and basis(d.get("url")) == d.get("url") and (not d.get("modell") or MODELL.match(str(d["modell"])))
-                and (not d.get("key") or KEY.match(str(d["key"]))))
+                and (not d.get("key") or KEY.match(str(d["key"]))) and _lanes_gut(d.get("lanes")))
     except Fehler:
         return False
+
+
+def lanes(x):
+    """The checked models of a service in the order they were checked: each signature must fit its address."""
+    out = [m for m, s in (x.get("lanes") or {}).items() if s == sig({"url": x.get("url", ""), "modell": m})]
+    if nutzbar(x) and x["modell"] not in out:
+        out.insert(0, x["modell"])   # a service checked before V01.1.524 has only "modell"
+    return out
 
 
 def stand(path=None):
@@ -105,14 +121,20 @@ def nutzbar(x):
     return bool(x and x.get("modell") and x.get("geprueft") == sig(x))
 
 
-def ziel(an, weg, path=None):
+def ziel(an, weg, path=None, status=None):
     """The service the panel asks now instead of the own language model, None for the own one. an: the admin switch
-    (features.admin_on "fremdmodelle"); weg: the model computer is gone (steuer.weg)."""
+    (features.admin_on "fremdmodelle"); weg: the model computer is gone (steuer.weg). „Für alle“ first, then „Ersatz“
+    while the model computer is gone; a service whose last look failed (STATUS ok False: no answer, no checked model
+    listed) is skipped until a look finds it again."""
     if not an:
         return None
+    status = STATUS if status is None else status
     d = stand(path)
-    x = finde(d, d["wahl"]) or (finde(d, d["ersatz"]) if weg else None)
-    return x if nutzbar(x) else None
+    for fid in (d["wahl"], d["ersatz"] if weg else ""):
+        x = finde(d, fid) if fid else None
+        if nutzbar(x) and (status.get(x["id"]) or {}).get("ok") is not False:
+            return x
+    return None
 
 
 def name_ok(name):
@@ -142,7 +164,8 @@ def speichern(fid, name, url, key=None, path=None):
         if any(y.get("url") == url and y["id"] != fid for y in d["dienste"]):
             raise Fehler("doppelt")
         if x.get("url") != url:
-            x.pop("modell", None)
+            for k in ("modell", "geprueft", "lanes"):
+                x.pop(k, None)
         x.update(name=name, url=url)
         if key is not None:
             x.pop("key", None)
@@ -161,9 +184,32 @@ def geprueft(fid, modell, path=None):
         x = finde(d, fid)
         if x is None:
             raise Fehler("unbekannt")
+        lz = {m: sig({"url": x["url"], "modell": m}) for m in lanes(x) if m != modell}
         x["modell"] = modell
         x["geprueft"] = sig(x)
+        if len(lz) >= LANES_MAX:
+            lz.pop(next(iter(lz)))   # the oldest check goes
+        lz[modell] = x["geprueft"]
+        x["lanes"] = lz
         _schreiben(d, path)
+
+
+def folgen(fid, namen, path=None):
+    """The service now lists namen (its /v1/models): when the model in use is not among them, take the first checked
+    model that is (fixed rule, never the model's own say). Returns the model taken, or None (nothing to change, or no
+    checked model listed: then the service waits, ziel skips it)."""
+    with _lock:
+        d = stand(path)
+        x = finde(d, fid)
+        if x is None or not x.get("modell") or x["modell"] in namen:
+            return None
+        neu = next((m for m in lanes(x) if m in namen), None)
+        if neu is None:
+            return None
+        x["modell"] = neu
+        x["geprueft"] = sig(x)
+        _schreiben(d, path)
+    return neu
 
 
 def nutzung(wahl, ersatz, path=None):
@@ -207,4 +253,4 @@ def zeigen(d, status=None):
     status = STATUS if status is None else status
     return [{"id": x["id"], "name": x["name"], "url": x["url"], "https": x["url"].startswith("https:"),
              "schluessel": bool(x.get("key")), "modell": x.get("modell", ""), "geprueft": nutzbar(x),
-             "status": status.get(x["id"])} for x in d["dienste"]]
+             "lanes": lanes(x), "status": status.get(x["id"])} for x in d["dienste"]]

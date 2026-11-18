@@ -4,11 +4,11 @@ from technik_seiten import S
 
 SEITEN = {
     "waechter": {
-        "stand": "2c26ff6727",
+        "stand": "b1503b6f5b",
         "bezug": {
             "notaus.AUTO": ["s4"], "netguard.allowed": ["s3", "s7", "s8"], "netguard.resolve": ["s2"],
             "netguard._Transport": ["s10", "s11"], "netguard._Capped": ["s11"], "netguard.same_site": ["s10"],
-            "netguard.own_addresses": ["s3"], "netguard.model_addresses": ["s3"], "netguard.IMAP4_SSL": ["s9"], "notaus.watch": ["s2"],
+            "netguard.own_addresses": ["s3"], "netguard.model_addresses": ["s3"], "netguard.own_service": ["s3"], "netguard.IMAP4_SSL": ["s9"], "notaus.watch": ["s2"],
             "live.outgoing": ["s2"], "regeln": ["s6", "s8"], "regel:immer": ["s3", "s4", "s7"],
             "netguard.hole_oeffentlich": ["s1", "s12"], "netguard.oeffentlich": ["s6"], "netguard.WEITER": ["s12"],
             "netproxy.Proxy": ["s1", "s9"], "ytquelle.erlaubt": ["s1"],
@@ -44,10 +44,14 @@ SEITEN = {
               ("Ports {netguard.OWN_PORTS|bereiche} hier", "ports {netguard.OWN_PORTS|bereiche} here"),
               ("Die Ports der eigenen Dienste sind auf dieser Maschine gesperrt: auf Loopback und auf jeder eigenen "
                "Adresse im LAN oder VPN (own_addresses liest sie jede Minute neu). Laufen die Modelle auf einem "
-               "anderen Rechner (models.host), gelten seine Adressen genauso (model_addresses).",
+               "anderen Rechner (models.host), sind dort die Ports {netguard.SPARK_PORTS|bereiche} gesperrt "
+               "(model_addresses); darunter darf dort ein anderes Programm laufen, etwa Alzeo auf 30001. "
+               "Die eine Regel ist own_service.",
                "The ports of the own services are closed on this machine: on loopback and on every own address in "
                "the LAN or VPN (own_addresses reads them again every minute). When the models run on another "
-               "computer (models.host), its addresses count the same (model_addresses)."),
+               "computer (models.host), the ports {netguard.SPARK_PORTS|bereiche} are closed there "
+               "(model_addresses); below them another program may run there, such as Alzeo on 30001. "
+               "The one rule is own_service."),
               ("stop", "ja", ("Gesperrt", "Blocked"))),
             S("s4", "frage", ("Internet und Notaus an?", "Internet and kill switch on?"),
               ("ab Notaus-Stufe {notaus.STAGE.internet} kein Internet", "from kill switch stage {notaus.STAGE.internet} no internet"),
@@ -134,6 +138,7 @@ SEITEN = {
             ("{netguard.MAX_BYTES|mb}", ("größte Antwort", "largest answer"), "netguard.MAX_BYTES"),
             ("{netguard.WEITER}", ("Weiterleitungen je Abruf, jede neu geprüft", "redirects per fetch, each checked again"), "netguard.WEITER"),
             ("{netguard.OWN_PORTS|bereiche}", ("gesperrte eigene Ports", "closed own ports"), "netguard.OWN_PORTS"),
+            ("{netguard.SPARK_PORTS|bereiche}", ("gesperrte Ports auf dem Modell-Rechner", "closed ports on the model computer"), "netguard.SPARK_PORTS"),
             ("{notaus.AUTO.netguard.0}", ("Sperren in {notaus.AUTO.netguard.1|min} Minuten bis Notaus Stufe 1 (wenn an)",
                                           "blocks in {notaus.AUTO.netguard.1|min} minutes until kill switch stage 1 (if on)"), "notaus.AUTO"),
             ("{notaus.STAGE.internet}", ("Notaus-Stufe ohne Internet", "kill switch stage without internet"), "notaus.STAGE"),
@@ -208,6 +213,7 @@ SEITEN = {
         ],
         "code": [
             ("netguard.allowed", ("die Regel: nichts oder der Grund", "the rule: nothing or the reason")),
+            ("netguard.own_service", ("ein Dienst des Sparks selbst? hier und auf dem Modell-Rechner", "a service of the Spark itself? here and on the model computer")),
             ("netguard.resolve", ("einmal auflösen, jede Adresse prüfen, Live melden", "resolve once, check every address, tell Live")),
             ("netguard.client", ("der Zugang nach außen für Werkzeuge", "the way out for tools")),
             ("netguard.hole_oeffentlich", ("der eine Abruf einer öffentlichen Seite oder Datei", "the one fetch of a public page or file")),
@@ -692,7 +698,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ sicherheit (the model as a whole)
     "sicherheit": {
-        "stand": "11455b7c24",
+        "stand": "ddf91e1faa",
         "bezug": {
             "features.blocked": ["s5"], "geteilt.put": ["s5"], "mitschreiblink.find": ["s3", "s5"], "core.confirm_code": ["s3", "s8"], "core.CONFIRM_WINDOW": ["s3"], "guard.Slot": ["s3"],
             "notaus.STAGE": ["s2"], "vault.seal": ["s10"], "tarswart.check": ["s3"], "tarswart.COMMANDS": ["s3"], "sysupdate.wunsch_nehmen": ["s3"],

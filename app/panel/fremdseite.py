@@ -1,7 +1,8 @@
 """Zustand → Modelle, card „Fremde Modell-Dienste“ (plan katalogpaket-und-zwei-modellrechner.md E6, Dominik
 2026-11-17 „c“): an admin adds a language model another program in the home network serves through the OpenAI
-interface (Ollama, LM Studio), the panel checks it with fixed rules, and the admin uses it „Für alle“ or as „Ersatz“
-while the model computer is gone. The rules and the stored services are in fremdmodell.py; llm.py asks it.
+interface (Ollama, LM Studio, Alzeo), the panel checks it with fixed rules, and the admin uses it „Für alle“ or as
+„Ersatz“ while the model computer is gone. Every STATUS_S seconds it looks at each service; when the model in use is
+no longer listed and another checked one is (Alzeo switched its lane), it follows (fremdmodell.folgen). The rules and the stored services are in fremdmodell.py; llm.py asks it.
 
 Fixed rules (Richtlinie Teil 2): the address is an IP in the home network (fremdmodell.basis), every connection goes
 through netguard (HOME); the service's answers are data: the check looks only for fixed things (the model in the list,
@@ -27,7 +28,7 @@ from core import admin_code, auth
 MAX_BODY = 2048
 TIMEOUT = 60           # seconds for one answer of the check (a big model on a Mac may load first)
 LISTE_MAX = 200        # model names shown from /v1/models
-STATUS_S = 300         # seconds between two looks at the services while the switch is on
+STATUS_S = 60          # seconds between two looks at the services while the switch is on (a lane switch shows within)
 SATZ = ("Antworte mit genau einem kurzen deutschen Satz: Welche Farbe hat der Himmel an einem klaren Tag?")
 SATZ_WORT = "blau"
 _status = fremdmodell.STATUS   # the last look per service (fremdmodell.STATUS), never a key or a text
@@ -75,6 +76,16 @@ def _client(x, timeout):
     hdrs = {"Authorization": f"Bearer {x['key']}"} if x.get("key") else {}
     return netguard.client(netguard.HOME, headers=hdrs, timeout=httpx.Timeout(timeout, connect=5),
                            follow_redirects=False)
+
+
+def _darf(url):
+    """The Spark's own services are never a foreign service (netguard.own_service, the one rule), and netguard must
+    allow the address in the home network."""
+    ip, port = fremdmodell.ziel_ip({"url": url})
+    if netguard.own_service(ip, port):
+        raise fremdmodell.Fehler("port")
+    if netguard.allowed(ip, port, netguard.HOME) is not None:
+        raise fremdmodell.Fehler("netz")
 
 
 def _wort(e):
@@ -145,6 +156,9 @@ async def status_tick():
         try:
             names = await modelle_holen(x, 10)
             wort = "" if not x.get("modell") or x["modell"] in names else "fehlt"
+            if wort and fremdmodell.folgen(x["id"], names):   # another checked model runs now (Alzeo's lanes)
+                wort = ""
+                print(f"modelle: fremd {x['id']} folgt lane {len(fremdmodell.lanes(x))} geprueft", flush=True)
         except Exception as e:   # noqa: BLE001 - a broken service is a status, not a crash
             wort = _wort(e)
         alt = _status.get(x["id"]) or {}
@@ -189,7 +203,9 @@ async def fremd_speichern(request: Request, lang: str = "de"):
         print("modelle: fremd speichern aus", flush=True)
         _fehler("aus", lang)
     try:
-        fid = fremdmodell.speichern(str(body.get("id") or ""), body.get("name"), body.get("url"),
+        url = fremdmodell.basis(body.get("url"))
+        _darf(url)
+        fid = fremdmodell.speichern(str(body.get("id") or ""), body.get("name"), url,
                                     body["key"] if isinstance(body.get("key"), str) else None)
     except fremdmodell.Fehler as e:
         print(f"modelle: fremd speichern abgelehnt {e}", flush=True)

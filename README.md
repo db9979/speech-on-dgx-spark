@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.524** Alzeo as a foreign model service: several checked models, the panel follows the running lane
 - **V01.1.523** Spark console on a Spark alone: embeddings and re-ranking as GPU services for programs such as Open WebUI, the helper model to choose
 - **V01.1.522** Red fix: help copy of the docs regenerated after V01.1.521
 - **V01.1.521** Spark console: the overview also shows this computer's language model, LLM-Tor, helper model, vision, pictures and music
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.517** Red fix: three self-tests set their own switches and no longer depend on the time of day
 - **V01.1.516** Night run: no misleading "Not quite current", the ladybug ignores a harmless browser note, long appointment notes scroll
 - **V01.1.515** Spark console: GGUF row only for pictures and music
-- **V01.1.514** Foreign model services (Ollama, LM Studio) for everyone or as a fallback
 
 
 

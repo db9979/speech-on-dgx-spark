@@ -6,8 +6,10 @@ One place decides where such a connection may go (allowed):
 - USER (CalDAV, CardDAV, webcal, IMAP, SMTP): public addresses; addresses in the home network only when the
   admin allows it (panel.allow_lan, Einstellungen -> Sicherheit, default off).
 - HOME (Home Assistant, which lives in the home network): public and home network addresses.
-Never: link-local (169.254.x, cloud metadata), multicast, unspecified, and on this machine the ports
-of the Spark's own services (30000-31099). While the Notaus is on (notaus.py, stage 1 and up) also no
+Never: link-local (169.254.x, cloud metadata), multicast, unspecified, and the Spark's own services
+(own_service): on this machine the ports 30000-31099, on the model computer (models.host) the ports of the Spark's
+services 31000-31099 (below them another program may serve there, Alzeo's text lane on 30001, Dominik 2026-11-18).
+While the Notaus is on (notaus.py, stage 1 and up) also no
 public internet address at any level; the home network stays reachable as the level allows.
 
 The name is resolved once and the connection goes to exactly the checked address (a second lookup
@@ -38,7 +40,8 @@ import httpcore
 import httpx
 
 PUBLIC, USER, HOME = "public", "user", "home"
-OWN_PORTS = set(range(30000, 31100)) | {31443}   # the services' ports and the panel's https port
+SPARK_PORTS = set(range(31000, 31100)) | {31443}   # the Spark's services and the panel's https port
+OWN_PORTS = SPARK_PORTS | set(range(30000, 31000))  # on this machine also the range below (an engine there may take no key)
 _own = {"t": 0.0, "ips": set()}
 _model = {"host": "", "t": 0.0, "ips": set()}
 
@@ -200,13 +203,23 @@ def lan_allowed():
         return False
 
 
+def _ip(ip):
+    ip = ipaddress.ip_address(str(ip).split("%")[0])
+    return ip.ipv4_mapped if ip.version == 6 and ip.ipv4_mapped else ip
+
+
+def own_service(ip, port):
+    """True when ip:port is one of the Spark's own services: OWN_PORTS on this machine (loopback, unspecified, every
+    own address), SPARK_PORTS on the model computer (model_addresses)."""
+    ip, port = _ip(ip), int(port or 0)
+    return (port in OWN_PORTS and (ip.is_loopback or ip.is_unspecified or ip in own_addresses())
+            or port in SPARK_PORTS and ip in model_addresses())
+
+
 def allowed(ip, port, level):
     """None when a connection to ip:port is fine at this level, else the reason."""
-    ip = ipaddress.ip_address(str(ip).split("%")[0])
-    if ip.version == 6 and ip.ipv4_mapped:
-        ip = ip.ipv4_mapped
-    if int(port or 0) in OWN_PORTS and (ip.is_loopback or ip.is_unspecified or ip in own_addresses()
-                                     or ip in model_addresses()):
+    ip = _ip(ip)
+    if own_service(ip, port):
         return "the Spark's own services are not reachable this way"
     if ip.is_global:
         import notaus   # Notaus stage 1 and up: nothing to the internet (notaus.py)
