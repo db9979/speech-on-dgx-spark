@@ -168,7 +168,7 @@ def status():
     cfg = load_config()
     einheiten, gpu = einheiten_stand(list(WATCHED.values()), run), gpu_stats()
     return {"version": version(), "einheiten": einheiten, "gpu": gpu, "betrieb": _betrieb(einheiten, cfg, gpu),
-            "mem_avail_gib": mem, "mem_total_gib": total, "einstellungen": model_settings_hash(cfg), "modellwahl": model_choice(cfg), "pause": pause(),
+            "mem_avail_gib": mem, "mem_total_gib": total, "einstellungen": model_settings_hash(mischbetrieb.sicht(cfg)), "modellwahl": model_choice(cfg), "pause": pause(),
             "commit": str(installed_version().get("commit") or "")[:40], "update": _update_laeuft(), "update_pct": _update_pct(), "rechner": _rechner(),
             "uhr": uhr(), "spark_api": SPARK_API, "mischbetrieb": mischbetrieb.ist_an(),
             "mischbetrieb_frei": mischbetrieb.stimme_frei(),
@@ -214,6 +214,7 @@ def _rechner():
 def einstellen(daten):
     """Takes the panel's speech settings into this computer's config (atomic write); returns the new hash."""
     cfg = load_config()
+    daten = mischbetrieb.einstellen_merken(daten)   # while it is on: VoiceDesign and the clone engine stay off
     try:
         new = model_settings_take(cfg, daten, shipped())
     except ValueError as e:
@@ -226,7 +227,7 @@ def einstellen(daten):
     write_json(CONFIG_PATH, raw, indent=2)
     print("waerter: einstellen ok", flush=True)
     gputakt.anwenden(cfg, load_config(), "waerter")   # GPU-Taktgrenze: root's unit, only when the setting changed
-    return {"ok": True, "einstellungen": model_settings_hash(load_config())}
+    return {"ok": True, "einstellungen": model_settings_hash(mischbetrieb.sicht(load_config()))}
 
 
 def logs(teil, n):

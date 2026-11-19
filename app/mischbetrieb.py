@@ -39,7 +39,7 @@ DATEI = os.path.join(STATE, "mischbetrieb.json")
 # and the LLM-Tor answer only with llm.enabled; the image understanding and the helper start only through the LLM-Tor)
 AUS = {"llm": ("enabled",), "image": ("enabled",), "music": ("enabled",), "tts": ("voicedesign_enabled", "klon_enabled")}
 # Hören and Sprechen in Mischbetrieb (Dominik „3a“: the small ones, about 7 GiB together, more room for the other project)
-KLEIN = {"asr": "qwen3-asr-0.6b", "tts": "qwen3-tts-0.6b-base"}
+KLEIN = {"asr": "qwen3-asr-0.6b", "tts": "qwen3-tts-0.6b"}   # entries install.sh offers (field "wahl")
 # engine.sh roles that never start while it is on
 GESPERRT = ("llm", "sehen", "helfer", "einbetten", "nachsortieren", "design", "klon")
 # kinds of modelle.py that neither switch nor are measured while it is on
@@ -119,6 +119,46 @@ def aus(cfg, kat, path=None, roh=None, schreib=None):
                and modelle.jetzt_id(art, cfg, kat) != sprach[art]]
     print(f"modelle: mischbetrieb aus, {len(wechsel)} wechsel", flush=True)
     return wechsel
+
+
+def einstellen_merken(daten, path=None):
+    """The Wärter's „einstellen“ while it is on (V01.1.528): the panel computer sends its speech settings every minute,
+    VoiceDesign and the clone engine with them (tts.voicedesign_enabled, klon_enabled are no model choice), and they
+    came back on tars while it was on. Such a key of AUS is kept as the value „aus“ restores (vorher) instead; returns
+    the settings without them."""
+    d = stand(path)
+    if d.get("an") is not True or not isinstance(daten, dict):
+        return daten
+    vorher, rest, n = dict(d.get("vorher") or {}), {}, 0
+    for sec, vals in daten.items():
+        keys = AUS.get(sec, ())
+        if isinstance(vals, dict):
+            for k in keys:
+                if isinstance(vals.get(k), bool):
+                    vorher[sec] = dict(vorher.get(sec) or {}, **{k: vals[k]})
+                    n += 1
+            vals = {k: v for k, v in vals.items() if k not in keys}
+        rest[sec] = vals
+    if n:
+        write_json(path or DATEI, dict(d, vorher=vorher), indent=1, mode=0o600)
+    return rest
+
+
+def sicht(cfg, path=None):
+    """The configuration as the panel computer counts it while it is on: the keys of AUS with the values „aus“ restores,
+    so the hash of the speech settings (common.model_settings_hash) matches the panel's and it stops sending them."""
+    d = stand(path)
+    if d.get("an") is not True:
+        return cfg
+    out = json.loads(json.dumps(cfg))
+    from common import shipped
+    for sec, keys in AUS.items():
+        alt = (d.get("vorher") or {}).get(sec) or {}
+        for k in keys:
+            if sec in out and k in out[sec]:
+                v = alt.get(k)
+                out[sec][k] = v if isinstance(v, bool) else (shipped().get(sec) or {}).get(k, out[sec][k])
+    return out
 
 
 def startet(einheiten):

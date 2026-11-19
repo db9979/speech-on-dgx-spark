@@ -40,7 +40,7 @@ class Ablage(unittest.TestCase):
     def schreib(self, raw):
         self.geschrieben.append(json.loads(json.dumps(raw)))
 
-    def cfg(self, asr="Qwen/Qwen3-ASR-1.7B", tts="Qwen/Qwen3-TTS-12Hz-1.7B-Base"):
+    def cfg(self, asr="Qwen/Qwen3-ASR-1.7B", tts="Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice"):
         return {"llm": {"enabled": True, "modell": "qwen36-35b-a3b-nvfp4"}, "image": {"enabled": True},
                 "music": {"enabled": False}, "asr": {"enabled": True, "recognizer": "qwen", "model": asr},
                 "tts": {"enabled": True, "model": tts, "voicedesign_enabled": True}}
@@ -51,7 +51,7 @@ class AnAus(Ablage):
         roh = {"llm": {"enabled": True, "port": 31006}, "image": {"enabled": True, "variant": "4b-q8"},
                "tts": {"voicedesign_enabled": True}, "chat": {"llm_url": "x"}}
         wechsel = mischbetrieb.an(self.cfg(), self.kat, roh=json.loads(json.dumps(roh)), schreib=self.schreib, now=0)
-        self.assertEqual(wechsel, [("asr", "qwen3-asr-0.6b"), ("tts", "qwen3-tts-0.6b-base")])
+        self.assertEqual(wechsel, [("asr", "qwen3-asr-0.6b"), ("tts", "qwen3-tts-0.6b")])
         neu = self.geschrieben[-1]
         self.assertEqual((neu["llm"]["enabled"], neu["image"]["enabled"], neu["music"]["enabled"],
                           neu["tts"]["voicedesign_enabled"], neu["tts"]["klon_enabled"]), (False,) * 5)
@@ -60,16 +60,22 @@ class AnAus(Ablage):
         self.assertEqual(oct(os.stat(self.datei).st_mode & 0o777), "0o600")
         self.assertEqual(mischbetrieb.an(self.cfg(), self.kat, roh={}, schreib=self.schreib), [], "a second an: nothing")
         self.assertEqual(len(self.geschrieben), 1)
-        klein = self.cfg("Qwen/Qwen3-ASR-0.6B", "Qwen/Qwen3-TTS-12Hz-0.6B-Base")
+        klein = self.cfg("Qwen/Qwen3-ASR-0.6B", "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice")
         back = mischbetrieb.aus(klein, self.kat, roh=json.loads(json.dumps(neu)), schreib=self.schreib)
-        self.assertEqual(back, [("asr", "qwen3-asr-1.7b"), ("tts", "qwen3-tts-1.7b-base")])
+        self.assertEqual(back, [("asr", "qwen3-asr-1.7b"), ("tts", "qwen3-tts-1.7b")])
         self.assertEqual(self.geschrieben[-1], dict(roh, tts={"voicedesign_enabled": True}, music={}),
                          "exactly the old values; a value that was not set is gone again")
         self.assertFalse(mischbetrieb.ist_an())
         self.assertEqual(mischbetrieb.aus(klein, self.kat, roh={}, schreib=self.schreib), [])
 
+    def test_the_small_ones_can_be_the_main_model(self):
+        # V01.1.528: the Base entry is only for own voices (rolle), so the switch was refused with "wahl" on tars
+        for art, mid in mischbetrieb.KLEIN.items():
+            m = self.kat[mid]
+            self.assertEqual((m["art"], "rolle" in m, bool(m.get("wahl"))), (art, False, True), mid)
+
     def test_never_to_a_bigger_model(self):
-        klein = self.cfg("Qwen/Qwen3-ASR-0.6B", "Qwen/Qwen3-TTS-12Hz-0.6B-Base")
+        klein = self.cfg("Qwen/Qwen3-ASR-0.6B", "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice")
         self.assertEqual(mischbetrieb.an(klein, self.kat, roh={}, schreib=self.schreib), [])
 
     def test_engine_roles_and_units(self):
@@ -82,6 +88,42 @@ class AnAus(Ablage):
         self.assertIn("speech-spark-llm-docker", mischbetrieb.EINHEITEN)
         self.assertNotIn("speech-spark-tts-engine", mischbetrieb.EINHEITEN)
         self.assertNotIn("speech-spark-asr-engine", mischbetrieb.EINHEITEN)
+
+
+class PanelSendet(Ablage):
+    """V01.1.528: the panel computer sends its speech settings every minute; VoiceDesign and the clone engine came
+    back on tars while Mischbetrieb was on (3 TTS engines of 12.4 GiB). They stay off, the wish waits for „aus“."""
+
+    def test_voicedesign_and_klon_stay_off_and_wait_for_aus(self):
+        import common
+        roh = {"tts": {"voicedesign_enabled": True}}
+        mischbetrieb.an(self.cfg(), self.kat, roh=json.loads(json.dumps(roh)), schreib=self.schreib, now=0)
+        neu = self.geschrieben[-1]
+        daten = {"tts": {"voicedesign_enabled": True, "klon_enabled": True, "speed": 1.1}, "asr": {"language": "de"}}
+        rest = mischbetrieb.einstellen_merken(json.loads(json.dumps(daten)))
+        self.assertEqual(rest, {"tts": {"speed": 1.1}, "asr": {"language": "de"}}, "everything else goes on as before")
+        self.assertEqual(mischbetrieb.stand()["vorher"]["tts"], {"voicedesign_enabled": True, "klon_enabled": True})
+        cfg = json.loads(json.dumps(neu))
+        cfg["tts"]["speed"] = 1.1
+        sicht = mischbetrieb.sicht(cfg)
+        self.assertEqual((sicht["tts"]["voicedesign_enabled"], sicht["tts"]["klon_enabled"]), (True, True))
+        self.assertEqual((cfg["tts"]["voicedesign_enabled"], cfg["tts"]["klon_enabled"]), (False, False), "a copy")
+        self.assertEqual(common.model_settings_hash(sicht)[:4], common.model_settings_hash(
+            dict(cfg, tts=dict(cfg["tts"], voicedesign_enabled=True, klon_enabled=True)))[:4],
+            "the panel's hash matches: it stops sending")
+        mischbetrieb.aus(self.cfg(), self.kat, roh=json.loads(json.dumps(neu)), schreib=self.schreib)
+        self.assertEqual((self.geschrieben[-1]["tts"]["voicedesign_enabled"], self.geschrieben[-1]["tts"]["klon_enabled"]),
+                         (True, True), "„aus“ brings the panel's latest wish")
+        self.assertEqual(mischbetrieb.einstellen_merken(daten), daten, "off: nothing held back")
+        self.assertIs(mischbetrieb.sicht(cfg), cfg)
+
+    def test_the_waerter_keeps_to_it(self):
+        with open(os.path.join(APP, "tarswart.py"), encoding="utf-8") as f:
+            s = f.read()
+        body = s[s.index("def einstellen("):s.index("def logs(")]
+        self.assertLess(body.index("mischbetrieb.einstellen_merken(daten)"), body.index("model_settings_take("))
+        self.assertNotIn("model_settings_hash(cfg)", s)
+        self.assertNotIn("model_settings_hash(load_config())", s)
 
 
 class Wache(Ablage):

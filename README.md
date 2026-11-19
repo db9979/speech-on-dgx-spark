@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.528** Fix Mischbetrieb: Sprechen switches to Qwen3-TTS 0.6B (the Base model is only for own voices and was refused); VoiceDesign and the clone engine stay off although the Pi sends its settings
 - **V01.1.527** Pi voice: while the DGX Spark does not speak (gone or memory guard), the panel computer speaks by itself with the Piper voice Thorsten; admin switch, off by default
 - **V01.1.526** Mischbetrieb memory guard: while the other project starts or memory runs short, Hören and Sprechen on the DGX Spark give their memory back, the Pi hears with Parakeet meanwhile
 - **V01.1.525** Mischbetrieb: the DGX Spark works for another project, the assistant keeps listening and speaking
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.521** Spark console: the overview also shows this computer's language model, LLM-Tor, helper model, vision, pictures and music
 - **V01.1.520** Fillers: more varied, now and then with your name, only one per answer and no longer cut off in the car
 - **V01.1.519** Blocked services are said at once: "The internet is blocked right now, please try again later" instead of "Let me look" and nothing
-- **V01.1.518** Spark console reordered: four areas in a side bar (at the bottom on a phone), overview with one sentence and tiles with history, models and connections as list and detail, maintenance with updates and logs, light and dark follow the system
 
 
 
