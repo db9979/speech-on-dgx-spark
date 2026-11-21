@@ -499,7 +499,8 @@ def _ask(system, user, most):
     headers = llm.headers(cc)
     vorrang.hold("Mail sortieren", model=True)   # Wartungspause of the language model: the sorting waits
     with httpx.Client(timeout=httpx.Timeout(90, connect=5)) as c:
-        model = cc.get("llm_model") or _model.get(url)
+        x = llm.fremd(cc)   # a foreign model service answers (llm.fremd): its checked model, never the own one's list
+        model = x["modell"] if x else cc.get("llm_model") or _model.get(url)
         if not model:
             r = c.get(url + "/models", headers=headers, timeout=10)
             r.raise_for_status()

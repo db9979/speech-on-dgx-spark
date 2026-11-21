@@ -1613,6 +1613,16 @@ def _mischbetrieb_frei(art, m=None, kat=None):
         raise Fehler("mischbetrieb")
 
 
+def _base_zu_base(art, m, cfg):
+    """A Base main voice (it clones the own voices from their samples) may switch to another Base one, and Mischbetrieb's
+    „aus“ back to the Base one it remembered: the catalog's Base entries carry rolle „klonen“ and no „wahl“ (V01.1.529)."""
+    if art != "tts" or m.get("rolle") != "klonen":
+        return False
+    import mischbetrieb
+    return str((cfg.get("tts") or {}).get("model", "")).rstrip("/").endswith("-Base") \
+        or (mischbetrieb.stand().get("sprach") or {}).get("tts") == m["id"]
+
+
 def wechsel_pruefen(art, mid, cfg, total_gib, kat=None, messung=None, profil=None):
     """The fixed rules of a switch (the panel decides, never a model): a kind that switches, an entry of that kind from
     the catalog, for an own engine a pinned commit (catalog or measured), for the others an entry install.sh offers,
@@ -1639,7 +1649,8 @@ def wechsel_pruefen(art, mid, cfg, total_gib, kat=None, messung=None, profil=Non
             raise Fehler("art")          # paired with a panel computer: as before, not offered
         if art in ALLEIN_ARTEN and not cfg.get("llm", {}).get("enabled"):
             raise Fehler("aus")          # they answer through the LLM-Tor, which runs with the own language model
-    elif not m.get("wahl") and not (m.get("eigen") and (art in SPRACH or art in DATEI_ART)):   # own: the probe decides
+    elif not m.get("wahl") and not (m.get("eigen") and (art in SPRACH or art in DATEI_ART)) \
+            and not _base_zu_base(art, m, cfg):   # own: the probe decides
         raise Fehler("wahl")
     if m.get("eigen") and art in ("sehen", "helfer"):      # stage E5: no round trip on demand, so an own one is measured first
         messung = read_json(MESSUNG, {}) if messung is None else messung

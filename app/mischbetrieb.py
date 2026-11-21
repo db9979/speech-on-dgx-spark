@@ -40,6 +40,16 @@ DATEI = os.path.join(STATE, "mischbetrieb.json")
 AUS = {"llm": ("enabled",), "image": ("enabled",), "music": ("enabled",), "tts": ("voicedesign_enabled", "klon_enabled")}
 # Hören and Sprechen in Mischbetrieb (Dominik „3a“: the small ones, about 7 GiB together, more room for the other project)
 KLEIN = {"asr": "qwen3-asr-0.6b", "tts": "qwen3-tts-0.6b"}   # entries install.sh offers (field "wahl")
+# a Base main voice (own voices cloned from samples, tars since 2026-11) stays a Base one: the built-in voices of the
+# CustomVoice model do not know its voice names (V01.1.529: every sentence and speaker file failed with „voice“)
+KLEIN_BASE = {"tts": "qwen3-tts-0.6b-base"}
+
+
+def klein(art, jetzt, kat):
+    """The small model of a kind for the model running now: the Base one when a Base one runs."""
+    if art in KLEIN_BASE and (kat.get(jetzt) or {}).get("rolle") == "klonen":
+        return KLEIN_BASE[art]
+    return KLEIN[art]
 # engine.sh roles that never start while it is on
 GESPERRT = ("llm", "sehen", "helfer", "einbetten", "nachsortieren", "design", "klon")
 # kinds of modelle.py that neither switch nor are measured while it is on
@@ -89,7 +99,8 @@ def an(cfg, kat, path=None, roh=None, schreib=None, now=None):
     write_json(path or DATEI, {"an": True, "seit": int(time.time() if now is None else now), "vorher": vorher,
                                "sprach": sprach}, indent=1, mode=0o600)
     (schreib or modelle._schreib)(raw)
-    wechsel = [(art, mid) for art, mid in KLEIN.items() if sprach[art] in kat and mid in kat
+    ziel = {art: klein(art, sprach[art], kat) for art in KLEIN}
+    wechsel = [(art, mid) for art, mid in ziel.items() if sprach[art] in kat and mid in kat
                and kat[sprach[art]].get("need_gib", 0) > kat[mid].get("need_gib", 0)]   # never to a bigger one
     print(f"modelle: mischbetrieb an, {len(wechsel)} wechsel", flush=True)
     return wechsel

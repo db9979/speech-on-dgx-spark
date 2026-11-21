@@ -74,6 +74,25 @@ class AnAus(Ablage):
             m = self.kat[mid]
             self.assertEqual((m["art"], "rolle" in m, bool(m.get("wahl"))), (art, False, True), mid)
 
+    def test_a_base_voice_stays_a_base_voice(self):
+        # V01.1.529: tars speaks with own voices on 1.7B Base; the CustomVoice model does not know their names, so
+        # every sentence and speaker file failed with „voice“. A Base main voice goes to the small Base one and back.
+        base = self.cfg(tts="Qwen/Qwen3-TTS-12Hz-1.7B-Base")
+        wechsel = mischbetrieb.an(base, self.kat, roh={}, schreib=self.schreib, now=0)
+        self.assertEqual(wechsel, [("asr", "qwen3-asr-0.6b"), ("tts", "qwen3-tts-0.6b-base")])
+        self.assertEqual(modelle.wechsel_pruefen("tts", "qwen3-tts-0.6b-base", base, 120.0, self.kat)["id"],
+                         "qwen3-tts-0.6b-base")
+        # V01.1.528 had put tars on the CustomVoice one: „aus“ still brings the remembered Base one back
+        falsch = self.cfg("Qwen/Qwen3-ASR-0.6B", "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice")
+        back = mischbetrieb.aus(falsch, self.kat, roh={}, schreib=self.schreib)
+        self.assertIn(("tts", "qwen3-tts-1.7b-base"), back)
+        self.assertEqual(modelle.wechsel_pruefen("tts", "qwen3-tts-1.7b-base", falsch, 120.0, self.kat)["id"],
+                         "qwen3-tts-1.7b-base")
+        os.unlink(self.datei)
+        with self.assertRaises(modelle.Fehler) as e:   # not remembered: a CustomVoice one never becomes a Base one
+            modelle.wechsel_pruefen("tts", "qwen3-tts-1.7b-base", falsch, 120.0, self.kat)
+        self.assertEqual(e.exception.args[0], "wahl")
+
     def test_never_to_a_bigger_model(self):
         klein = self.cfg("Qwen/Qwen3-ASR-0.6B", "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice")
         self.assertEqual(mischbetrieb.an(klein, self.kat, roh={}, schreib=self.schreib), [])
@@ -240,6 +259,27 @@ class Panel(unittest.TestCase):
     def test_a_foreign_service_answers_instead(self):
         with mock.patch.object(llm, "fremd", lambda ccfg: {"id": "f1"}):
             self.assertFalse(wartung.paused("llm"))
+
+    def test_mail_sorting_asks_the_foreign_model(self):
+        """tidy._ask never asks the own model's list while a foreign service answers (V01.1.529: Connection refused)."""
+        import httpx
+        import tidy
+        seen = []
+
+        def antwort(req):
+            seen.append((req.method, str(req.url), json.loads(req.content or b"null")))
+            return httpx.Response(200, json={"choices": [{"message": {"content": "ok"}}]})
+
+        echt = httpx.Client
+        x = {"url": "http://192.168.178.171:30001/v1", "modell": "alzeo-lane", "key": "k"}
+        with mock.patch.object(llm, "fremd", lambda ccfg: x), \
+                mock.patch.object(tidy.httpx, "Client", lambda **kw: echt(transport=httpx.MockTransport(antwort))), \
+                mock.patch.object(tidy.vorrang, "hold", lambda *a, **kw: None), \
+                mock.patch.object(tidy.verbrauch, "response", lambda *a, **kw: None), \
+                mock.patch.object(tidy, "_model", {}):
+            self.assertEqual(tidy._ask("s", "u", 10), "ok")
+        self.assertEqual([(m, u) for m, u, _ in seen], [("POST", x["url"] + "/chat/completions")])
+        self.assertEqual(seen[0][2]["model"], "alzeo-lane")
 
     def test_ersatz_steps_in(self):
         tmp = tempfile.mkdtemp(prefix="misch-fremd-")
