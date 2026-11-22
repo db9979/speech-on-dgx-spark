@@ -29,6 +29,7 @@ import threading
 import time
 
 import llm
+import steuer
 from common import DayCounter, SPEECH_MARK, model_url, speech_mark
 
 GRACE = 20          # seconds after the last speech that still count as "speaking" (follow-up question)
@@ -404,7 +405,7 @@ async def measure(sleep=asyncio.sleep):
         first, rtf, wav = await _speak(c, cfg, h)
         question = wav   # stands in for the person's question in (c)
         res["alone"] = {"first": _r(first), "rtf": _r(rtf), "asr": _r(await _hear(c, cfg, h, wav))}
-        if ccfg.get("llm_url"):
+        if ccfg.get("llm_url") and not steuer.mischbetrieb():   # Mischbetrieb: no own model to load (V01.1.530)
             lh = llm.headers(ccfg)
             model = await llm.model(c, ccfg, lh)
             # (b) without the rule: the load runs straight on, as it did before V01.0.225

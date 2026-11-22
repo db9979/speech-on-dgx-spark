@@ -20,6 +20,7 @@ import httpx
 import live
 import llm
 import modelle
+import steuer
 import taten
 from common import STATE, load_config, no_think, write_json
 
@@ -406,10 +407,25 @@ def compare():
     return out
 
 
+# Mischbetrieb (V01.1.530, Dominik 2026-11-22: 0 / 39, every question „ConnectError“): the test checks only the own
+# language model, which is off then; a foreign service is not tested here
+MISCH = ("Mischbetrieb: das eigene Sprachmodell ist aus. Der Qualitätstest prüft es wieder, wenn der Mischbetrieb aus ist.",
+         "Mischbetrieb: the own language model is off. The quality test checks it again once Mischbetrieb is off.")
+# a run in which no question reached the model (each one a connection error) is not a result: it stays out of the history
+WEG = (httpx.TransportError,)
+
+
 async def run(reason="manual", sampling="eigen"):
     if _lock.locked():
         return last()
     async with _lock:
+        if steuer.mischbetrieb():   # the own language model is off on purpose: nothing to test, nothing in the history
+            res = {"t": int(time.time()), "reason": reason, "error": MISCH[0], "error_en": MISCH[1], "cases": [],
+                   "passed": 0, "total": 0}
+            if reason == "manual":
+                _save(res)
+            print(f"quality: test ({reason}): mischbetrieb", flush=True)
+            return res
         cfg = load_config()
         ccfg = llm.eigen(cfg.get("chat", {}))   # with the shipped defaults; the own model, never a foreign one
         if sampling == "qwen":   # only for this run, never written to the settings
@@ -429,6 +445,7 @@ async def run(reason="manual", sampling="eigen"):
                        "cases": [], "passed": 0, "total": 0}
                 _save(res)
                 return res
+            weg, wegname = 0, ""
             for case in todo:
                 first = None
                 for attempt in range(2):  # a failed case once more: at temperature 0.3 one miss can be chance
@@ -438,6 +455,8 @@ async def run(reason="manual", sampling="eigen"):
                     except Exception as e:
                         got = {"answer": "", "raw": "", "held": [], "retried": False, "tools": [], "seconds": 0}
                         why = [f"Fehler: {type(e).__name__}: {e}"[:200]]
+                        if attempt and isinstance(e, WEG):
+                            weg, wegname = weg + 1, type(e).__name__
                     if not why or attempt:
                         break
                     first = {"why": why, "answer": got["answer"][:300], "tools": got["tools"]}
@@ -447,6 +466,12 @@ async def run(reason="manual", sampling="eigen"):
                             "first": first, "held": got["held"], "retried": got["retried"],
                             "raw": got["raw"][:600] if got["held"] else "", **({"judge": rated} if rated else {})})
                 _progress["done"] = len(out)
+            if out and weg == len(out):
+                res = {"t": int(time.time()), "reason": reason, "error": f"LLM nicht erreichbar: {wegname}", "cases": [],
+                       "passed": 0, "total": 0}
+                _save(res)
+                print(f"quality: test ({reason}): llm nicht erreichbar", flush=True)
+                return res
         res = {"t": int(time.time()), "reason": reason, "model": model, "seconds": round(time.time() - t0),
                # the catalog model that answered (the served name is always the same, llm_tor): Probetag compares by it
                "katalog": (cfg.get("llm") or {}).get("modell", "") if (cfg.get("llm") or {}).get("enabled") else "",
@@ -566,7 +591,9 @@ HELFER_ERR = {"memory": ("Das Hilfsmodell passt gerade nicht neben das Sprachmod
               "aus": ("Auf dem Modell-Rechner ist kein Hilfsmodell eingerichtet.",
                       "No helper model is set up on the model computer."),
               "fehler": ("Das Hilfsmodell hat nicht geantwortet.", "The helper model did not answer."),
-              "llm": ("Das Sprachmodell ist nicht erreichbar.", "The language model is not reachable.")}
+              "llm": ("Das Sprachmodell ist nicht erreichbar.", "The language model is not reachable."),
+              "mischbetrieb": ("Mischbetrieb: das eigene Sprachmodell und das Hilfsmodell sind aus.",
+                               "Mischbetrieb: the own language model and the helper model are off.")}
 
 
 async def helfer_run(reason="manual"):
@@ -584,7 +611,11 @@ async def helfer_run(reason="manual"):
                "need_gib": {"main": _need_gib(cfg, "modell"), "helfer": _need_gib(cfg, "helfer_modell")}}
         async with httpx.AsyncClient(timeout=httpx.Timeout(120, connect=5)) as c:
             try:
-                model = await llm.model(c, ccfg, llm.headers(ccfg))
+                if steuer.mischbetrieb():
+                    model = None
+                    res["error"] = "mischbetrieb"
+                else:
+                    model = await llm.model(c, ccfg, llm.headers(ccfg))
             except Exception:
                 model = None
                 res["error"] = "llm"

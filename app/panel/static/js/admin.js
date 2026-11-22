@@ -1041,7 +1041,7 @@ function qRender(d){const r=d&&d.last;clearTimeout(qTimer);qProg(d&&d.running?(d
   else{$('qgo').disabled=$('qgoqwen').disabled=$('qgohelfer').disabled=false;$('qmsg').textContent=r?new Date(r.t*1000).toLocaleString()+' · '+(r.version||'')+(r.reason==='after update'?t(' · nach dem Update',' · after the update'):''):''}
   const none=h=>{$('qsum').innerHTML=h;$('qlist').innerHTML='';$('qallbox').hidden=true};
   if(!r)return none(`<span class="mut">${t('Noch nicht geprüft.','Not tested yet.')}</span>`);
-  if(r.error)return none(`<span class="err">${esc(r.error)}</span>`);
+  if(r.error)return none(`<span class="err">${esc(t(r.error,r.error_en||r.error))}</span>`);
   const bad=r.cases.filter(x=>!x.ok),flaky=r.cases.filter(x=>x.ok&&x.flaky),held=r.cases.filter(x=>x.ok&&!x.flaky&&x.held&&x.held.length);
   // Einordnung im Qualitätstest (systemone): a second opinion only; a passed case it doubts stays open to look at
   const doubt=x=>!!(x.judge&&(x.judge.passt<1||x.judge.erfunden>=0.5)),doubted=r.cases.filter(x=>x.ok&&!x.flaky&&!(x.held&&x.held.length)&&doubt(x));

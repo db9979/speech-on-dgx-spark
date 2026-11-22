@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.530** Fix Mischbetrieb: quality test and service check say that the own language model is off instead of failing every question; no own-model checks while Mischbetrieb is on
 - **V01.1.529** Fix Mischbetrieb: a Base main voice stays a Base voice (Qwen3-TTS 0.6B Base), so own voices keep speaking; mail sorting asks the foreign model service instead of the switched-off own model
 - **V01.1.528** Fix Mischbetrieb: Sprechen switches to Qwen3-TTS 0.6B (the Base model is only for own voices and was refused); VoiceDesign and the clone engine stay off although the Pi sends its settings
 - **V01.1.527** Pi voice: while the DGX Spark does not speak (gone or memory guard), the panel computer speaks by itself with the Piper voice Thorsten; admin switch, off by default
@@ -51,7 +52,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.524** Alzeo as a foreign model service: several checked models, the panel follows the running lane
 - **V01.1.523** Spark console on a Spark alone: embeddings and re-ranking as GPU services for programs such as Open WebUI, the helper model to choose
 - **V01.1.522** Red fix: help copy of the docs regenerated after V01.1.521
-- **V01.1.521** Spark console: the overview also shows this computer's language model, LLM-Tor, helper model, vision, pictures and music
 - **V01.1.519** Blocked services are said at once: "The internet is blocked right now, please try again later" instead of "Let me look" and nothing
 
 

@@ -281,6 +281,80 @@ class Panel(unittest.TestCase):
         self.assertEqual([(m, u) for m, u, _ in seen], [("POST", x["url"] + "/chat/completions")])
         self.assertEqual(seen[0][2]["model"], "alzeo-lane")
 
+    def _tmp_state(self, mod, *names):
+        tmp = tempfile.mkdtemp(prefix="misch-q-")
+        self.addCleanup(shutil.rmtree, tmp, True)
+        for n in names:
+            p = mock.patch.object(mod, n, os.path.join(tmp, n.lower() + ".json"))
+            p.start()
+            self.addCleanup(p.stop)
+
+    def test_quality_test_waits_for_the_own_model(self):
+        """Zustand → Prüfen → Qualitätstest asks only the own model, which is off: a clear sentence, no 0 / 39 in the
+        history (V01.1.530); after an update it is not even shown."""
+        import asyncio
+        import quality
+        self._tmp_state(quality, "RESULT", "HISTORY", "HELFER_RESULT")
+        asked = []
+        with mock.patch.object(llm, "model", lambda *a, **kw: asked.append(a)):
+            self.assertIsNone(asyncio.run(quality.run("after update")).get("model"))
+            self.assertIsNone(quality.last(), "after an update nothing is shown")
+            res = asyncio.run(quality.run("manual"))
+            self.assertEqual((res["error"], res["error_en"]), quality.MISCH)
+            self.assertEqual(quality.last()["error"], quality.MISCH[0])
+            self.assertEqual(quality.history(), [])
+            h = asyncio.run(quality.helfer_run("manual"))
+            self.assertEqual(h["error"], "mischbetrieb")
+            self.assertEqual(h["verdict"]["de"], quality.HELFER_ERR["mischbetrieb"][0])
+        self.assertEqual(asked, [], "the own model is never asked")
+
+    def test_a_run_that_reached_no_model_is_no_result(self):
+        import asyncio
+        import httpx
+        import quality
+        self._tmp_state(quality, "RESULT", "HISTORY")
+
+        async def name(*a, **kw):
+            return "sprachmodell"   # an old name from the cache, as before V01.1.530
+
+        async def weg(*a, **kw):
+            raise httpx.ConnectError("refused")
+
+        zwei = quality.cases()[:2]
+        with mock.patch.object(steuer, "mischbetrieb", lambda now=None: False), \
+                mock.patch.object(llm, "model", name), mock.patch.object(quality, "_run_case", weg), \
+                mock.patch.object(quality, "cases", lambda: zwei):
+            res = asyncio.run(quality.run("manual"))
+        self.assertEqual(res["error"], "LLM nicht erreichbar: ConnectError")
+        self.assertEqual(quality.history(), [], "no 0 / N in the history")
+
+    def test_live_check_skips_the_language_model(self):
+        import asyncio
+        import httpx
+        import health
+        self._tmp_state(health, "LIVE_FILE")
+        seen = []
+
+        def antwort(req):
+            seen.append(str(req.url))
+            return httpx.Response(500, text="x")
+
+        echt = httpx.AsyncClient
+        with mock.patch.object(health.httpx, "AsyncClient", lambda **kw: echt(transport=httpx.MockTransport(antwort))):
+            res = asyncio.run(health.livecheck("manual"))
+        step = [x for x in res["steps"] if x["name"] == "llm"][0]
+        self.assertEqual((step["ok"], step["detail"]), (None, "skipped: Mischbetrieb"))
+        self.assertFalse([u for u in seen if u.endswith(("/chat/completions", "/models"))], seen)
+        self.assertNotIn("tools", [x["name"] for x in res["steps"]])
+
+    def test_systemone_is_not_asked(self):
+        """The own LLM-Tor's /systemone (Weiche, Einordnung) is off too, also while a foreign service answers."""
+        import systemone
+        with mock.patch.object(llm, "fremd", lambda ccfg: {"id": "f1"}):
+            with self.assertRaises(systemone.Unavailable) as e:
+                systemone._prep({"llm_url": "http://127.0.0.1:31006/v1"}, next(iter(systemone.USES)), "x", [])
+        self.assertEqual(e.exception.why, "Mischbetrieb")
+
     def test_ersatz_steps_in(self):
         tmp = tempfile.mkdtemp(prefix="misch-fremd-")
         self.addCleanup(shutil.rmtree, tmp, True)

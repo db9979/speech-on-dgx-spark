@@ -236,6 +236,10 @@ def heard_share(text):
     return len(want & _words(text)) / len(want)
 
 
+
+class _Misch(Exception):
+    """Mischbetrieb in the live check: the language model step is skipped, not failed."""
+
 async def livecheck(reason="manual"):
     """LLM, TTS and ASR once, with times; returns and stores the result."""
     if _live_lock.locked():
@@ -248,6 +252,8 @@ async def livecheck(reason="manual"):
             t0 = time.time()
             ccfg = llm.eigen(cfg.get("chat", {}))
             try:
+                if steuer.mischbetrieb():   # the own language model is off on purpose (V01.1.530): not a failure
+                    raise _Misch()
                 headers = llm.headers(ccfg)
                 model = await llm.model(c, ccfg, headers)
                 r = await c.post(llm.url(ccfg), headers=headers, json={
@@ -258,6 +264,8 @@ async def livecheck(reason="manual"):
                 text = (r.json()["choices"][0]["message"].get("content") or "").strip() if ok else r.text[:200]
                 steps.append({"name": "llm", "ok": ok, "seconds": round(time.time() - t0, 2),
                               "detail": ((llm.known_model() or model) + ": " + text[:80]) if ok else f"HTTP {r.status_code}: {text}"})
+            except _Misch:
+                steps.append({"name": "llm", "ok": None, "seconds": 0, "detail": "skipped: Mischbetrieb"})
             except Exception as e:
                 steps.append({"name": "llm", "ok": False, "seconds": round(time.time() - t0, 2),
                               "detail": f"{type(e).__name__}: {e}"[:200]})

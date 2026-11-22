@@ -231,6 +231,8 @@ def _prep(ccfg, use, state, questions):
     import wartung
     if wartung.paused("llm"):     # Wartungspause: the language model is being updated, nothing is asked
         raise Unavailable("Wartung")
+    if wartung.mischbetrieb():    # the own LLM-Tor's model is off; a foreign service has no /systemone (V01.1.530)
+        raise Unavailable("Mischbetrieb")
     return url, body(state, questions)
 
 

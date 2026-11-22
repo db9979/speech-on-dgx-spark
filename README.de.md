@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.530** Fix Mischbetrieb: Qualitätstest und Dienst prüfen sagen, dass das eigene Sprachmodell aus ist, statt jede Frage als Fehler zu zählen; keine Prüfungen des eigenen Modells im Mischbetrieb
 - **V01.1.529** Fix Mischbetrieb: eine Base-Hauptstimme bleibt eine Base-Stimme (Qwen3-TTS 0.6B Base), damit eigene Stimmen weiter sprechen; Postfach aufräumen fragt den fremden Modell-Dienst statt des abgeschalteten eigenen Modells
 - **V01.1.528** Fix Mischbetrieb: Sprechen wechselt auf Qwen3-TTS 0.6B (das Base-Modell ist nur für eigene Stimmen und wurde abgelehnt); VoiceDesign und Stimmen-Engine bleiben aus, obwohl der Pi seine Einstellungen schickt
 - **V01.1.527** Pi-Stimme: spricht der DGX Spark gerade nicht (weg oder Speicher-Wache), spricht der Panel-Rechner selbst mit der Piper-Stimme Thorsten; Admin-Schalter, ab Werk aus
@@ -51,7 +52,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.524** Alzeo als fremder Modell-Dienst: mehrere geprüfte Modelle, das Panel folgt der laufenden Lane
 - **V01.1.523** Spark-Konsole bei Spark allein: Einbetten und Nachsortieren als GPU-Dienste für Programme wie Open WebUI, Hilfsmodell wählbar
 - **V01.1.522** Rot-Fix: Hilfe-Kopie der Doku nach V01.1.521 neu erzeugt
-- **V01.1.521** Spark-Konsole: der Überblick zeigt auch Sprachmodell, LLM-Tor, Hilfsmodell, Bildverständnis, Bilder und Musik dieses Rechners
 - **V01.1.519** Gesperrte Dienste sofort ansagen: „Das Internet ist gerade gesperrt, versuch es später noch einmal“ statt „Ich schau nach“ und dann nichts
 
 
