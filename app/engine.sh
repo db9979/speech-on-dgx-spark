@@ -29,7 +29,7 @@ fail() { state error "$1"; echo "ERROR: $1" >&2; exit 1; }
 
 # Mischbetrieb (app/mischbetrieb.py): the memory belongs to another project; these roles stay off, also after an update
 case "$ROLE" in
-  llm|sehen|helfer|einbetten|nachsortieren|design|klon)
+  llm|sehen|helfer|einbetten|nachsortieren|design|klon|asr|main)   # asr, main: only in „mischbetrieb ganz“
     if "${SPEECH_SPARK_PREFIX:-$(dirname "$VENV")}/venv-panel/bin/python" "$(dirname "$(readlink -f "$0")")/mischbetrieb.py" sperrt "$ROLE"; then
       state off "Mischbetrieb: sudo speech-spark mischbetrieb aus"
       echo "modelle: mischbetrieb $ROLE bleibt aus"

@@ -7,6 +7,9 @@ service (fremdmodell.py), Bilder and Musik are off, and what is missing says so 
     sudo speech-spark mischbetrieb an       the own language model (with image understanding, helper, embeddings),
                                             Bilder, Musik, VoiceDesign and the clone engine off, their units stopped
                                             and disabled; Hören and Sprechen switch to the small models (KLEIN)
+    sudo speech-spark mischbetrieb ganz     the same, and Hören and Sprechen on the DGX Spark off too (V01.1.532,
+                                            Dominik 2026-11-25 „3“, „Deutsch mit Thorsten“): the panel computer hears
+                                            with Parakeet and speaks with the Pi voice; „an“ again brings them back
     sudo speech-spark mischbetrieb aus      everything back exactly as it was before „an“ (STATE/mischbetrieb.json)
     sudo speech-spark mischbetrieb status
 
@@ -21,7 +24,8 @@ Fixed rules (the shell's root part only runs what this module prints, words of f
   (FREMD_EINHEITEN) starts (activating, or active for less than START_S) or less than FREI_MIN GiB are free, Hören's
   and Sprechen's engines (EIGENE) stop and give their memory back („frei“, the panel computer hears with Parakeet and
   shows the answers as text); once nothing starts and ZURUECK_GIB GiB are free RUHIG_N looks in a row, they start
-  again. It only starts what it stopped itself.
+  again. It only starts what it stopped itself. „ganz“ (GANZ): the guard keeps them stopped and never brings them
+  back, and engine.sh does not start the GANZ_GESPERRT roles either; no switch to the small models then.
 
 Only the standard library and common; one file STATE/mischbetrieb.json (0600). Log lines start with "modelle:" and
 hold fixed words and catalog ids only.
@@ -51,6 +55,7 @@ def klein(art, jetzt, kat):
         return KLEIN_BASE[art]
     return KLEIN[art]
 # engine.sh roles that never start while it is on
+GANZ_GESPERRT = ("asr", "main")   # engine.sh roles of Hören's and Sprechen's engines, off in „ganz“ too
 GESPERRT = ("llm", "sehen", "helfer", "einbetten", "nachsortieren", "design", "klon")
 # kinds of modelle.py that neither switch nor are measured while it is on
 ARTEN = ("llm", "sehen", "helfer", "einbetten", "nachsortieren", "bild", "musik")
@@ -85,24 +90,41 @@ def _roh():
         return json.load(f)
 
 
-def an(cfg, kat, path=None, roh=None, schreib=None, now=None):
-    """Switches it on. Returns the switches Hören and Sprechen still need ([(art, id)]), [] when already on."""
+def ist_ganz(path=None):
+    d = stand(path)
+    return d.get("an") is True and d.get("ganz") is True
+
+
+def _klein_wechsel(sprach, kat):
+    ziel = {art: klein(art, sprach[art], kat) for art in KLEIN}
+    return [(art, mid) for art, mid in ziel.items() if sprach.get(art) in kat and mid in kat
+            and kat[sprach[art]].get("need_gib", 0) > kat[mid].get("need_gib", 0)]   # never to a bigger one
+
+
+def an(cfg, kat, path=None, roh=None, schreib=None, now=None, ganz=False):
+    """Switches it on (ganz: Hören and Sprechen off as well). Returns the switches Hören and Sprechen still need
+    ([(art, id)]); already on: only „ganz“ changes (back from „ganz“ the small models are switched to then)."""
     import modelle
     if ist_an(path):
-        print("modelle: mischbetrieb an schon", flush=True)
-        return []
+        d = stand(path)
+        if (d.get("ganz") is True) == ganz:
+            print("modelle: mischbetrieb an schon", flush=True)
+            return []
+        # into „ganz“: the guard stops the engines within WACHE_S; back: it starts them once memory is free
+        write_json(path or DATEI, dict(d, ganz=ganz), indent=1, mode=0o600)
+        wechsel = [] if ganz else _klein_wechsel({art: modelle.jetzt_id(art, cfg, kat) for art in KLEIN}, kat)
+        print(f"modelle: mischbetrieb ganz {'an' if ganz else 'aus'}, {len(wechsel)} wechsel", flush=True)
+        return wechsel
     raw = _roh() if roh is None else roh
     vorher = {sec: {k: (raw.get(sec) or {}).get(k) for k in keys} for sec, keys in AUS.items()}
     sprach = {art: modelle.jetzt_id(art, cfg, kat) for art in KLEIN}
     for sec, keys in AUS.items():
         raw[sec] = dict(raw.get(sec) or {}, **{k: False for k in keys})
     write_json(path or DATEI, {"an": True, "seit": int(time.time() if now is None else now), "vorher": vorher,
-                               "sprach": sprach}, indent=1, mode=0o600)
+                               "sprach": sprach, **({"ganz": True} if ganz else {})}, indent=1, mode=0o600)
     (schreib or modelle._schreib)(raw)
-    ziel = {art: klein(art, sprach[art], kat) for art in KLEIN}
-    wechsel = [(art, mid) for art, mid in ziel.items() if sprach[art] in kat and mid in kat
-               and kat[sprach[art]].get("need_gib", 0) > kat[mid].get("need_gib", 0)]   # never to a bigger one
-    print(f"modelle: mischbetrieb an, {len(wechsel)} wechsel", flush=True)
+    wechsel = [] if ganz else _klein_wechsel(sprach, kat)   # „ganz“: they stop, no switch
+    print(f"modelle: mischbetrieb {'ganz' if ganz else 'an'}, {len(wechsel)} wechsel", flush=True)
     return wechsel
 
 
@@ -124,7 +146,7 @@ def aus(cfg, kat, path=None, roh=None, schreib=None):
                 sek.pop(k, None)      # it was not set before: the shipped default counts again
         raw[sec] = sek
     (schreib or modelle._schreib)(raw)
-    write_json(path or DATEI, dict(d, an=False, frei=False, bis=int(time.time())), indent=1, mode=0o600)
+    write_json(path or DATEI, dict(d, an=False, frei=False, ganz=False, bis=int(time.time())), indent=1, mode=0o600)
     sprach = d.get("sprach") or {}
     wechsel = [(art, sprach[art]) for art in KLEIN if sprach.get(art) and sprach[art] in kat
                and modelle.jetzt_id(art, cfg, kat) != sprach[art]]
@@ -180,9 +202,12 @@ def startet(einheiten):
                for u in (einheiten or {}).values())
 
 
-def wache(frei_gib, einheiten, frei, ruhig):
+def wache(frei_gib, einheiten, frei, ruhig, ganz=False):
     """One look (fixed rule): returns (action, ruhig) with action "freigeben", "zurueck" or None. frei: our engines are
-    stopped by the guard now; ruhig: good looks in a row so far. Unknown memory (None) never brings them back."""
+    stopped by the guard now; ruhig: good looks in a row so far. Unknown memory (None) never brings them back; „ganz“
+    keeps them stopped."""
+    if ganz:
+        return (None if frei else "freigeben"), 0
     if not frei:
         if startet(einheiten) or (frei_gib is not None and frei_gib < FREI_MIN):
             return "freigeben", 0
@@ -214,7 +239,7 @@ def wache_lauf(einheit, stand_holen, mem, stop, path=None, sleep=time.sleep):
             except OSError:
                 frei_gib = None
             aktion, ruhig = wache(frei_gib, stand_holen(list(FREMD_EINHEITEN)), d.get("frei") is True,
-                                  ruhig)
+                                  ruhig, d.get("ganz") is True)
             if aktion:
                 ok = all((einheit("stop" if aktion == "freigeben" else "start", t) or {}).get("ok") for t in EIGENE)
                 write_json(path or DATEI, dict(stand(path), frei=aktion == "freigeben"), indent=1, mode=0o600)
@@ -227,23 +252,25 @@ def wache_lauf(einheit, stand_holen, mem, stop, path=None, sleep=time.sleep):
 def main(argv):
     cmd = argv[0] if argv else "status"
     if cmd == "sperrt":            # engine.sh: exit 0 = this role does not start now
-        return 0 if len(argv) == 2 and argv[1] in GESPERRT and ist_an() else 1
+        return 0 if len(argv) == 2 and ((argv[1] in GESPERRT and ist_an())
+                                        or (argv[1] in GANZ_GESPERRT and ist_ganz())) else 1
     if cmd == "einheiten":
         print("\n".join(EINHEITEN))
         return 0
     if cmd == "status":
         d = stand()
         print("Mischbetrieb: " + ("an seit " + time.strftime("%Y-%m-%d %H:%M", time.localtime(d.get("seit") or 0))
+                                  + (", ganz (der Pi hört und spricht)" if d.get("ganz") is True else "")
                                   if d.get("an") is True else "aus"))
         return 0
-    if cmd in ("an", "aus"):
+    if cmd in ("an", "aus", "ganz"):
         import modelle
         from common import load_config
         cfg, kat = load_config(), modelle.katalog()
-        for art, mid in (an if cmd == "an" else aus)(cfg, kat):
+        for art, mid in (aus(cfg, kat) if cmd == "aus" else an(cfg, kat, ganz=cmd == "ganz")):
             print(f"wechsel {art} {mid}")
         return 0
-    print("mischbetrieb.py an|aus|status|sperrt <rolle>|einheiten", file=sys.stderr)
+    print("mischbetrieb.py an|ganz|aus|status|sperrt <rolle>|einheiten", file=sys.stderr)
     return 2
 
 

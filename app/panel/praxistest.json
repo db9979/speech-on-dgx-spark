@@ -6744,6 +6744,14 @@
 "titel": "Qualitätstest prüft Alzeo",
 "text": "Während Alzeo antwortet (Für alle oder im Mischbetrieb): Zustand → Prüfen → Qualitätstest → „Fremden Dienst prüfen“. Der Test läuft mit Alzeos laufender Lane, oben steht „fremder Dienst: Alzeo (Modellname)“. Danach „Jetzt prüfen“ ohne Mischbetrieb: der Verlauf des eigenen Modells enthält den Alzeo-Lauf nicht.",
 "thread": "tars für Alzeo nutzen, Assistent behalten"
+},
+{
+"id": "P973",
+"v": 1532,
+"titel": "Mischbetrieb ganz: der Pi hört und spricht",
+"text": "Funktionen → Notbetrieb mit Parakeet und Funktionen → Pi-Stimme an. Auf tars: sudo speech-spark mischbetrieb ganz. Nach wenigen Sekunden sind Hören und Sprechen auf tars aus (sudo speech-spark mischbetrieb status zeigt „ganz“), eine gesprochene Frage wird trotzdem verstanden und mit der Stimme Thorsten beantwortet, auch nach einem Neustart von tars. sudo speech-spark mischbetrieb an holt Hören und Sprechen auf tars zurück, sudo speech-spark mischbetrieb aus alles.",
+"thread": "tars für Alzeo nutzen, Assistent behalten",
+"wichtig": true
 }
 ]
 }

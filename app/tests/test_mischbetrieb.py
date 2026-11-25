@@ -7,6 +7,7 @@ import json
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 from unittest import mock
@@ -67,6 +68,30 @@ class AnAus(Ablage):
                          "exactly the old values; a value that was not set is gone again")
         self.assertFalse(mischbetrieb.ist_an())
         self.assertEqual(mischbetrieb.aus(klein, self.kat, roh={}, schreib=self.schreib), [])
+
+    def test_ganz_leaves_the_voice_to_the_pi(self):
+        """„mischbetrieb ganz“ (V01.1.532, Dominik 2026-11-25 „3“, „Deutsch mit Thorsten“): Hören and Sprechen on the
+        DGX Spark stay off as well, the guard never brings them back, engine.sh does not start them; „an“ again
+        brings them back with the small models, „aus“ restores everything."""
+        self.assertEqual(mischbetrieb.an(self.cfg(), self.kat, roh={}, schreib=self.schreib, now=0, ganz=True), [],
+                         "no switch: they stop")
+        self.assertTrue(mischbetrieb.ist_ganz())
+        with mock.patch.object(sys, "argv", ["x"]):
+            for rolle in ("asr", "main", "llm"):
+                self.assertEqual(mischbetrieb.main(["sperrt", rolle]), 0, rolle)
+        laeuft = {"x": {"state": "active", "da": True, "seit": 10 ** 6}}
+        self.assertEqual(mischbetrieb.wache(40, laeuft, False, 0, ganz=True), ("freigeben", 0))
+        self.assertEqual(mischbetrieb.wache(mischbetrieb.ZURUECK_GIB, laeuft, True, mischbetrieb.RUHIG_N, ganz=True),
+                         (None, 0), "never back while ganz")
+        wechsel = mischbetrieb.an(self.cfg(), self.kat, roh={}, schreib=self.schreib)
+        self.assertEqual(wechsel, [("asr", "qwen3-asr-0.6b"), ("tts", "qwen3-tts-0.6b")], "back: the small models")
+        self.assertFalse(mischbetrieb.ist_ganz())
+        self.assertEqual(mischbetrieb.main(["sperrt", "asr"]), 1)
+        self.assertEqual(mischbetrieb.an(self.cfg(), self.kat, roh={}, schreib=self.schreib, ganz=True), [])
+        mischbetrieb.aus(self.cfg(), self.kat, roh={}, schreib=self.schreib)
+        self.assertFalse(mischbetrieb.ist_ganz() or mischbetrieb.stand().get("ganz"))
+        with open(os.path.join(APP, "engine.sh"), encoding="utf-8") as f:
+            self.assertIn("nachsortieren|design|klon|asr|main)", f.read())
 
     def test_the_small_ones_can_be_the_main_model(self):
         # V01.1.528: the Base entry is only for own voices (rolle), so the switch was refused with "wahl" on tars

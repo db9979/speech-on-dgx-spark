@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.532** Mischbetrieb "ganz": hearing and speaking on the DGX Spark go off too, the Pi hears with Parakeet and speaks with the Pi voice
 - **V01.1.531** Alzeo: classification (System One) through Alzeo while the own model is off, and the quality test checks Alzeo's running lane
 - **V01.1.530** Fix Mischbetrieb: quality test and service check say that the own language model is off instead of failing every question; no own-model checks while Mischbetrieb is on
 - **V01.1.529** Fix Mischbetrieb: a Base main voice stays a Base voice (Qwen3-TTS 0.6B Base), so own voices keep speaking; mail sorting asks the foreign model service instead of the switched-off own model
@@ -51,7 +52,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.526** Mischbetrieb memory guard: while the other project starts or memory runs short, Hören and Sprechen on the DGX Spark give their memory back, the Pi hears with Parakeet meanwhile
 - **V01.1.525** Mischbetrieb: the DGX Spark works for another project, the assistant keeps listening and speaking
 - **V01.1.524** Alzeo as a foreign model service: several checked models, the panel follows the running lane
-- **V01.1.523** Spark console on a Spark alone: embeddings and re-ranking as GPU services for programs such as Open WebUI, the helper model to choose
 - **V01.1.519** Blocked services are said at once: "The internet is blocked right now, please try again later" instead of "Let me look" and nothing
 
 

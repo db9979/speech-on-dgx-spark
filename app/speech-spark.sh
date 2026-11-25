@@ -43,7 +43,7 @@
 #   speech-spark systemupdate [status]|pruefen  System-Updates: this computer's apt state, or check now (apt update, simulate)
 #   speech-spark systemupdate einspielen|neustart  the fixed apt run of the panel's „Jetzt einspielen“, or the restart it needs
 #   speech-spark gputakt [status]|setzen  GPU-Taktgrenze: the chosen and the set clock cap, or set it again now
-#   speech-spark mischbetrieb [status]|an|aus  Mischbetrieb: another project gets the GPU, the Spark keeps Hören and Sprechen
+#   speech-spark mischbetrieb [status]|an|ganz|aus  Mischbetrieb: another project gets the GPU (ganz: Hören, Sprechen too)
 #   speech-spark clients [liste]|an [netz …]|aus|neu <name> <rechte> [klasse]|sperren|entsperren|weg <id>  Spark-Clients
 #   speech-spark konsole [status]|an <netz> [netz …]|aus  Spark-Konsole: own web page https://<ip>:31010, home network only
 set -euo pipefail
@@ -1360,7 +1360,7 @@ cmd_mischbetrieb() {
   local zeile art mid u out zeilen=()
   case "${1:-status}" in
     status) as_panel_user ../mischbetrieb.py status ;;
-    an|aus)
+    an|aus|ganz)
       need_root mischbetrieb "$1"
       for u in "$WECHSEL_UNIT" "$MESS_UNIT" "$MESS_WUNSCH_UNIT" speech-spark-update; do
         im_gang "$u" && die "$u is running; try again afterwards"
@@ -1368,11 +1368,14 @@ cmd_mischbetrieb() {
       if [ "$1" = an ]; then
         echo "Mischbetrieb an: das eigene Sprachmodell, Bilder, Musik und VoiceDesign gehen aus, Hören und Sprechen nehmen die kleinen Modelle."
         ask_yes "${2:-}"
+      elif [ "$1" = ganz ]; then
+        echo "Mischbetrieb ganz: dazu gehen Hören und Sprechen auf dem DGX Spark aus; der Pi hört mit Parakeet und spricht mit der Pi-Stimme (Funktionen → Notbetrieb mit Parakeet und Pi-Stimme müssen an sein)."
+        ask_yes "${2:-}"
       fi
       out=$(as_panel_user ../mischbetrieb.py "$1") || die "mischbetrieb: abgelehnt"
       grep '^modelle: ' <<<"$out" || true
       mapfile -t zeilen < <(grep '^wechsel ' <<<"$out" || true)
-      if [ "$1" = an ]; then
+      if [ "$1" != aus ]; then
         while read -r u; do
           [[ "$u" =~ ^speech-spark-[a-z-]{2,30}$ ]] || continue
           systemctl disable --now "$u.service" >/dev/null 2>&1 || true
@@ -1388,11 +1391,13 @@ cmd_mischbetrieb() {
       if [ "$1" = aus ]; then
         systemctl start speech-spark-asr-engine.service speech-spark-tts-engine.service 2>/dev/null || true   # the Speicher-Wache may have stopped them
         echo "Mischbetrieb aus. Damit das eigene Sprachmodell, Bilder und Musik wieder starten: sudo speech-spark update"
+      elif [ "$1" = ganz ]; then
+        echo "Mischbetrieb ganz. Hören und Sprechen auf dem DGX Spark gehen in wenigen Sekunden aus; Hören und Sprechen zurück: sudo speech-spark mischbetrieb an, alles zurück: sudo speech-spark mischbetrieb aus"
       else
         echo "Mischbetrieb an. Jetzt kann das andere Projekt den Speicher nutzen; zurück mit: sudo speech-spark mischbetrieb aus"
       fi
       ;;
-    *) die "speech-spark mischbetrieb [status]|an [--yes]|aus" ;;
+    *) die "speech-spark mischbetrieb [status]|an [--yes]|ganz [--yes]|aus" ;;
   esac
 }
 
