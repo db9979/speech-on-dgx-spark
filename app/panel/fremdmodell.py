@@ -15,7 +15,10 @@ Fixed rules, the panel decides (Richtlinie Teil 2):
   one it lists now (folgen, from fremdseite's look every minute) and goes back by the same rule; a service that does
   not answer or lists no checked model is left out (ziel) until it does again;
 - „Für alle“ (wahl): the panel asks it instead of the own model; „Ersatz“ (ersatz): only while the model computer is
-  gone (steuer.weg); the own model's checks (quality test, Probetag), System One and the helper model stay own.
+  gone (steuer.weg); the own model's checks (quality test, Probetag), System One and the helper model stay own;
+- „Einordnung“ (einordnung, V01.1.531, Dominik 2026-11-25 „1“): only after the panel's own System One question passed
+  on this service (fremdseite.einordnung_pruefen), System One (systemone.fremd) asks it while the own language model
+  is off in Mischbetrieb or the model computer is gone; off by default, a change of the address takes it away.
 
 Everything lives in STATE/fremd-modelle.json (0600, never in the configuration, never on a page, never in a log: the
 key stays here). Only the standard library and common: llm.py reads it on every call, so it stays below the knot.
@@ -82,7 +85,8 @@ def _gut(d):
     try:
         return (isinstance(d, dict) and ID.match(str(d.get("id", ""))) and 1 <= len(str(d.get("name", ""))) <= NAME_MAX
                 and basis(d.get("url")) == d.get("url") and (not d.get("modell") or MODELL.match(str(d["modell"])))
-                and (not d.get("key") or KEY.match(str(d["key"]))) and _lanes_gut(d.get("lanes")))
+                and (not d.get("key") or KEY.match(str(d["key"]))) and _lanes_gut(d.get("lanes"))
+                and isinstance(d.get("einordnung", False), bool))
     except Fehler:
         return False
 
@@ -164,7 +168,7 @@ def speichern(fid, name, url, key=None, path=None):
         if any(y.get("url") == url and y["id"] != fid for y in d["dienste"]):
             raise Fehler("doppelt")
         if x.get("url") != url:
-            for k in ("modell", "geprueft", "lanes"):
+            for k in ("modell", "geprueft", "lanes", "einordnung"):
                 x.pop(k, None)
         x.update(name=name, url=url)
         if key is not None:
@@ -223,6 +227,22 @@ def nutzung(wahl, ersatz, path=None):
         _schreiben(d, path)
 
 
+def einordnung(fid, an, path=None):
+    """System One over this service on or off; on only for a checked one (the caller checked its System One)."""
+    with _lock:
+        d = stand(path)
+        x = finde(d, fid)
+        if x is None:
+            raise Fehler("unbekannt")
+        if an and not nutzbar(x):
+            raise Fehler("ungeprueft")
+        if an:
+            x["einordnung"] = True
+        else:
+            x.pop("einordnung", None)
+        _schreiben(d, path)
+
+
 def loeschen(fid, path=None):
     with _lock:
         d = stand(path)
@@ -238,13 +258,14 @@ def fuer_live(an, path=None):
     d = stand(path)
     return {"on": bool(an) and bool(d["dienste"]), "dienste": len(d["dienste"]),
             "geprueft": sum(nutzbar(x) for x in d["dienste"]), "fuer_alle": bool(d["wahl"]), "ersatz": bool(d["ersatz"]),
-            "erreichbar": sum(1 for x in d["dienste"] if (STATUS.get(x["id"]) or {}).get("ok"))}
+            "erreichbar": sum(1 for x in d["dienste"] if (STATUS.get(x["id"]) or {}).get("ok")),
+            "einordnung": sum(1 for x in d["dienste"] if x.get("einordnung"))}
 
 
 def live_sub(z, weg=False):
     """The line under the node: numbers and fixed words."""
     return (f"{z['dienste']} Dienste · {z['geprueft']} geprüft · {z['erreichbar']} erreichbar"
-            + (" · für alle" if z["fuer_alle"] else "") + (" · Ersatz bereit" if z["ersatz"] and not weg else "")
+            + (" · für alle" if z["fuer_alle"] else "") + (" · Einordnung" if z.get("einordnung") else "") + (" · Ersatz bereit" if z["ersatz"] and not weg else "")
             + (" · Ersatz antwortet statt des Modell-Rechners" if z["ersatz"] and weg else ""))
 
 
@@ -253,4 +274,4 @@ def zeigen(d, status=None):
     status = STATUS if status is None else status
     return [{"id": x["id"], "name": x["name"], "url": x["url"], "https": x["url"].startswith("https:"),
              "schluessel": bool(x.get("key")), "modell": x.get("modell", ""), "geprueft": nutzbar(x),
-             "lanes": lanes(x), "status": status.get(x["id"])} for x in d["dienste"]]
+             "lanes": lanes(x), "einordnung": bool(x.get("einordnung")), "status": status.get(x["id"])} for x in d["dienste"]]

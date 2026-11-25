@@ -6729,6 +6729,21 @@
 "text": "Auf dem Pi: sudo ./install.sh --mode panel (holt die Stimme, im Protokoll „notbetrieb: pistimme laden ok“). Funktionen → Pi-Stimme an. Auf tars die Sprachausgabe stoppen (oder Mischbetrieb an und eine Alzeo-Lane starten): eine Frage im Panel wird mit der Stimme Thorsten gesprochen, Zustand → Live zeigt „Pi-Stimme spricht“. Läuft die Sprachausgabe auf tars wieder, kommt die gewohnte Stimme zurück, und die Sätze der Rückmeldung klingen weiter wie vorher.",
 "thread": "tars für Alzeo nutzen, Assistent behalten",
 "wichtig": true
+},
+{
+"id": "P971",
+"v": 1531,
+"titel": "Einordnung über Alzeo im Mischbetrieb",
+"text": "Mischbetrieb an, in Alzeo die 27B- oder die Flash-Lane laufen lassen. Zustand → Modelle → Fremde Modell-Dienste: beim geprüften Alzeo-Dienst das Häkchen „Einordnung (System One) über diesen Dienst“ setzen, es bleibt nur gesetzt, wenn Alzeo die Prüffrage richtig beantwortet. Danach eine Frage stellen, die keine feste Regel erkennt: Zustand → Live zeigt bei der Einordnung „vom fremden Dienst“, im Protokoll steht „systemone: … fremder dienst“. Auf einer anderen Lane geht es ohne Einordnung weiter.",
+"thread": "tars für Alzeo nutzen, Assistent behalten",
+"wichtig": true
+},
+{
+"id": "P972",
+"v": 1531,
+"titel": "Qualitätstest prüft Alzeo",
+"text": "Während Alzeo antwortet (Für alle oder im Mischbetrieb): Zustand → Prüfen → Qualitätstest → „Fremden Dienst prüfen“. Der Test läuft mit Alzeos laufender Lane, oben steht „fremder Dienst: Alzeo (Modellname)“. Danach „Jetzt prüfen“ ohne Mischbetrieb: der Verlauf des eigenen Modells enthält den Alzeo-Lauf nicht.",
+"thread": "tars für Alzeo nutzen, Assistent behalten"
 }
 ]
 }

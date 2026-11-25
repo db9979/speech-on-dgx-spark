@@ -22,6 +22,7 @@ import guard
 import health
 import llm
 import netguard
+import systemone
 from common import load_config
 from core import admin_code, auth
 
@@ -56,7 +57,15 @@ GRUND = {
     "satz": ("Keine passende deutsche Antwort.", "No fitting German answer."),
     "werkzeug": ("Das Modell ruft kein Werkzeug auf.", "The model does not call a tool."),
     "antwort": ("Die Antwort des Dienstes ist nicht lesbar.", "The service's answer is not readable."),
+    "einordnung": ("Der Dienst beantwortet die Einordnung (System One) nicht richtig. Bei Alzeo können das nur die 27B- "
+                   "und die Flash-Lane.", "The service does not answer the classification (System One) right. On Alzeo "
+                   "only the 27B and the flash lane can."),
 }
+# the panel's own System One question for „Einordnung“ (fixed, no outside text): the right option must win clearly
+EIN_STATE = "Der Himmel ist an einem klaren Tag blau."
+EIN_FRAGE = {"farbe": {"type": "choice", "instructions": "Welche Farbe nennt der Text?",
+                       "criteria": {"blau": "blau", "gruen": "grün", "rot": "rot"}}}
+EIN_MIN = 0.6
 
 
 def _an(cfg=None):
@@ -144,6 +153,20 @@ async def pruefen(x, modell):
             AttributeError, IndexError) as e:
         return _wort(e), zahlen
     return "", zahlen
+
+
+async def einordnung_pruefen(x):
+    """The panel's own System One question on this service (fixed rules): an answer of the contract whose pick is the
+    right option from EIN_MIN. Returns a fixed word or ""; never the service's text."""
+    try:
+        async with _client(x, TIMEOUT) as c:
+            r = await c.post(x["url"] + "/systemone", json=systemone.body(EIN_STATE, EIN_FRAGE))
+        a = systemone.parse(systemone._read(r), EIN_FRAGE)["farbe"]
+    except systemone.Unavailable:
+        return "einordnung"
+    except (httpx.HTTPError, netguard.Blocked, fremdmodell.Fehler, ValueError, KeyError, TypeError) as e:
+        return _wort(e)
+    return "" if a["pick"] == "blau" and a["p"] >= EIN_MIN else "einordnung"
 
 
 async def status_tick():
@@ -278,6 +301,34 @@ async def fremd_wahl(request: Request, lang: str = "de"):
     d = fremdmodell.stand()
     print(f"modelle: fremd wahl {d['wahl'] or 'eigen'} ersatz {d['ersatz'] or 'keiner'}", flush=True)
     guard.log("modelle_fremd", detail=f"Für alle {d['wahl'] or 'eigen'}, Ersatz {d['ersatz'] or 'keiner'}")
+    return _seite()
+
+
+@router.post("/api/admin/modelle/fremd/einordnung", dependencies=[Depends(auth), Depends(admin_code)])
+async def fremd_einordnung(request: Request, lang: str = "de"):
+    """„Einordnung über diesen Dienst“ on (after the panel's own System One question passed) or off."""
+    guard.limit(request, "modelle_fremd", None, True)
+    body = await core.json_body(request, MAX_BODY)
+    if not _an():
+        print("modelle: fremd einordnung aus", flush=True)
+        _fehler("aus", lang)
+    x = fremdmodell.finde(fremdmodell.stand(), str(body.get("id") or ""))
+    if x is None:
+        print("modelle: fremd einordnung unbekannt", flush=True)
+        _fehler("unbekannt", lang)
+    an = body.get("an") is True
+    if an:
+        wort = await einordnung_pruefen(x)
+        if wort:
+            print(f"modelle: fremd {x['id']} einordnung {wort}", flush=True)
+            _fehler(wort, lang)
+    try:
+        fremdmodell.einordnung(x["id"], an)
+    except fremdmodell.Fehler as e:
+        print(f"modelle: fremd {x['id']} einordnung {e}", flush=True)
+        _fehler(str(e), lang)
+    print(f"modelle: fremd {x['id']} einordnung {'an' if an else 'aus'}", flush=True)
+    guard.log("modelle_fremd", detail=f"{x['id']} Einordnung {'an' if an else 'aus'}")
     return _seite()
 
 

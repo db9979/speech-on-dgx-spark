@@ -308,6 +308,33 @@ class Panel(unittest.TestCase):
             self.assertEqual(h["verdict"]["de"], quality.HELFER_ERR["mischbetrieb"][0])
         self.assertEqual(asked, [], "the own model is never asked")
 
+    def test_the_quality_test_checks_the_foreign_service(self):
+        """„Fremden Dienst prüfen“ (V01.1.531, Dominik 2026-11-25 „3“): the same questions to the service that answers
+        now, also in Mischbetrieb, shown with its name, never in the own model's history (Probetag)."""
+        import asyncio
+        import quality
+        self._tmp_state(quality, "RESULT", "HISTORY")
+        res = asyncio.run(quality.run("manual", "fremd"))
+        self.assertEqual(res["error"], quality.FREMD_KEINER[0], "no service answers")
+        x = {"id": "f1", "name": "Alzeo", "url": "http://192.168.178.171:30001/v1", "modell": "qwen3.8-27b", "key": "k"}
+        seen = []
+
+        async def fall(c, ccfg, headers, model, case):
+            seen.append((ccfg.get("eigen"), model, llm.url(ccfg)))
+            return {"answer": "", "raw": "", "held": [], "retried": False, "tools": [], "seconds": 0}
+
+        async def kein_urteil(*a, **kw):
+            return None
+
+        zwei = quality.cases()[:2]
+        with mock.patch.object(llm, "fremd", lambda ccfg: None if ccfg.get("eigen") else x), \
+                mock.patch.object(quality, "_run_case", fall), mock.patch.object(quality, "judge", kein_urteil), \
+                mock.patch.object(quality, "cases", lambda: zwei):
+            res = asyncio.run(quality.run("manual", "fremd"))
+        self.assertEqual((res.get("fremd"), res["model"], res["total"]), ("Alzeo", "qwen3.8-27b", 2), res.get("error"))
+        self.assertEqual({s for s in seen}, {(None, "qwen3.8-27b", x["url"] + "/chat/completions")})
+        self.assertEqual(quality.history(), [], "never compared with the own model's runs")
+
     def test_a_run_that_reached_no_model_is_no_result(self):
         import asyncio
         import httpx

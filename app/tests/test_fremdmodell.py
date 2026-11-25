@@ -245,6 +245,78 @@ class Pruefung(Ablage):
             self.assertEqual(asyncio.run(fremdseite.pruefen(self.x, "qwen3:30b-a3b"))[0], "netz")
 
 
+def system_one(blau=0.9, status=200):
+    """A fake System One (Alzeo's /v1/systemone, the contract systemone.py speaks)."""
+    def handle(req):
+        if status != 200:
+            return httpx.Response(status, json={"error": "lane"})
+        if not req.url.path.endswith("/systemone"):
+            return httpx.Response(404, json={})
+        q = json.loads(req.content)["questions"]
+        return httpx.Response(200, json={"answers": {n: {"probabilities": {"blau": blau, "gruen": 1 - blau, "rot": 0.0}}
+                                                     for n in q}})
+    return handle
+
+
+class Einordnung(Ablage):
+    """„Einordnung“ (V01.1.531, Dominik 2026-11-25 „1“): off by default, on only after the panel's own System One
+    question passed; System One asks the service only while the own model is off, with the service's key."""
+
+    def setUp(self):
+        super().setUp()
+        self.fid = fremdmodell.speichern("", "Alzeo", "http://192.168.178.171:30001/v1", "alzeo-key-1")
+        fremdmodell.geprueft(self.fid, "qwen3.8-27b")
+
+    def pruefen(self, handle):
+        def client(x, timeout):
+            return httpx.AsyncClient(transport=httpx.MockTransport(handle), timeout=timeout)
+        with mock.patch.object(fremdseite, "_client", client):
+            return asyncio.run(fremdseite.einordnung_pruefen(fremdmodell.finde(fremdmodell.stand(), self.fid)))
+
+    def test_off_by_default_and_only_after_the_check(self):
+        x = fremdmodell.finde(fremdmodell.stand(), self.fid)
+        self.assertFalse(x.get("einordnung"))
+        self.assertEqual(self.pruefen(system_one()), "")
+        self.assertEqual(self.pruefen(system_one(blau=0.4)), "einordnung", "the right option must win clearly")
+        self.assertEqual(self.pruefen(system_one(status=400)), "einordnung", "a lane without System One")
+        self.assertEqual(self.pruefen(system_one(status=401)), "einordnung")
+        neu = fremdmodell.speichern("", "Mac", MAC)
+        with self.assertRaises(fremdmodell.Fehler):
+            fremdmodell.einordnung(neu, True)   # never on an unchecked service
+        fremdmodell.einordnung(self.fid, True)
+        self.assertTrue(fremdmodell.zeigen(fremdmodell.stand())[0]["einordnung"])
+        self.assertEqual(fremdmodell.fuer_live(True)["einordnung"], 1)
+        fremdmodell.speichern(self.fid, "Alzeo", "http://192.168.178.172:30001/v1")
+        self.assertFalse(fremdmodell.finde(fremdmodell.stand(), self.fid).get("einordnung"), "a new address: gone")
+
+    def test_system_one_asks_it_only_while_the_own_model_is_off(self):
+        import steuer
+        import systemone
+        fremdmodell.einordnung(self.fid, True)
+        x = fremdmodell.finde(fremdmodell.stand(), self.fid)
+        seen = []
+
+        def handle(req):
+            seen.append((str(req.url), req.headers.get("authorization"), json.loads(req.content)["model"]))
+            return system_one()(req)
+
+        q = {"farbe": fremdseite.EIN_FRAGE["farbe"]}
+        cc = {"llm_url": "http://127.0.0.1:31006/v1"}
+        with mock.patch.object(systemone, "_transport", httpx.MockTransport(handle)), \
+                mock.patch.object(llm, "fremd", lambda ccfg: x), mock.patch.object(steuer, "weg", lambda now=None: False):
+            with mock.patch.object(steuer, "mischbetrieb", lambda now=None: True):
+                out = systemone.ask_sync(cc, "mail", "Der Himmel ist blau.", q)
+                self.assertEqual(out["farbe"]["pick"], "blau")
+                self.assertEqual(seen, [("http://192.168.178.171:30001/v1/systemone", "Bearer alzeo-key-1", systemone.MODEL)])
+                fremdmodell.einordnung(self.fid, False)
+                with mock.patch.object(llm, "fremd", lambda ccfg: fremdmodell.finde(fremdmodell.stand(), self.fid)):
+                    with self.assertRaises(systemone.Unavailable):
+                        systemone.ask_sync(cc, "mail", "x", q)
+            fremdmodell.einordnung(self.fid, True)
+            with mock.patch.object(steuer, "mischbetrieb", lambda now=None: False):
+                self.assertIsNone(systemone.fremd(cc), "the own model runs: System One stays own")
+
+
 class Endpunkte(Ablage):
     def setUp(self):
         super().setUp()
@@ -256,7 +328,8 @@ class Endpunkte(Ablage):
     def test_admin_only_and_off_refuses_changes(self):
         for m, path in (("get", "/api/admin/modelle/fremd"), ("put", "/api/admin/modelle/fremd"),
                         ("post", "/api/admin/modelle/fremd/pruefen"), ("post", "/api/admin/modelle/fremd/wahl"),
-                        ("post", "/api/admin/modelle/fremd/modelle"), ("delete", "/api/admin/modelle/fremd/f1")):
+                        ("post", "/api/admin/modelle/fremd/modelle"), ("delete", "/api/admin/modelle/fremd/f1"),
+                        ("post", "/api/admin/modelle/fremd/einordnung")):
             self.assertIn(getattr(self.anon, m)(path).status_code, (401, 403), path)
         helpers.set_config(modelle_fremd=False)
         r = self.admin.put("/api/admin/modelle/fremd", json={"name": "Mac", "url": MAC})
@@ -281,6 +354,16 @@ class Endpunkte(Ablage):
         self.assertTrue(r.json()["dienste"][0]["geprueft"])
         r = self.admin.post("/api/admin/modelle/fremd/wahl", json={"wahl": fid, "ersatz": fid})
         self.assertEqual((r.status_code, r.json()["wahl"], r.json()["ersatz"]), (200, fid, fid))
+        with mock.patch.object(fremdseite, "_client", lambda x, timeout: httpx.AsyncClient(
+                transport=httpx.MockTransport(system_one(blau=0.2)), timeout=timeout)):
+            r = self.admin.post("/api/admin/modelle/fremd/einordnung", json={"id": fid, "an": True})
+            self.assertEqual(r.status_code, 400)
+        with mock.patch.object(fremdseite, "_client", lambda x, timeout: httpx.AsyncClient(
+                transport=httpx.MockTransport(system_one()), timeout=timeout)):
+            r = self.admin.post("/api/admin/modelle/fremd/einordnung", json={"id": fid, "an": True})
+        self.assertEqual((r.status_code, r.json()["dienste"][0]["einordnung"]), (200, True), r.text)
+        r = self.admin.post("/api/admin/modelle/fremd/einordnung", json={"id": fid, "an": False})
+        self.assertFalse(r.json()["dienste"][0]["einordnung"])
         self.assertEqual(self.admin.delete(f"/api/admin/modelle/fremd/{fid}").status_code, 200)
         self.assertEqual(fremdmodell.stand(), {"dienste": [], "wahl": "", "ersatz": ""})
 

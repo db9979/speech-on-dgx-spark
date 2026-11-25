@@ -411,15 +411,32 @@ def compare():
 # language model, which is off then; a foreign service is not tested here
 MISCH = ("Mischbetrieb: das eigene Sprachmodell ist aus. Der Qualitätstest prüft es wieder, wenn der Mischbetrieb aus ist.",
          "Mischbetrieb: the own language model is off. The quality test checks it again once Mischbetrieb is off.")
+FREMD_KEINER = ("Gerade antwortet kein fremder Modell-Dienst (Zustand → Modelle → Fremde Modell-Dienste).",
+                "No foreign model service answers right now (Status → Models → Foreign model services).")
 # a run in which no question reached the model (each one a connection error) is not a result: it stays out of the history
 WEG = (httpx.TransportError,)
 
 
+def fremd_jetzt(cfg=None):
+    """The foreign model service that answers the questions now (llm.fremd), or None: „Fremden Dienst prüfen“."""
+    cfg = load_config() if cfg is None else cfg
+    return llm.fremd(cfg.get("chat", {}))
+
+
 async def run(reason="manual", sampling="eigen"):
+    """sampling "eigen" or "qwen": the own language model; "fremd" (V01.1.531, Dominik 2026-11-25 „3“): the foreign
+    service that answers now (Alzeo's running lane), with the same questions, never into the own model's history."""
     if _lock.locked():
         return last()
     async with _lock:
-        if steuer.mischbetrieb():   # the own language model is off on purpose: nothing to test, nothing in the history
+        x = fremd_jetzt() if sampling == "fremd" else None
+        if sampling == "fremd" and x is None:
+            res = {"t": int(time.time()), "reason": reason, "error": FREMD_KEINER[0], "error_en": FREMD_KEINER[1],
+                   "cases": [], "passed": 0, "total": 0}
+            _save(res)
+            print(f"quality: test ({reason}, fremd): kein dienst", flush=True)
+            return res
+        if x is None and steuer.mischbetrieb():   # the own language model is off on purpose: nothing to test, nothing in the history
             res = {"t": int(time.time()), "reason": reason, "error": MISCH[0], "error_en": MISCH[1], "cases": [],
                    "passed": 0, "total": 0}
             if reason == "manual":
@@ -428,7 +445,9 @@ async def run(reason="manual", sampling="eigen"):
             return res
         cfg = load_config()
         ccfg = llm.eigen(cfg.get("chat", {}))   # with the shipped defaults; the own model, never a foreign one
-        if sampling == "qwen":   # only for this run, never written to the settings
+        if x is not None:
+            ccfg = dict(cfg.get("chat", {}))   # llm.url/headers/model then go to the foreign service
+        elif sampling == "qwen":   # only for this run, never written to the settings
             ccfg = dict(ccfg, **QWEN_SAMPLING)
         else:
             sampling = "eigen"
@@ -474,7 +493,7 @@ async def run(reason="manual", sampling="eigen"):
                 return res
         res = {"t": int(time.time()), "reason": reason, "model": model, "seconds": round(time.time() - t0),
                # the catalog model that answered (the served name is always the same, llm_tor): Probetag compares by it
-               "katalog": (cfg.get("llm") or {}).get("modell", "") if (cfg.get("llm") or {}).get("enabled") else "",
+               "katalog": "" if x else (cfg.get("llm") or {}).get("modell", "") if (cfg.get("llm") or {}).get("enabled") else "",
                "temperature": float(ccfg.get("temperature", 0.3)),
                "tool_temperature": float(ccfg.get("tool_temperature", 0.1)), "cases": out,
                "sampling": sampling, "sampling_values": chat_sampling(ccfg),
@@ -484,7 +503,10 @@ async def run(reason="manual", sampling="eigen"):
             res["version"] = app_version()
         except Exception:
             pass
-        _history(res)
+        if x is not None:   # a foreign service: shown, never compared with the own model's runs (Probetag)
+            res["fremd"] = x["name"]
+        else:
+            _history(res)
         _save(res)
         print(f"quality: test ({reason}, {sampling}): {res['passed']}/{res['total']}", flush=True)
         live.mark("Qualitätstest", f"{res['passed']} von {res['total']} richtig, {res['seconds']} s")

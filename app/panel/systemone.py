@@ -53,6 +53,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 import guard
 import llm
 import meldung
+import steuer
 import seitentext
 from common import DayCounter, load_config
 from einordnung import MAX_OPTIONS, MAX_QUESTIONS, MAX_STATE, NAME, check_questions, clean_state  # noqa: F401  (the shared rules)
@@ -186,6 +187,8 @@ def _read(r):
         raise Unavailable("fehlt")
     if r.status_code in (401, 403):
         raise Unavailable("Schlüssel abgelehnt")
+    if r.status_code == 400:   # Alzeo: a lane without System One (only its Qwen lanes answer)
+        raise Unavailable("abgelehnt")
     if r.status_code != 200:
         raise Unavailable(f"HTTP {r.status_code}")
     raw = r.content
@@ -204,6 +207,8 @@ def _note(use, ok, ms, why="", wer=""):
             _count.bump("ms", ms)
             if wer == HELFER:
                 _count.bump("helfer")
+            if wer == "fremd":
+                _count.bump("fremd")
         else:
             _count.bump({"ausgelastet": "busy", "unsicher": "unsure"}.get(why, "fail"))
         _last[use] = (time.time(), ok, ms)
@@ -211,7 +216,7 @@ def _note(use, ok, ms, why="", wer=""):
         import verbrauch
         verbrauch.add("systemone", USES.get(use, use), amount=1, ms=ms)
     if not (ok and use == "messen"):   # a measurement says its sum once at the end (no flood of lines)
-        print(f"systemone: {USES.get(use, use)} " + (f"{ms} ms" + (" hilfsmodell" if wer == HELFER else "") if ok
+        print(f"systemone: {USES.get(use, use)} " + (f"{ms} ms" + (" hilfsmodell" if wer == HELFER else " fremder dienst" if wer == "fremd" else "") if ok
                                                      else f"nicht genutzt ({why}), weiter ohne"), flush=True)
     if not ok:
         try:
@@ -222,9 +227,25 @@ def _note(use, ok, ms, why="", wer=""):
             pass
 
 
+def fremd(ccfg):
+    """The foreign model service that answers the questions while the own language model is off (Mischbetrieb) or the
+    model computer is gone, when the admin let it (fremdmodell „einordnung“, checked by fremdseite: Alzeo's System One,
+    the contract this module came from); None for the own LLM-Tor. Its address, key and netguard come from llm.fremd."""
+    if not (steuer.mischbetrieb() or steuer.weg()):
+        return None
+    x = llm.fremd(ccfg)
+    return x if x and x.get("einordnung") else None
+
+
 def _prep(ccfg, use, state, questions):
+    """(address, request, headers, foreign) for one ask; Unavailable (a fixed word) when nobody can answer."""
     if use not in USES:
         raise ValueError("use")
+    x = fremd(ccfg)
+    if x:   # Alzeo's System One (V01.1.531): the same contract, its own key, no helper model there
+        return (x["url"] + "/systemone", body(state, questions),
+                {"Content-Type": "application/json", **({"Authorization": f"Bearer {x['key']}"} if x.get("key") else {})},
+                True)
     url = endpoint(ccfg)
     if not url:
         raise Unavailable("keine Adresse")
@@ -233,7 +254,7 @@ def _prep(ccfg, use, state, questions):
         raise Unavailable("Wartung")
     if wartung.mischbetrieb():    # the own LLM-Tor's model is off; a foreign service has no /systemone (V01.1.530)
         raise Unavailable("Mischbetrieb")
-    return url, body(state, questions)
+    return url, body(state, questions), _headers(ccfg), False
 
 
 def _helfer_zurueck(use, why):
@@ -271,14 +292,14 @@ def _wer(ccfg, use):
 async def ask(ccfg, use, state, questions, timeout=4.0, info=None):
     """The parsed answers, or Unavailable. For the conversation itself: never waits for speech. `info` (a dict)
     gets the label mass and the option orders."""
-    url, payload = _prep(ccfg, use, state, questions)
+    url, payload, hdrs, aussen = _prep(ccfg, use, state, questions)
     t0 = time.monotonic()
-    wer = _wer(ccfg, use)
+    wer = (MODEL,) if aussen else _wer(ccfg, use)
     for i, model in enumerate(wer):
         try:
             async with httpx.AsyncClient(timeout=httpx.Timeout(timeout, connect=2), follow_redirects=False,
                                          trust_env=False, transport=_transport) as c:
-                r = await c.post(url, json=dict(payload, model=model), headers=_headers(ccfg))
+                r = await c.post(url, json=dict(payload, model=model), headers=hdrs)
             out = parse(_read(r), questions)
             _sure(r, questions, info)
         except (Unavailable, httpx.HTTPError, OSError) as e:
@@ -288,23 +309,23 @@ async def ask(ccfg, use, state, questions, timeout=4.0, info=None):
                 continue
             _note(use, False, 0, why)
             raise Unavailable(why)
-        _note(use, True, int((time.monotonic() - t0) * 1000), wer=model)
+        _note(use, True, int((time.monotonic() - t0) * 1000), wer="fremd" if aussen else model)
         return out
 
 
 def ask_sync(ccfg, use, state, questions, timeout=20.0, job="", info=None):
     """The same from a worker thread (mail tidying); with `job` it first waits while somebody speaks."""
-    url, payload = _prep(ccfg, use, state, questions)
+    url, payload, hdrs, aussen = _prep(ccfg, use, state, questions)
     if job:
         import vorrang
         vorrang.hold(job)
     t0 = time.monotonic()
-    wer = _wer(ccfg, use)
+    wer = (MODEL,) if aussen else _wer(ccfg, use)
     for i, model in enumerate(wer):
         try:
             with httpx.Client(timeout=httpx.Timeout(timeout, connect=5), follow_redirects=False, trust_env=False,
                               transport=_transport) as c:
-                r = c.post(url, json=dict(payload, model=model), headers=_headers(ccfg))
+                r = c.post(url, json=dict(payload, model=model), headers=hdrs)
             out = parse(_read(r), questions)
             _sure(r, questions, info)
         except (Unavailable, httpx.HTTPError, OSError) as e:
@@ -314,7 +335,7 @@ def ask_sync(ccfg, use, state, questions, timeout=20.0, job="", info=None):
                 continue
             _note(use, False, 0, why)
             raise Unavailable(why)
-        _note(use, True, int((time.monotonic() - t0) * 1000), wer=model)
+        _note(use, True, int((time.monotonic() - t0) * 1000), wer="fremd" if aussen else model)
         return out
 
 
@@ -326,7 +347,7 @@ def for_live(now=None):
     n = sum(uses.values())
     return {"n": n, "uses": uses, "busy": c.get("busy", 0), "fail": c.get("fail", 0), "unsure": c.get("unsure", 0),
             "ms": round(c.get("ms", 0) / n) if n else 0, "orders": _orders[0], "helfer": c.get("helfer", 0),
-            "helfer_zurueck": c.get("helfer_zurueck", 0)}
+            "helfer_zurueck": c.get("helfer_zurueck", 0), "fremd": c.get("fremd", 0)}
 
 
 # ---------------------------------------------------------------- the fixed questions of each use

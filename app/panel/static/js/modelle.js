@@ -251,6 +251,7 @@ function mdFremdKarte(x,d){const s=x.status||{},l=MD_FREMD_LISTE[x.id];
   return `<div class="card"><b>${esc(x.name)}</b> <span class="pill">${esc(t('fremd, ungeprüft','foreign, unchecked'))}</span> ${st}`+
     `<div class="mut">${esc(x.url)} · ${esc(x.https?t('https','https'):t('ohne https: der Text geht unverschlüsselt durchs Heimnetz','without https: the text crosses the home network unencrypted'))}${x.schluessel?' · '+esc(t('mit Schlüssel','with key')):''}</div>`+
     `<div class="row">${x.geprueft?`<span class="pill ok">${esc(t('läuft: ','running: ')+x.modell)}</span>`+(nutzung?` <span class="pill">${esc(nutzung)}</span>`:''):esc(t('Noch kein geprüftes Modell.','No checked model yet.'))}</div>`+
+    (x.geprueft&&d.an?`<div class="row"><label><input type="checkbox" data-mdfe="${esc(x.id)}"${x.einordnung?' checked':''}> ${esc(t('Einordnung (System One) über diesen Dienst, solange das eigene Sprachmodell aus ist','Classification (System One) through this service while the own language model is off'))}</label></div>`:'')+
     ((x.lanes||[]).length>1?`<div class="mut">${esc(t('Geprüft: ','Checked: ')+x.lanes.join(', ')+t('. Wechselt der Dienst auf eines davon, folgt der Spark von selbst.','. When the service switches to one of them, the Spark follows by itself.'))}</div>`:'')+
     (d.an?`<div class="row">`+(l?`<select id="mdfm_${esc(x.id)}" aria-label="${esc(t('Modell','Model'))}">${l.map(m=>`<option${m===x.modell?' selected':''}>${esc(m)}</option>`).join('')}</select> <button type="button" class="b sm" data-mdfp="${esc(x.id)}">${esc(t('Prüfen','Check'))}</button>`:
       `<button type="button" class="b sm" data-mdfl="${esc(x.id)}">${esc(t('Modelle holen','Get models'))}</button>`)+
@@ -258,7 +259,7 @@ function mdFremdKarte(x,d){const s=x.status||{},l=MD_FREMD_LISTE[x.id];
 function mdFremdWahl(d){const ok=d.dienste.filter(x=>x.geprueft);if(!d.an||!ok.length)return '';
   const sel=(id,v,leer)=>`<select id="${id}">${[['',leer]].concat(ok.map(x=>[x.id,x.name+' · '+x.modell])).map(([k,n])=>`<option value="${esc(k)}"${k===v?' selected':''}>${esc(n)}</option>`).join('')}</select>`;
   return `<div class="row"><label>${esc(t('Für alle','For everyone'))} ${sel('mdfwahl',d.wahl,t('eigenes Sprachmodell','own language model'))}</label> <label>${esc(t('Ersatz, wenn der Modell-Rechner weg ist','Fallback while the model computer is gone'))} ${sel('mdfersatz',d.ersatz,t('keiner','none'))}</label> <button type="button" class="b sm" id="mdfwok">${esc(t('Übernehmen','Apply'))}</button></div>`+
-    `<div class="mut vb-note">${esc(t('Qualitätstest, Probetag, System One und das Hilfsmodell bleiben beim eigenen Modell.','The quality test, the trial, System One and the helper model stay with the own model.'))}</div>`}
+    `<div class="mut vb-note">${esc(t('Qualitätstest, Probetag, System One und das Hilfsmodell bleiben beim eigenen Modell. System One fragt den Dienst nur mit „Einordnung“ und nur, solange das eigene Modell aus ist.','The quality test, the trial, System One and the helper model stay with the own model. System One asks the service only with „Einordnung“ and only while the own model is off.'))}</div>`}
 async function mdFremd(daten){const box=$('mdfremd');if(!box)return;let d=daten;
   if(!d)try{d=await (await api('/api/admin/modelle/fremd')).json()}catch(_){box.innerHTML='';return}
   if(!d.an&&!d.dienste.length){box.innerHTML='';return}
@@ -274,6 +275,7 @@ async function mdFremd(daten){const box=$('mdfremd');if(!box)return;let d=daten;
   box.querySelectorAll('[data-mdfl]').forEach(b=>b.onclick=async()=>{const r=await mdFremdApi('/api/admin/modelle/fremd/modelle','POST',{id:b.dataset.mdfl});if(r){MD_FREMD_LISTE[b.dataset.mdfl]=r.modelle;mdFremd(d)}});
   box.querySelectorAll('[data-mdfp]').forEach(b=>b.onclick=async()=>{const id=b.dataset.mdfp;b.disabled=true;b.textContent=t('prüft …','checking …');
     const r=await mdFremdApi('/api/admin/modelle/fremd/pruefen','POST',{id,modell:$('mdfm_'+id).value});delete MD_FREMD_LISTE[id];mdFremd(r||null)});
+  box.querySelectorAll('[data-mdfe]').forEach(b=>b.onchange=async()=>{b.disabled=true;const r=await mdFremdApi('/api/admin/modelle/fremd/einordnung','POST',{id:b.dataset.mdfe,an:b.checked});mdFremd(r||null)});
   box.querySelectorAll('[data-mdfx]').forEach(b=>b.onclick=async()=>{if(confirm(t('Diesen Dienst und seinen Schlüssel löschen?','Delete this service and its key?')))neu(await mdFremdApi('/api/admin/modelle/fremd/'+encodeURIComponent(b.dataset.mdfx),'DELETE'))})}
 function mdHf(d){const h=d.hf_token;if(!h)return '';
   return `<div><h3>${esc(t('Hugging-Face-Token','Hugging Face token'))}</h3>`+(h.gesetzt?

@@ -181,6 +181,7 @@ LIST = {
     ("PUT", "/api/admin/modelle/fremd"): (CONFIRM, "Spark", "Einen fremden Modell-Dienst eintragen", "Add a foreign model service"),
     ("POST", "/api/admin/modelle/fremd/pruefen"): (CONFIRM, "Spark", "Einen fremden Modell-Dienst prüfen", "Check a foreign model service"),
     ("POST", "/api/admin/modelle/fremd/wahl"): (CONFIRM, "Spark", "Einen fremden Modell-Dienst nutzen", "Use a foreign model service"),
+    ("POST", "/api/admin/modelle/fremd/einordnung"): (CONFIRM, "Spark", "Einordnung über einen fremden Modell-Dienst", "Classification through a foreign model service"),
     ("DELETE", "/api/admin/modelle/fremd/{fid}"): (CONFIRM, "Spark", "Einen fremden Modell-Dienst löschen", "Delete a foreign model service"),
     ("POST", "/api/admin/modelle/eigen"): (CONFIRM, "Spark", "Ein eigenes Modell hinzufügen", "Add an own model"),
     ("DELETE", "/api/admin/modelle/eigen/{mid}"): (CONFIRM, "Spark", "Ein eigenes Modell löschen", "Delete an own model"),

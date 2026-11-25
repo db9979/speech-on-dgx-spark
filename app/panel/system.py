@@ -245,7 +245,8 @@ async def kiwix_check(request: Request):
 @router.get("/api/quality", dependencies=[Depends(auth)])
 def quality_result():
     return {"running": quality.running(), "progress": quality.progress(), "last": quality.last(), "own": quality.own(),
-            "compare": quality.compare(), "helfer": quality.helfer_last()}
+            "compare": quality.compare(), "helfer": quality.helfer_last(),
+            "fremd": bool(quality.fremd_jetzt())}   # „Fremden Dienst prüfen“ only while one answers
 
 
 @router.delete("/api/quality/cases/{cid}", dependencies=[Depends(auth)])
@@ -262,7 +263,7 @@ async def quality_now(request: Request):
     if not quality.running():   # "qwen": once with Qwen's recommended word choice (quality.QWEN_SAMPLING)
         # "helfer": Hilfsmodell vergleichen (quality.helfer_run), plain questions to both models
         spawn(quality.helfer_run("manual") if body.get("sampling") == "helfer"
-              else quality.run("manual", "qwen" if body.get("sampling") == "qwen" else "eigen"))
+              else quality.run("manual", body["sampling"] if body.get("sampling") in ("qwen", "fremd") else "eigen"))
         await asyncio.sleep(0.1)
     return {"running": True, "progress": quality.progress(), "last": quality.last(), "helfer": quality.helfer_last()}
 

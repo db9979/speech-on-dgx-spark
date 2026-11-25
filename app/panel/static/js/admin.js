@@ -1037,8 +1037,9 @@ function qProg(p){const box=$('qprog'),bar=$('qbar');box.hidden=!p;if(!p)return;
   $('qprogtxt').textContent=n?`${t('Frage','Question')} ${Math.min(d+1,n)} ${t('von','of')} ${n}`+(d>=3&&left>0?` · ${t('noch etwa','about')} ${left<60?left+' s':Math.round(left/60)+' min'}${t('',' left')}`:''):t('startet …','starting …')}
 function qRender(d){const r=d&&d.last;clearTimeout(qTimer);qProg(d&&d.running?(d.progress||{done:0,total:0,seconds:0}):null);
   qCompare(d&&d.compare);qHelfer(d&&d.helfer);
-  if(d&&d.running){$('qmsg').textContent=t('läuft …','running …');$('qgo').disabled=$('qgoqwen').disabled=$('qgohelfer').disabled=true;qTimer=setTimeout(loadQuality,2000)}
-  else{$('qgo').disabled=$('qgoqwen').disabled=$('qgohelfer').disabled=false;$('qmsg').textContent=r?new Date(r.t*1000).toLocaleString()+' · '+(r.version||'')+(r.reason==='after update'?t(' · nach dem Update',' · after the update'):''):''}
+  if(d&&d.running){$('qmsg').textContent=t('läuft …','running …');$('qgo').disabled=$('qgoqwen').disabled=$('qgohelfer').disabled=$('qgofremd').disabled=true;qTimer=setTimeout(loadQuality,2000)}
+  else{$('qgo').disabled=$('qgoqwen').disabled=$('qgohelfer').disabled=$('qgofremd').disabled=false;$('qmsg').textContent=r?new Date(r.t*1000).toLocaleString()+' · '+(r.version||'')+(r.reason==='after update'?t(' · nach dem Update',' · after the update'):'')+(r.fremd?' · '+t('fremder Dienst: ','foreign service: ')+r.fremd+(r.model?' ('+r.model+')':''):''):''}
+  if(d&&'fremd' in d)$('qgofremd').hidden=!d.fremd;
   const none=h=>{$('qsum').innerHTML=h;$('qlist').innerHTML='';$('qallbox').hidden=true};
   if(!r)return none(`<span class="mut">${t('Noch nicht geprüft.','Not tested yet.')}</span>`);
   if(r.error)return none(`<span class="err">${esc(t(r.error,r.error_en||r.error))}</span>`);
@@ -1083,7 +1084,7 @@ function qHelfer(h){const box=$('qhelfer');box.hidden=!h;if(!h)return;const v=h.
     +`<div class="fh">${h.load_s?t('Laden des Hilfsmodells','Loading the helper model')+' '+s(h.load_s)+' · ':''}${gib.main?t('Speicher Sprachmodell','Memory language model')+' '+gib.main+' GiB · ':''}${gib.helfer?t('Hilfsmodell','helper model')+' '+gib.helfer+' GiB':''}</div>`
     +`<details class="adv"><summary>${t('Je Frage','Per question')}</summary>${(h.cases||[]).map(x=>`<div class="qrow"><div class="qq"><span>${esc(x.q)}</span></div>${['main','helfer'].map(k=>{const y=x[k]||{};return `<div class="qa">${ic(y.ok?'check':'x',y.ok?'okc':'badc')} ${k==='main'?t('Sprachmodell','Language model'):t('Hilfsmodell','Helper model')} · ${s(y.first)}: ${esc(y.answer||'–')}${y.ok?'':' · '+esc((y.why||[]).join('; '))}</div>`}).join('')}</div>`).join('')}</details>`)}
 const qStart=body=>async()=>{try{qRender(await (await api('/api/quality',{method:'POST',body:JSON.stringify(body)})).json())}catch(e){$('qmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
-$('qgo').onclick=qStart({});$('qgoqwen').onclick=qStart({sampling:'qwen'});$('qgohelfer').onclick=qStart({sampling:'helfer'});
+$('qgo').onclick=qStart({});$('qgoqwen').onclick=qStart({sampling:'qwen'});$('qgohelfer').onclick=qStart({sampling:'helfer'});$('qgofremd').onclick=qStart({sampling:'fremd'});
 $('livego').onclick=async()=>{$('livego').disabled=true;$('livemsg').textContent=t('prüft … (bis zu einer Minute)','checking … (up to a minute)');
   try{liveRender(await (await api('/api/livecheck',{method:'POST'})).json())}catch(e){$('livemsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}$('livego').disabled=false;refresh()};
 const WHY={daily:t('täglich','daily'),manual:t('von Hand','manual'),'before-update':t('vor Update','before update'),'before-rollback':t('vor Rückkehr','before rollback'),'before-restore':t('vor Wiederherstellung','before restore'),move:t('Umzug (mit Schlüssel)','move (with key)')};
